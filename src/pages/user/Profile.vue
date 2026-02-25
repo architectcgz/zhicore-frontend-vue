@@ -165,6 +165,8 @@
                   :key="post.id"
                   :post="post"
                   @click="handlePostClick(post.id)"
+                  @like-change="handleLikeChange"
+                  @favorite-change="handleFavoriteChange"
                 />
               </div>
               <!-- 加载更多 -->
@@ -222,6 +224,8 @@
                   :key="post.id"
                   :post="post"
                   @click="handlePostClick(post.id)"
+                  @like-change="handleLikeChange"
+                  @favorite-change="handleFavoriteChange"
                 />
               </div>
               <!-- 加载更多 -->
@@ -741,6 +745,31 @@ const loadMoreFollowers = async () => {
  */
 const handlePostClick = (postId: string) => {
   router.push(`/posts/${postId}`);
+};
+
+/**
+ * 点赞/收藏状态变化：更新本地列表（避免 PostCard 直接修改 props）
+ */
+const handleLikeChange = (data: { postId: string; isLiked: boolean; likeCount: number }) => {
+  posts.value.list = posts.value.list.map((post) =>
+    post.id === data.postId ? { ...post, isLiked: data.isLiked, likeCount: data.likeCount } : post
+  );
+  favorites.value.list = favorites.value.list.map((post) =>
+    post.id === data.postId ? { ...post, isLiked: data.isLiked, likeCount: data.likeCount } : post
+  );
+};
+
+const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favoriteCount: number }) => {
+  posts.value.list = posts.value.list.map((post) =>
+    post.id === data.postId
+      ? { ...post, isFavorited: data.isFavorited, favoriteCount: data.favoriteCount }
+      : post
+  );
+  favorites.value.list = favorites.value.list.map((post) =>
+    post.id === data.postId
+      ? { ...post, isFavorited: data.isFavorited, favoriteCount: data.favoriteCount }
+      : post
+  );
 };
 
 /**

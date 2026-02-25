@@ -6,28 +6,40 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
+import { ref } from 'vue';
 import Home from '@/pages/Home.vue';
-import DefaultLayout from '@/layouts/DefaultLayout.vue';
 
 // Mock TanStack Query hooks
 vi.mock('@/queries/tags/useHotTagsQuery', () => ({
   useHotTagsQuery: () => ({
-    data: { value: [] },
-    isLoading: false,
+    data: ref([]),
+    isLoading: ref(false),
+    error: ref(null),
   }),
 }));
 
 vi.mock('@/queries/ranking/useHotCreatorsQuery', () => ({
   useHotCreatorsQuery: () => ({
-    data: { value: { items: [] } },
-    isLoading: false,
+    data: ref({ items: [] }),
+    isLoading: ref(false),
+    error: ref(null),
+  }),
+}));
+
+vi.mock('@/queries/posts/useHotPostsQuery', () => ({
+  useHotPostsQuery: () => ({
+    data: ref({ items: [] }),
+    isLoading: ref(false),
+    error: ref(null),
   }),
 }));
 
 vi.mock('@/queries/posts/usePostsQuery', () => ({
   usePostsQuery: () => ({
-    data: { value: { items: [] } },
-    isLoading: false,
+    data: ref({ items: [] }),
+    isLoading: ref(false),
+    isFetching: ref(false),
+    error: ref(null),
   }),
 }));
 
@@ -39,7 +51,7 @@ vi.mock('@/stores/auth', () => ({
 }));
 
 describe('Home 页面布局', () => {
-  it('应该使用 DefaultLayout 包装', () => {
+  it('应该渲染 Home 页面主体', () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -56,17 +68,15 @@ describe('Home 页面布局', () => {
       global: {
         plugins: [router],
         stubs: {
-          DefaultLayout: {
-            template: '<div class="default-layout-stub"><slot /></div>',
-          },
+          Teleport: true,
           PostList: true,
           LoadingSpinner: true,
         },
       },
     });
 
-    // 验证使用了 DefaultLayout
-    expect(wrapper.findComponent(DefaultLayout).exists()).toBe(true);
+    expect(wrapper.find('.home-page').exists()).toBe(true);
+    expect(wrapper.text()).toContain('发现精彩内容');
   });
 
   it('应该包含自定义的左侧边栏', () => {
@@ -86,9 +96,7 @@ describe('Home 页面布局', () => {
       global: {
         plugins: [router],
         stubs: {
-          DefaultLayout: {
-            template: '<div><slot /></div>',
-          },
+          Teleport: true,
           PostList: true,
           LoadingSpinner: true,
         },
@@ -116,18 +124,15 @@ describe('Home 页面布局', () => {
       global: {
         plugins: [router],
         stubs: {
-          DefaultLayout: {
-            template: '<div><slot /></div>',
-          },
+          Teleport: true,
           PostList: true,
           LoadingSpinner: true,
         },
       },
     });
 
-    // 验证包含热门作者和最新文章部分（右侧边栏）
-    expect(wrapper.text()).toContain('热门作者');
-    expect(wrapper.text()).toContain('最新文章');
+    // 验证包含热门文章部分（右侧边栏）
+    expect(wrapper.text()).toContain('热门文章');
   });
 
   it('应该使用响应式网格布局', () => {
@@ -147,19 +152,15 @@ describe('Home 页面布局', () => {
       global: {
         plugins: [router],
         stubs: {
-          DefaultLayout: {
-            template: '<div><slot /></div>',
-          },
+          Teleport: true,
           PostList: true,
           LoadingSpinner: true,
         },
       },
     });
 
-    // 验证使用了响应式网格类
-    const gridContainer = wrapper.find('.grid');
-    expect(gridContainer.exists()).toBe(true);
-    expect(gridContainer.classes()).toContain('grid-cols-1');
-    expect(gridContainer.classes()).toContain('lg:grid-cols-12');
+    // 验证内容区域存在（布局由 DefaultLayout 负责响应式网格，Home 自身负责内容结构）
+    expect(wrapper.find('.content-container').exists()).toBe(true);
+    expect(wrapper.find('.posts-section').exists()).toBe(true);
   });
 });

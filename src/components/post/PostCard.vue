@@ -317,9 +317,11 @@ const displayTags = computed(() => {
  * 计算属性：估算阅读时间（基于内容长度）
  */
 const estimatedReadTime = computed(() => {
-  const wordsPerMinute = 200; // 平均阅读速度
-  const wordCount = props.post.content?.length || props.post.excerpt?.length || 0;
-  const minutes = Math.ceil(wordCount / wordsPerMinute);
+  // 中文阅读速度通常更快，且这里按字符数估算（去除空白字符）
+  const charsPerMinute = 400;
+  const rawText = props.post.content || props.post.excerpt || '';
+  const charCount = rawText.replace(/\s+/g, '').length;
+  const minutes = Math.ceil(charCount / charsPerMinute);
   return Math.max(1, minutes);
 });
 
@@ -432,10 +434,6 @@ const handleLike = async () => {
       ? await postApi.unlikePost(props.post.id)
       : await postApi.likePost(props.post.id);
 
-    // 更新本地状态
-    props.post.isLiked = result.isLiked;
-    props.post.likeCount = result.likeCount;
-
     // 发出事件
     emit('like-change', {
       postId: props.post.id,
@@ -464,10 +462,6 @@ const handleFavorite = async () => {
     const result = props.post.isFavorited 
       ? await postApi.unfavoritePost(props.post.id)
       : await postApi.favoritePost(props.post.id);
-
-    // 更新本地状态
-    props.post.isFavorited = result.isFavorited;
-    props.post.favoriteCount = result.favoriteCount;
 
     // 发出事件
     emit('favorite-change', {
@@ -502,21 +496,6 @@ const handleAvatarError = (event: Event) => {
 </script>
 
 <style scoped>
-/* 文本截断样式 */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* 悬停动画效果 */
 .post-card {
   transform: translateY(0);
@@ -534,17 +513,6 @@ const handleAvatarError = (event: Event) => {
 
 .post-card button:hover {
   transform: translateY(-1px);
-}
-
-/* 加载动画 */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
 }
 
 /* 响应式调整 */

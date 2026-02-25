@@ -7,6 +7,17 @@ import type { Router, NavigationGuardNext, RouteLocationNormalized } from 'vue-r
 import { useAuthStore } from '@/stores/auth';
 import type { RouteMeta } from './routes';
 
+function sanitizeRedirectPath(redirect: unknown): string {
+  if (typeof redirect !== 'string') return '/';
+
+  const trimmed = redirect.trim();
+  if (!trimmed.startsWith('/')) return '/';
+  if (trimmed.startsWith('//')) return '/';
+  if (trimmed.includes('://')) return '/';
+
+  return trimmed;
+}
+
 /**
  * 路由守卫错误类型
  */
@@ -43,7 +54,7 @@ export function requiresAuth(
     console.warn(`Access denied to ${to.path}: User not authenticated`);
     
     // 保存原始目标路径，登录后重定向
-    const redirectPath = to.fullPath !== '/login' ? to.fullPath : '/';
+    const redirectPath = to.fullPath !== '/auth/login' ? to.fullPath : '/';
     
     next({
       name: 'Login',
@@ -224,7 +235,7 @@ export function requiresGuest(
     console.info(`Redirecting authenticated user from ${to.path} to home`);
     
     // 如果有重定向参数，使用重定向地址，否则去首页
-    const redirectTo = (to.query.redirect as string) || '/';
+    const redirectTo = sanitizeRedirectPath(to.query.redirect);
     
     next({
       path: redirectTo,
@@ -247,33 +258,15 @@ export function updatePageTitle(
 ): void {
   // 获取页面标题
   const title = (to.meta as RouteMeta)?.title;
+  const siteTitle = import.meta.env.VITE_APP_NAME || '知构';
   
   if (title) {
     // 设置页面标题，格式：页面标题 - 网站名称
-    const siteTitle = '博客系统';
     document.title = `${title} - ${siteTitle}`;
   } else {
     // 如果没有设置标题，使用默认标题
-    document.title = '博客系统';
+    document.title = siteTitle;
   }
-  
-  next();
-}
-
-/**
- * 路由加载状态守卫
- * 在路由切换时显示加载状态
- */
-export function routeLoadingGuard(
-  _to: RouteLocationNormalized,
-  _from: RouteLocationNormalized,
-  next: NavigationGuardNext
-): void {
-  // 这里可以设置全局加载状态
-  // 例如：显示顶部进度条
-  
-  // 如果是异步组件，可能需要一些时间加载
-  // 这里可以添加加载指示器的逻辑
   
   next();
 }
@@ -334,129 +327,35 @@ export function setupRouterGuards(router: Router): void {
   // 全局前置守卫
   router.beforeEach(async (to, from, next) => {
     try {
-      const authStore = useAuthStore();
-      
-      // 1. 验证路由参数
-      if (to.params.id && (to.name?.toString().includes('User') || to.name?.toString().includes('Post'))) {
-        const id = to.params.id as string;
-        if (!/^[a-zA-Z0-9-_]+$/.test(id)) {
-          console.warn(`Invalid ID format: ${id}`);
-          next({ name: 'NotFound' });
-          return;
-        }
-      }
-      
-      if (to.params.slug && to.name === 'TagDetail') {
-        const slug = to.params.slug as string;
-        if (!/^[a-zA-Z0-9-_]+$/.test(slug)) {
-          console.warn(`Invalid tag slug format: ${slug}`);
-          next({ name: 'NotFound' });
-          return;
-        }
-      }
-      
-      // 2. 检查访客守卫（只允许未登录用户访问）
-      if (to.meta?.requiresGuest && authStore.isAuthenticated) {
-        console.info(`Redirecting authenticated user from ${to.path} to home`);
-        const redirectTo = (to.query.redirect as string) || '/';
-        next({ path: redirectTo, replace: true });
-        return;
-      }
-      
-      // 3. 检查认证守卫
-      if (to.meta?.requiresAuth && !authStore.isAuthenticated) {
-        console.warn(`Access denied to ${to.path}: User not authenticated`);
-        const redirectPath = to.fullPath !== '/login' ? to.fullPath : '/';
-        next({
-          name: 'Login',
-          query: { 
-            redirect: redirectPath,
-            reason: 'auth_required'
-          },
+      const evaluateGuard = (guard: (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => void) => {
+        let called = false;
+        let nextArg: Parameters<NavigationGuardNext>[0] | undefined;
+
+        guard(to, from, (arg?: Parameters<NavigationGuardNext>[0]) => {
+          called = true;
+          nextArg = arg;
         });
-        return;
-      }
-      
-      // 4. 检查管理员守卫
-      if (to.meta?.requiresAdmin) {
-        if (!authStore.isAuthenticated) {
-          console.warn(`Access denied to ${to.path}: User not authenticated`);
-          next({
-            name: 'Login',
-            query: { 
-              redirect: to.fullPath,
-              reason: 'admin_required'
-            },
-          });
-          return;
-        }
-        
-        if (!authStore.isAdmin) {
-          console.warn(`Access denied to ${to.path}: User is not admin`);
-          next({ name: 'NotFound' });
+
+        return called ? nextArg : undefined;
+      };
+
+      const guards = [
+        validateRouteParams,
+        requiresGuest,
+        requiresAuth,
+        requiresAdmin,
+        requiresPermissions,
+        requiresRoles,
+      ];
+
+      for (const guard of guards) {
+        const result = evaluateGuard(guard);
+        if (result !== undefined) {
+          next(result);
           return;
         }
       }
-      
-      // 5. 检查权限守卫
-      const permissions = (to.meta as RouteMeta)?.permissions;
-      if (permissions && permissions.length > 0) {
-        if (!authStore.isAuthenticated) {
-          console.warn(`Access denied to ${to.path}: User not authenticated`);
-          next({
-            name: 'Login',
-            query: { 
-              redirect: to.fullPath,
-              reason: 'permission_required'
-            },
-          });
-          return;
-        }
-        
-        const hasAllPermissions = permissions.every(permission => 
-          authStore.hasPermission(permission)
-        );
-        
-        if (!hasAllPermissions) {
-          console.warn(`Access denied to ${to.path}: Insufficient permissions`, {
-            required: permissions,
-            user: authStore.user?.id,
-          });
-          next({ name: 'NotFound' });
-          return;
-        }
-      }
-      
-      // 6. 检查角色守卫
-      const roles = (to.meta as RouteMeta)?.roles;
-      if (roles && roles.length > 0) {
-        if (!authStore.isAuthenticated) {
-          console.warn(`Access denied to ${to.path}: User not authenticated`);
-          next({
-            name: 'Login',
-            query: { 
-              redirect: to.fullPath,
-              reason: 'role_required'
-            },
-          });
-          return;
-        }
-        
-        const userRole = authStore.user?.role;
-        const hasRequiredRole = userRole && roles.includes(userRole);
-        
-        if (!hasRequiredRole) {
-          console.warn(`Access denied to ${to.path}: Insufficient role`, {
-            required: roles,
-            current: userRole,
-            user: authStore.user?.id,
-          });
-          next({ name: 'NotFound' });
-          return;
-        }
-      }
-      
-      // 所有检查通过，允许导航
+
       next();
       
     } catch (error) {
@@ -496,7 +395,9 @@ export function setupRouterGuards(router: Router): void {
     }
     
     // 记录路由变化（用于分析）
-    console.info(`Route changed: ${from.fullPath} -> ${to.fullPath}`);
+    if (import.meta.env.DEV) {
+      console.info(`Route changed: ${from.fullPath} -> ${to.fullPath}`);
+    }
   });
   
   // 路由错误处理
@@ -511,7 +412,6 @@ export function setupRouterGuards(router: Router): void {
       name: 'ServerError',
       query: { 
         error: 'router_error',
-        message: error.message 
       },
     });
   });
@@ -563,8 +463,8 @@ export function getLoginUrl(currentPath: string): string {
 export function handleAuthFailure(router: Router, currentPath: string): void {
   const authStore = useAuthStore();
   
-  // 清除认证状态
-  authStore.clearAuth();
+  // 清除认证状态（统一走 logout，确保同步广播）
+  void authStore.logout();
   
   // 重定向到登录页面
   router.push(getLoginUrl(currentPath));

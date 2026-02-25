@@ -5,11 +5,10 @@
 -->
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
-import { useTheme } from '@/composables/useTheme';
 import ThemeToggle from './ThemeToggle.vue';
 import NotificationDropdown from '../notification/NotificationDropdown.vue';
 
@@ -30,8 +29,6 @@ const authStore = useAuthStore();
 const notificationStore = useNotificationStore();
 
 // 主题
-const { isDark } = useTheme();
-
 // 响应式状态
 const searchQuery = ref('');
 const showUserMenu = ref(false);
@@ -143,14 +140,6 @@ const goToMessages = () => {
 };
 
 /**
- * 导航到通知页面
- */
-const goToNotifications = () => {
-  router.push('/notifications');
-  showNotifications.value = false;
-};
-
-/**
  * 关闭所有下拉菜单
  */
 const closeAllDropdowns = () => {
@@ -166,10 +155,15 @@ const handleClickOutside = (event: Event) => {
   }
 };
 
-// 监听点击外部事件
-if (typeof document !== 'undefined') {
+onMounted(() => {
+  if (typeof document === 'undefined') return;
   document.addEventListener('click', handleClickOutside);
-}
+});
+
+onUnmounted(() => {
+  if (typeof document === 'undefined') return;
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>

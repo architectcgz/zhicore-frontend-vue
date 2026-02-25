@@ -100,9 +100,11 @@
           class="posts-list"
         >
           <PostCard
-            v-for="post in posts"
+            v-for="post in displayPosts"
             :key="post.id"
             :post="post"
+            @like-change="handleLikeChange"
+            @favorite-change="handleFavoriteChange"
           />
         </div>
       </main>
@@ -144,15 +146,19 @@ onMounted(() => {
 /**
  * 获取最新文章列表
  */
+const postsQueryParams = {
+  page: 1,
+  size: 20,
+  sort: 'latest',
+} as const;
+
 const {
   data: postsData,
   isLoading: postsLoading,
   isFetching: postsFetching,
   error: postsError,
 } = usePostsQuery({
-  page: 1,
-  size: 20,
-  sort: 'latest',
+  ...postsQueryParams,
 });
 
 /**
@@ -181,6 +187,14 @@ const {
  */
 const posts = computed<Post[]>(() => {
   return postsData.value?.items || [];
+});
+
+const displayPosts = computed<Post[]>(() => {
+  const overrides = postOverrides.value;
+  return posts.value.map((post) => {
+    const patch = overrides[post.id];
+    return patch ? ({ ...post, ...patch } as Post) : post;
+  });
 });
 
 /**
@@ -212,6 +226,8 @@ const isSidebarLoading = computed(() => tagsLoading.value || trendingLoading.val
  */
 const error = computed(() => postsError.value);
 
+const postOverrides = ref<Record<string, Partial<Post>>>({});
+
 /**
  * 获取错误消息
  */
@@ -224,12 +240,42 @@ const getErrorMessage = (err: any): string => {
   }
   return '加载数据时发生错误，请稍后重试';
 };
+
+/**
+ * 点赞/收藏状态变化：由父组件更新列表数据（避免子组件直接修改 props）
+ */
+const handleLikeChange = (data: { postId: string; isLiked: boolean; likeCount: number }) => {
+  const current = postOverrides.value[data.postId] || {};
+  postOverrides.value = {
+    ...postOverrides.value,
+    [data.postId]: { ...current, isLiked: data.isLiked, likeCount: data.likeCount },
+  };
+};
+
+const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favoriteCount: number }) => {
+  const current = postOverrides.value[data.postId] || {};
+  postOverrides.value = {
+    ...postOverrides.value,
+    [data.postId]: { ...current, isFavorited: data.isFavorited, favoriteCount: data.favoriteCount },
+  };
+};
 </script>
 
 <style scoped>
 /* 页面容器 */
 .home-page {
   width: 100%;
+
+  /* 骨架屏色值（默认亮色，暗色由 data-theme 覆盖） */
+  --skeleton-card-bg: var(--color-bg-secondary);
+  --skeleton-shimmer-1: var(--color-bg-tertiary);
+  --skeleton-shimmer-2: var(--color-border-light);
+}
+
+[data-theme='dark'] .home-page {
+  --skeleton-card-bg: var(--color-bg-secondary);
+  --skeleton-shimmer-1: var(--color-bg-hover);
+  --skeleton-shimmer-2: var(--color-bg-tertiary);
 }
 
 /* 页面头部 */
@@ -412,10 +458,8 @@ const getErrorMessage = (err: any): string => {
   animation: fadeIn 0.3s ease-in-out;
 }
 
-@media (prefers-color-scheme: dark) {
-  .error-overlay {
-    background: rgba(31, 41, 55, 0.95);
-  }
+[data-theme='dark'] .error-overlay {
+  background: rgba(30, 30, 33, 0.95);
 }
 
 .error-card {
@@ -430,20 +474,14 @@ const getErrorMessage = (err: any): string => {
 .error-card .error-icon {
   width: 2.5rem;
   height: 2.5rem;
-  color: #ef4444;
+  color: var(--color-danger);
   margin-bottom: 0.75rem;
 }
 
 .error-card .error-message {
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--color-text-secondary);
   line-height: 1.5;
-}
-
-@media (prefers-color-scheme: dark) {
-  .error-card .error-message {
-    color: #d1d5db;
-  }
 }
 
 @keyframes fadeIn {
@@ -464,10 +502,10 @@ const getErrorMessage = (err: any): string => {
 }
 
 .skeleton-post-card {
-  background: white;
+  background: var(--skeleton-card-bg);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   display: flex;
   gap: 1.5rem;
 }
@@ -476,7 +514,7 @@ const getErrorMessage = (err: any): string => {
   width: 200px;
   height: 150px;
   flex-shrink: 0;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 8px;
@@ -492,7 +530,7 @@ const getErrorMessage = (err: any): string => {
 .skeleton-title {
   height: 1.5rem;
   width: 70%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -501,7 +539,7 @@ const getErrorMessage = (err: any): string => {
 .skeleton-text {
   height: 1rem;
   width: 100%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -522,7 +560,7 @@ const getErrorMessage = (err: any): string => {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
 }
@@ -530,7 +568,7 @@ const getErrorMessage = (err: any): string => {
 .skeleton-info {
   height: 1rem;
   width: 8rem;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -542,22 +580,6 @@ const getErrorMessage = (err: any): string => {
   }
   100% {
     background-position: -200% 0;
-  }
-}
-
-/* 暗色模式骨架屏 */
-@media (prefers-color-scheme: dark) {
-  .skeleton-post-card {
-    background: #1f2937;
-  }
-
-  .skeleton-image,
-  .skeleton-title,
-  .skeleton-text,
-  .skeleton-avatar,
-  .skeleton-info {
-    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
-    background-size: 200% 100%;
   }
 }
 
@@ -574,32 +596,3 @@ const getErrorMessage = (err: any): string => {
 }
 
 </style>
-}
-
-.error-card .error-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  color: #ef4444;
-  margin-bottom: 0.75rem;
-}
-
-.error-card .error-message {
-  font-size: 0.875rem;
-  color: #374151;
-  line-height: 1.5;
-}
-
-@media (prefers-color-scheme: dark) {
-  .error-card .error-message {
-    color: #d1d5db;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
