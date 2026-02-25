@@ -298,7 +298,7 @@ const findCommentInReplies = (replies: Comment[], commentId: string): Comment | 
 /**
  * 添加新评论到列表
  */
-const addComment = (comment: Comment) => {
+const addComment = (_comment: Comment) => {
   // TanStack Query 会自动处理缓存更新
   // 这里只需要刷新查询
   refresh();

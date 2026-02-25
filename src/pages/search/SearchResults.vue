@@ -205,8 +205,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import { searchApi, type AdvancedSearchParams } from '@/api/search';
 import type { Post, User, Tag } from '@/types';
 import PostCard from '@/components/post/PostCard.vue';
@@ -217,7 +217,6 @@ import EmptyState from '@/components/common/EmptyState.vue';
  * 路由和路由器
  */
 const route = useRoute();
-const router = useRouter();
 
 /**
  * 搜索关键词
@@ -452,14 +451,14 @@ const performSearch = async (page: number = 1, append: boolean = false) => {
  */
 const highlightKeywords = () => {
   // 在下一个 tick 执行，确保 DOM 已更新
-  setTimeout(() => {
+  nextTick(() => {
     const keywords = searchQuery.value.trim().split(/\s+/);
     const elements = document.querySelectorAll('.search-results__post-card');
-    
+
     elements.forEach((element) => {
       const titleEl = element.querySelector('h3');
       const excerptEl = element.querySelector('p');
-      
+
       if (titleEl) {
         highlightElement(titleEl, keywords);
       }
@@ -467,23 +466,41 @@ const highlightKeywords = () => {
         highlightElement(excerptEl, keywords);
       }
     });
-  }, 100);
+  });
 };
 
 /**
  * 高亮元素中的关键词
  */
 const highlightElement = (element: Element, keywords: string[]) => {
-  let html = element.innerHTML;
-  
-  keywords.forEach((keyword) => {
-    if (keyword.length < 2) return;
-    
-    const regex = new RegExp(`(${escapeRegExp(keyword)})`, 'gi');
-    html = html.replace(regex, '<mark class="search-highlight">$1</mark>');
+  const text = element.textContent || '';
+  const validKeywords = keywords.filter(k => k.length >= 2);
+  if (validKeywords.length === 0) return;
+
+  const pattern = new RegExp(
+    `(${validKeywords.map(escapeRegExp).join('|')})`, 'gi'
+  );
+  const fragment = document.createDocumentFragment();
+  let lastIndex = 0;
+
+  text.replace(pattern, (match, _p1, offset) => {
+    if (offset > lastIndex) {
+      fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+    }
+    const mark = document.createElement('mark');
+    mark.className = 'search-highlight';
+    mark.textContent = match;
+    fragment.appendChild(mark);
+    lastIndex = offset + match.length;
+    return match;
   });
-  
-  element.innerHTML = html;
+
+  if (lastIndex < text.length) {
+    fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+
+  element.textContent = '';
+  element.appendChild(fragment);
 };
 
 /**
@@ -584,17 +601,6 @@ watch(
   { immediate: true }
 );
 
-/**
- * 组件挂载
- */
-onMounted(() => {
-  const query = route.query.q;
-  if (query && typeof query === 'string') {
-    searchQuery.value = query;
-    performSearch();
-    loadAvailableTags();
-  }
-});
 </script>
 
 <style scoped>

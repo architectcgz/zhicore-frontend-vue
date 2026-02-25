@@ -7,10 +7,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { useAuthStore } from '@/stores/auth';
-import CommentList from '@/components/comment/CommentList.vue';
 import CommentForm from '@/components/comment/CommentForm.vue';
 import { commentApi } from '@/api/comment';
-import type { Comment, PaginatedResponse, User } from '@/types';
+import type { Comment, User } from '@/types';
 
 // Mock comment API
 vi.mock('@/api/comment', () => ({

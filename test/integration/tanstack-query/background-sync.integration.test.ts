@@ -260,7 +260,7 @@ describe('TanStack Query 后台同步集成测试', () => {
         },
       });
 
-      const wrapper = mount(TestComponent, {
+      mount(TestComponent, {
         global: {
           plugins: [[VueQueryPlugin, { queryClient: testQueryClient }], pinia],
         },
@@ -479,7 +479,7 @@ describe('TanStack Query 后台同步集成测试', () => {
       // 模拟离线状态
       onlineManager.setOnline(false);
 
-      const wrapper = mount(TestComponent, {
+      mount(TestComponent, {
         global: {
           plugins: [[VueQueryPlugin, { queryClient: testQueryClient }], pinia],
         },

@@ -7,8 +7,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { adminApi, type AdminUser, type PageParams } from '@/api/admin';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Refresh, Delete, Lock, Unlock } from '@element-plus/icons-vue';
-import type { TableColumnCtx } from 'element-plus';
+import { Search, Refresh, Lock, Unlock } from '@element-plus/icons-vue';
 
 // 数据状态
 const loading = ref(false);

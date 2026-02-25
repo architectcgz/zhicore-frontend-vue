@@ -5,7 +5,7 @@
 -->
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '@/stores/notification';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -22,7 +22,6 @@ const isInitialLoading = ref(true);
 
 // 计算属性
 const notifications = computed(() => notificationStore.notifications);
-const isLoading = computed(() => notificationStore.isLoading);
 const isLoadingMore = computed(() => notificationStore.isLoadingMore);
 const hasMore = computed(() => notificationStore.hasMore);
 const total = computed(() => notificationStore.total);

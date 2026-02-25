@@ -417,7 +417,7 @@ const calculateWordCount = (content: string): number => {
   
   // 移除 Markdown 标记，计算字数
   const plainText = content
-    .replace(/[#*`_~\[\]()]/g, '') // 移除 Markdown 符号
+    .replace(/[#*`_~[\]()]/g, '') // 移除 Markdown 符号
     .replace(/!\[.*?\]\(.*?\)/g, '') // 移除图片
     .replace(/\[.*?\]\(.*?\)/g, '') // 移除链接
     .replace(/```[\s\S]*?```/g, '') // 移除代码块

@@ -3,7 +3,7 @@
  * 验证焦点陷阱功能是否正常工作
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { useFocusTrap } from '@/composables/useFocusTrap';
 

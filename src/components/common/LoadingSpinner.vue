@@ -48,17 +48,6 @@ const spinnerClasses = computed(() => [
   },
 ]);
 
-// 计算尺寸值
-const sizeValue = computed(() => {
-  switch (props.size) {
-    case 'small':
-      return '16px';
-    case 'large':
-      return '48px';
-    default:
-      return '32px';
-  }
-});
 </script>
 
 <template>

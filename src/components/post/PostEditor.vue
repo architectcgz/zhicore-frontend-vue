@@ -633,9 +633,9 @@ const insertCodeBlock = () => {
   const start = textarea.selectionStart;
   const selectedText = content.value.substring(start, textarea.selectionEnd);
   
-  const codeBlock = selectedText ? 
-    `\`\`\`\n${selectedText}\n\`\`\`` : 
-    '\`\`\`javascript\n// 在这里输入代码\n\`\`\`';
+  const codeBlock = selectedText ?
+    `\`\`\`\n${selectedText}\n\`\`\`` :
+    '```javascript\n// 在这里输入代码\n```';
   
   insertText('', '', codeBlock);
 };

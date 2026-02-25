@@ -15,7 +15,7 @@ const passwordValidationSchema = yup
   .min(8, '密码至少8个字符')
   .max(128, '密码不能超过128个字符')
   .matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&=#+\-_.,;:'"<>()\[\]{}|/\\~])[A-Za-z\d@$!%*?&=#+\-_.,;:'"<>()\[\]{}|/\\~]+$/,
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&=#+\-_.,;:'"<>()[\]{}|/\\~])[A-Za-z\d@$!%*?&=#+\-_.,;:'"<>()[\]{}|/\\~]+$/,
     '密码必须包含大小写字母、数字和特殊字符'
   );
 
@@ -236,7 +236,7 @@ describe('Password Validation - Regex Syntax', () => {
 
 describe('Password Strength Checks - hasSpecial regex', () => {
   // Test the hasSpecial regex pattern used in passwordChecks
-  const hasSpecialRegex = /[@$!%*?&=#+\-_.,;:'"<>()\[\]{}|/\\~]/;
+  const hasSpecialRegex = /[@$!%*?&=#+\-_.,;:'"<>()[\]{}|/\\~]/;
 
   describe('Should recognize all extended special characters', () => {
     const specialChars = '@$!%*?&=#+\\-_.,;:\'"<>()[]{}|/\\~'.split('');

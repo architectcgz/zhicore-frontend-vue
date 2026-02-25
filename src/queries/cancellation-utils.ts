@@ -154,7 +154,6 @@ export function createCancellableQuery<TArgs extends any[], TResult>(
   queryFn: (...args: [...TArgs, AbortSignal?]) => Promise<TResult>
 ) {
   return async (...args: [...TArgs, AbortSignal?]): Promise<TResult> => {
-    const signal = args[args.length - 1] as AbortSignal | undefined;
     return queryFn(...args);
   };
 }

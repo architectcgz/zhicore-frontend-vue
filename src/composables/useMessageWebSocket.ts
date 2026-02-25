@@ -6,7 +6,6 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useQueryClient } from '@tanstack/vue-query';
 import { wsManager } from '@/utils/websocket';
-import { useMessageStore } from '@/stores/message';
 import { useAuthStore } from '@/stores/auth';
 import { queryKeys } from '@/queries/query-keys';
 import type { Message, PaginatedResponse } from '@/types';
@@ -17,7 +16,6 @@ import type { ConnectionEventData, NewMessagePayload, MessageReadPayload } from 
  */
 export function useMessageWebSocket() {
   const queryClient = useQueryClient();
-  const messageStore = useMessageStore();
   const authStore = useAuthStore();
 
   // 取消订阅函数列表

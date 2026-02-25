@@ -6,7 +6,6 @@
  * 并自动更新导入路径和配置文件。
  */
 
-import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 

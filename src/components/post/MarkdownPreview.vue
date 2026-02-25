@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { useMarkdown } from '@/composables/useMarkdown';
 
 // Props
@@ -51,9 +51,6 @@ const { renderMarkdown, highlightCodeBlocks } = useMarkdown();
 // 响应式状态
 const renderedContent = ref('');
 const isRendering = ref(false);
-
-// 计算属性
-const hasContent = computed(() => props.content.trim().length > 0);
 
 // 监听内容变化并渲染
 watch(() => props.content, async (newContent) => {

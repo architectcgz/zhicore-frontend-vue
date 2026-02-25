@@ -805,7 +805,7 @@ describe('ErrorMessageGenerator', () => {
       const originalWindow = global.window;
 
       // 删除 window 对象
-      // @ts-ignore
+      // @ts-expect-error 测试需要临时删除 window 对象
       delete global.window;
 
       const config: ErrorMessageConfig = {

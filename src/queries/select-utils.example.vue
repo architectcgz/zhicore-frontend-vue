@@ -186,10 +186,9 @@ import {
   selectPostIds,
   selectorFactory,
   composeSelectors,
-  commonSelectors,
 } from './select-utils';
 import { postApi } from '@/api/post';
-import type { Post, PaginatedResponse } from '@/types';
+import type { Post } from '@/types';
 
 // ============================================================================
 // 示例 1: 选择部分字段

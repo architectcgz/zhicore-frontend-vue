@@ -188,7 +188,7 @@ const maxSizeMB = computed(() => props.maxSize);
  * 处理点击上传
  */
 const handleClick = () => {
-  if (disabled.value || uploading.value) return;
+  if (props.disabled || uploading.value) return;
   fileInputRef.value?.click();
 };
 
@@ -210,8 +210,8 @@ const handleFileChange = async (event: Event) => {
 /**
  * 处理拖拽进入
  */
-const handleDragOver = (event: DragEvent) => {
-  if (disabled.value || uploading.value) return;
+const handleDragOver = (_event: DragEvent) => {
+  if (props.disabled || uploading.value) return;
   isDragging.value = true;
 };
 
@@ -228,7 +228,7 @@ const handleDragLeave = () => {
 const handleDrop = async (event: DragEvent) => {
   isDragging.value = false;
 
-  if (disabled.value || uploading.value) return;
+  if (props.disabled || uploading.value) return;
 
   const files = Array.from(event.dataTransfer?.files || []).filter((file) =>
     file.type.startsWith('image/')
@@ -243,7 +243,7 @@ const handleDrop = async (event: DragEvent) => {
  * 处理粘贴上传
  */
 const handlePaste = async (event: ClipboardEvent) => {
-  if (!props.enablePaste || disabled.value || uploading.value) return;
+  if (!props.enablePaste || props.disabled || uploading.value) return;
 
   const items = Array.from(event.clipboardData?.items || []);
   const imageItems = items.filter((item) => item.type.startsWith('image/'));

@@ -3,12 +3,6 @@
  * 检查 CSS 变量中定义的颜色是否符合 WCAG AA 标准
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // 颜色转换和对比度计算函数
 interface RGB {

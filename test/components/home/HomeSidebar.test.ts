@@ -8,8 +8,8 @@
  * - 性能测试: 验证渲染性能和动画流畅度
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount, VueWrapper } from '@vue/test-utils';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mount } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import HomeSidebar from '@/components/home/HomeSidebar.vue';
 import type { Tag, Post } from '@/types';

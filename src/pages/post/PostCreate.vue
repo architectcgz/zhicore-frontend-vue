@@ -205,9 +205,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { usePost, useTagSearch, useAutoSave, type PostEditorState } from '@/composables/usePost';
-import type { Category, UploadResponse } from '@/types';
+import type { Category } from '@/types';
 import PostEditor from '@/components/post/PostEditor.vue';
 import MarkdownPreview from '@/components/post/MarkdownPreview.vue';
 
@@ -425,7 +425,7 @@ const togglePreview = () => {
 const generateExcerpt = (content: string): string => {
   // 移除 Markdown 标记，提取纯文本
   const plainText = content
-    .replace(/[#*`_~\[\]()]/g, '') // 移除 Markdown 符号
+    .replace(/[#*`_~[\]()]/g, '') // 移除 Markdown 符号
     .replace(/\n+/g, ' ') // 替换换行为空格
     .trim();
   

@@ -51,7 +51,7 @@ export function useUpdateCommentMutation() {
       commentApi.updateComment(commentId, commentData),
     
     // 乐观更新：在请求发送前立即更新 UI
-    onMutate: async ({ commentId, commentData, postId }: UpdateCommentParams) => {
+    onMutate: async ({ commentId, commentData, postId: _postId }: UpdateCommentParams) => {
       // 找到包含该评论的所有查询并乐观更新
       const queries = queryClient.getQueriesData<PaginatedResponse<Comment>>({
         queryKey: queryKeys.comments.lists(),

@@ -327,6 +327,8 @@ export function setupRouterGuards(router: Router): void {
   // 全局前置守卫
   router.beforeEach(async (to, from, next) => {
     try {
+      // 注意：当前仅支持同步守卫。如需异步守卫（如远程权限校验），
+      // 需将 evaluateGuard 改为 async 并 await 调用
       const evaluateGuard = (guard: (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => void) => {
         let called = false;
         let nextArg: Parameters<NavigationGuardNext>[0] | undefined;

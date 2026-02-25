@@ -336,7 +336,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { tagApi } from '@/api';
 import type { Tag, PaginatedResponse } from '@/types';
@@ -363,7 +363,7 @@ const pagination = ref({
 });
 
 // 防抖搜索
-const debouncedSearch = useDebounce(searchKeyword, 500);
+useDebounce(searchKeyword, 500);
 
 /**
  * 获取标签列表

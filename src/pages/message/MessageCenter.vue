@@ -326,7 +326,7 @@ const { mutate: sendMessageMutation, isPending: isSending } = useSendMessageMuta
 const { mutate: markAsRead } = useMarkConversationAsReadMutation();
 
 // TanStack Query - 创建会话
-const { mutate: createConversation, isPending: isCreatingConversation } = useCreateConversationMutation();
+const { mutate: createConversation } = useCreateConversationMutation();
 
 // 响应式数据
 const searchQuery = ref('');

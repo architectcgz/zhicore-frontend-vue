@@ -13,8 +13,8 @@ import ThemeToggle from '@/components/common/ThemeToggle.vue';
 // 当前路由
 const route = useRoute();
 
-// 主题功能
-const { isDark } = useTheme();
+// 主题功能（初始化主题状态）
+useTheme();
 
 // 页面标题
 const pageTitle = computed(() => {

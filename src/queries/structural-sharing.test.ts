@@ -7,7 +7,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref, nextTick } from 'vue';
 import { mount } from '@vue/test-utils';
 import { QueryClient, VueQueryPlugin, useQuery } from '@tanstack/vue-query';
 import type { Post, PaginatedResponse } from '@/types';

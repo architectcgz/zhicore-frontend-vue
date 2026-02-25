@@ -302,7 +302,7 @@ export const routePrefetchConfig = {
   /**
    * 文章列表页预取
    */
-  PostList: async (params: any) => {
+  PostList: async (_params: any) => {
     const queryClient = useQueryClient();
     await queryClient.prefetchQuery({
       queryKey: queryKeys.posts.list({ page: 1, size: 20 }),

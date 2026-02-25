@@ -5,8 +5,6 @@
  * 将相对路径转换为使用 @ 别名的绝对路径。
  */
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
 
 // ============================================================================
 // 类型定义
@@ -54,8 +52,8 @@ export interface ImportUpdateResult {
  */
 export async function updateImports(
   testFile: string,
-  sourceDir: string,
-  targetDir: string
+  _sourceDir: string,
+  _targetDir: string
 ): Promise<ImportUpdateResult> {
   const result: ImportUpdateResult = {
     file: testFile,
@@ -90,8 +88,8 @@ export async function updateImports(
  */
 export function resolveRelativeImport(
   relativePath: string,
-  currentFile: string,
-  sourceDir: string
+  _currentFile: string,
+  _sourceDir: string
 ): string {
   // TODO: 实现相对路径解析逻辑
   // 1. 计算绝对路径
@@ -107,7 +105,7 @@ export function resolveRelativeImport(
  * @param content 文件内容
  * @returns 导入语句列表
  */
-export function parseImports(content: string): Array<{ line: number; path: string }> {
+export function parseImports(_content: string): Array<{ line: number; path: string }> {
   // TODO: 实现导入语句解析逻辑
   // 使用正则表达式匹配 import 语句
 

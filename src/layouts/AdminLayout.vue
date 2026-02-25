@@ -21,7 +21,7 @@ import {
   SwitchButton,
 } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import type { IconType, MenuItem } from '@/types/components';
+import type { MenuItem } from '@/types/components';
 import logoSvg from '@/assets/logo.svg';
 
 // 路由和认证

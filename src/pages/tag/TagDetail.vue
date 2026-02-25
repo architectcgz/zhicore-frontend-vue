@@ -395,7 +395,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { tagApi, postApi } from '@/api';
+import { tagApi } from '@/api';
 import type { Tag, Post, PaginatedResponse } from '@/types';
 import { getErrorMessage } from '@/types/errors';
 

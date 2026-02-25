@@ -950,25 +950,6 @@ onUnmounted(() => {
 
 /* ========== 性能优化 ========== */
 
-/* 任务 8.1: 优化渲染性能 - 使用 CSS 变量减少计算 */
-.app-header__hamburger,
-.app-header__icon-button,
-.app-header__user-button,
-.app-header__auth-button {
-  /* 使用 will-change 提示浏览器优化 */
-  will-change: transform, background-color;
-}
-
-/* 任务 8.1: 避免不必要的重排和重绘 - 使用 transform 而非 position */
-.app-header__dropdown-panel {
-  /* 使用 transform 优化动画性能 */
-  will-change: transform, opacity;
-}
-
-/* 任务 8.1: 优化选择器性能 - 避免深层嵌套 */
-/* 所有选择器已经使用 BEM 命名，避免了深层嵌套 */
-
-/* 任务 8.2: 优化动画性能 - 确保动画保持 60fps */
 /* 使用硬件加速 - 所有动画使用 transform 和 opacity */
 .app-header__hamburger span {
   /* 使用 GPU 加速 */
@@ -982,7 +963,6 @@ onUnmounted(() => {
   backface-visibility: hidden;
 }
 
-/* 任务 8.2: 监控性能指标 - 使用 contain 属性优化渲染 */
 .app-header__dropdown-panel {
   contain: layout style paint;
 }
@@ -1047,7 +1027,7 @@ onUnmounted(() => {
   }
   
   .app-header__dropdown-panel {
-    right: -var(--space-sm);
+    right: calc(-1 * var(--space-sm));
     left: var(--space-sm);
     min-width: auto;
   }
@@ -1071,7 +1051,6 @@ onUnmounted(() => {
 @media (max-width: 479px) {
   .app-header__container {
     height: 56px;
-    /* 任务 9.1: 进一步减小间距 */
     padding: 0 8px;
     gap: 6px;
   }
@@ -1081,29 +1060,24 @@ onUnmounted(() => {
   }
   
   .app-header__logo-text {
-    /* 任务 9.1: 调整字体大小 */
     font-size: 15px;
   }
   
   .app-header__hamburger {
-    /* 任务 9.1: 确保所有元素可见和可用 - 保持最小点击区域 */
     width: 32px;
     height: 32px;
   }
   
   .app-header__icon-button {
-    /* 任务 9.1: 进一步减小尺寸但保持可用性 */
     width: 32px;
     height: 32px;
   }
   
   .app-header__icon {
-    /* 任务 9.1: 调整图标大小 */
     font-size: 16px;
   }
   
   .app-header__badge {
-    /* 任务 9.1: 调整徽章大小 */
     min-width: 16px;
     height: 16px;
     font-size: 10px;
@@ -1111,65 +1085,54 @@ onUnmounted(() => {
   }
   
   .app-header__user-avatar {
-    /* 任务 9.1: 调整头像大小 */
     width: 24px;
     height: 24px;
   }
   
   .app-header__auth-button {
-    /* 任务 9.1: 调整按钮内边距和字体 */
     padding: 6px 12px;
     font-size: 12px;
   }
   
   .app-header__right {
-    /* 任务 9.1: 减小右侧区域间距 */
     gap: 6px;
   }
   
   .app-header__dropdown-panel {
-    /* 任务 9.1: 确保下拉面板在小屏上完全可见 */
     right: -8px;
     left: 8px;
     max-width: calc(100vw - 16px);
   }
   
   .app-header__user-menu {
-    /* 任务 9.1: 调整用户菜单宽度 */
     min-width: 200px;
   }
   
   .app-header__user-info {
-    /* 任务 9.1: 减小用户信息区域内边距 */
     padding: 12px;
     gap: 10px;
   }
   
   .app-header__user-info-avatar {
-    /* 任务 9.1: 调整用户信息头像大小 */
     width: 40px;
     height: 40px;
   }
   
   .app-header__user-details-name {
-    /* 任务 9.1: 调整用户名字体大小 */
     font-size: 14px;
   }
   
   .app-header__user-details-email {
-    /* 任务 9.1: 调整邮箱字体大小 */
     font-size: 12px;
   }
   
   .app-header__user-menu-item {
-    /* 任务 9.1: 减小菜单项内边距 */
     padding: 10px 12px;
     gap: 10px;
     font-size: 13px;
   }
   
   .app-header__user-menu-icon {
-    /* 任务 9.1: 调整菜单图标大小 */
     font-size: 16px;
     width: 16px;
   }
@@ -1177,7 +1140,6 @@ onUnmounted(() => {
 
 /* ========== 减少动画支持 ========== */
 
-/* 任务 8.3: 添加减少动画支持 - 禁用所有动画和过渡 */
 @media (prefers-reduced-motion: reduce) {
   /* 禁用所有过渡效果 */
   *,
@@ -1189,75 +1151,54 @@ onUnmounted(() => {
     scroll-behavior: auto !important;
   }
   
-  /* 任务 8.3: 保持功能正常 - 汉堡图标仍然可以切换状态 */
   .app-header__hamburger span {
     transition: none;
-  }
-  
-  /* 移除 will-change 以节省资源 */
-  .app-header__hamburger,
-  .app-header__icon-button,
-  .app-header__user-button,
-  .app-header__auth-button,
-  .app-header__dropdown-panel {
-    will-change: auto;
   }
 }
 
 /* ========== 横屏模式优化 ========== */
 
-/* 任务 9.2: 优化横屏模式 - 移动设备横屏 */
 @media (max-width: 767px) and (orientation: landscape) {
   .app-header__container {
-    /* 任务 9.2: 横屏时减小头部高度以节省垂直空间 */
     height: 48px;
     padding: 0 12px;
   }
   
   .app-header__logo-text {
-    /* 任务 9.2: 调整 Logo 字体大小 */
     font-size: 14px;
   }
   
   .app-header__hamburger {
-    /* 任务 9.2: 保持可点击性 */
     width: 32px;
     height: 32px;
   }
   
   .app-header__icon-button {
-    /* 任务 9.2: 减小图标按钮尺寸 */
     width: 28px;
     height: 28px;
   }
   
   .app-header__icon {
-    /* 任务 9.2: 调整图标大小 */
     font-size: 16px;
   }
   
   .app-header__user-avatar {
-    /* 任务 9.2: 调整头像大小 */
     width: 24px;
     height: 24px;
   }
   
   .app-header__dropdown-panel {
-    /* 任务 9.2: 确保内容不被遮挡 - 调整下拉面板最大高度 */
     max-height: calc(100vh - 60px);
     overflow-y: auto;
   }
   
   .app-header__dropdown-content {
-    /* 任务 9.2: 优化滚动体验 */
     max-height: calc(100vh - 160px);
   }
 }
 
-/* 任务 9.2: 小屏设备横屏模式 */
 @media (max-width: 479px) and (orientation: landscape) {
   .app-header__container {
-    /* 任务 9.2: 进一步减小高度 */
     height: 44px;
     padding: 0 8px;
     gap: 4px;
@@ -1272,12 +1213,10 @@ onUnmounted(() => {
   }
   
   .app-header__logo-text {
-    /* 任务 9.2: 更小的 Logo */
     font-size: 13px;
   }
   
   .app-header__icon-button {
-    /* 任务 9.2: 更小的图标按钮 */
     width: 28px;
     height: 28px;
   }
@@ -1287,7 +1226,6 @@ onUnmounted(() => {
   }
   
   .app-header__badge {
-    /* 任务 9.2: 调整徽章大小 */
     min-width: 14px;
     height: 14px;
     font-size: 9px;

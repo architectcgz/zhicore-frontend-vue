@@ -624,7 +624,7 @@ const togglePreview = () => {
 const generateExcerpt = (content: string): string => {
   // 移除 Markdown 标记，提取纯文本
   const plainText = content
-    .replace(/[#*`_~\[\]()]/g, '') // 移除 Markdown 符号
+    .replace(/[#*`_~[\]()]/g, '') // 移除 Markdown 符号
     .replace(/\n+/g, ' ') // 替换换行为空格
     .trim();
   

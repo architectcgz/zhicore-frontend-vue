@@ -407,7 +407,7 @@ const validationSchema = yup.object({
     .required('请输入密码')
     .min(8, '密码至少8个字符')
     .max(128, '密码不能超过128个字符')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&=#+\-_.,;:'"<>()\[\]{}|/\\~])[A-Za-z\d@$!%*?&=#+\-_.,;:'"<>()\[\]{}|/\\~]+$/, '密码必须包含大小写字母、数字和特殊字符'),
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&=#+\-_.,;:'"<>()[\]{}|/\\~])[A-Za-z\d@$!%*?&=#+\-_.,;:'"<>()[\]{}|/\\~]+$/, '密码必须包含大小写字母、数字和特殊字符'),
   confirmPassword: yup
     .string()
     .required('请确认密码')
@@ -455,7 +455,7 @@ const passwordChecks = computed(() => {
     hasUpperCase: /[A-Z]/.test(pwd),
     hasLowerCase: /[a-z]/.test(pwd),
     hasNumber: /\d/.test(pwd),
-    hasSpecial: /[@$!%*?&=#+\-_.,;:'"<>()\[\]{}|/\\~]/.test(pwd),
+    hasSpecial: /[@$!%*?&=#+\-_.,;:'"<>()[\]{}|/\\~]/.test(pwd),
   };
 });
 

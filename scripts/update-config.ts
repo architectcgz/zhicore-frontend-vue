@@ -5,8 +5,6 @@
  * 包括 vitest.config.ts、tsconfig.json 和 package.json。
  */
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
 
 // ============================================================================
 // 类型定义
