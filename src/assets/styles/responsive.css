@@ -1,0 +1,387 @@
+/**
+ * 响应式工具类
+ * 提供统一的响应式断点和工具类
+ */
+
+/* ========== 响应式断点媒体查询 ========== */
+
+/* 移动设备优先 (Mobile First) */
+/* 默认样式适用于移动设备 (< 768px) */
+
+/* 平板设备及以上 (>= 768px) */
+@media (min-width: 768px) {
+  .tablet\:block {
+    display: block;
+  }
+  
+  .tablet\:hidden {
+    display: none;
+  }
+  
+  .tablet\:flex {
+    display: flex;
+  }
+}
+
+/* 桌面设备及以上 (>= 1024px) */
+@media (min-width: 1024px) {
+  .desktop\:block {
+    display: block;
+  }
+  
+  .desktop\:hidden {
+    display: none;
+  }
+  
+  .desktop\:flex {
+    display: flex;
+  }
+}
+
+/* 宽屏设备及以上 (>= 1440px) */
+@media (min-width: 1440px) {
+  .wide\:block {
+    display: block;
+  }
+  
+  .wide\:hidden {
+    display: none;
+  }
+  
+  .wide\:flex {
+    display: flex;
+  }
+}
+
+/* ========== 仅在特定断点显示 ========== */
+
+/* 仅移动设备 (< 768px) */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* 仅平板设备 (768px - 1023px) */
+.tablet-only {
+  display: none !important;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet-only {
+    display: block !important;
+  }
+}
+
+/* 仅桌面设备 (>= 1024px) */
+.desktop-only {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  .desktop-only {
+    display: block !important;
+  }
+}
+
+/* ========== 容器最大宽度 ========== */
+
+.container-mobile {
+  max-width: 375px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.container-tablet {
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.container-desktop {
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.container-wide {
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ========== 响应式间距 ========== */
+
+/* 移动设备 */
+.responsive-padding {
+  padding: var(--space-sm);
+}
+
+.responsive-margin {
+  margin: var(--space-sm);
+}
+
+.responsive-gap {
+  gap: var(--space-sm);
+}
+
+/* 平板设备 */
+@media (min-width: 768px) {
+  .responsive-padding {
+    padding: var(--space-md);
+  }
+  
+  .responsive-margin {
+    margin: var(--space-md);
+  }
+  
+  .responsive-gap {
+    gap: var(--space-md);
+  }
+}
+
+/* 桌面设备 */
+@media (min-width: 1024px) {
+  .responsive-padding {
+    padding: var(--space-lg);
+  }
+  
+  .responsive-margin {
+    margin: var(--space-lg);
+  }
+  
+  .responsive-gap {
+    gap: var(--space-lg);
+  }
+}
+
+/* 宽屏设备 */
+@media (min-width: 1440px) {
+  .responsive-padding {
+    padding: var(--space-xl);
+  }
+  
+  .responsive-margin {
+    margin: var(--space-xl);
+  }
+  
+  .responsive-gap {
+    gap: var(--space-xl);
+  }
+}
+
+/* ========== 响应式字体大小 ========== */
+
+.responsive-text-sm {
+  font-size: var(--font-size-xs);
+}
+
+.responsive-text-base {
+  font-size: var(--font-size-sm);
+}
+
+.responsive-text-lg {
+  font-size: var(--font-size-base);
+}
+
+@media (min-width: 768px) {
+  .responsive-text-sm {
+    font-size: var(--font-size-sm);
+  }
+  
+  .responsive-text-base {
+    font-size: var(--font-size-base);
+  }
+  
+  .responsive-text-lg {
+    font-size: var(--font-size-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-text-sm {
+    font-size: var(--font-size-base);
+  }
+  
+  .responsive-text-base {
+    font-size: var(--font-size-lg);
+  }
+  
+  .responsive-text-lg {
+    font-size: var(--font-size-xl);
+  }
+}
+
+/* ========== 响应式网格布局 ========== */
+
+.responsive-grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+/* 移动设备：单列 */
+.responsive-grid {
+  grid-template-columns: 1fr;
+}
+
+/* 平板设备：两列 */
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 桌面设备：三列 */
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 宽屏设备：四列 */
+@media (min-width: 1440px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========== 响应式 Flexbox ========== */
+
+.responsive-flex {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .responsive-flex {
+    flex-direction: row;
+  }
+}
+
+/* ========== 响应式可见性 ========== */
+
+/* 隐藏在移动设备 */
+@media (max-width: 767px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* 隐藏在平板设备 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* 隐藏在桌面设备 */
+@media (min-width: 1024px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* ========== 响应式图片 ========== */
+
+.responsive-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ========== 响应式视频 ========== */
+
+.responsive-video {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 宽高比 */
+  height: 0;
+  overflow: hidden;
+}
+
+.responsive-video iframe,
+.responsive-video video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========== 触摸设备优化 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* 增大触摸目标 */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 移除悬停效果 */
+  *:hover {
+    /* 在触摸设备上禁用悬停效果 */
+  }
+}
+
+/* ========== 打印样式 ========== */
+
+@media print {
+  /* 隐藏导航和侧边栏 */
+  .app-header,
+  .app-sidebar,
+  .app-footer {
+    display: none !important;
+  }
+  
+  /* 优化打印布局 */
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+  
+  /* 避免分页断裂 */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  
+  img {
+    max-width: 100% !important;
+  }
+  
+  /* 显示链接 URL */
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+}
+
+/* ========== 减少动画（用户偏好） ========== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========== 高对比度模式 ========== */
+
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: #000000;
+    --color-text: #000000;
+    --color-bg: #ffffff;
+  }
+  
+  [data-theme='dark'] {
+    --color-border: #ffffff;
+    --color-text: #ffffff;
+    --color-bg: #000000;
+  }
+}

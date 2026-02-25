@@ -1,0 +1,120 @@
+/**
+ * 自托管字体（替代 Google Fonts 在线加载）
+ *
+ * 放置路径：src/assets/fonts/
+ * 文件命名约定（woff2）：
+ * - NotoSansSC-300.woff2 / 400 / 500 / 700
+ * - NotoSerifSC-400.woff2 / 500 / 600 / 700
+ * - JetBrainsMono-400.woff2 / 500 / 700
+ */
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src:
+    local('Noto Sans SC'),
+    url('../fonts/NotoSansSC-300.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Noto Sans SC'),
+    url('../fonts/NotoSansSC-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local('Noto Sans SC'),
+    url('../fonts/NotoSansSC-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local('Noto Sans SC'),
+    url('../fonts/NotoSansSC-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Noto Serif SC'),
+    url('../fonts/NotoSerifSC-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local('Noto Serif SC'),
+    url('../fonts/NotoSerifSC-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    local('Noto Serif SC'),
+    url('../fonts/NotoSerifSC-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local('Noto Serif SC'),
+    url('../fonts/NotoSerifSC-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('JetBrains Mono'),
+    url('../fonts/JetBrainsMono-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local('JetBrains Mono'),
+    url('../fonts/JetBrainsMono-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local('JetBrains Mono'),
+    url('../fonts/JetBrainsMono-700.woff2') format('woff2');
+}
+

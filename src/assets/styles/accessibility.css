@@ -1,0 +1,246 @@
+/**
+ * 可访问性样式
+ * 包含焦点指示器、跳过导航链接等
+ */
+
+/* ==================== 焦点指示器 ==================== */
+
+/* 默认焦点样式 */
+.focus-indicator:focus {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 键盘导航焦点样式（更明显） */
+.focus-visible {
+  outline: 3px solid var(--color-cta);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+  border-radius: 4px;
+}
+
+/* 移除浏览器默认焦点样式 */
+*:focus {
+  outline: none;
+}
+
+/* 为交互元素添加焦点样式 */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 按钮焦点样式 */
+button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+/* 输入框焦点样式 */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--color-cta);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* 链接焦点样式 */
+a:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* ==================== 跳过导航链接 ==================== */
+
+.skip-nav {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-cta);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s ease;
+}
+
+.skip-nav:focus {
+  top: 0;
+  outline: 3px solid white;
+  outline-offset: -3px;
+}
+
+/* ==================== 屏幕阅读器专用文本 ==================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ==================== 高对比度模式支持 ==================== */
+
+@media (prefers-contrast: high) {
+  .focus-indicator:focus,
+  .focus-visible,
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-width: 3px;
+    outline-color: currentColor;
+  }
+}
+
+/* ==================== 减少动画模式 ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .skip-nav {
+    transition: none;
+  }
+}
+
+/* ==================== 键盘导航提示 ==================== */
+
+.keyboard-nav-hint {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 9998;
+}
+
+.keyboard-nav-hint.visible {
+  opacity: 1;
+}
+
+/* ==================== 焦点陷阱容器 ==================== */
+
+.focus-trap {
+  position: relative;
+}
+
+.focus-trap::before,
+.focus-trap::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ==================== 可访问性工具栏 ==================== */
+
+.a11y-toolbar {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 9997;
+}
+
+.a11y-toolbar button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.a11y-toolbar button:hover {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-cta);
+}
+
+.a11y-toolbar button:focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 2px;
+}
+
+.a11y-toolbar button.active {
+  background-color: var(--color-cta);
+  color: white;
+  border-color: var(--color-cta);
+}
+
+/* ==================== 暗色主题适配 ==================== */
+
+[data-theme='dark'] .skip-nav {
+  background-color: var(--color-cta);
+}
+
+[data-theme='dark'] .keyboard-nav-hint {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: black;
+}
+
+[data-theme='dark'] .a11y-toolbar {
+  background-color: var(--color-bg-primary);
+  border-color: var(--color-border);
+}
+
+[data-theme='dark'] .a11y-toolbar button {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark'] .a11y-toolbar button:hover {
+  background-color: var(--color-bg-tertiary);
+}

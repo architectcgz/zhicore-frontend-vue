@@ -1,0 +1,36 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle -->
+  <circle cx="60" cy="60" r="55" fill="url(#logoGradient)"/>
+  
+  <!-- Book/Blog icon -->
+  <g transform="translate(30, 30)">
+    <!-- Left page -->
+    <path d="M 10 10 L 10 50 L 25 55 L 25 15 Z" fill="white" opacity="0.9"/>
+    <!-- Right page -->
+    <path d="M 35 15 L 35 55 L 50 50 L 50 10 Z" fill="white" opacity="0.9"/>
+    <!-- Spine -->
+    <rect x="24" y="15" width="2" height="40" fill="white" opacity="0.7"/>
+    <!-- Lines on left page -->
+    <line x1="13" y1="20" x2="22" y2="20" stroke="url(#logoGradient)" stroke-width="1"/>
+    <line x1="13" y1="25" x2="22" y2="25" stroke="url(#logoGradient)" stroke-width="1"/>
+    <line x1="13" y1="30" x2="22" y2="30" stroke="url(#logoGradient)" stroke-width="1"/>
+    <!-- Lines on right page -->
+    <line x1="38" y1="20" x2="47" y2="20" stroke="url(#logoGradient)" stroke-width="1"/>
+    <line x1="38" y1="25" x2="47" y2="25" stroke="url(#logoGradient)" stroke-width="1"/>
+    <line x1="38" y1="30" x2="47" y2="30" stroke="url(#logoGradient)" stroke-width="1"/>
+  </g>
+  
+  <!-- Pen icon overlay -->
+  <g transform="translate(70, 70) rotate(-45)">
+    <rect x="0" y="0" width="4" height="20" fill="white" rx="1"/>
+    <polygon points="0,20 4,20 2,25" fill="white"/>
+  </g>
+</svg>
