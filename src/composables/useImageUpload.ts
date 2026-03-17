@@ -4,9 +4,10 @@
  * 使用 zhicore-upload 微服务进行文件上传
  */
 
-import { ref } from 'vue';
+import { computed, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import { uploadApi } from '@/api/upload';
+import { useFileUpload } from '@/composables/useFileUpload';
 
 /**
  * 图片验证配置
@@ -45,9 +46,10 @@ const DEFAULT_VALIDATION_CONFIG: ImageValidationConfig = {
  * 图片上传 Hook
  */
 export function useImageUpload(config?: Partial<ImageValidationConfig>) {
-  const validationConfig = { ...DEFAULT_VALIDATION_CONFIG, ...config };
-  const uploading = ref(false);
-  const progress = ref(0);
+  const validationConfig = reactive({
+    ...DEFAULT_VALIDATION_CONFIG,
+    ...config,
+  });
 
   /**
    * 验证图片文件
@@ -203,40 +205,18 @@ export function useImageUpload(config?: Partial<ImageValidationConfig>) {
     shouldCompress: boolean = true
   ): Promise<ImageUploadResult> => {
     try {
-      uploading.value = true;
-      progress.value = 0;
-
-      // 验证图片
-      await validateImage(file);
-
-      // 压缩图片（可选）
-      let fileToUpload = file;
-      if (shouldCompress && file.size > 500 * 1024) {
-        // 大于 500KB 才压缩
-        fileToUpload = await compressImage(file);
-      }
-
-      // 上传图片到 zhicore-upload 服务
-      const response = await uploadApi.uploadImage(fileToUpload, (p) => {
-        progress.value = p;
+      const result = await imageUploader.upload({
+        file,
+        shouldCompress,
       });
 
       ElMessage.success('图片上传成功');
-
-      return {
-        fileId: response.fileId, // 返回 fileId 用于传递给后端
-        url: response.url,
-        filename: file.name,
-        size: response.fileSize,
-      };
+      return result;
     } catch (error) {
       const message =
         error instanceof Error ? error.message : '图片上传失败';
       ElMessage.error(message);
       throw error;
-    } finally {
-      uploading.value = false;
-      progress.value = 0;
     }
   };
 
@@ -264,12 +244,47 @@ export function useImageUpload(config?: Partial<ImageValidationConfig>) {
     return results;
   };
 
+  const imageUploader = useFileUpload({
+    upload: async (
+      input: { file: File; shouldCompress: boolean },
+      context
+    ): Promise<ImageUploadResult> => {
+      const { file, shouldCompress } = input;
+
+      await validateImage(file);
+
+      let fileToUpload = file;
+      if (shouldCompress && file.size > 500 * 1024) {
+        fileToUpload = await compressImage(file);
+      }
+
+      const response = await uploadApi.uploadImage(fileToUpload, {
+        onProgress: context.onProgress,
+        signal: context.signal,
+      });
+
+      return {
+        fileId: response.fileId,
+        url: response.url,
+        filename: file.name,
+        size: response.fileSize,
+      };
+    },
+  });
+
+  const uploading = computed(() => imageUploader.isUploading.value);
+  const progress = computed(() => imageUploader.progress.value);
+
   return {
     uploading,
     progress,
+    status: imageUploader.status,
+    error: imageUploader.error,
     validateImage,
     compressImage,
     uploadImage,
     uploadImages,
+    cancelUpload: imageUploader.cancel,
+    resetUpload: imageUploader.reset,
   };
 }

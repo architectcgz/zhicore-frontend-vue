@@ -105,7 +105,7 @@
         <el-button 
           size="small" 
           title="插入图片 (Ctrl+Shift+I)"
-          :loading="uploadingImage"
+          :loading="isImageUploading"
           @click="triggerImageUpload"
         >
           <i class="el-icon-picture" />
@@ -204,11 +204,17 @@
           字数: {{ wordCount }} | 字符: {{ charCount }}
         </span>
         <span
-          v-if="uploadingImage"
+          v-if="isImageUploading"
           class="upload-status"
         >
           <i class="el-icon-loading" />
-          上传图片中...
+          上传图片中
+          <span
+            v-if="imageUploadProgress > 0"
+            class="upload-progress-text"
+          >
+            {{ imageUploadProgress }}%
+          </span>
         </span>
       </div>
       <div class="status-right">
@@ -216,6 +222,16 @@
           行 {{ cursorLine }}, 列 {{ cursorColumn }}
         </span>
       </div>
+    </div>
+    <div
+      v-if="isImageUploading"
+      class="upload-progress-bar"
+    >
+      <el-progress
+        :percentage="imageUploadProgress"
+        :show-text="false"
+        :stroke-width="3"
+      />
     </div>
 
     <!-- 隐藏的文件上传输入 -->
@@ -329,12 +345,17 @@ import MarkdownPreview from './MarkdownPreview.vue';
 interface Props {
   content: string;
   uploadImage?: (file: File) => Promise<string | null>;
+  imageUploading?: boolean;
+  imageUploadProgress?: number;
   placeholder?: string;
   readonly?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   content: '',
+  uploadImage: undefined,
+  imageUploading: false,
+  imageUploadProgress: 0,
   placeholder: '开始写作...',
   readonly: false,
 });
@@ -370,6 +391,18 @@ const wordCount = computed(() => {
 
 const charCount = computed(() => {
   return content.value.length;
+});
+
+const isImageUploading = computed(() => {
+  return uploadingImage.value || props.imageUploading;
+});
+
+const imageUploadProgress = computed(() => {
+  if (!props.imageUploading) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(props.imageUploadProgress)));
 });
 
 const cursorLine = ref(1);
@@ -883,6 +916,15 @@ defineExpose({
   align-items: center;
   gap: var(--space-xs);
   color: var(--color-primary);
+}
+
+.upload-progress-text {
+  font-variant-numeric: tabular-nums;
+}
+
+.upload-progress-bar {
+  padding: 0 var(--space-md) var(--space-sm);
+  background-color: var(--color-bg-secondary);
 }
 
 .markdown-help {

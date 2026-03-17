@@ -36,6 +36,21 @@ export interface UploadConfig {
   accessLevel?: AccessLevel;
 }
 
+export interface UploadRequestOptions {
+  onProgress?: (progress: number) => void;
+  signal?: AbortSignal;
+}
+
+function normalizeUploadOptions(
+  options?: UploadRequestOptions | ((progress: number) => void)
+): UploadRequestOptions {
+  if (typeof options === 'function') {
+    return { onProgress: options };
+  }
+
+  return options ?? {};
+}
+
 /**
  * 文件上传 API 服务类
  */
@@ -55,10 +70,11 @@ export class UploadApi {
    */
   async uploadImage(
     file: File,
-    onProgress?: (progress: number) => void
+    options?: UploadRequestOptions | ((progress: number) => void)
   ): Promise<FileUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
+    const resolvedOptions = normalizeUploadOptions(options);
 
     try {
       const response = await axios.post<{ code: number; data: FileUploadResponse; message: string }>(
@@ -68,10 +84,11 @@ export class UploadApi {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          signal: resolvedOptions.signal,
           onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-            if (onProgress && progressEvent.total) {
+            if (resolvedOptions.onProgress && progressEvent.total) {
               const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              onProgress(progress);
+              resolvedOptions.onProgress(progress);
             }
           },
         }
@@ -102,11 +119,12 @@ export class UploadApi {
   async uploadImageWithAccess(
     file: File,
     accessLevel: AccessLevel,
-    onProgress?: (progress: number) => void
+    options?: UploadRequestOptions | ((progress: number) => void)
   ): Promise<FileUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('accessLevel', accessLevel);
+    const resolvedOptions = normalizeUploadOptions(options);
 
     try {
       const response = await axios.post<{ code: number; data: FileUploadResponse; message: string }>(
@@ -116,10 +134,11 @@ export class UploadApi {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          signal: resolvedOptions.signal,
           onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-            if (onProgress && progressEvent.total) {
+            if (resolvedOptions.onProgress && progressEvent.total) {
               const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              onProgress(progress);
+              resolvedOptions.onProgress(progress);
             }
           },
         }
@@ -150,13 +169,14 @@ export class UploadApi {
   async uploadImagesBatch(
     files: File[],
     accessLevel: AccessLevel = AccessLevel.PUBLIC,
-    onProgress?: (progress: number) => void
+    options?: UploadRequestOptions | ((progress: number) => void)
   ): Promise<FileUploadResponse[]> {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append('files', file);
     });
     formData.append('accessLevel', accessLevel);
+    const resolvedOptions = normalizeUploadOptions(options);
 
     try {
       const response = await axios.post<{ code: number; data: FileUploadResponse[]; message: string }>(
@@ -166,10 +186,11 @@ export class UploadApi {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          signal: resolvedOptions.signal,
           onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-            if (onProgress && progressEvent.total) {
+            if (resolvedOptions.onProgress && progressEvent.total) {
               const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              onProgress(progress);
+              resolvedOptions.onProgress(progress);
             }
           },
         }

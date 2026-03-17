@@ -208,6 +208,19 @@
                       </el-button>
                     </div>
                   </div>
+                  <div
+                    v-if="coverUploader.uploading.value"
+                    class="cover-upload-progress"
+                  >
+                    <div class="cover-upload-progress__label">
+                      正在上传封面图 {{ coverUploader.progress.value }}%
+                    </div>
+                    <el-progress
+                      :percentage="coverUploader.progress.value"
+                      :show-text="false"
+                      :stroke-width="6"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -218,6 +231,8 @@
             <PostEditor
               v-model:content="editorState.content"
               :upload-image="handleImageUpload"
+              :image-uploading="editorImageUploader.uploading.value"
+              :image-upload-progress="editorImageUploader.progress.value"
               @change="handleContentChange"
             />
           </div>
@@ -271,6 +286,7 @@ import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { usePost, useTagSearch, useAutoSave, type PostEditorState } from '@/composables/usePost';
+import { useImageUpload } from '@/composables/useImageUpload';
 import type { Category } from '@/types';
 import PostEditor from '@/components/post/PostEditor.vue';
 import MarkdownPreview from '@/components/post/MarkdownPreview.vue';
@@ -294,10 +310,11 @@ const {
   deletePost, 
   updateDraft,
   publishDraft, 
-  uploadImage,
   refetch
 } = postComposable;
 const tagSearch = useTagSearch();
+const coverUploader = useImageUpload();
+const editorImageUploader = useImageUpload();
 
 // 响应式状态
 const editorState = reactive<PostEditorState>({
@@ -311,7 +328,6 @@ const editorState = reactive<PostEditorState>({
 
 const showPreview = ref(true);
 const categories = ref<Category[]>([]);
-const uploadingCover = ref(false);
 const hasUnsavedChanges = ref(false);
 
 // 自动保存功能
@@ -418,16 +434,11 @@ const handleCoverUpload = async (file: File): Promise<boolean> => {
     return false;
   }
 
-  uploadingCover.value = true;
-  try {
-    const result = await uploadImage(file);
-    if (result) {
-      editorState.coverImage = result.url; // 用于显示
-      editorState.coverImageId = result.fileId; // 用于提交给后端
-      handleContentChange();
-    }
-  } finally {
-    uploadingCover.value = false;
+  const result = await coverUploader.uploadImage(file);
+  if (result) {
+    editorState.coverImage = result.url; // 用于显示
+    editorState.coverImageId = result.fileId; // 用于提交给后端
+    handleContentChange();
   }
 
   return false; // 阻止默认上传行为
@@ -463,7 +474,7 @@ const handleCoverRemove = () => {
  * 处理图片上传（编辑器内）
  */
 const handleImageUpload = async (file: File): Promise<string | null> => {
-  const result = await uploadImage(file);
+  const result = await editorImageUploader.uploadImage(file);
   return result?.url || null;
 };
 
@@ -822,6 +833,16 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 
 .cover-uploader {
   width: 100%;
+}
+
+.cover-upload-progress {
+  margin-top: var(--space-sm);
+}
+
+.cover-upload-progress__label {
+  margin-bottom: var(--space-xs);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 .upload-placeholder {
