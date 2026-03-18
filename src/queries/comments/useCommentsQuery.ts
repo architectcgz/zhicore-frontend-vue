@@ -41,10 +41,16 @@ import { CACHE_TIMES } from '../query-config';
  */
 export function useCommentsQuery(
   postId: Ref<string> | string,
-  params?: Ref<Omit<CommentQueryParams, 'postId'>>
+  params?: Ref<Omit<CommentQueryParams, 'postId'>> | Omit<CommentQueryParams, 'postId'>
 ) {
   const id = computed(() => typeof postId === 'string' ? postId : postId.value);
-  const queryParams = computed(() => params?.value || {});
+  const queryParams = computed(() => {
+    if (!params) {
+      return {};
+    }
+
+    return typeof params === 'object' && 'value' in params ? params.value : params;
+  });
   
   return useQuery({
     queryKey: computed(() => queryKeys.comments.list(id.value, queryParams.value)),

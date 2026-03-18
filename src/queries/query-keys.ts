@@ -173,7 +173,8 @@ export const queryKeys = {
     /**
      * 热门文章查询 key
      */
-    hot: () => [...queryKeys.posts.all, 'hot'] as const,
+    hot: (filters?: Pick<PostQueryParams, 'page' | 'size'>) =>
+      [...queryKeys.posts.all, 'hot', filters] as const,
 
     /**
      * 推荐文章查询 key

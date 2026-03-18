@@ -41,7 +41,136 @@ const purifyConfig = {
 
 // 语法高亮状态
 const isHighlightLoaded = ref(false);
-let highlighter: any = null;
+type ShikiThemeName = 'github-light' | 'github-dark';
+
+type MarkdownHighlighter = {
+  codeToHtml: (code: string, options: { lang: string; theme: ShikiThemeName }) => string;
+};
+
+const SHIKI_LANGUAGE_ALIASES: Record<string, string> = {
+  react: 'jsx',
+  js: 'javascript',
+  ts: 'typescript',
+  py: 'python',
+  yml: 'yaml',
+  docker: 'dockerfile',
+  sh: 'shellscript',
+  shell: 'shellscript',
+  bash: 'shellscript',
+};
+
+let highlighter: MarkdownHighlighter | null = null;
+
+const normalizeCodeLanguage = (language: string): string => {
+  const normalized = language.toLowerCase();
+  return SHIKI_LANGUAGE_ALIASES[normalized] ?? normalized;
+};
+
+const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
+  if (highlighter) {
+    return highlighter;
+  }
+
+  // Avoid `import('shiki')`, which pulls Shiki's full language/theme bundle into the build.
+  const [
+    { createHighlighterCore },
+    { createOnigurumaEngine },
+    { default: getWasmInstance },
+    { default: githubLight },
+    { default: githubDark },
+    { default: javascript },
+    { default: jsx },
+    { default: typescript },
+    { default: tsx },
+    { default: html },
+    { default: css },
+    { default: scss },
+    { default: less },
+    { default: vue },
+    { default: json },
+    { default: markdown },
+    { default: shellscript },
+    { default: python },
+    { default: java },
+    { default: go },
+    { default: rust },
+    { default: cpp },
+    { default: c },
+    { default: csharp },
+    { default: php },
+    { default: ruby },
+    { default: sql },
+    { default: yaml },
+    { default: xml },
+    { default: dockerfile },
+  ] = await Promise.all([
+    import('shiki/core'),
+    import('shiki/engine/oniguruma'),
+    import('shiki/wasm'),
+    import('@shikijs/themes/github-light'),
+    import('@shikijs/themes/github-dark'),
+    import('@shikijs/langs/javascript'),
+    import('@shikijs/langs/jsx'),
+    import('@shikijs/langs/typescript'),
+    import('@shikijs/langs/tsx'),
+    import('@shikijs/langs/html'),
+    import('@shikijs/langs/css'),
+    import('@shikijs/langs/scss'),
+    import('@shikijs/langs/less'),
+    import('@shikijs/langs/vue'),
+    import('@shikijs/langs/json'),
+    import('@shikijs/langs/markdown'),
+    import('@shikijs/langs/shellscript'),
+    import('@shikijs/langs/python'),
+    import('@shikijs/langs/java'),
+    import('@shikijs/langs/go'),
+    import('@shikijs/langs/rust'),
+    import('@shikijs/langs/cpp'),
+    import('@shikijs/langs/c'),
+    import('@shikijs/langs/csharp'),
+    import('@shikijs/langs/php'),
+    import('@shikijs/langs/ruby'),
+    import('@shikijs/langs/sql'),
+    import('@shikijs/langs/yaml'),
+    import('@shikijs/langs/xml'),
+    import('@shikijs/langs/dockerfile'),
+  ]);
+
+  highlighter = await createHighlighterCore({
+    themes: [githubLight, githubDark],
+    langs: [
+      ...javascript,
+      ...jsx,
+      ...typescript,
+      ...tsx,
+      ...html,
+      ...css,
+      ...scss,
+      ...less,
+      ...vue,
+      ...json,
+      ...markdown,
+      ...shellscript,
+      ...python,
+      ...java,
+      ...go,
+      ...rust,
+      ...cpp,
+      ...c,
+      ...csharp,
+      ...php,
+      ...ruby,
+      ...sql,
+      ...yaml,
+      ...xml,
+      ...dockerfile,
+    ],
+    engine: await createOnigurumaEngine(getWasmInstance),
+  });
+  isHighlightLoaded.value = true;
+
+  return highlighter;
+};
 
 /**
  * Markdown 处理组合式函数
@@ -83,17 +212,7 @@ export function useMarkdown() {
 
       // 懒加载 Shiki 高亮器
       if (!highlighter) {
-        const { getHighlighter } = await import('shiki');
-        highlighter = await getHighlighter({
-          themes: ['github-light', 'github-dark'],
-          langs: [
-            'javascript', 'typescript', 'html', 'css', 'scss', 'less',
-            'vue', 'react', 'json', 'markdown', 'bash', 'shell',
-            'python', 'java', 'go', 'rust', 'cpp', 'c', 'csharp',
-            'php', 'ruby', 'sql', 'yaml', 'xml', 'dockerfile',
-          ],
-        });
-        isHighlightLoaded.value = true;
+        await loadHighlighter();
       }
 
       // 使用 Intersection Observer 实现懒加载高亮
@@ -130,7 +249,7 @@ export function useMarkdown() {
 
     try {
       // 获取语言和代码内容
-      const language = getLanguageFromClassName(codeBlock.className) || 'text';
+      const language = normalizeCodeLanguage(getLanguageFromClassName(codeBlock.className) || 'text');
       const code = codeBlock.textContent || '';
 
       // 获取当前主题

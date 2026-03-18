@@ -169,9 +169,10 @@
           </div>
 
           <!-- 文章正文 -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
           <div
             class="article-body"
-            v-html="post.content"
+            v-html="sanitizedHtml"
           />
 
           <!-- 标签 -->
@@ -243,6 +244,27 @@
       </div>
     </article>
 
+    <section
+      v-if="post && !isLoading && !error"
+      ref="commentsSectionRef"
+      class="comments-section"
+    >
+      <div class="comments-section__inner">
+        <div class="comments-section__header">
+          <h2 class="comments-section__title">
+            评论
+          </h2>
+          <span class="comments-section__count">
+            {{ formatNumber(commentCount) }}
+          </span>
+        </div>
+        <CommentList
+          :post-id="post.id"
+          @comment-count-change="handleCommentCountChange"
+        />
+      </div>
+    </section>
+
     <!-- 浮动 CTA -->
     <div
       v-if="post && !isLoading"
@@ -273,9 +295,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import DOMPurify from 'dompurify';
 import { useRoute } from 'vue-router';
 import { usePostQuery } from '@/queries/posts/usePostQuery';
 import { postApi } from '@/api/post';
+import CommentList from '@/components/comment/CommentList.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { Post } from '@/types';
 
@@ -298,8 +322,27 @@ const {
   refetch,
 } = usePostQuery(postId);
 
-// 计算属性：文章数据
-const post = computed<Post | undefined>(() => postData.value);
+const postOverrides = ref<Partial<Post>>({});
+const commentsSectionRef = ref<HTMLElement | null>(null);
+const loadedCommentCount = ref<number | null>(null);
+
+const post = computed<Post | undefined>(() => {
+  if (!postData.value) {
+    return undefined;
+  }
+
+  return {
+    ...postData.value,
+    ...postOverrides.value,
+  };
+});
+
+const sanitizedHtml = computed(() => {
+  const html = post.value?.htmlContent || post.value?.content || '';
+  return DOMPurify.sanitize(html);
+});
+
+const commentCount = computed(() => loadedCommentCount.value ?? post.value?.commentCount ?? 0);
 
 // 加载状态
 const likeLoading = ref(false);
@@ -332,8 +375,8 @@ const formatDate = (dateString: string): string => {
 /**
  * 获取错误消息
  */
-const getErrorMessage = (err: any): string => {
-  if (err?.message) {
+const getErrorMessage = (err: unknown): string => {
+  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
     return err.message;
   }
   if (typeof err === 'string') {
@@ -350,12 +393,19 @@ const handleLike = async () => {
   
   likeLoading.value = true;
   try {
-    const result = post.value.isLiked 
-      ? await postApi.unlikePost(post.value.id)
-      : await postApi.likePost(post.value.id);
+    const nextIsLiked = !post.value.isLiked;
 
-    post.value.isLiked = result.isLiked;
-    post.value.likeCount = result.likeCount;
+    if (post.value.isLiked) {
+      await postApi.unlikePost(post.value.id);
+    } else {
+      await postApi.likePost(post.value.id);
+    }
+
+    postOverrides.value = {
+      ...postOverrides.value,
+      isLiked: nextIsLiked,
+      likeCount: Math.max(0, post.value.likeCount + (nextIsLiked ? 1 : -1)),
+    };
   } catch (error) {
     console.error('点赞操作失败:', error);
   } finally {
@@ -371,12 +421,19 @@ const handleFavorite = async () => {
   
   favoriteLoading.value = true;
   try {
-    const result = post.value.isFavorited 
-      ? await postApi.unfavoritePost(post.value.id)
-      : await postApi.favoritePost(post.value.id);
+    const nextIsFavorited = !post.value.isFavorited;
 
-    post.value.isFavorited = result.isFavorited;
-    post.value.favoriteCount = result.favoriteCount;
+    if (post.value.isFavorited) {
+      await postApi.unfavoritePost(post.value.id);
+    } else {
+      await postApi.favoritePost(post.value.id);
+    }
+
+    postOverrides.value = {
+      ...postOverrides.value,
+      isFavorited: nextIsFavorited,
+      favoriteCount: Math.max(0, post.value.favoriteCount + (nextIsFavorited ? 1 : -1)),
+    };
   } catch (error) {
     console.error('收藏操作失败:', error);
   } finally {
@@ -388,8 +445,18 @@ const handleFavorite = async () => {
  * 滚动到评论区
  */
 const scrollToComments = () => {
-  // TODO: 实现滚动到评论区的功能
-  console.log('滚动到评论区');
+  commentsSectionRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  });
+};
+
+const handleCommentCountChange = (count: number) => {
+  loadedCommentCount.value = count;
+  postOverrides.value = {
+    ...postOverrides.value,
+    commentCount: count,
+  };
 };
 
 /**
@@ -538,6 +605,40 @@ const handleAvatarError = (event: Event) => {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-3xl) var(--space-lg);
+}
+
+.comments-section {
+  padding: 0 var(--space-lg) var(--space-3xl);
+}
+
+.comments-section__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 0 0 24px 24px;
+  box-shadow: var(--shadow-xl);
+  padding: 0 var(--space-lg) var(--space-2xl);
+}
+
+.comments-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-xl) 0 var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.comments-section__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.comments-section__count {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
 }
 
 /* 加载和错误状态 */
@@ -800,6 +901,10 @@ const handleAvatarError = (event: Event) => {
   .post-container {
     padding: var(--space-2xl) var(--space-lg);
   }
+
+  .comments-section__inner {
+    padding: 0 var(--space-lg) var(--space-xl);
+  }
 }
 
 @media (max-width: 768px) {
@@ -814,6 +919,14 @@ const handleAvatarError = (event: Event) => {
   
   .post-container {
     padding: var(--space-xl) var(--space-md);
+  }
+
+  .comments-section {
+    padding: 0 var(--space-md) var(--space-2xl);
+  }
+
+  .comments-section__inner {
+    padding: 0 var(--space-md) var(--space-xl);
   }
   
   .action-buttons {

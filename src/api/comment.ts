@@ -4,10 +4,72 @@
  */
 
 import { httpClient } from '@/utils/request';
+import { normalizePageResponse, type BackendPageResult } from '@/api/contracts';
+import { normalizeUserSummary } from '@/api/post';
 import type { 
   Comment, 
   PaginatedResponse 
 } from '@/types';
+
+interface BackendCommentAuthor {
+  id?: number | string;
+  userId?: number | string;
+  nickName?: string;
+  nickname?: string;
+  userName?: string;
+  username?: string;
+  avatarUrl?: string;
+  avatar?: string;
+  role?: string;
+  roles?: string[];
+}
+
+interface BackendCommentVO {
+  id: number | string;
+  postId: number | string;
+  rootId?: number | string;
+  content: string;
+  author?: BackendCommentAuthor;
+  likeCount?: number;
+  replyCount?: number;
+  createdAt: string;
+  liked?: boolean;
+  hotReplies?: BackendCommentVO[];
+}
+
+function normalizeCommentAuthor(source?: BackendCommentAuthor) {
+  return normalizeUserSummary({
+    ownerId: source?.id ?? source?.userId,
+    ownerName: source?.nickName ?? source?.nickname ?? source?.userName ?? source?.username ?? '匿名用户',
+    ownerAvatar: source?.avatarUrl ?? source?.avatar,
+    role: source?.role,
+    roles: source?.roles,
+  });
+}
+
+function normalizeComment(source: BackendCommentVO): Comment {
+  const replies = (source.hotReplies ?? []).map(normalizeComment);
+
+  return {
+    id: String(source.id),
+    postId: String(source.postId),
+    userId: String(source.author?.id ?? source.author?.userId ?? ''),
+    user: normalizeCommentAuthor(source.author),
+    content: source.content,
+    parentId: source.rootId ? String(source.rootId) : undefined,
+    replies,
+    repliesCount: source.replyCount ?? replies.length,
+    hasMore: (source.replyCount ?? 0) > replies.length,
+    likeCount: source.likeCount ?? 0,
+    isLiked: source.liked ?? false,
+    createdAt: source.createdAt,
+    updatedAt: source.createdAt,
+  };
+}
+
+function toBackendCommentSort(sort?: CommentQueryParams['sort']): 'TIME' | 'HOT' {
+  return sort === 'hot' ? 'HOT' : 'TIME';
+}
 
 /**
  * 评论创建请求接口
@@ -60,7 +122,15 @@ export class CommentApi {
     postId: string, 
     params?: Omit<CommentQueryParams, 'postId'>
   ): Promise<PaginatedResponse<Comment>> {
-    return httpClient.get<PaginatedResponse<Comment>>(`/posts/${postId}/comments`, params);
+    const pageResult = await httpClient.get<BackendPageResult<BackendCommentVO>>(
+      `/comments/post/${postId}/page`,
+      {
+        page: params?.page ?? 0,
+        size: params?.size,
+        sort: toBackendCommentSort(params?.sort),
+      }
+    );
+    return normalizePageResponse(pageResult, normalizeComment);
   }
 
   /**
@@ -69,7 +139,8 @@ export class CommentApi {
    * @returns 评论详情
    */
   async getCommentById(commentId: string): Promise<Comment> {
-    return httpClient.get<Comment>(`/comments/${commentId}`);
+    const comment = await httpClient.get<BackendCommentVO>(`/comments/${commentId}`);
+    return normalizeComment(comment);
   }
 
   /**
@@ -82,7 +153,14 @@ export class CommentApi {
     commentId: string,
     params?: { page?: number; size?: number; sort?: 'latest' | 'oldest' }
   ): Promise<PaginatedResponse<Comment>> {
-    return httpClient.get<PaginatedResponse<Comment>>(`/comments/${commentId}/replies`, params);
+    const pageResult = await httpClient.get<BackendPageResult<BackendCommentVO>>(
+      `/comments/${commentId}/replies/page`,
+      {
+        page: params?.page ?? 0,
+        size: params?.size,
+      }
+    );
+    return normalizePageResponse(pageResult, normalizeComment);
   }
 
   /**
@@ -117,8 +195,8 @@ export class CommentApi {
    * @param commentId 评论 ID
    * @returns 点赞后的评论信息
    */
-  async likeComment(commentId: string): Promise<{ isLiked: boolean; likeCount: number }> {
-    return httpClient.post<{ isLiked: boolean; likeCount: number }>(`/comments/${commentId}/like`);
+  async likeComment(commentId: string): Promise<void> {
+    return httpClient.post<void>(`/comments/${commentId}/like`);
   }
 
   /**
@@ -126,8 +204,8 @@ export class CommentApi {
    * @param commentId 评论 ID
    * @returns 取消点赞后的评论信息
    */
-  async unlikeComment(commentId: string): Promise<{ isLiked: boolean; likeCount: number }> {
-    return httpClient.delete<{ isLiked: boolean; likeCount: number }>(`/comments/${commentId}/like`);
+  async unlikeComment(commentId: string): Promise<void> {
+    return httpClient.delete<void>(`/comments/${commentId}/like`);
   }
 
   /**
@@ -162,7 +240,11 @@ export class CommentApi {
     postId: string,
     params?: { page?: number; size?: number }
   ): Promise<PaginatedResponse<Comment>> {
-    return httpClient.get<PaginatedResponse<Comment>>(`/posts/${postId}/comments/hot`, params);
+    return this.getCommentsByPostId(postId, {
+      page: params?.page,
+      size: params?.size,
+      sort: 'hot',
+    });
   }
 
   /**

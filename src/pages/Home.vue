@@ -178,7 +178,7 @@ const {
   isLoading: trendingLoading,
   error: trendingError,
 } = useHotPostsQuery({
-  page: 1,
+  page: 0,
   size: 5,
 });
 
@@ -231,8 +231,8 @@ const postOverrides = ref<Record<string, Partial<Post>>>({});
 /**
  * 获取错误消息
  */
-const getErrorMessage = (err: any): string => {
-  if (err?.message) {
+const getErrorMessage = (err: unknown): string => {
+  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
     return err.message;
   }
   if (typeof err === 'string') {

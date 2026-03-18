@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false
+  },
+  "include": [
+    "src/vite-env.d.ts",
+    "src/api/comment.ts",
+    "src/api/contracts.ts",
+    "src/api/post.ts",
+    "src/api/ranking.ts",
+    "src/components/comment/CommentItem.vue",
+    "src/components/comment/CommentList.vue",
+    "src/components/home/HomeSidebar.vue",
+    "src/components/post/PostCard.vue",
+    "src/pages/Home.vue",
+    "src/pages/post/PostDetail.vue",
+    "src/queries/comments/useCommentsQuery.ts",
+    "src/queries/comments/useDeleteCommentMutation.ts",
+    "src/queries/comments/useInfiniteCommentsQuery.ts",
+    "src/queries/comments/useLikeCommentMutation.ts",
+    "src/queries/posts/useHotPostsQuery.ts",
+    "src/queries/posts/usePostQuery.ts",
+    "src/queries/posts/usePostsQuery.ts",
+    "src/queries/query-keys.ts",
+    "src/types/index.ts"
+  ]
+}

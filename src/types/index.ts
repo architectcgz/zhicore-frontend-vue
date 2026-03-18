@@ -174,6 +174,8 @@ export interface Post {
   id: string;
   title: string;
   content: string;
+  rawContent?: string;
+  htmlContent?: string;
   excerpt: string;
   coverImage?: string;
   authorId: string;

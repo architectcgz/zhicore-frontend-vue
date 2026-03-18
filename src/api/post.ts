@@ -4,11 +4,96 @@
  */
 
 import { httpClient } from '@/utils/request';
+import { normalizePageResponse, type BackendHybridPageResult } from '@/api/contracts';
 import type { 
+  User,
   Post, 
   PaginatedResponse, 
   UploadResponse 
 } from '@/types';
+
+interface BackendPostSummary {
+  id: number | string;
+  ownerId?: number | string;
+  ownerName?: string;
+  ownerAvatar?: string;
+  title: string;
+  raw?: string;
+  html?: string;
+  excerpt?: string;
+  coverImageUrl?: string;
+  status?: string;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  likeCount?: number;
+  commentCount?: number;
+  favoriteCount?: number;
+  viewCount?: number;
+  liked?: boolean;
+  favorited?: boolean;
+}
+
+export function normalizeUserSummary(source: {
+  ownerId?: number | string;
+  ownerName?: string;
+  ownerAvatar?: string;
+  role?: string;
+  roles?: string[];
+}): User {
+  const nickname = source.ownerName || '匿名用户';
+  const isAdmin = source.role === 'ADMIN' || source.roles?.includes('ADMIN');
+
+  return {
+    id: String(source.ownerId ?? ''),
+    username: nickname,
+    email: '',
+    nickname,
+    avatar: source.ownerAvatar || '',
+    bio: '',
+    role: isAdmin ? 'ADMIN' : 'USER',
+    followersCount: 0,
+    followingCount: 0,
+    postsCount: 0,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeAuthor(source: BackendPostSummary): User {
+  const nickname = source.ownerName || '匿名用户';
+
+  return normalizeUserSummary({
+    ownerId: source.ownerId,
+    ownerName: nickname,
+    ownerAvatar: source.ownerAvatar,
+  });
+}
+
+export function normalizePost(source: BackendPostSummary): Post {
+  return {
+    id: String(source.id),
+    title: source.title,
+    content: source.raw || source.excerpt || '',
+    rawContent: source.raw,
+    htmlContent: source.html,
+    excerpt: source.excerpt || '',
+    coverImage: source.coverImageUrl,
+    authorId: String(source.ownerId ?? ''),
+    author: normalizeAuthor(source),
+    tags: [],
+    status: (source.status as Post['status']) || 'PUBLISHED',
+    viewCount: source.viewCount ?? 0,
+    likeCount: source.likeCount ?? 0,
+    commentCount: source.commentCount ?? 0,
+    favoriteCount: source.favoriteCount ?? 0,
+    isLiked: source.liked ?? false,
+    isFavorited: source.favorited ?? false,
+    publishedAt: source.publishedAt,
+    createdAt: source.createdAt || source.publishedAt || '',
+    updatedAt: source.updatedAt || source.createdAt || source.publishedAt || '',
+  };
+}
 
 /**
  * 文章创建/更新请求接口
@@ -51,7 +136,8 @@ export class PostApi {
    * @returns 分页文章列表
    */
   async getPosts(params?: PostQueryParams): Promise<PaginatedResponse<Post>> {
-    return httpClient.get<PaginatedResponse<Post>>('/posts', params);
+    const pageResult = await httpClient.get<BackendHybridPageResult<BackendPostSummary>>('/posts', params);
+    return normalizePageResponse(pageResult, normalizePost);
   }
 
   /**
@@ -60,7 +146,8 @@ export class PostApi {
    * @returns 文章详情
    */
   async getPostById(postId: string): Promise<Post> {
-    return httpClient.get<Post>(`/posts/${postId}`);
+    const post = await httpClient.get<BackendPostSummary>(`/posts/${postId}`);
+    return normalizePost(post);
   }
 
   /**
@@ -95,8 +182,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 点赞后的文章信息
    */
-  async likePost(postId: string): Promise<{ isLiked: boolean; likeCount: number }> {
-    return httpClient.post<{ isLiked: boolean; likeCount: number }>(`/posts/${postId}/like`);
+  async likePost(postId: string): Promise<void> {
+    return httpClient.post<void>(`/posts/${postId}/like`);
   }
 
   /**
@@ -104,8 +191,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 取消点赞后的文章信息
    */
-  async unlikePost(postId: string): Promise<{ isLiked: boolean; likeCount: number }> {
-    return httpClient.delete<{ isLiked: boolean; likeCount: number }>(`/posts/${postId}/like`);
+  async unlikePost(postId: string): Promise<void> {
+    return httpClient.delete<void>(`/posts/${postId}/like`);
   }
 
   /**
@@ -113,8 +200,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 收藏后的文章信息
    */
-  async favoritePost(postId: string): Promise<{ isFavorited: boolean; favoriteCount: number }> {
-    return httpClient.post<{ isFavorited: boolean; favoriteCount: number }>(`/posts/${postId}/favorite`);
+  async favoritePost(postId: string): Promise<void> {
+    return httpClient.post<void>(`/posts/${postId}/favorite`);
   }
 
   /**
@@ -122,8 +209,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 取消收藏后的文章信息
    */
-  async unfavoritePost(postId: string): Promise<{ isFavorited: boolean; favoriteCount: number }> {
-    return httpClient.delete<{ isFavorited: boolean; favoriteCount: number }>(`/posts/${postId}/favorite`);
+  async unfavoritePost(postId: string): Promise<void> {
+    return httpClient.delete<void>(`/posts/${postId}/favorite`);
   }
 
   /**

@@ -141,7 +141,6 @@ const sortOptions = [
 // 查询参数
 const queryParams = computed(() => ({
   sort: currentSort.value,
-  loadReplies: false, // 不预加载回复，按需加载
 }));
 
 // 使用 TanStack Query hooks
@@ -228,6 +227,7 @@ const handleLike = (commentId: string) => {
   likeCommentMutation.mutate({
     commentId,
     isLiked: comment.isLiked,
+    postId: props.postId,
   });
 };
 
@@ -235,7 +235,10 @@ const handleLike = (commentId: string) => {
  * 处理删除评论
  */
 const handleDelete = (commentId: string) => {
-  deleteCommentMutation.mutate(commentId);
+  deleteCommentMutation.mutate({
+    commentId,
+    postId: props.postId,
+  });
 };
 
 /**
@@ -247,9 +250,8 @@ const handleLoadReplies = async (commentId: string) => {
     if (!comment) return;
 
     const response = await commentApi.getCommentReplies(commentId, {
-      page: 1,
+      page: 0,
       size: 10,
-      sort: 'latest',
     });
 
     comment.replies = response.items;

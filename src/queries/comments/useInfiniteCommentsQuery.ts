@@ -47,21 +47,27 @@ import type { PaginatedResponse, Comment } from '@/types';
  */
 export function useInfiniteCommentsQuery(
   postId: Ref<string> | string,
-  params?: Ref<Omit<CommentQueryParams, 'postId' | 'page'>>
+  params?: Ref<Omit<CommentQueryParams, 'postId' | 'page'>> | Omit<CommentQueryParams, 'postId' | 'page'>
 ) {
   const id = computed(() => typeof postId === 'string' ? postId : postId.value);
-  const queryParams = computed(() => params?.value || {});
+  const queryParams = computed(() => {
+    if (!params) {
+      return {};
+    }
+
+    return typeof params === 'object' && 'value' in params ? params.value : params;
+  });
   
   return useInfiniteQuery<PaginatedResponse<Comment>>({
     queryKey: computed(() => queryKeys.comments.list(id.value, queryParams.value)),
-    queryFn: ({ pageParam = 1 }) =>
+    queryFn: ({ pageParam = 0 }) =>
       commentApi.getCommentsByPostId(id.value, { ...queryParams.value, page: pageParam as number }),
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.page + 1 : undefined,
     getPreviousPageParam: (firstPage) =>
-      firstPage.page > 1 ? firstPage.page - 1 : undefined,
+      firstPage.page > 0 ? firstPage.page - 1 : undefined,
     enabled: computed(() => !!id.value),
     ...CACHE_TIMES.COMMENT_LIST, // 使用统一的评论列表缓存配置
-    initialPageParam: 1,
+    initialPageParam: 0,
   });
 }

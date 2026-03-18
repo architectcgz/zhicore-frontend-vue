@@ -4,6 +4,7 @@
  */
 
 import { httpClient } from '@/utils/request';
+import { normalizePost } from '@/api/post';
 import type { 
   Post,
   User,
@@ -11,6 +12,21 @@ import type {
   PaginatedResponse,
   RankingItem
 } from '@/types';
+
+interface BackendHotPostDTO {
+  id: number | string;
+  title: string;
+  excerpt?: string;
+  coverImageUrl?: string;
+  ownerId?: number | string;
+  ownerName?: string;
+  ownerAvatar?: string;
+  publishedAt?: string;
+  likeCount?: number;
+  commentCount?: number;
+  favoriteCount?: number;
+  viewCount?: number;
+}
 
 /**
  * 排行榜查询参数接口
@@ -84,6 +100,19 @@ export interface RankingStats {
  * 排行榜 API 服务类
  */
 export class RankingApi {
+  /**
+   * 获取热门文章详情列表
+   * 首页垂直切片使用后端确认的 details 端点。
+   */
+  async getHotPostDetails(params?: { page?: number; size?: number }): Promise<Post[]> {
+    const requestParams = {
+      page: params?.page ?? 0,
+      size: params?.size ?? 20,
+    };
+    const posts = await httpClient.get<BackendHotPostDTO[]>('/ranking/posts/hot/details', requestParams);
+    return posts.map(normalizePost);
+  }
+
   /**
    * 获取热门文章排行榜
    * @param params 查询参数

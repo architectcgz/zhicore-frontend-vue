@@ -10,7 +10,7 @@
 import { computed } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
 import type { Ref } from 'vue';
-import { httpClient } from '@/utils/request';
+import { rankingApi } from '@/api/ranking';
 import { queryKeys } from '../query-keys';
 import { CACHE_TIMES } from '../query-config';
 import type { PaginatedResponse, Post } from '@/types';
@@ -52,19 +52,13 @@ export function useHotPostsQuery(params?: Ref<HotPostsParams> | HotPostsParams) 
   });
 
   return useQuery<PaginatedResponse<Post>>({
-    // 使用固定的 hot key
-    queryKey: queryKeys.posts.hot(),
-    // 查询函数 - 使用新的 ranking API 端点，直接返回文章详情
+    queryKey: computed(() => queryKeys.posts.hot(queryParams.value)),
     queryFn: async () => {
-      const page = queryParams.value?.page || 0;
+      const page = queryParams.value?.page ?? 0;
       const size = queryParams.value?.size || 20;
-      
-      // 调用新的 /ranking/posts/hot/details 接口
-      const posts = await httpClient.get<Post[]>('/ranking/posts/hot/details', {
-        page,
-        size,
-      });
-      
+
+      const posts = await rankingApi.getHotPostDetails({ page, size });
+
       return {
         items: posts,
         total: posts.length,

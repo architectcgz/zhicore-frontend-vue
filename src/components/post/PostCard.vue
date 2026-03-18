@@ -430,15 +430,18 @@ const handleLike = async () => {
   likeLoading.value = true;
 
   try {
-    const result = props.post.isLiked 
-      ? await postApi.unlikePost(props.post.id)
-      : await postApi.likePost(props.post.id);
+    const nextIsLiked = !props.post.isLiked;
 
-    // 发出事件
+    if (props.post.isLiked) {
+      await postApi.unlikePost(props.post.id);
+    } else {
+      await postApi.likePost(props.post.id);
+    }
+
     emit('like-change', {
       postId: props.post.id,
-      isLiked: result.isLiked,
-      likeCount: result.likeCount,
+      isLiked: nextIsLiked,
+      likeCount: Math.max(0, props.post.likeCount + (nextIsLiked ? 1 : -1)),
     });
 
   } catch (error) {
@@ -459,15 +462,18 @@ const handleFavorite = async () => {
   favoriteLoading.value = true;
 
   try {
-    const result = props.post.isFavorited 
-      ? await postApi.unfavoritePost(props.post.id)
-      : await postApi.favoritePost(props.post.id);
+    const nextIsFavorited = !props.post.isFavorited;
 
-    // 发出事件
+    if (props.post.isFavorited) {
+      await postApi.unfavoritePost(props.post.id);
+    } else {
+      await postApi.favoritePost(props.post.id);
+    }
+
     emit('favorite-change', {
       postId: props.post.id,
-      isFavorited: result.isFavorited,
-      favoriteCount: result.favoriteCount,
+      isFavorited: nextIsFavorited,
+      favoriteCount: Math.max(0, props.post.favoriteCount + (nextIsFavorited ? 1 : -1)),
     });
 
   } catch (error) {
