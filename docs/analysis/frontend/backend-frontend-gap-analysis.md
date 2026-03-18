@@ -170,18 +170,15 @@ Key gaps:
 
 Implemented:
 
-- ranking page shell
+- ranking page narrowed to backend-confirmed hot-post-only view
 - hot-post sidebar on home
+- contract-aligned `src/api/ranking.ts` now keeps only `GET /ranking/posts/hot/details`
 
 Key gaps:
 
-- Backend confirms hot creator/topic reads only, but frontend exposes daily/weekly/monthly creators and topics.
-- Frontend ranking client assumes yearly posts, rising creators, trending topics, stats, and item-rank detail APIs not present in the inventory.
-- The safest currently supported ranking set is:
-  - hot posts
-  - daily/weekly/monthly posts
-  - hot creators
-  - hot topics
+- Daily/weekly/monthly post lists and creator/topic hot lists still need explicit hydration or page-ready DTO handling before they can return to the active public page.
+- Legacy ranking APIs and hooks remain available for untouched surfaces, but they are intentionally separated from the contract-aligned page and client.
+- Unsupported creator/topic time tabs, yearly posts, rising/trending lists, stats, and item-rank detail flows are no longer exposed by the active ranking page.
 
 ### Upload
 

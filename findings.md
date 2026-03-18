@@ -93,3 +93,11 @@
   - authenticated users read and clear history through the confirmed backend `/search/history` contract
   - anonymous users keep localStorage fallback because the backend history endpoints are auth-required
   - single-item delete stays hidden in authenticated mode because the confirmed backend contract only exposes list + clear-all
+- Backend-confirmed ranking surface relevant to the next public-content slice:
+  - `GET /api/v1/ranking/posts/hot/details?page=&size=` returns `HotPostDTO[]` and is the safest directly renderable ranking read
+  - `GET /api/v1/ranking/posts/daily|weekly|monthly` returns ranked post IDs rather than page-ready post cards
+  - `GET /api/v1/ranking/creators/hot` and `GET /api/v1/ranking/topics/hot` are confirmed, but still require separate hydration before they can drive the public page safely
+- The ranking public page is now intentionally narrowed to `hot-post-only`:
+  - contract-aligned reads stay in `src/api/ranking.ts`
+  - remaining ranking methods moved behind `src/api/ranking-legacy.ts`
+  - unsupported creator/topic tabs and period controls were removed from the active page instead of being guessed against ID-only responses

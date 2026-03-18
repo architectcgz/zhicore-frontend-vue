@@ -5,7 +5,8 @@
 
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
-import { rankingApi, type RankingQueryParams } from '@/api/ranking';
+import type { RankingQueryParams } from '@/api/ranking';
+import { legacyRankingApi } from '@/api/ranking-legacy';
 import { queryKeys } from '../query-keys';
 
 /**
@@ -22,7 +23,7 @@ import { queryKeys } from '../query-keys';
 export function useHotCreatorsQuery(params?: Ref<RankingQueryParams>) {
   return useQuery({
     queryKey: computed(() => queryKeys.ranking.creators.hot(params?.value)),
-    queryFn: () => rankingApi.getHotCreators(params?.value),
+    queryFn: () => legacyRankingApi.getHotCreators(params?.value),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }

@@ -5,7 +5,8 @@
 
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
-import { rankingApi, type RankingQueryParams } from '@/api/ranking';
+import type { RankingQueryParams } from '@/api/ranking';
+import { legacyRankingApi } from '@/api/ranking-legacy';
 import { queryKeys } from '../query-keys';
 
 /**
@@ -22,7 +23,7 @@ import { queryKeys } from '../query-keys';
 export function useMonthlyPostsQuery(params?: Ref<Omit<RankingQueryParams, 'period'>>) {
   return useQuery({
     queryKey: computed(() => queryKeys.ranking.posts.monthly(params?.value)),
-    queryFn: () => rankingApi.getMonthlyPosts(params?.value),
+    queryFn: () => legacyRankingApi.getMonthlyPosts(params?.value),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

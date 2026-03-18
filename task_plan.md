@@ -6,7 +6,7 @@ Continue ZhiCore frontend development with a contract-first pipeline. This round
 ## Status
 - Current phase: in_progress
 - Active workflow: `planning-with-files` + `leader`
-- Current slice: post-search next public-content slice selection
+- Current slice: public ranking hot-post-only alignment
 
 ## Phases
 - [x] Restore planning context from existing repo documents
@@ -31,12 +31,12 @@ Continue ZhiCore frontend development with a contract-first pipeline. This round
 - [x] Review the search slice changes
 - [x] Validate the search slice with targeted checks
 - [x] Sync documentation and update planning files for the search slice
-- [ ] Commit the completed search slice
-- [ ] Analyze the next public-content slice after search
-- [ ] Implement the next public-content slice with minimal diff
-- [ ] Review the next slice changes
-- [ ] Validate the next slice with targeted checks
-- [ ] Sync documentation and update planning files for the next slice
+- [x] Commit the completed search slice
+- [x] Analyze the next public-content slice after search
+- [x] Implement public ranking hot-post-only alignment with minimal diff
+- [ ] Review the ranking slice changes
+- [x] Validate the ranking slice with targeted checks
+- [x] Sync documentation and update planning files for the ranking slice
 
 ## Constraints
 - Keep changes limited to the first public-content vertical slice.

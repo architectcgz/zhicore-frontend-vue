@@ -89,3 +89,18 @@
 - Validation:
   - `npm run build:check:public-content` -> passed
   - `npm run build` -> passed
+- Committed the completed search read slice in the shared worktree:
+  - `cb7df24 feat(public-content): 对齐搜索读取契约`
+- Selected the next public-content slice after search:
+  - narrowed the target to `ranking hot-post-only`
+  - rationale: comments read path is already close to the confirmed backend surface, while ranking still exposes a large amount of unsupported or ID-only UI that should be hidden behind a smaller contract-aligned slice
+- Completed the public ranking hot-post-only alignment slice in the shared worktree:
+  - rewrote `src/pages/ranking/RankingList.vue` into a hot-post-only route view backed by `useHotPostsQuery`
+  - reduced `src/api/ranking.ts` to the directly renderable `hot/details` contract
+  - moved the remaining ranking methods into `src/api/ranking-legacy.ts`
+  - switched legacy ranking hooks to `legacyRankingApi` so active and speculative surfaces stop sharing the same client
+  - expanded `tsconfig.public-content-slice.json` to cover the ranking page, ranking hooks, and legacy client
+- Ranking-slice validation:
+  - `git diff --check` -> passed
+  - `npm run build:check:public-content` -> passed under Node `v22.22.1`
+  - `npm run build` -> passed under Node `v22.22.1`
