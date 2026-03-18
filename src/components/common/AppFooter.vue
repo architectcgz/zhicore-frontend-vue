@@ -189,7 +189,7 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
             </a>
           </p>
         </div>
-        
+
         <div class="app-footer__meta">
           <div class="app-footer__stats">
             <span class="app-footer__stat">
@@ -205,10 +205,10 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
               <span class="app-footer__stat-text">1,000+ 标签</span>
             </span>
           </div>
-          
+
           <div class="app-footer__tech">
             <span class="app-footer__tech-text">
-              Powered by 
+              Powered by
               <a 
                 href="https://vuejs.org" 
                 target="_blank"
@@ -484,7 +484,7 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
   .app-footer__meta {
     align-items: center;
   }
-  
+
   .app-footer__stats {
     flex-wrap: wrap;
     justify-content: center;
@@ -536,12 +536,12 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
   .app-footer__bottom {
     gap: var(--space-sm);
   }
-  
+
   .app-footer__stats {
     flex-direction: column;
     gap: var(--space-sm);
   }
-  
+
   .app-footer__stat {
     justify-content: center;
   }
