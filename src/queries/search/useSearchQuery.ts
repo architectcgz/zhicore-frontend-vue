@@ -5,7 +5,8 @@
 
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
-import { searchApi, type SearchRequest } from '@/api/search';
+import { legacySearchApi } from '@/api/search-legacy';
+import type { SearchRequest } from '@/types';
 import { queryKeys } from '../query-keys';
 
 /**
@@ -29,7 +30,7 @@ export function useSearchQuery(
   
   return useQuery({
     queryKey: computed(() => queryKeys.search.global(searchQuery.value, params?.value)),
-    queryFn: () => searchApi.search({ query: searchQuery.value, ...params?.value }),
+    queryFn: () => legacySearchApi.search({ query: searchQuery.value, ...params?.value }),
     enabled: computed(() => searchQuery.value.length >= 2), // 只在查询长度 >= 2 时搜索
     staleTime: 2 * 60 * 1000, // 2 minutes
   });

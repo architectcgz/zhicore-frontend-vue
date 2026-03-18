@@ -70,3 +70,22 @@
   - synchronized minimal planning/docs updates for this slice in both the main repo and the shared worktree
   - removed fabricated `postCount = 0` behavior for tag detail/list/search and hid counts when the backend DTO does not provide them
   - split unconfirmed tag endpoints out of `src/api/tag.ts` into `src/api/tag-legacy.ts`
+- Committed the completed tag read slice in the shared worktree:
+  - `27416ad feat(public-content): 对齐标签读取契约`
+- Started the next slice selection for continued development:
+  - compared `search` / `ranking` / `comments` as the next public-content contract-alignment candidate
+  - selected `search post-only` as the next minimal slice because backend contracts are explicit and the active page currently mixes multiple unconfirmed search capabilities
+- Completed the public search post-only alignment slice in the shared worktree:
+  - aligned `src/api/search.ts` to backend-confirmed post search + suggest/hot/history read contracts
+  - split unconfirmed search abilities into `src/api/search-legacy.ts`
+  - constrained `SearchResults.vue` to the post-only search results page
+  - updated `SearchBar.vue` suggestions/hot UX to consume backend-confirmed `string[]` results
+  - aligned SearchBar history behavior with backend contracts by using remote list/clear for authenticated users and local fallback for anonymous users
+  - removed authenticated single-item history deletion because the confirmed backend surface does not provide that endpoint
+- Search-slice closeout:
+  - manually cross-checked the result-card navigation target against the existing `PostDetail` route
+  - updated the frontend gap analysis and query cache example docs to match the active search contracts
+  - `git diff --check` -> passed
+- Validation:
+  - `npm run build:check:public-content` -> passed
+  - `npm run build` -> passed

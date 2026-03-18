@@ -20,7 +20,7 @@ import { queryKeys } from '../query-keys';
  */
 export function useHotSearchesQuery(limit?: number) {
   return useQuery({
-    queryKey: queryKeys.search.hot(),
+    queryKey: queryKeys.search.hot(limit),
     queryFn: () => searchApi.getHotSearches(limit),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

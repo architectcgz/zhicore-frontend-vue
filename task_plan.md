@@ -4,9 +4,9 @@
 Continue ZhiCore frontend development with a contract-first pipeline. This round targets the first public-content vertical slice so the home page, post detail page, and comment read path move closer to the backend inventory without broad refactors.
 
 ## Status
-- Current phase: completed
+- Current phase: in_progress
 - Active workflow: `planning-with-files` + `leader`
-- Current slice: public content tag read flow follow-up
+- Current slice: post-search next public-content slice selection
 
 ## Phases
 - [x] Restore planning context from existing repo documents
@@ -19,11 +19,24 @@ Continue ZhiCore frontend development with a contract-first pipeline. This round
 - [x] Validate with targeted checks
 - [x] Sync documentation and update planning files
 
-## Current Slice Scope
-- Home hot tags sidebar
-- Tag list read flow
-- Tag detail read flow
-- Backend-confirmed tag search and slug-post reads used by the above screens
+## Recently Completed Slice
+- Search results page post-only read flow
+- Search bar suggestions and hot keywords
+- Backend-confirmed `/search/posts` and `/search/suggest` / `/search/hot` reads used by the above screens
+
+## Post-Search Continuation
+- [x] Commit the completed tag read slice
+- [x] Analyze search / ranking / comments candidates for the next slice
+- [x] Implement public search post-only alignment with minimal diff
+- [x] Review the search slice changes
+- [x] Validate the search slice with targeted checks
+- [x] Sync documentation and update planning files for the search slice
+- [ ] Commit the completed search slice
+- [ ] Analyze the next public-content slice after search
+- [ ] Implement the next public-content slice with minimal diff
+- [ ] Review the next slice changes
+- [ ] Validate the next slice with targeted checks
+- [ ] Sync documentation and update planning files for the next slice
 
 ## Constraints
 - Keep changes limited to the first public-content vertical slice.

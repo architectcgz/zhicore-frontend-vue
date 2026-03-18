@@ -47,24 +47,11 @@
             :key="`suggestion-${index}`"
             class="search-bar__item"
             :class="{ 'search-bar__item--active': activeIndex === index }"
-            @click="handleSelectSuggestion(suggestion.text)"
+            @click="handleSelectSuggestion(suggestion)"
             @mouseenter="activeIndex = index"
           >
-            <i
-              class="search-bar__item-icon"
-              :class="{
-                'el-icon-document': suggestion.type === 'KEYWORD',
-                'el-icon-price-tag': suggestion.type === 'TAG',
-                'el-icon-user': suggestion.type === 'USER',
-              }"
-            />
-            <span class="search-bar__item-text">{{ suggestion.text }}</span>
-            <span
-              v-if="suggestion.count"
-              class="search-bar__item-count"
-            >
-              {{ formatCount(suggestion.count) }}
-            </span>
+            <i class="search-bar__item-icon el-icon-search" />
+            <span class="search-bar__item-text">{{ suggestion }}</span>
           </div>
         </div>
 
@@ -96,6 +83,7 @@
             <i class="search-bar__item-icon el-icon-time" />
             <span class="search-bar__item-text">{{ history }}</span>
             <button
+              v-if="!useRemoteHistory"
               class="search-bar__item-remove"
               @click.stop="handleRemoveHistory(history)"
             >
@@ -114,29 +102,21 @@
           </div>
           <div
             v-for="(hotSearch, index) in hotSearches"
-            :key="`hot-${hotSearch.query}`"
+            :key="`hot-${hotSearch}`"
             class="search-bar__item"
             :class="{ 'search-bar__item--active': activeIndex === suggestions.length + searchHistory.length + index }"
-            @click="handleSelectSuggestion(hotSearch.query)"
+            @click="handleSelectSuggestion(hotSearch)"
             @mouseenter="activeIndex = suggestions.length + searchHistory.length + index"
           >
             <span
               class="search-bar__item-rank"
               :class="{
-                'search-bar__item-rank--top': hotSearch.rank <= 3,
+                'search-bar__item-rank--top': index < 3,
               }"
             >
-              {{ hotSearch.rank }}
+              {{ index + 1 }}
             </span>
-            <span class="search-bar__item-text">{{ hotSearch.query }}</span>
-            <i
-              v-if="hotSearch.trend === 'up'"
-              class="search-bar__item-trend el-icon-top"
-            />
-            <i
-              v-else-if="hotSearch.trend === 'down'"
-              class="search-bar__item-trend el-icon-bottom"
-            />
+            <span class="search-bar__item-text">{{ hotSearch }}</span>
           </div>
         </div>
       </div>
@@ -145,11 +125,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { searchApi, type HotSearch } from '@/api/search';
-import type { SearchSuggestion } from '@/types';
+import { searchApi } from '@/api/search';
 import { useDebounceFn } from '@/composables/useDebounce';
+import { useAuthStore } from '@/stores/auth';
 
 /**
  * Props 定义
@@ -161,7 +141,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: '搜索文章、用户...',
+  placeholder: '搜索文章...',
   maxHistory: 10,
   maxSuggestions: 8,
 });
@@ -175,6 +155,7 @@ const emit = defineEmits<{
 
 // Router
 const router = useRouter();
+const authStore = useAuthStore();
 
 // 搜索输入框引用
 const searchInputRef = ref<HTMLInputElement | null>(null);
@@ -192,16 +173,14 @@ const showDropdown = ref(false);
 const activeIndex = ref(-1);
 
 // 搜索建议
-const suggestions = ref<SearchSuggestion[]>([]);
+const suggestions = ref<string[]>([]);
 
 // 搜索历史
 const searchHistory = ref<string[]>([]);
 
 // 热门搜索
-const hotSearches = ref<HotSearch[]>([]);
-
-// 加载状态
-const loading = ref(false);
+const hotSearches = ref<string[]>([]);
+const useRemoteHistory = computed(() => authStore.isAuthenticated);
 
 /**
  * 本地存储键名
@@ -209,43 +188,50 @@ const loading = ref(false);
 const STORAGE_KEY = 'blog_search_history';
 
 /**
- * 格式化数量
- */
-const formatCount = (count: number): string => {
-  if (count >= 10000) {
-    return `${(count / 10000).toFixed(1)}w`;
-  }
-  if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}k`;
-  }
-  return count.toString();
-};
-
-/**
  * 加载搜索历史
  */
-const loadSearchHistory = () => {
+const loadLocalSearchHistory = () => {
   try {
     const history = localStorage.getItem(STORAGE_KEY);
     if (history) {
       searchHistory.value = JSON.parse(history);
+      return;
     }
+
+    searchHistory.value = [];
   } catch (error) {
     console.error('Failed to load search history:', error);
+    searchHistory.value = [];
   }
+};
+
+const loadSearchHistory = async () => {
+  if (useRemoteHistory.value) {
+    try {
+      const history = await searchApi.getSearchHistory(props.maxHistory);
+      searchHistory.value = history.slice(0, props.maxHistory);
+    } catch (error) {
+      console.error('Failed to load remote search history:', error);
+      searchHistory.value = [];
+    }
+    return;
+  }
+
+  loadLocalSearchHistory();
 };
 
 /**
  * 保存搜索历史
  */
 const saveSearchHistory = (query: string) => {
+  const filtered = searchHistory.value.filter((item) => item !== query);
+  searchHistory.value = [query, ...filtered].slice(0, props.maxHistory);
+
+  if (useRemoteHistory.value) {
+    return;
+  }
+
   try {
-    // 移除重复项
-    const filtered = searchHistory.value.filter((item) => item !== query);
-    // 添加到开头
-    filtered.unshift(query);
-    // 限制数量
-    searchHistory.value = filtered.slice(0, props.maxHistory);
     // 保存到本地存储
     localStorage.setItem(STORAGE_KEY, JSON.stringify(searchHistory.value));
   } catch (error) {
@@ -257,6 +243,10 @@ const saveSearchHistory = (query: string) => {
  * 移除搜索历史项
  */
 const handleRemoveHistory = (query: string) => {
+  if (useRemoteHistory.value) {
+    return;
+  }
+
   searchHistory.value = searchHistory.value.filter((item) => item !== query);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(searchHistory.value));
@@ -268,8 +258,19 @@ const handleRemoveHistory = (query: string) => {
 /**
  * 清空搜索历史
  */
-const handleClearHistory = () => {
+const handleClearHistory = async () => {
   searchHistory.value = [];
+
+  if (useRemoteHistory.value) {
+    try {
+      await searchApi.clearSearchHistory();
+    } catch (error) {
+      console.error('Failed to clear remote search history:', error);
+      await loadSearchHistory();
+    }
+    return;
+  }
+
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
@@ -297,15 +298,12 @@ const fetchSuggestions = async (query: string) => {
     return;
   }
 
-  loading.value = true;
   try {
-    const result = await searchApi.getSuggestions(query);
+    const result = await searchApi.getSuggestions(query, props.maxSuggestions);
     suggestions.value = result.slice(0, props.maxSuggestions);
   } catch (error) {
     console.error('Failed to fetch suggestions:', error);
     suggestions.value = [];
-  } finally {
-    loading.value = false;
   }
 };
 
@@ -329,16 +327,24 @@ watch(searchQuery, (newQuery) => {
   activeIndex.value = -1;
 });
 
+watch(useRemoteHistory, () => {
+  void loadSearchHistory();
+});
+
 /**
  * 处理焦点
  */
 const handleFocus = () => {
   isFocused.value = true;
   showDropdown.value = true;
-  
+
   // 如果没有搜索关键词，加载热门搜索
   if (!searchQuery.value.trim() && hotSearches.value.length === 0) {
     loadHotSearches();
+  }
+
+  if (!searchQuery.value.trim()) {
+    void loadSearchHistory();
   }
 };
 
@@ -440,7 +446,7 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
  */
 onMounted(() => {
   // 加载搜索历史
-  loadSearchHistory();
+  void loadSearchHistory();
   
   // 注册全局快捷键
   window.addEventListener('keydown', handleGlobalKeydown);

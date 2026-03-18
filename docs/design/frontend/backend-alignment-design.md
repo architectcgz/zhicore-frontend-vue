@@ -66,6 +66,10 @@ Target behavior:
 - `admin.ts`
   - users/posts/comments/reports aligned to gateway-visible `/admin` endpoints
 
+Boundary rule:
+
+- When a frontend surface still depends on endpoints not confirmed in the backend inventory, keep them in `src/api/*-legacy.ts` modules and do not import them from contract-aligned pages/hooks. This makes the public-content slice boundary explicit and prevents speculative APIs from leaking back into `src/api/*`.
+
 ## 3. DTO Adapter Layer
 
 Introduce explicit normalization between backend DTOs and UI-facing view models.

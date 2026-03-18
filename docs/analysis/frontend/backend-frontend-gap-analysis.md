@@ -44,7 +44,7 @@ Typecheck confirms the drift is material rather than theoretical:
 | Comments | Partial | comment components and comment query/mutation layer exist | frontend uses `/posts/{postId}/comments` style paths while backend exposes `/comments/post/{postId}/page|cursor`; current mutations/types do not line up cleanly; typecheck shows like/delete signature drift | comment cursor pagination, reply cursor flow, liked batch-state alignment, image/voice comment media upload integration, hot-reply specific handling |
 | Messaging | Partial | message center page, message query hooks, websocket composable, conversation creation entry from profile | frontend paths use `/messages/conversations`, `/messages/history`, `/messages/send`; backend uses `/conversations`, `/messages/conversation/{conversationId}`, `/messages`; message UI expects sender display object fields not present in current type model | unread conversation count surface, recall UI, conversation-by-user alignment, finalized real-time transport contract |
 | Notifications | Partial | notification center page, dropdown, unread-count query, websocket scaffolding | backend only confirms list, unread count, mark read, mark all read; frontend assumes delete, clear all, unread list, stats, settings, recent list, subscribe/unsubscribe; pages still use store methods that no longer exist | contract-aligned notification center built on query hooks only, verified realtime `/ws/notification` integration |
-| Search | Partial | search results page, hot search hooks, suggestion hooks | backend inventory confirms post search, suggest, hot, history; frontend additionally assumes global search, user search, tag search, advanced search, report, filter metadata; search page exposes a user tab without confirmed backend support | history list/clear UX aligned to backend, confirmed suggestion auth behavior, search-result adapter for `SearchResultVO<PostSearchVO>` |
+| Search | Partial | post-only search results page, hot search hooks, suggestion hooks | backend inventory confirms post search, suggest, hot, history; frontend now constrains the active route/page to post-only and consumes confirmed `List<String>` suggestion/hot responses; server-backed history is not wired yet (SearchBar keeps localStorage history) | history list/clear UX aligned to backend (auth required), user/tag/global/advanced search remain unconfirmed and should stay isolated |
 | Ranking | Partial | ranking page shell, home hot-post sidebar, ranking query layer | backend confirms hot/daily/weekly/monthly post reads and hot creator/topic reads; frontend additionally assumes yearly posts, daily/weekly/monthly creators and topics, rising creators, trending topics, stats, user rank, post rank, topic rank | creator/topic views constrained to confirmed endpoints, score/rank detail surfaces if needed, admin ranking rebuild UI |
 | Upload | Partial | dedicated upload client, avatar upload flow, editor/cover image upload scaffolding | upload client bypasses shared request stack; frontend uses upload patterns tied to post endpoints not in inventory; comment media uploads are not wired to backend comment-media endpoints; auth/ownership of upload requests is not normalized | audio upload UX, file URL resolution flow, delete/upload lifecycle for post/comment media |
 | Admin / Moderation | Partial | admin routes for dashboard/users/posts/comments, aligned admin user page, admin posts/comments list/delete scaffolding | dashboard depends on unconfirmed stats/trends/activity endpoints; delete flows ignore backend delete-reason bodies; reports API exists in client/hooks but no route/page; report action enum does not match inventory yet | report queue page, report handling workflow, delete reason capture, ranking rebuild admin action if needed |
@@ -155,14 +155,16 @@ Key gaps:
 
 Implemented:
 
-- search results route/page
-- hot-search and suggestion hooks
+- search results route/page narrowed to post-only search
+- contract-aligned `src/api/search.ts` for confirmed `/search/posts`, `/search/suggest`, `/search/hot`, `/search/history`
+- search result normalization from `SearchResultVO<PostSearchVO>` to route-friendly post cards
+- search bar suggestions and hot keywords aligned to backend `string[]` responses
 
 Key gaps:
 
-- Backend only confirms post search plus suggestions/hot/history.
-- Frontend search page and API layer assume user search, tag search, global search, advanced search, filters, and reporting.
-- The backend response shape is `SearchResultVO<PostSearchVO>`; the page assumes generalized `PaginatedResponse<Post>` style objects.
+- Backend inventory confirms post search plus suggestions/hot/history; the active UI now limits itself to the confirmed post-only search read flow.
+- Unconfirmed global/user/tag/advanced/report/filter capabilities are intentionally isolated (see `src/api/search-legacy.ts`) and should not be used by the public-content slice until contracts are verified.
+- Backend history list/clear is now wired for authenticated users; anonymous users still use localStorage fallback because the confirmed backend history contract is auth-required.
 
 ### Ranking
 

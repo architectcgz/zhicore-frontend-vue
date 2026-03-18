@@ -484,14 +484,14 @@ export const queryKeys = {
     /**
      * 搜索建议查询 key
      * @param query - 搜索关键词
-     * @param type - 搜索类型（可选）
+     * @param limit - 建议条数上限（可选）
      */
-    suggestions: (query: string, type?: string) => [...queryKeys.search.all, 'suggestions', query, type] as const,
+    suggestions: (query: string, limit?: number) => [...queryKeys.search.all, 'suggestions', query, limit] as const,
 
     /**
      * 热门搜索查询 key
      */
-    hot: () => [...queryKeys.search.all, 'hot'] as const,
+    hot: (limit?: number) => [...queryKeys.search.all, 'hot', limit] as const,
 
     /**
      * 搜索历史查询 key

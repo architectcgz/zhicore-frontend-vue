@@ -80,3 +80,16 @@
   - `npm run build:check:public-content` passes in the worktree
   - `npm run build` passes in the worktree
 - The contract-aligned `src/api/tag.ts` now keeps the confirmed public-content read surface only; unconfirmed follow/suggestions/related and ID-based helpers were moved to `src/api/tag-legacy.ts` to keep the active slice boundary explicit.
+- Backend-confirmed search query surface from local backend source:
+  - `GET /api/v1/search/posts?keyword=&page=0&size=10` -> `ApiResponse<SearchResultVO<PostSearchVO>>`
+  - `GET /api/v1/search/suggest?prefix=&limit=10` -> `ApiResponse<List<String>>`
+  - `GET /api/v1/search/hot?limit=10` -> `ApiResponse<List<String>>`
+  - `GET /api/v1/search/history?limit=10` -> `ApiResponse<List<String>>` (auth required)
+  - `DELETE /api/v1/search/history` -> `ApiResponse<Void>` (auth required)
+- The public-content slice now constrains the active search UI to backend-confirmed post-only reads:
+  - contract-aligned reads live in `src/api/search.ts`
+  - unconfirmed search capabilities were moved to `src/api/search-legacy.ts` to prevent speculative contracts from leaking back into aligned pages/hooks
+- Search history alignment rule for the public search bar:
+  - authenticated users read and clear history through the confirmed backend `/search/history` contract
+  - anonymous users keep localStorage fallback because the backend history endpoints are auth-required
+  - single-item delete stays hidden in authenticated mode because the confirmed backend contract only exposes list + clear-all

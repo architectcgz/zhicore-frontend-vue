@@ -176,12 +176,12 @@ export function useDraftQuery(draftId: Ref<string>) {
 export function useSearchSuggestionsQuery(query: Ref<string>) {
   return useQuery({
     queryKey: computed(() => ['searchSuggestions', query.value]),
-    queryFn: () => searchApi.getSuggestions(query.value),
+    queryFn: () => searchApi.getSuggestions(query.value, 10),
     enabled: computed(() => query.value.length >= 2), // 至少 2 个字符
     staleTime: 5 * 60 * 1000, // 5 分钟（建议不需要太实时）
     gcTime: 10 * 60 * 1000, // 10 分钟
     // 使用 select 只提取需要的数据
-    select: (data) => data.suggestions.slice(0, 10), // 只取前 10 条
+    select: (data) => data.slice(0, 10), // 只取前 10 条
   });
 }
 ```
