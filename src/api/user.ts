@@ -4,12 +4,43 @@
  */
 
 import { httpClient } from '@/utils/request';
-import type { 
-  User, 
+import type {
+  User,
   Post,
-  PaginatedResponse, 
-  UploadResponse 
+  PaginatedResponse,
+  UploadResponse
 } from '@/types';
+
+interface BackendUserVO {
+  id: number | string;
+  userName?: string;
+  nickName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  followersCount?: number;
+}
+
+export interface PublicUserSummary {
+  id: string;
+  username: string;
+  nickname: string;
+  avatar: string;
+  bio: string;
+  followersCount: number;
+}
+
+function normalizePublicUserSummary(source: BackendUserVO): PublicUserSummary {
+  const nickname = source.nickName || source.userName || '匿名用户';
+
+  return {
+    id: String(source.id),
+    username: source.userName || nickname,
+    nickname,
+    avatar: source.avatarUrl || '',
+    bio: source.bio || '',
+    followersCount: source.followersCount ?? 0,
+  };
+}
 
 /**
  * 用户信息更新请求接口
@@ -78,6 +109,11 @@ export interface MonthlyCheckIn {
  * 用户 API 服务类
  */
 export class UserApi {
+  async getPublicUserSummary(userId: string): Promise<PublicUserSummary> {
+    const user = await httpClient.get<BackendUserVO>(`/users/${userId}`);
+    return normalizePublicUserSummary(user);
+  }
+
   /**
    * 根据 ID 获取用户信息
    * @param userId 用户 ID

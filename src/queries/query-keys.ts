@@ -257,6 +257,12 @@ export const queryKeys = {
      * 当前用户查询 key
      */
     current: () => [...queryKeys.users.all, 'current'] as const,
+
+    /**
+     * 热门作者补全查询 key
+     */
+    hotCreators: (filters?: Pick<RankingQueryParams, 'page' | 'size'>) =>
+      [...queryKeys.users.all, 'hot-creators', filters] as const,
   },
 
   // ============================================================================

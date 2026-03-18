@@ -8,7 +8,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useHotTagsQuery } from '@/queries/tags/useHotTagsQuery';
-import { useHotCreatorsQuery } from '@/queries/ranking/useHotCreatorsQuery';
+import { useHotCreatorUsersQuery } from '@/queries/users/useHotCreatorUsersQuery';
 import { usePostsQuery } from '@/queries/posts/usePostsQuery';
 import { 
   House, 
@@ -51,14 +51,9 @@ const { data: hotTagsData } = useHotTagsQuery(hotTagsParams);
 const hotTags = computed(() => hotTagsData.value || []);
 
 // TanStack Query - 热门作者
-const hotCreatorsParams = ref({ size: 4 });
-const { data: hotCreatorsData } = useHotCreatorsQuery(hotCreatorsParams);
-const hotAuthors = computed(() => {
-  if (!hotCreatorsData.value?.items) {
-    return [];
-  }
-  return hotCreatorsData.value.items.map(item => item.user);
-});
+const hotCreatorsParams = ref({ page: 0, size: 4 });
+const { data: hotCreatorsData } = useHotCreatorUsersQuery(hotCreatorsParams);
+const hotAuthors = computed(() => hotCreatorsData.value || []);
 
 // TanStack Query - 最新文章
 const latestPostsParams = ref({
@@ -146,7 +141,7 @@ const formatDate = (dateStr: string): string => {
  * 获取用户头像占位符
  */
 const getAvatarPlaceholder = (nickname: string): string => {
-  return nickname.charAt(0).toUpperCase();
+  return nickname.charAt(0).toUpperCase() || '匿';
 };
 
 </script>
@@ -264,8 +259,7 @@ const getAvatarPlaceholder = (nickname: string): string => {
               {{ author.nickname }}
             </div>
             <div class="app-sidebar__author-stats">
-              {{ formatNumber(author.followersCount || 0) }} 关注者 · 
-              {{ author.postsCount || 0 }} 文章
+              {{ formatNumber(author.followersCount) }} 关注者
             </div>
           </div>
         </div>

@@ -84,6 +84,7 @@ Key gaps:
 
 - Follow routes in frontend use `/users/{userId}/follow`; backend uses `/{actorId}/following/{targetUserId}`.
 - Blocking routes from backend have no frontend module.
+- Shared hot-creators sidebar now hydrates creator IDs through confirmed user detail reads, but the full profile route still relies on `useUser` flows that mix speculative follow, favorites, and stats assumptions.
 - Stranger-message settings exist in backend inventory but are absent in settings UI.
 - Settings page includes email and password flows not present in the inventory.
 
@@ -172,11 +173,12 @@ Implemented:
 
 - ranking page narrowed to backend-confirmed hot-post-only view
 - hot-post sidebar on home
-- contract-aligned `src/api/ranking.ts` now keeps only `GET /ranking/posts/hot/details`
+- shared hot-creators sidebar now hydrates `GET /ranking/creators/hot` IDs through confirmed `GET /users/{id}` reads
+- contract-aligned `src/api/ranking.ts` now keeps active confirmed reads for `GET /ranking/posts/hot/details` and `GET /ranking/creators/hot`
 
 Key gaps:
 
-- Daily/weekly/monthly post lists and creator/topic hot lists still need explicit hydration or page-ready DTO handling before they can return to the active public page.
+- Daily/weekly/monthly post lists and creator/topic hot lists still need explicit hydration or page-ready DTO handling before they can return to the active ranking page.
 - Legacy ranking APIs and hooks remain available for untouched surfaces, but they are intentionally separated from the contract-aligned page and client.
 - Unsupported creator/topic time tabs, yearly posts, rising/trending lists, stats, and item-rank detail flows are no longer exposed by the active ranking page.
 

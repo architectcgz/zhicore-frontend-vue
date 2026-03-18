@@ -13,6 +13,8 @@
     "src/api/search.ts",
     "src/api/search-legacy.ts",
     "src/api/tag.ts",
+    "src/api/user.ts",
+    "src/components/common/AppSidebar.vue",
     "src/components/common/SearchBar.vue",
     "src/components/comment/CommentItem.vue",
     "src/components/comment/CommentList.vue",
@@ -47,6 +49,7 @@
     "src/queries/tags/usePostsByTagQuery.ts",
     "src/queries/tags/useTagQuery.ts",
     "src/queries/tags/useTagsQuery.ts",
+    "src/queries/users/useHotCreatorUsersQuery.ts",
     "src/types/index.ts"
   ]
 }
