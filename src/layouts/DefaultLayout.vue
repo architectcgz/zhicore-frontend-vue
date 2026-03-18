@@ -129,7 +129,10 @@ onUnmounted(() => {
         class="default-layout__aside"
       >
         <!-- Teleport 目标：主页侧边栏 -->
-        <div id="home-sidebar-slot" />
+        <div
+          id="home-sidebar-slot"
+          class="default-layout__aside-slot"
+        />
       </aside>
     </div>
     
@@ -210,13 +213,11 @@ onUnmounted(() => {
   flex-shrink: 0;
   position: sticky;
   top: calc(80px + var(--space-lg));
-  height: fit-content;
-  max-height: calc(100vh - 160px);
-  overflow-y: auto;
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-sm);
+  align-self: flex-start;
+}
+
+.default-layout__aside-slot {
+  width: 100%;
 }
 
 .default-layout__footer {

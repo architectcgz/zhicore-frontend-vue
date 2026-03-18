@@ -119,7 +119,8 @@
       <HomeSidebar
         :tags="tags"
         :trending-posts="trendingPosts"
-        :is-loading="isSidebarLoading"
+        :is-tags-loading="tagsLoading"
+        :is-posts-loading="trendingLoading"
         :tags-error="tagsError"
         :posts-error="trendingError"
       />
@@ -217,11 +218,6 @@ const trendingPosts = computed<Post[]>(() => {
  * 计算属性：主要加载状态
  */
 const isLoading = computed(() => postsLoading.value || (postsFetching.value && !postsData.value));
-
-/**
- * 计算属性：侧边栏加载状态
- */
-const isSidebarLoading = computed(() => tagsLoading.value || trendingLoading.value);
 
 /**
  * 计算属性：错误状态
