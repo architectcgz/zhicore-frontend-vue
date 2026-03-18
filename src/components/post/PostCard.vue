@@ -358,14 +358,24 @@ const handleAvatarError = (event: Event) => {
           class="post-card__stats"
         >
           <span class="post-card__stat">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
               <path d="M2.75 12S6.15 6.75 12 6.75 21.25 12 21.25 12 17.85 17.25 12 17.25 2.75 12 2.75 12Z" />
-              <circle cx="12" cy="12" r="2.5" />
+              <circle
+                cx="12"
+                cy="12"
+                r="2.5"
+              />
             </svg>
             {{ formatNumber(post.viewCount) }}
           </span>
           <span class="post-card__stat">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
               <path d="M4.75 6.75h14.5A1.75 1.75 0 0 1 21 8.5v7a1.75 1.75 0 0 1-1.75 1.75H9.5L4 21v-3.75H4.75A1.75 1.75 0 0 1 3 15.5v-7a1.75 1.75 0 0 1 1.75-1.75Z" />
             </svg>
             {{ formatNumber(post.commentCount) }}
@@ -384,7 +394,10 @@ const handleAvatarError = (event: Event) => {
           :disabled="likeLoading"
           @click.stop="handleLike"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path d="m12 20.25-1.1-1C5.15 14.08 2.75 11.46 2.75 8.25A4.5 4.5 0 0 1 7.25 3.75c1.74 0 3.41.81 4.5 2.1 1.09-1.29 2.76-2.1 4.5-2.1a4.5 4.5 0 0 1 4.5 4.5c0 3.21-2.4 5.83-8.15 11l-1.1 1Z" />
           </svg>
           <span>{{ formatNumber(post.likeCount) }}</span>
@@ -397,7 +410,10 @@ const handleAvatarError = (event: Event) => {
           :disabled="favoriteLoading"
           @click.stop="handleFavorite"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path d="M6.75 3.75h10.5A1.75 1.75 0 0 1 19 5.5v14.75L12 16.5l-7 3.75V5.5a1.75 1.75 0 0 1 1.75-1.75Z" />
           </svg>
           <span>{{ formatNumber(post.favoriteCount) }}</span>
@@ -405,7 +421,10 @@ const handleAvatarError = (event: Event) => {
 
         <span class="post-card__read-more">
           阅读全文
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path d="M6.75 12h10.5M13.5 7.75 17.75 12l-4.25 4.25" />
           </svg>
         </span>

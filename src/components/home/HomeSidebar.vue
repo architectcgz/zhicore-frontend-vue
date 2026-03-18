@@ -121,7 +121,9 @@ const handlePostClick = (post: Post) => {
             >
               <path d="M12 8.5v4.75M12 17.25h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
             </svg>
-            <p class="home-sidebar__error-message">{{ getErrorMessage(tagsError) }}</p>
+            <p class="home-sidebar__error-message">
+              {{ getErrorMessage(tagsError) }}
+            </p>
           </div>
         </div>
       </div>
@@ -129,7 +131,9 @@ const handlePostClick = (post: Post) => {
       <div v-else-if="displayTags.length > 0">
         <div class="home-sidebar__section-head">
           <div>
-            <p class="home-sidebar__section-kicker">话题热度</p>
+            <p class="home-sidebar__section-kicker">
+              话题热度
+            </p>
             <h2
               id="tags-heading"
               class="home-sidebar__section-title"
@@ -144,7 +148,9 @@ const handlePostClick = (post: Post) => {
               热门标签
             </h2>
           </div>
-          <p class="home-sidebar__section-description">跟进社区话题热度和内容增长。</p>
+          <p class="home-sidebar__section-description">
+            跟进社区话题热度和内容增长。
+          </p>
         </div>
 
         <div class="home-sidebar__tags">
@@ -167,7 +173,9 @@ const handlePostClick = (post: Post) => {
         v-else
         class="home-sidebar__empty"
       >
-        <p class="home-sidebar__empty-text">暂无热门标签</p>
+        <p class="home-sidebar__empty-text">
+          暂无热门标签
+        </p>
       </div>
     </section>
 
@@ -209,7 +217,9 @@ const handlePostClick = (post: Post) => {
             >
               <path d="M12 8.5v4.75M12 17.25h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
             </svg>
-            <p class="home-sidebar__error-message">{{ getErrorMessage(postsError) }}</p>
+            <p class="home-sidebar__error-message">
+              {{ getErrorMessage(postsError) }}
+            </p>
           </div>
         </div>
       </div>
@@ -217,7 +227,9 @@ const handlePostClick = (post: Post) => {
       <div v-else-if="displayPosts.length > 0">
         <div class="home-sidebar__section-head">
           <div>
-            <p class="home-sidebar__section-kicker">阅读推荐</p>
+            <p class="home-sidebar__section-kicker">
+              阅读推荐
+            </p>
             <h2
               id="posts-heading"
               class="home-sidebar__section-title"
@@ -232,7 +244,9 @@ const handlePostClick = (post: Post) => {
               热门文章
             </h2>
           </div>
-          <p class="home-sidebar__section-description">优先阅读当前最受关注的内容。</p>
+          <p class="home-sidebar__section-description">
+            优先阅读当前最受关注的内容。
+          </p>
         </div>
 
         <div class="home-sidebar__posts">
@@ -255,7 +269,9 @@ const handlePostClick = (post: Post) => {
               </div>
 
               <div class="home-sidebar__post-info">
-                <h3 class="home-sidebar__post-title">{{ post.title }}</h3>
+                <h3 class="home-sidebar__post-title">
+                  {{ post.title }}
+                </h3>
 
                 <div class="home-sidebar__post-meta">
                   <span class="home-sidebar__post-meta-item">
@@ -265,7 +281,11 @@ const handlePostClick = (post: Post) => {
                       aria-hidden="true"
                     >
                       <path d="M2.75 12S6.15 6.75 12 6.75 21.25 12 21.25 12 17.85 17.25 12 17.25 2.75 12 2.75 12Z" />
-                      <circle cx="12" cy="12" r="2.5" />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="2.5"
+                      />
                     </svg>
                     <span class="sr-only">浏览量:</span>
                     {{ formatNumber(post.viewCount) }}
@@ -298,7 +318,9 @@ const handlePostClick = (post: Post) => {
         v-else
         class="home-sidebar__empty"
       >
-        <p class="home-sidebar__empty-text">暂无热门文章</p>
+        <p class="home-sidebar__empty-text">
+          暂无热门文章
+        </p>
       </div>
     </section>
   </aside>

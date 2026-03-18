@@ -77,8 +77,12 @@ const featureList = computed(() => [
       <main class="auth-layout__main">
         <section class="auth-layout__showcase">
           <span class="auth-layout__eyebrow">知构账号</span>
-          <h1 class="auth-layout__title">{{ pageTitle }}</h1>
-          <p class="auth-layout__description">{{ pageDescription }}</p>
+          <h1 class="auth-layout__title">
+            {{ pageTitle }}
+          </h1>
+          <p class="auth-layout__description">
+            {{ pageDescription }}
+          </p>
 
           <div class="auth-layout__feature-list">
             <div
@@ -111,7 +115,9 @@ const featureList = computed(() => [
       </main>
 
       <footer class="auth-layout__footer">
-        <p class="auth-layout__footer-text">© 2026 知构. 保留所有权利.</p>
+        <p class="auth-layout__footer-text">
+          © 2026 知构. 保留所有权利.
+        </p>
         <div class="auth-layout__footer-links">
           <a
             href="/privacy"

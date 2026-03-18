@@ -188,8 +188,15 @@ onUnmounted(() => {
         @submit.prevent="handleSearch"
       >
         <span class="app-header__search-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" />
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="6.5"
+            />
             <path d="m16 16 4.5 4.5" />
           </svg>
         </span>
@@ -203,8 +210,15 @@ onUnmounted(() => {
           type="submit"
           class="app-header__search-button"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" />
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="6.5"
+            />
             <path d="m16 16 4.5 4.5" />
           </svg>
           搜索
@@ -233,7 +247,10 @@ onUnmounted(() => {
             :aria-expanded="showNotifications"
             @click="toggleNotifications"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
               <path d="M12 4.25a4.75 4.75 0 0 0-4.75 4.75v2.08c0 .66-.2 1.31-.57 1.86L5.25 15.1c-.48.72.03 1.68.89 1.68h11.72c.86 0 1.37-.96.89-1.68l-1.43-2.16a3.3 3.3 0 0 1-.57-1.86V9A4.75 4.75 0 0 0 12 4.25Z" />
               <path d="M9.75 18.25a2.25 2.25 0 0 0 4.5 0" />
             </svg>
@@ -258,7 +275,10 @@ onUnmounted(() => {
           aria-label="消息"
           @click="goToMessages"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path d="M5 6.75A2.75 2.75 0 0 1 7.75 4h8.5A2.75 2.75 0 0 1 19 6.75v5.5A2.75 2.75 0 0 1 16.25 15H10l-4 4V6.75Z" />
           </svg>
           <span
@@ -296,7 +316,10 @@ onUnmounted(() => {
                 {{ user?.role === 'ADMIN' ? '管理员' : '创作者' }}
               </span>
             </span>
-            <span class="app-header__user-arrow" aria-hidden="true">
+            <span
+              class="app-header__user-arrow"
+              aria-hidden="true"
+            >
               <svg viewBox="0 0 20 20">
                 <path d="m5 7.5 5 5 5-5" />
               </svg>
@@ -321,8 +344,12 @@ onUnmounted(() => {
                 {{ user?.nickname?.charAt(0) || 'U' }}
               </span>
               <div class="app-header__user-details">
-                <div class="app-header__user-details-name">{{ user?.nickname || '用户' }}</div>
-                <div class="app-header__user-details-email">{{ user?.email }}</div>
+                <div class="app-header__user-details-name">
+                  {{ user?.nickname || '用户' }}
+                </div>
+                <div class="app-header__user-details-email">
+                  {{ user?.email }}
+                </div>
               </div>
             </div>
 
@@ -373,7 +400,10 @@ onUnmounted(() => {
           @click="goToLogin"
         >
           <span class="app-header__auth-entry-label">登录 / 创建账号</span>
-          <span class="app-header__auth-entry-arrow" aria-hidden="true">
+          <span
+            class="app-header__auth-entry-arrow"
+            aria-hidden="true"
+          >
             <svg viewBox="0 0 24 24">
               <path d="M5.75 12h12.5M13.5 7.75 18.25 12l-4.75 4.25" />
             </svg>

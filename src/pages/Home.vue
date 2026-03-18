@@ -287,7 +287,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
     <section class="home-page__hero surface-panel">
       <div class="home-page__hero-copy">
         <span class="home-page__eyebrow">今日推荐</span>
-        <h1 class="page-title">发现精彩内容</h1>
+        <h1 class="page-title">
+          发现精彩内容
+        </h1>
         <p class="page-description">
           在这里浏览创作者最新观点、技术文章与社区热议，快速找到值得阅读和参与的话题。
         </p>
@@ -337,7 +339,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
           class="home-page__feature"
         >
           <span class="home-page__feature-label">编辑精选</span>
-          <h2 class="home-page__feature-title">{{ featuredPost.title }}</h2>
+          <h2 class="home-page__feature-title">
+            {{ featuredPost.title }}
+          </h2>
           <p class="home-page__feature-text">
             {{ featuredPost.excerpt || featuredPost.content.slice(0, 110) }}
           </p>
@@ -371,8 +375,12 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         <span class="home-page__quick-kicker">
           {{ link.kicker === 'Topics' ? '主题' : link.kicker === 'Ranking' ? '榜单' : '写作' }}
         </span>
-        <h2 class="home-page__quick-title">{{ link.title }}</h2>
-        <p class="home-page__quick-description">{{ link.description }}</p>
+        <h2 class="home-page__quick-title">
+          {{ link.title }}
+        </h2>
+        <p class="home-page__quick-description">
+          {{ link.description }}
+        </p>
       </router-link>
     </section>
 
@@ -381,7 +389,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         <div class="home-page__section-head home-page__section-head--discovery">
           <div>
             <span class="home-page__section-kicker">热门看点</span>
-            <h2 class="home-page__section-title">先看方向，再进入内容流</h2>
+            <h2 class="home-page__section-title">
+              先看方向，再进入内容流
+            </h2>
           </div>
           <p class="home-page__section-description">
             先了解热门主题与活跃作者，再进入你感兴趣的文章内容。
@@ -407,7 +417,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
             <div class="home-page__block-head">
               <div>
                 <span class="home-page__block-kicker">主题趋势</span>
-                <h3 class="home-page__block-title">热门主题</h3>
+                <h3 class="home-page__block-title">
+                  热门主题
+                </h3>
               </div>
               <router-link
                 to="/tags"
@@ -430,7 +442,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
                     {{ formatGrowth(topic.growth) }}
                   </span>
                 </div>
-                <p class="home-page__topic-description">{{ topic.description }}</p>
+                <p class="home-page__topic-description">
+                  {{ topic.description }}
+                </p>
                 <div class="home-page__topic-meta">
                   <span>{{ formatCompactNumber(topic.posts) }} 篇文章</span>
                   <span>{{ formatCompactNumber(topic.views) }} 阅读</span>
@@ -443,7 +457,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
             <div class="home-page__block-head">
               <div>
                 <span class="home-page__block-kicker">活跃作者</span>
-                <h3 class="home-page__block-title">本周作者</h3>
+                <h3 class="home-page__block-title">
+                  本周作者
+                </h3>
               </div>
               <router-link
                 to="/ranking"
@@ -470,7 +486,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
                     <strong class="home-page__creator-name">{{ creator.nickname }}</strong>
                     <span class="home-page__creator-score">{{ formatCompactNumber(creator.score) }}</span>
                   </div>
-                  <p class="home-page__creator-bio">{{ creator.bio }}</p>
+                  <p class="home-page__creator-bio">
+                    {{ creator.bio }}
+                  </p>
                   <div class="home-page__creator-meta">
                     <span>{{ formatCompactNumber(creator.posts) }} 篇文章</span>
                     <span>{{ formatCompactNumber(creator.followers) }} 关注</span>
@@ -487,7 +505,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         <div class="home-page__section-head">
           <div>
             <span class="home-page__section-kicker">最新更新</span>
-            <h2 class="home-page__section-title">最新发布</h2>
+            <h2 class="home-page__section-title">
+              最新发布
+            </h2>
           </div>
           <p class="home-page__section-description">
             按最新发布时间浏览内容，第一时间跟进社区里的新观点与新文章。
@@ -512,13 +532,20 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         >
           <div class="home-page__error-card">
             <span class="home-page__error-badge">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <path d="M12 8.5v4.75M12 17.25h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
               </svg>
               加载异常
             </span>
-            <h3 class="home-page__error-title">首页内容暂时没有取到</h3>
-            <p class="home-page__error-text">{{ getErrorMessage(error) }}</p>
+            <h3 class="home-page__error-title">
+              首页内容暂时没有取到
+            </h3>
+            <p class="home-page__error-text">
+              {{ getErrorMessage(error) }}
+            </p>
           </div>
         </div>
 
@@ -568,7 +595,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
       <section class="home-page__cta surface-panel">
         <div class="home-page__cta-copy">
           <span class="home-page__block-kicker">开始创作</span>
-          <h2 class="home-page__cta-title">分享你的观察、经验与教程</h2>
+          <h2 class="home-page__cta-title">
+            分享你的观察、经验与教程
+          </h2>
           <p class="home-page__cta-description">
             开始发布你的观察、教程和经验，让更多读者在这里看到你的内容。
           </p>

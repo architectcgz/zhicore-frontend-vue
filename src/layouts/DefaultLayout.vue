@@ -95,8 +95,8 @@ onUnmounted(() => {
         class="default-layout__aside"
       >
         <div
-          class="default-layout__aside-shell surface-panel"
           id="home-sidebar-slot"
+          class="default-layout__aside-shell surface-panel"
         />
       </aside>
     </div>
