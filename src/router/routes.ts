@@ -268,7 +268,7 @@ export const routes: AppRouteRecordRaw[] = [
   {
     path: '/admin',
     name: 'Admin',
-    redirect: '/admin/dashboard',
+    redirect: '/admin/users',
     meta: {
       requiresAuth: true,
       requiresAdmin: true,

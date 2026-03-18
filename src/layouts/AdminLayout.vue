@@ -16,8 +16,6 @@ import {
   User,
   Document,
   ChatLineSquare,
-  Bell,
-  Setting,
   SwitchButton,
 } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
@@ -56,16 +54,6 @@ const menuItems: MenuItem[] = [
     path: '/admin/comments',
     title: '评论管理',
     icon: ChatLineSquare,
-  },
-  {
-    path: '/admin/reports',
-    title: '举报管理',
-    icon: Bell,
-  },
-  {
-    path: '/admin/settings',
-    title: '系统设置',
-    icon: Setting,
   },
 ];
 

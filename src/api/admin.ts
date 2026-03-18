@@ -3,7 +3,7 @@
  * 提供管理后台相关的 API 接口
  */
 
-import {request} from '@/utils/request';
+import { httpClient } from '@/utils/request';
 
 /**
  * 统计数据接口
@@ -59,12 +59,56 @@ export interface AdminUser {
   email: string;
   nickname: string;
   avatar: string;
-  role: 'USER' | 'ADMIN';
-  status: 'ACTIVE' | 'DISABLED';
-  postsCount: number;
-  followersCount: number;
+  status: AdminUserStatus;
+  roles: string[];
   createdAt: string;
-  lastLoginAt?: string;
+}
+
+export type AdminUserStatus = 'NORMAL' | 'FORBIDDEN';
+
+interface BackendPageResult<T> {
+  current: number;
+  size: number;
+  total: number;
+  pages: number;
+  records: T[];
+  hasNext: boolean;
+  cursor?: string;
+}
+
+interface BackendAdminUser {
+  id: number;
+  username: string;
+  email: string;
+  nickname: string;
+  avatar?: string;
+  status: AdminUserStatus;
+  createdAt: string;
+  roles?: string[];
+}
+
+interface BackendAdminPost {
+  id: number;
+  title: string;
+  authorId: number;
+  authorName: string;
+  status: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  publishedAt?: string;
+  createdAt: string;
+}
+
+interface BackendAdminComment {
+  id: number;
+  postId: number;
+  postTitle: string;
+  userId: number;
+  userName: string;
+  content: string;
+  likeCount: number;
+  createdAt: string;
 }
 
 /**
@@ -78,7 +122,7 @@ export interface AdminPost {
     nickname: string;
     avatar: string;
   };
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED';
   viewCount: number;
   likeCount: number;
   commentCount: number;
@@ -143,8 +187,82 @@ export interface PageParams {
   size?: number;
   keyword?: string;
   status?: string;
+  authorId?: string | number;
+  postId?: string | number;
+  userId?: string | number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+function sanitizePageParams(params: PageParams = {}): Record<string, string | number> {
+  const entries = Object.entries(params).filter(([, value]) => {
+    return value !== undefined && value !== null && value !== '';
+  });
+
+  return Object.fromEntries(entries);
+}
+
+export function normalizePageResponse<TSource, TTarget>(
+  pageResult: BackendPageResult<TSource>,
+  mapper: (item: TSource) => TTarget
+): PageResponse<TTarget> {
+  return {
+    items: pageResult.records.map(mapper),
+    total: pageResult.total,
+    page: pageResult.current,
+    size: pageResult.size,
+    hasMore: pageResult.hasNext,
+  };
+}
+
+export function normalizeAdminUser(user: BackendAdminUser): AdminUser {
+  return {
+    id: String(user.id),
+    username: user.username,
+    email: user.email,
+    nickname: user.nickname,
+    avatar: user.avatar || '',
+    status: user.status,
+    roles: user.roles ?? [],
+    createdAt: user.createdAt,
+  };
+}
+
+function normalizeAdminPost(post: BackendAdminPost): AdminPost {
+  return {
+    id: String(post.id),
+    title: post.title,
+    author: {
+      id: String(post.authorId),
+      nickname: post.authorName,
+      avatar: '',
+    },
+    status: post.status as AdminPost['status'],
+    viewCount: post.viewCount,
+    likeCount: post.likeCount,
+    commentCount: post.commentCount,
+    publishedAt: post.publishedAt,
+    createdAt: post.createdAt,
+  };
+}
+
+function normalizeAdminComment(comment: BackendAdminComment): AdminComment {
+  return {
+    id: String(comment.id),
+    content: comment.content,
+    user: {
+      id: String(comment.userId),
+      nickname: comment.userName,
+      avatar: '',
+    },
+    post: {
+      id: String(comment.postId),
+      title: comment.postTitle,
+    },
+    likeCount: comment.likeCount,
+    repliesCount: 0,
+    createdAt: comment.createdAt,
+  };
 }
 
 /**
@@ -155,119 +273,141 @@ export const adminApi = {
    * 获取统计数据
    */
   getStats(): Promise<AdminStats> {
-    return request.get('/api/v1/admin/stats');
+    return httpClient.get('/admin/stats');
   },
 
   /**
    * 获取访问趋势数据
    */
   getTrends(days: number = 7): Promise<TrendDataPoint[]> {
-    return request.get('/api/v1/admin/trends', { params: { days } });
+    return httpClient.get('/admin/trends', { days });
   },
 
   /**
    * 获取内容增长数据
    */
   getContentGrowth(days: number = 30): Promise<ContentGrowth> {
-    return request.get('/api/v1/admin/content-growth', { params: { days } });
+    return httpClient.get('/admin/content-growth', { days });
   },
 
   /**
    * 获取最近活动
    */
   getRecentActivities(limit: number = 10): Promise<RecentActivity[]> {
-    return request.get('/api/v1/admin/activities', { params: { limit } });
+    return httpClient.get('/admin/activities', { limit });
   },
 
   /**
    * 获取用户列表
    */
-  getUsers(params: PageParams): Promise<PageResponse<AdminUser>> {
-    return request.get('/api/v1/admin/users', { params });
+  async getUsers(params: PageParams = {}): Promise<PageResponse<AdminUser>> {
+    const pageResult = await httpClient.get<BackendPageResult<BackendAdminUser>>(
+      '/admin/users',
+      sanitizePageParams(params)
+    );
+
+    return normalizePageResponse(pageResult, normalizeAdminUser);
   },
 
   /**
    * 禁用用户
    */
   disableUser(userId: string): Promise<void> {
-    return request.post(`/api/v1/admin/users/${userId}/disable`);
+    return httpClient.post(`/admin/users/${userId}/disable`);
   },
 
   /**
    * 启用用户
    */
   enableUser(userId: string): Promise<void> {
-    return request.post(`/api/v1/admin/users/${userId}/enable`);
+    return httpClient.post(`/admin/users/${userId}/enable`);
+  },
+
+  /**
+   * 使用户所有 Token 失效
+   */
+  invalidateUserTokens(userId: string): Promise<void> {
+    return httpClient.post(`/admin/users/${userId}/invalidate-tokens`);
   },
 
   /**
    * 批量禁用用户
    */
-  batchDisableUsers(userIds: string[]): Promise<void> {
-    return request.post('/api/v1/admin/users/batch-disable', { userIds });
+  async batchDisableUsers(userIds: string[]): Promise<void> {
+    await Promise.all(userIds.map((userId) => this.disableUser(userId)));
   },
 
   /**
    * 批量启用用户
    */
-  batchEnableUsers(userIds: string[]): Promise<void> {
-    return request.post('/api/v1/admin/users/batch-enable', { userIds });
+  async batchEnableUsers(userIds: string[]): Promise<void> {
+    await Promise.all(userIds.map((userId) => this.enableUser(userId)));
   },
 
   /**
    * 获取文章列表
    */
-  getPosts(params: PageParams): Promise<PageResponse<AdminPost>> {
-    return request.get('/api/v1/admin/posts', { params });
+  async getPosts(params: PageParams = {}): Promise<PageResponse<AdminPost>> {
+    const pageResult = await httpClient.get<BackendPageResult<BackendAdminPost>>(
+      '/admin/posts',
+      sanitizePageParams(params)
+    );
+
+    return normalizePageResponse(pageResult, normalizeAdminPost);
   },
 
   /**
    * 删除文章
    */
   deletePost(postId: string): Promise<void> {
-    return request.delete(`/api/v1/admin/posts/${postId}`);
+    return httpClient.delete(`/admin/posts/${postId}`);
   },
 
   /**
    * 批量删除文章
    */
-  batchDeletePosts(postIds: string[]): Promise<void> {
-    return request.post('/api/v1/admin/posts/batch-delete', { postIds });
+  async batchDeletePosts(postIds: string[]): Promise<void> {
+    await Promise.all(postIds.map((postId) => this.deletePost(postId)));
   },
 
   /**
    * 获取评论列表
    */
-  getComments(params: PageParams): Promise<PageResponse<AdminComment>> {
-    return request.get('/api/v1/admin/comments', { params });
+  async getComments(params: PageParams = {}): Promise<PageResponse<AdminComment>> {
+    const pageResult = await httpClient.get<BackendPageResult<BackendAdminComment>>(
+      '/admin/comments',
+      sanitizePageParams(params)
+    );
+
+    return normalizePageResponse(pageResult, normalizeAdminComment);
   },
 
   /**
    * 删除评论
    */
   deleteComment(commentId: string): Promise<void> {
-    return request.delete(`/api/v1/admin/comments/${commentId}`);
+    return httpClient.delete(`/admin/comments/${commentId}`);
   },
 
   /**
    * 批量删除评论
    */
-  batchDeleteComments(commentIds: string[]): Promise<void> {
-    return request.post('/api/v1/admin/comments/batch-delete', { commentIds });
+  async batchDeleteComments(commentIds: string[]): Promise<void> {
+    await Promise.all(commentIds.map((commentId) => this.deleteComment(commentId)));
   },
 
   /**
    * 获取举报列表
    */
   getReports(params: PageParams): Promise<PageResponse<AdminReport>> {
-    return request.get('/api/v1/admin/reports', { params });
+    return httpClient.get('/admin/reports', sanitizePageParams(params));
   },
 
   /**
    * 处理举报
    */
   handleReport(reportId: string, action: 'resolve' | 'reject', reason?: string): Promise<void> {
-    return request.post(`/api/v1/admin/reports/${reportId}/handle`, { action, reason });
+    return httpClient.post(`/admin/reports/${reportId}/handle`, { action, reason });
   },
 };
 

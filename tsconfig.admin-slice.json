@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false
+  },
+  "include": [
+    "src/vite-env.d.ts",
+    "src/api/admin.ts",
+    "src/components/admin/AdminUserManagementPanel.vue",
+    "src/layouts/AdminLayout.vue",
+    "src/pages/admin/Dashboard.vue",
+    "src/pages/admin/UserManagement.vue",
+    "src/queries/admin/useAdminUsersQuery.ts",
+    "src/queries/admin/useDisableUserMutation.ts",
+    "src/queries/query-keys.ts",
+    "test/api/admin.test.ts"
+  ]
+}
