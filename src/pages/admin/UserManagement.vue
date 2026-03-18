@@ -10,7 +10,7 @@ import AdminUserManagementPanel from '@/components/admin/AdminUserManagementPane
           用户管理
         </h1>
         <p class="page-description">
-          基于 zhicore 当前管理员用户接口，对账号状态进行查询和维护。
+          查看用户信息，筛选账号状态，并处理启用或禁用等管理操作。
         </p>
       </div>
     </div>

@@ -26,6 +26,11 @@ const queryClient = createQueryClient();
 setupQueryErrorHandler(queryClient);
 
 app.use(pinia);
+
+// 在挂载前初始化主题，避免认证页首屏出现主题错位
+const themeStore = useThemeStore();
+themeStore.initTheme();
+
 app.use(router);
 app.use(ElementPlus);
 app.use(VueQueryPlugin, { queryClient });
@@ -54,8 +59,3 @@ if (import.meta.env.DEV) {
     app.component('VueQueryDevtools', VueQueryDevtools);
   });
 }
-
-// 初始化主题
-const themeStore = useThemeStore();
-themeStore.initTheme();
-

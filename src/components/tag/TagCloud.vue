@@ -52,7 +52,7 @@
         :href="`/tags/${tag.slug}`"
         class="tag-item"
         :style="getTagStyle(tag)"
-        :title="tag.postCount !== undefined ? `${tag.name} - ${tag.postCount} 篇文章` : tag.name"
+        :title="`${tag.name} - ${tag.postCount} 篇文章`"
         @click.prevent="handleTagClick(tag)"
       >
         {{ tag.name }}
@@ -119,8 +119,9 @@ const loadTags = async () => {
     } else {
       // 获取普通标签列表
       const response = await tagApi.getTags({
-        page: 0,
+        page: 1,
         size: props.limit,
+        sort: 'postCount',
       });
       tags.value = response.items;
     }
@@ -139,28 +140,19 @@ const loadTags = async () => {
 const getTagStyle = (tag: Tag) => {
   if (tags.value.length === 0) return {};
 
-  const tagsWithCount = tags.value.filter(item => item.postCount !== undefined);
-  if (tagsWithCount.length === 0 || tag.postCount === undefined) {
-    return {
-      fontSize: `${props.minFontSize}px`,
-      opacity: '1.00',
-      fontWeight: '500',
-    };
-  }
-
   // 计算文章数量范围
-  const postCounts = tagsWithCount.map(t => t.postCount ?? 0);
+  const postCounts = tags.value.map(t => t.postCount);
   const maxPostCount = Math.max(...postCounts);
   const minPostCount = Math.min(...postCounts);
   const range = maxPostCount - minPostCount || 1;
 
   // 计算字体大小（线性映射）
   const fontSizeRange = props.maxFontSize - props.minFontSize;
-  const fontSize = props.minFontSize +
-    (((tag.postCount ?? minPostCount) - minPostCount) / range) * fontSizeRange;
+  const fontSize = props.minFontSize + 
+    ((tag.postCount - minPostCount) / range) * fontSizeRange;
 
   // 计算颜色深度（文章越多颜色越深）
-  const colorIntensity = ((tag.postCount ?? minPostCount) - minPostCount) / range;
+  const colorIntensity = (tag.postCount - minPostCount) / range;
   const opacity = 0.6 + (colorIntensity * 0.4); // 0.6 - 1.0
 
   return {

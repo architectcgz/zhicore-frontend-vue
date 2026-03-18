@@ -108,7 +108,7 @@ function generateRequestId(): string {
  */
 function createAxiosInstance(): AxiosInstance {
   const instance = axios.create({
-    baseURL: API_BASE_URL || 'http://localhost:8100/api/v1',
+    baseURL: API_BASE_URL || '/api/v1',
     timeout: REQUEST_TIMEOUT,
     withCredentials: true, // Enable credentials for CORS requests
     headers: {

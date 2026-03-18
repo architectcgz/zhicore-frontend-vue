@@ -34,6 +34,22 @@ vi.mock('@/queries/posts/useHotPostsQuery', () => ({
   }),
 }));
 
+vi.mock('@/queries/ranking/useHotCreatorsQuery', () => ({
+  useHotCreatorsQuery: () => ({
+    data: ref({ items: [] }),
+    isLoading: ref(false),
+    error: ref(null),
+  }),
+}));
+
+vi.mock('@/queries/ranking/useHotTopicsQuery', () => ({
+  useHotTopicsQuery: () => ({
+    data: ref({ items: [] }),
+    isLoading: ref(false),
+    error: ref(null),
+  }),
+}));
+
 vi.mock('@/queries/posts/usePostsQuery', () => ({
   usePostsQuery: () => ({
     data: ref({ items: [] }),
@@ -60,6 +76,31 @@ describe('Home 页面布局', () => {
           name: 'Home',
           component: Home,
           meta: { showSidebar: false },
+        },
+        {
+          path: '/posts',
+          name: 'Posts',
+          component: { template: '<div>Posts</div>' },
+        },
+        {
+          path: '/posts/create',
+          name: 'PostCreate',
+          component: { template: '<div>Create Post</div>' },
+        },
+        {
+          path: '/tags',
+          name: 'Tags',
+          component: { template: '<div>Tags</div>' },
+        },
+        {
+          path: '/ranking',
+          name: 'Ranking',
+          component: { template: '<div>Ranking</div>' },
+        },
+        {
+          path: '/drafts',
+          name: 'Drafts',
+          component: { template: '<div>Drafts</div>' },
         },
       ],
     });
@@ -89,6 +130,31 @@ describe('Home 页面布局', () => {
           component: Home,
           meta: { showSidebar: false },
         },
+        {
+          path: '/posts',
+          name: 'Posts',
+          component: { template: '<div>Posts</div>' },
+        },
+        {
+          path: '/posts/create',
+          name: 'PostCreate',
+          component: { template: '<div>Create Post</div>' },
+        },
+        {
+          path: '/tags',
+          name: 'Tags',
+          component: { template: '<div>Tags</div>' },
+        },
+        {
+          path: '/ranking',
+          name: 'Ranking',
+          component: { template: '<div>Ranking</div>' },
+        },
+        {
+          path: '/drafts',
+          name: 'Drafts',
+          component: { template: '<div>Drafts</div>' },
+        },
       ],
     });
 
@@ -117,6 +183,31 @@ describe('Home 页面布局', () => {
           component: Home,
           meta: { showSidebar: false },
         },
+        {
+          path: '/posts',
+          name: 'Posts',
+          component: { template: '<div>Posts</div>' },
+        },
+        {
+          path: '/posts/create',
+          name: 'PostCreate',
+          component: { template: '<div>Create Post</div>' },
+        },
+        {
+          path: '/tags',
+          name: 'Tags',
+          component: { template: '<div>Tags</div>' },
+        },
+        {
+          path: '/ranking',
+          name: 'Ranking',
+          component: { template: '<div>Ranking</div>' },
+        },
+        {
+          path: '/drafts',
+          name: 'Drafts',
+          component: { template: '<div>Drafts</div>' },
+        },
       ],
     });
 
@@ -144,6 +235,31 @@ describe('Home 页面布局', () => {
           name: 'Home',
           component: Home,
           meta: { showSidebar: false },
+        },
+        {
+          path: '/posts',
+          name: 'Posts',
+          component: { template: '<div>Posts</div>' },
+        },
+        {
+          path: '/posts/create',
+          name: 'PostCreate',
+          component: { template: '<div>Create Post</div>' },
+        },
+        {
+          path: '/tags',
+          name: 'Tags',
+          component: { template: '<div>Tags</div>' },
+        },
+        {
+          path: '/ranking',
+          name: 'Ranking',
+          component: { template: '<div>Ranking</div>' },
+        },
+        {
+          path: '/drafts',
+          name: 'Drafts',
+          component: { template: '<div>Drafts</div>' },
         },
       ],
     });

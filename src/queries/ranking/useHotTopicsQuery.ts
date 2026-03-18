@@ -5,8 +5,7 @@
 
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
-import type { RankingQueryParams } from '@/api/ranking';
-import { legacyRankingApi } from '@/api/ranking-legacy';
+import { rankingApi, type RankingQueryParams } from '@/api/ranking';
 import { queryKeys } from '../query-keys';
 
 /**
@@ -23,7 +22,7 @@ import { queryKeys } from '../query-keys';
 export function useHotTopicsQuery(params?: Ref<RankingQueryParams>) {
   return useQuery({
     queryKey: computed(() => queryKeys.ranking.topics.hot(params?.value)),
-    queryFn: () => legacyRankingApi.getHotTopics(params?.value),
+    queryFn: () => rankingApi.getHotTopics(params?.value),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }

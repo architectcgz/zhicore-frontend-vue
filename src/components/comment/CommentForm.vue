@@ -39,7 +39,7 @@
       <!-- 用户头像 -->
       <div class="user-avatar">
         <img
-          :src="currentUser?.avatar || '/default-avatar.png'"
+          :src="currentUser?.avatar || '/images/default-avatar.svg'"
           :alt="currentUser?.nickname || '用户'"
           class="avatar-img"
         >

@@ -12,29 +12,22 @@ import { queryKeys } from '../query-keys';
  * 获取搜索建议（带防抖）
  * 
  * @param query 搜索关键词
- * @param options 查询选项（可选）
+ * @param type 搜索类型（可选）
  * @param debounceMs 防抖延迟（毫秒，默认 300ms）
  * @returns Query 结果，包含搜索建议
  * 
  * @example
  * ```ts
  * const searchQuery = ref('');
- * const { data: suggestions, isLoading } = useSearchSuggestionsQuery(searchQuery, { limit: 8 });
+ * const { data: suggestions, isLoading } = useSearchSuggestionsQuery(searchQuery, ref('POST'));
  * ```
  */
 export function useSearchSuggestionsQuery(
   query: Ref<string> | string,
-  options?: Ref<{ limit?: number } | undefined> | { limit?: number },
+  type?: Ref<'POST' | 'USER' | 'TAG'>,
   debounceMs: number = 300
 ) {
   const searchQuery = computed(() => typeof query === 'string' ? query : query.value);
-  const queryOptions = computed(() => {
-    if (!options) {
-      return undefined;
-    }
-
-    return typeof options === 'object' && 'value' in options ? options.value : options;
-  });
   const debouncedQuery = ref(searchQuery.value);
   
   // 防抖处理
@@ -47,10 +40,10 @@ export function useSearchSuggestionsQuery(
       debouncedQuery.value = newQuery;
     }, debounceMs);
   });
-
+  
   return useQuery({
-    queryKey: computed(() => queryKeys.search.suggestions(debouncedQuery.value, queryOptions.value?.limit)),
-    queryFn: () => searchApi.getSuggestions(debouncedQuery.value, queryOptions.value?.limit),
+    queryKey: computed(() => queryKeys.search.suggestions(debouncedQuery.value, type?.value)),
+    queryFn: () => searchApi.getSuggestions(debouncedQuery.value, type?.value),
     enabled: computed(() => debouncedQuery.value.length >= 1),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

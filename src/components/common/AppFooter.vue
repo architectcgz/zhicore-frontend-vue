@@ -189,26 +189,11 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
             </a>
           </p>
         </div>
-
+        
         <div class="app-footer__meta">
-          <div class="app-footer__stats">
-            <span class="app-footer__stat">
-              <span class="app-footer__stat-icon">👥</span>
-              <span class="app-footer__stat-text">10,000+ 用户</span>
-            </span>
-            <span class="app-footer__stat">
-              <span class="app-footer__stat-icon">📝</span>
-              <span class="app-footer__stat-text">50,000+ 文章</span>
-            </span>
-            <span class="app-footer__stat">
-              <span class="app-footer__stat-icon">🏷️</span>
-              <span class="app-footer__stat-text">1,000+ 标签</span>
-            </span>
-          </div>
-
           <div class="app-footer__tech">
             <span class="app-footer__tech-text">
-              Powered by
+              Powered by 
               <a 
                 href="https://vuejs.org" 
                 target="_blank"
@@ -423,23 +408,6 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
   gap: var(--space-md);
 }
 
-.app-footer__stats {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.app-footer__stat {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.app-footer__stat-icon {
-  font-size: var(--font-size-base);
-}
-
 .app-footer__tech-text {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
@@ -483,12 +451,6 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
   
   .app-footer__meta {
     align-items: center;
-  }
-
-  .app-footer__stats {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-md);
   }
 }
 
@@ -535,15 +497,6 @@ const handleSocialClick = (link: typeof socialLinks[0]) => {
   
   .app-footer__bottom {
     gap: var(--space-sm);
-  }
-
-  .app-footer__stats {
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .app-footer__stat {
-    justify-content: center;
   }
 }
 

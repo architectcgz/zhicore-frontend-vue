@@ -101,9 +101,3 @@
   - contract-aligned reads stay in `src/api/ranking.ts`
   - remaining ranking methods moved behind `src/api/ranking-legacy.ts`
   - unsupported creator/topic tabs and period controls were removed from the active page instead of being guessed against ID-only responses
-- Current branch history already includes upstream commit `a563624 feat(public-content): align home feed post detail and comments to backend contracts`, so those surfaces are now the baseline rather than the next slice candidate.
-- The shared `AppSidebar.vue` still used speculative `useHotCreatorsQuery` output (`item.user`) even though the confirmed backend `GET /api/v1/ranking/creators/hot?page=&size=` returns creator IDs only.
-- The smallest next public-content slice after ranking is therefore shared-sidebar hot creators:
-  - fetch creator IDs from `GET /api/v1/ranking/creators/hot?page=&size=`
-  - hydrate display data from confirmed user detail reads via `GET /api/v1/users/{userId}`
-- Backend `UserVO` confirms `followersCount` but does not provide `postsCount`, so the shared hot-creators sidebar must hide post-count text instead of fabricating `0`.

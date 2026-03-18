@@ -219,7 +219,7 @@ export interface Tag {
   name: string;
   slug: string;
   description?: string;
-  postCount?: number;
+  postCount: number;
   createdAt: string;
   updatedAt: string;
 }

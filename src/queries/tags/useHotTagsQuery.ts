@@ -6,7 +6,6 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import { tagApi } from '@/api/tag';
-import { CACHE_TIMES } from '../query-config';
 import { queryKeys } from '../query-keys';
 
 /**
@@ -17,21 +16,13 @@ import { queryKeys } from '../query-keys';
  * 
  * @example
  * ```ts
- * const { data: hotTags, isLoading } = useHotTagsQuery(ref({ limit: 10 }));
+ * const { data: hotTags, isLoading } = useHotTagsQuery(ref({ limit: 10, period: 'week' }));
  * ```
  */
-export function useHotTagsQuery(params?: Ref<{ limit?: number }> | { limit?: number }) {
-  const queryParams = computed(() => {
-    if (!params) {
-      return undefined;
-    }
-
-    return typeof params === 'object' && 'value' in params ? params.value : params;
-  });
-
+export function useHotTagsQuery(params?: Ref<{ limit?: number; period?: 'day' | 'week' | 'month' }>) {
   return useQuery({
-    queryKey: computed(() => queryKeys.tags.hot(queryParams.value?.limit)),
-    queryFn: () => tagApi.getHotTags({ limit: queryParams.value?.limit }),
-    ...CACHE_TIMES.TAG_INFO,
+    queryKey: computed(() => queryKeys.tags.hot()),
+    queryFn: () => tagApi.getHotTags(params?.value),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

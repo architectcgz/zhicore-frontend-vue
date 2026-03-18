@@ -9,7 +9,7 @@
   >
     <div class="user-avatar">
       <img 
-        :src="user.avatar || '/default-avatar.png'" 
+        :src="user.avatar || '/images/default-avatar.svg'" 
         :alt="user.nickname"
         @error="handleImageError"
       >
@@ -128,8 +128,11 @@ const handleFollowToggle = async () => {
 /**
  * 处理图片加载错误
  */
-const handleImageError = () => {
+const handleImageError = (event: Event) => {
   imageError.value = true;
+  const img = event.target as HTMLImageElement;
+  img.onerror = null;
+  img.src = '/images/default-avatar.svg';
 };
 </script>
 

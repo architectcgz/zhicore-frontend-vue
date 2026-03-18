@@ -84,7 +84,6 @@ Key gaps:
 
 - Follow routes in frontend use `/users/{userId}/follow`; backend uses `/{actorId}/following/{targetUserId}`.
 - Blocking routes from backend have no frontend module.
-- Shared hot-creators sidebar now hydrates creator IDs through confirmed user detail reads, but the full profile route still relies on `useUser` flows that mix speculative follow, favorites, and stats assumptions.
 - Stranger-message settings exist in backend inventory but are absent in settings UI.
 - Settings page includes email and password flows not present in the inventory.
 
@@ -102,12 +101,7 @@ Key gaps:
 
 - Frontend models still include category support although categories are not part of the inspected backend scope.
 - Draft lifecycle is modeled as `/posts/drafts` in frontend, but backend inventory uses `/posts/{postId}/draft`, `/posts/drafts`, `GET /posts/my`, and explicit publish/unpublish/schedule flows.
-- Tag detail/list reads are now aligned to backend-confirmed tag contracts:
-  - tag detail: `GET /api/v1/tags/{slug}`
-  - tag posts: `GET /api/v1/tags/{slug}/posts?page=&size=`
-  - tag search: `GET /api/v1/tags/search?keyword=&limit=`
-  - UI no longer renders speculative `isFollowing`, `followersCount`, `relatedTags`, or paging fields.
-- Remaining: tag follow/related/suggestions/followers are not confirmed in the inspected content service and are currently not implemented in the public-content read slice.
+- Tag detail/list screens assume `isFollowing`, `followersCount`, `relatedTags`, and `totalPages` fields that are not part of the shared frontend type model and are not confirmed by the backend inventory.
 - The editor path uses post-image upload assumptions instead of contract-aligned upload service usage.
 
 ### Comments
@@ -156,31 +150,31 @@ Key gaps:
 
 Implemented:
 
-- search results route/page narrowed to post-only search
-- contract-aligned `src/api/search.ts` for confirmed `/search/posts`, `/search/suggest`, `/search/hot`, `/search/history`
-- search result normalization from `SearchResultVO<PostSearchVO>` to route-friendly post cards
-- search bar suggestions and hot keywords aligned to backend `string[]` responses
+- search results route/page
+- hot-search and suggestion hooks
 
 Key gaps:
 
 - Backend inventory confirms post search plus suggestions/hot/history; the active UI now limits itself to the confirmed post-only search read flow.
-- Unconfirmed global/user/tag/advanced/report/filter capabilities are intentionally isolated (see `src/api/search-legacy.ts`) and should not be used by the public-content slice until contracts are verified.
-- Backend history list/clear is now wired for authenticated users; anonymous users still use localStorage fallback because the confirmed backend history contract is auth-required.
+- Unconfirmed global/user/tag/advanced search capabilities are intentionally isolated (see `src/api/search-legacy.ts`) and should not be used by the public-content slice until contracts are verified.
+- Backend history list/clear exists but is not wired to the current SearchBar UX yet (SearchBar still uses localStorage history).
 
 ### Ranking
 
 Implemented:
 
-- ranking page narrowed to backend-confirmed hot-post-only view
+- ranking page shell
 - hot-post sidebar on home
-- shared hot-creators sidebar now hydrates `GET /ranking/creators/hot` IDs through confirmed `GET /users/{id}` reads
-- contract-aligned `src/api/ranking.ts` now keeps active confirmed reads for `GET /ranking/posts/hot/details` and `GET /ranking/creators/hot`
 
 Key gaps:
 
-- Daily/weekly/monthly post lists and creator/topic hot lists still need explicit hydration or page-ready DTO handling before they can return to the active ranking page.
-- Legacy ranking APIs and hooks remain available for untouched surfaces, but they are intentionally separated from the contract-aligned page and client.
-- Unsupported creator/topic time tabs, yearly posts, rising/trending lists, stats, and item-rank detail flows are no longer exposed by the active ranking page.
+- Backend confirms hot creator/topic reads only, but frontend exposes daily/weekly/monthly creators and topics.
+- Frontend ranking client assumes yearly posts, rising creators, trending topics, stats, and item-rank detail APIs not present in the inventory.
+- The safest currently supported ranking set is:
+  - hot posts
+  - daily/weekly/monthly posts
+  - hot creators
+  - hot topics
 
 ### Upload
 

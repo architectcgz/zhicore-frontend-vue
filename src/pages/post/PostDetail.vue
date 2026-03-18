@@ -312,7 +312,7 @@ const route = useRoute();
 const postId = props.id || route.params.id as string;
 
 // 默认头像
-const defaultAvatar = '/images/default-avatar.png';
+const defaultAvatar = '/images/default-avatar.svg';
 
 // 获取文章数据
 const {
@@ -464,7 +464,8 @@ const handleCommentCountChange = (count: number) => {
  */
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  img.src = '/images/default-post-cover.png';
+  img.onerror = null;
+  img.src = '/images/default-post-cover.svg';
 };
 
 /**
@@ -472,6 +473,7 @@ const handleImageError = (event: Event) => {
  */
 const handleAvatarError = (event: Event) => {
   const img = event.target as HTMLImageElement;
+  img.onerror = null;
   img.src = defaultAvatar;
 };
 </script>

@@ -6,7 +6,7 @@ Continue ZhiCore frontend development with a contract-first pipeline. This round
 ## Status
 - Current phase: in_progress
 - Active workflow: `planning-with-files` + `leader`
-- Current slice: public sidebar hot-creators alignment
+- Current slice: public ranking hot-post-only alignment
 
 ## Phases
 - [x] Restore planning context from existing repo documents
@@ -34,15 +34,9 @@ Continue ZhiCore frontend development with a contract-first pipeline. This round
 - [x] Commit the completed search slice
 - [x] Analyze the next public-content slice after search
 - [x] Implement public ranking hot-post-only alignment with minimal diff
-- [x] Review the ranking slice changes
+- [ ] Review the ranking slice changes
 - [x] Validate the ranking slice with targeted checks
 - [x] Sync documentation and update planning files for the ranking slice
-- [x] Commit the completed ranking slice
-- [x] Analyze the next public-content slice after ranking
-- [x] Implement public sidebar hot-creators alignment with minimal diff
-- [ ] Review the sidebar slice changes
-- [x] Validate the sidebar slice with targeted checks
-- [x] Sync documentation and update planning files for the sidebar slice
 
 ## Constraints
 - Keep changes limited to the first public-content vertical slice.
@@ -55,4 +49,3 @@ Continue ZhiCore frontend development with a contract-first pipeline. This round
 |---|---:|---|
 | `session-catchup.py` not found under `/home/azhi/.claude/plugins/planning-with-files/scripts/` | 1 | Use the active Codex skill directory and restore context manually from `task_plan.md`, `findings.md`, `progress.md`, and current repo docs |
 | `vue-tsc` crashed with `Search string not found: /supportedTSExtensions.../` in the previous session | 1 | Already resolved upstream by exact-pinning `typescript` to `5.3.3`; keep this as a known environment baseline |
-| `code-reviewer` runner stream disconnected before sidebar slice produced a final verdict | 1 | Fixed the only concrete review finding locally (`Promise.all` -> partial-success hydration), reran `git diff --check`, `npm run build:check:public-content`, and `npm run build`, then kept the review checkbox pending until a clean reviewer verdict is available |

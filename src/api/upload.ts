@@ -59,7 +59,7 @@ export class UploadApi {
 
   constructor() {
     // zhicore-upload 服务地址
-    this.baseURL = import.meta.env.VITE_UPLOAD_API_URL || 'http://localhost:8104/api/v1/upload';
+    this.baseURL = import.meta.env.VITE_UPLOAD_API_URL || '/api/v1/upload';
   }
 
   /**

@@ -1,10 +1,10 @@
 <!--
   主题切换组件
-  提供主题切换下拉菜单，支持亮色/暗色/自动三种模式
+  提供亮色、暗色和自动三种模式切换
 -->
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import type { Theme } from '@/stores/theme';
 
@@ -16,72 +16,52 @@ const {
   setTheme,
 } = useTheme();
 
-// 下拉菜单状态
 const isOpen = ref(false);
 const dropdownRef = ref<HTMLDivElement | null>(null);
 
-/**
- * 主题选项配置
- */
-const themeOptions = [
+const themeOptions: Array<{ value: Theme; label: string; description: string }> = [
   {
-    value: 'light' as Theme,
+    value: 'light',
     label: '亮色',
-    icon: '☀️',
-    description: '',
+    description: '明亮阅读',
   },
   {
-    value: 'dark' as Theme,
+    value: 'dark',
     label: '暗色',
-    icon: '🌙',
-    description: '',
+    description: '夜间浏览',
   },
   {
-    value: 'auto' as Theme,
+    value: 'auto',
     label: '自动',
-    icon: '🔄',
     description: '跟随系统',
   },
 ];
 
-/**
- * 切换下拉菜单
- */
+const currentIcon = computed(() => getThemeIcon.value);
+
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value;
 };
 
-/**
- * 选择主题
- */
 const selectTheme = (selectedTheme: Theme) => {
   setTheme(selectedTheme);
   isOpen.value = false;
 };
 
-/**
- * 点击外部关闭下拉菜单
- */
 const handleClickOutside = (event: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     isOpen.value = false;
   }
 };
 
-/**
- * 按下 Escape 键关闭下拉菜单
- */
 const handleEscape = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && isOpen.value) {
     isOpen.value = false;
   }
 };
 
-/**
- * 获取自动模式的描述文字
- */
 const getAutoDescription = () => {
-  return `跟随系统 (当前: ${systemTheme.value === 'dark' ? '暗色' : '亮色'})`;
+  return `当前系统为${systemTheme.value === 'dark' ? '暗色' : '亮色'}`;
 };
 
 onMounted(() => {
@@ -100,40 +80,67 @@ onUnmounted(() => {
     ref="dropdownRef"
     class="theme-toggle"
   >
-    <!-- 主题切换按钮 -->
     <button
-      class="theme-toggle__button"
+      class="theme-toggle__button soft-pill"
       :class="{ 'theme-toggle__button--active': isOpen }"
-      :aria-label="`切换主题 (当前: ${getThemeLabel})`"
+      :aria-label="`切换主题，当前为${getThemeLabel}`"
       :aria-expanded="isOpen"
+      type="button"
       @click="toggleDropdown"
     >
-      <!-- 图标 -->
       <span class="theme-toggle__icon">
-        <span v-if="getThemeIcon === 'sun'">☀️</span>
-        <span v-else-if="getThemeIcon === 'moon'">🌙</span>
-        <span v-else>🔄</span>
+        <svg
+          v-if="currentIcon === 'sun'"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="4.5"
+          />
+          <path d="M12 2.75v2.5M12 18.75v2.5M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2.75 12h2.5M18.75 12h2.5M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" />
+        </svg>
+        <svg
+          v-else-if="currentIcon === 'moon'"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M20.58 14.16A8.98 8.98 0 0 1 9.84 3.42a9 9 0 1 0 10.74 10.74Z" />
+        </svg>
+        <svg
+          v-else
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <rect
+            x="4"
+            y="5"
+            width="16"
+            height="11"
+            rx="2.5"
+          />
+          <path d="M8 19h8M12 16v3" />
+        </svg>
       </span>
-      
-      <!-- 标签 -->
-      <span class="theme-toggle__label">
-        {{ getThemeLabel }}
-      </span>
-
-      <!-- 箭头图标 -->
+      <span class="theme-toggle__label">{{ getThemeLabel }}</span>
       <span
         class="theme-toggle__arrow"
         :class="{ 'theme-toggle__arrow--up': isOpen }"
       >
-        ▼
+        <svg
+          viewBox="0 0 20 20"
+          aria-hidden="true"
+        >
+          <path d="m5 7.5 5 5 5-5" />
+        </svg>
       </span>
     </button>
 
-    <!-- 下拉菜单 -->
-    <Transition name="dropdown">
+    <Transition name="theme-toggle-dropdown">
       <div
         v-if="isOpen"
-        class="theme-toggle__dropdown"
+        class="theme-toggle__dropdown surface-panel"
         role="menu"
       >
         <button
@@ -142,23 +149,23 @@ onUnmounted(() => {
           class="theme-toggle__option"
           :class="{ 'theme-toggle__option--active': theme === option.value }"
           role="menuitem"
+          type="button"
           @click="selectTheme(option.value)"
         >
-          <span class="theme-toggle__option-icon">{{ option.icon }}</span>
-          <div class="theme-toggle__option-content">
+          <div class="theme-toggle__option-copy">
             <span class="theme-toggle__option-label">{{ option.label }}</span>
-            <span
-              v-if="option.value === 'auto'"
-              class="theme-toggle__option-description"
-            >
-              {{ getAutoDescription() }}
+            <span class="theme-toggle__option-description">
+              {{ option.value === 'auto' ? getAutoDescription() : option.description }}
             </span>
           </div>
           <span
             v-if="theme === option.value"
             class="theme-toggle__option-check"
+            aria-hidden="true"
           >
-            ✓
+            <svg viewBox="0 0 20 20">
+              <path d="m4.5 10.5 3.25 3.25L15.5 6" />
+            </svg>
           </span>
         </button>
       </div>
@@ -169,54 +176,52 @@ onUnmounted(() => {
 <style scoped>
 .theme-toggle {
   position: relative;
-  display: inline-block;
+  z-index: 40;
 }
-
-/* ========== 按钮样式 ========== */
 
 .theme-toggle__button {
+  gap: 10px;
+  min-width: 112px;
+  padding: 10px 14px;
+  color: var(--color-text);
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.theme-toggle__button:hover,
+.theme-toggle__button--active {
+  border-color: var(--color-border-dark);
+  background: var(--color-bg-secondary);
+}
+
+.theme-toggle__icon,
+.theme-toggle__arrow,
+.theme-toggle__option-check {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  min-width: 120px;
-}
-
-.theme-toggle__button:hover {
-  background-color: var(--color-hover);
-  border-color: var(--color-cta);
-}
-
-.theme-toggle__button--active {
-  background-color: var(--color-hover);
-  border-color: var(--color-cta);
-}
-
-.theme-toggle__icon {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: var(--font-size-lg);
+}
+
+.theme-toggle__icon svg,
+.theme-toggle__arrow svg,
+.theme-toggle__option-check svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .theme-toggle__label {
-  flex: 1;
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  text-align: left;
 }
 
 .theme-toggle__arrow {
-  display: flex;
-  align-items: center;
-  font-size: 10px;
   color: var(--color-text-secondary);
   transition: transform var(--transition-base);
 }
@@ -225,122 +230,76 @@ onUnmounted(() => {
   transform: rotate(180deg);
 }
 
-/* ========== 下拉菜单样式 ========== */
-
 .theme-toggle__dropdown {
   position: absolute;
-  top: calc(100% + var(--space-xs));
+  top: calc(100% + 10px);
   right: 0;
-  min-width: 160px;
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  z-index: 1000;
+  min-width: 220px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  z-index: 60;
 }
-
-[data-theme='dark'] .theme-toggle__dropdown {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* ========== 选项样式 ========== */
 
 .theme-toggle__option {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  justify-content: space-between;
   width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  background-color: transparent;
+  padding: 12px;
   border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: var(--font-size-sm);
-  text-align: left;
-  cursor: pointer;
   transition: background-color var(--transition-base);
 }
 
-.theme-toggle__option:hover {
-  background-color: var(--color-hover);
-}
-
+.theme-toggle__option:hover,
 .theme-toggle__option--active {
-  background-color: var(--color-bg-secondary);
+  background: var(--color-hover);
 }
 
-.theme-toggle__option-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-base);
-  width: 20px;
-  flex-shrink: 0;
-}
-
-.theme-toggle__option-content {
-  flex: 1;
+.theme-toggle__option-copy {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  text-align: left;
 }
 
 .theme-toggle__option-label {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .theme-toggle__option-description {
-  font-size: var(--font-size-xs);
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
 }
 
 .theme-toggle__option-check {
-  display: flex;
-  align-items: center;
   color: var(--color-cta);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
 }
 
-/* ========== 下拉动画 ========== */
-
-.dropdown-enter-active,
-.dropdown-leave-active {
-  transition: all 0.2s ease;
+.theme-toggle-dropdown-enter-active,
+.theme-toggle-dropdown-leave-active {
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base);
 }
 
-.dropdown-enter-from {
+.theme-toggle-dropdown-enter-from,
+.theme-toggle-dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
 }
 
-.dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-/* ========== 响应式设计 ========== */
-
-/* 移动设备 */
 @media (max-width: 767px) {
   .theme-toggle__button {
-    min-width: 100px;
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--font-size-xs);
+    min-width: auto;
+    padding: 10px 12px;
   }
 
-  .theme-toggle__icon {
-    font-size: var(--font-size-base);
-  }
-
-  .theme-toggle__dropdown {
-    min-width: 140px;
-  }
-
-  .theme-toggle__option {
-    padding: var(--space-xs) var(--space-sm);
+  .theme-toggle__label {
+    display: none;
   }
 }
 </style>

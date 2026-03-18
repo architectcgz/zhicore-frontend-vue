@@ -420,7 +420,7 @@ export function useAuth() {
     
     if (!baseUrl) {
       // 返回默认头像
-      return `/images/default-avatar-${size}.png`;
+      return '/images/default-avatar.svg';
     }
 
     // 如果是完整 URL，直接返回

@@ -6,27 +6,26 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import { tagApi } from '@/api/tag';
-import { CACHE_TIMES } from '../query-config';
 import { queryKeys } from '../query-keys';
 
 /**
  * 获取标签详情
- *
- * @param tagSlug 标签 slug
+ * 
+ * @param tagId 标签 ID
  * @returns Query 结果，包含标签详情
- *
+ * 
  * @example
  * ```ts
- * const { data: tag, isLoading, error } = useTagQuery(ref('frontend'));
+ * const { data: tag, isLoading, error } = useTagQuery(ref('tag-id'));
  * ```
  */
-export function useTagQuery(tagSlug: Ref<string> | string) {
-  const slug = computed(() => typeof tagSlug === 'string' ? tagSlug : tagSlug.value);
-
+export function useTagQuery(tagId: Ref<string> | string) {
+  const id = computed(() => typeof tagId === 'string' ? tagId : tagId.value);
+  
   return useQuery({
-    queryKey: computed(() => queryKeys.tags.bySlug(slug.value)),
-    queryFn: () => tagApi.getTagBySlug(slug.value),
-    enabled: computed(() => !!slug.value),
-    ...CACHE_TIMES.TAG_INFO,
+    queryKey: computed(() => queryKeys.tags.detail(id.value)),
+    queryFn: () => tagApi.getTagById(id.value),
+    enabled: computed(() => !!id.value),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

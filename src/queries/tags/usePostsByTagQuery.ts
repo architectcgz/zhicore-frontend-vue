@@ -6,41 +6,33 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import { tagApi } from '@/api/tag';
-import { CACHE_TIMES } from '../query-config';
 import { queryKeys } from '../query-keys';
 
 /**
  * 根据标签获取文章列表
- *
- * @param tagSlug 标签 slug
+ * 
+ * @param tagId 标签 ID
  * @param params 查询参数（可选）
  * @returns Query 结果，包含文章列表
- *
+ * 
  * @example
  * ```ts
  * const { data, isLoading } = usePostsByTagQuery(
- *   ref('frontend'),
- *   ref({ page: 0, size: 20 })
+ *   ref('tag-id'),
+ *   ref({ page: 1, size: 20, sort: 'latest' })
  * );
  * ```
  */
 export function usePostsByTagQuery(
-  tagSlug: Ref<string> | string,
-  params?: Ref<{ page?: number; size?: number } | undefined> | { page?: number; size?: number }
+  tagId: Ref<string> | string,
+  params?: Ref<{ page?: number; size?: number; sort?: 'latest' | 'popular' | 'hot' }>
 ) {
-  const slug = computed(() => typeof tagSlug === 'string' ? tagSlug : tagSlug.value);
-  const queryParams = computed(() => {
-    if (!params) {
-      return undefined;
-    }
-
-    return typeof params === 'object' && 'value' in params ? params.value : params;
-  });
-
+  const id = computed(() => typeof tagId === 'string' ? tagId : tagId.value);
+  
   return useQuery({
-    queryKey: computed(() => queryKeys.tags.posts(slug.value, queryParams.value)),
-    queryFn: () => tagApi.getPostsByTagSlug(slug.value, queryParams.value),
-    enabled: computed(() => !!slug.value),
-    ...CACHE_TIMES.POST_LIST,
+    queryKey: computed(() => queryKeys.tags.posts(id.value, params?.value)),
+    queryFn: () => tagApi.getPostsByTag(id.value, params?.value),
+    enabled: computed(() => !!id.value),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }

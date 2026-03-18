@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
-import { legacySearchApi, type AdvancedSearchParams } from '@/api/search-legacy';
+import { searchApi, type AdvancedSearchParams } from '@/api/search';
 import { queryKeys } from '../query-keys';
 
 /**
@@ -32,7 +32,7 @@ export function useSearchUsersQuery(
   
   return useQuery({
     queryKey: computed(() => queryKeys.search.users(searchQuery.value, params?.value)),
-    queryFn: () => legacySearchApi.searchUsers({ query: searchQuery.value, ...params?.value }),
+    queryFn: () => searchApi.searchUsers({ query: searchQuery.value, ...params?.value }),
     enabled: computed(() => searchQuery.value.length >= 2),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });

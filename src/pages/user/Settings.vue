@@ -133,7 +133,7 @@
             <div class="avatar-section">
               <div class="current-avatar">
                 <img 
-                  :src="currentAvatar || '/default-avatar.png'" 
+                  :src="currentAvatar || '/images/default-avatar.svg'" 
                   alt="当前头像"
                   class="avatar-preview"
                 >

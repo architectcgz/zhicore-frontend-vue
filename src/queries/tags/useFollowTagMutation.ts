@@ -4,14 +4,9 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
-import { legacyTagApi } from '@/api/tag-legacy';
+import { tagApi } from '@/api/tag';
 import { queryKeys } from '../query-keys';
 import type { Tag } from '@/types';
-
-type FollowableTag = Tag & {
-  isFollowing: boolean;
-  followersCount: number;
-};
 
 /**
  * 关注/取消关注标签（乐观更新）
@@ -31,19 +26,19 @@ export function useFollowTagMutation() {
   return useMutation({
     mutationFn: async ({ tagId, isFollowing }: { tagId: string; isFollowing: boolean }) => {
       if (isFollowing) {
-        return legacyTagApi.unfollowTag(tagId);
+        return tagApi.unfollowTag(tagId);
       } else {
-        return legacyTagApi.followTag(tagId);
+        return tagApi.followTag(tagId);
       }
     },
     onMutate: async ({ tagId, isFollowing }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.tags.detail(tagId) });
-
-      const previousTag = queryClient.getQueryData<FollowableTag>(queryKeys.tags.detail(tagId));
-
+      
+      const previousTag = queryClient.getQueryData<Tag>(queryKeys.tags.detail(tagId));
+      
       // 乐观更新标签信息
       if (previousTag) {
-        queryClient.setQueryData<FollowableTag>(queryKeys.tags.detail(tagId), {
+        queryClient.setQueryData<Tag>(queryKeys.tags.detail(tagId), {
           ...previousTag,
           isFollowing: !isFollowing,
           followersCount: isFollowing ? previousTag.followersCount - 1 : previousTag.followersCount + 1,

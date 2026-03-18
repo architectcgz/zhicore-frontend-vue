@@ -1,522 +1,847 @@
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useHotSearchesQuery } from '@/queries/search/useHotSearchesQuery';
-import { useSearchPostsQuery } from '@/queries/search/useSearchPostsQuery';
-import { getErrorMessage } from '@/types/errors';
-import type { SearchPostItem } from '@/api/search';
-
-const route = useRoute();
-const router = useRouter();
-const pageSize = 10;
-
-const searchQuery = computed(() => {
-  const raw = route.query.q;
-  return typeof raw === 'string' ? raw.trim() : '';
-});
-
-const currentPage = computed(() => {
-  const raw = Number(route.query.page ?? '1');
-  if (!Number.isFinite(raw) || raw < 1) {
-    return 1;
-  }
-
-  return Math.floor(raw);
-});
-
-const queryParams = computed(() => ({
-  page: currentPage.value - 1,
-  size: pageSize,
-}));
-
-const {
-  data,
-  isLoading,
-  error,
-  refetch,
-} = useSearchPostsQuery(searchQuery, queryParams);
-
-const {
-  data: hotKeywordsData,
-} = useHotSearchesQuery(10);
-
-const posts = computed(() => data.value?.items ?? []);
-const totalResults = computed(() => data.value?.total ?? 0);
-const totalPages = computed(() => {
-  if (!data.value || data.value.total === 0) {
-    return 0;
-  }
-
-  return Math.ceil(data.value.total / data.value.size);
-});
-const errorMessage = computed(() => error.value ? getErrorMessage(error.value) : null);
-const loading = computed(() => isLoading.value && !!searchQuery.value);
-const hotKeywords = computed(() => hotKeywordsData.value ?? []);
-
-const stripHtml = (value?: string) => (value ?? '').replace(/<[^>]*>/g, '').trim();
-
-const getPostTitle = (post: SearchPostItem) => stripHtml(post.highlightTitle || post.title) || post.title;
-const getPostExcerpt = (post: SearchPostItem) => {
-  const value = stripHtml(post.highlightContent || post.excerpt);
-  return value || '暂无摘要';
-};
-
-const formatDate = (value?: string) => {
-  if (!value) {
-    return '';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-};
-
-const navigateToPost = (postId: string) => {
-  void router.push({ name: 'PostDetail', params: { id: postId } });
-};
-
-const navigateToKeyword = (keyword: string, page: number = 1) => {
-  void router.push({
-    path: '/search',
-    query: {
-      q: keyword,
-      page: page > 1 ? String(page) : undefined,
-    },
-  });
-};
-
-const handleRetry = () => {
-  void refetch();
-};
-
-const goToPage = (page: number) => {
-  if (page < 1 || page > totalPages.value || !searchQuery.value) {
-    return;
-  }
-
-  navigateToKeyword(searchQuery.value, page);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-</script>
-
 <template>
   <div class="search-results">
-    <header class="search-results__header">
-      <div class="search-results__header-inner">
-        <p class="search-results__eyebrow">
-          Public Search
-        </p>
+    <!-- 搜索头部 -->
+    <div class="search-results__header">
+      <div class="search-results__header-content">
         <h1 class="search-results__title">
-          文章搜索
+          搜索结果
           <span
             v-if="searchQuery"
             class="search-results__query"
-          >“{{ searchQuery }}”</span>
+          >"{{ searchQuery }}"</span>
         </h1>
         <p
-          v-if="searchQuery && !loading && !errorMessage"
-          class="search-results__summary"
+          v-if="totalResults > 0"
+          class="search-results__count"
         >
-          找到 {{ totalResults }} 条结果
-        </p>
-        <p
-          v-else
-          class="search-results__summary"
-        >
-          当前仅对齐 backend-confirmed 的文章搜索能力
-        </p>
-      </div>
-    </header>
-
-    <main class="search-results__body">
-      <section
-        v-if="!searchQuery"
-        class="search-results__panel"
-      >
-        <h2 class="search-results__panel-title">
-          热门搜索
-        </h2>
-        <p class="search-results__panel-text">
-          从已确认的热门关键词开始搜索文章。
-        </p>
-        <div
-          v-if="hotKeywords.length > 0"
-          class="search-results__keywords"
-        >
-          <button
-            v-for="keyword in hotKeywords"
-            :key="keyword"
-            class="search-results__keyword"
-            @click="navigateToKeyword(keyword)"
+          找到 <strong>{{ totalResults }}</strong> 个结果
+          <span
+            v-if="searchTime"
+            class="search-results__time"
           >
-            {{ keyword }}
-          </button>
-        </div>
-        <p
-          v-else
-          class="search-results__empty-text"
-        >
-          暂无热门搜索词
-        </p>
-      </section>
-
-      <div
-        v-else-if="loading"
-        class="search-results__state"
-      >
-        <div class="search-results__spinner" />
-        <p>搜索中...</p>
-      </div>
-
-      <div
-        v-else-if="errorMessage"
-        class="search-results__state"
-      >
-        <p class="search-results__error">
-          {{ errorMessage }}
-        </p>
-        <button
-          class="search-results__retry"
-          @click="handleRetry"
-        >
-          重试
-        </button>
-      </div>
-
-      <section
-        v-else-if="posts.length > 0"
-        class="search-results__results"
-      >
-        <article
-          v-for="post in posts"
-          :key="post.id"
-          class="search-results__card"
-          @click="navigateToPost(post.id)"
-        >
-          <div class="search-results__card-main">
-            <div class="search-results__meta">
-              <span v-if="post.authorName">{{ post.authorName }}</span>
-              <span v-if="post.publishedAt">{{ formatDate(post.publishedAt) }}</span>
-              <span v-if="post.score !== undefined">相关度 {{ post.score.toFixed(1) }}</span>
-            </div>
-
-            <h2 class="search-results__card-title">
-              {{ getPostTitle(post) }}
-            </h2>
-
-            <p class="search-results__card-excerpt">
-              {{ getPostExcerpt(post) }}
-            </p>
-
-            <div
-              v-if="post.tags.length > 0"
-              class="search-results__tags"
-            >
-              <span
-                v-for="tag in post.tags"
-                :key="`${post.id}-${tag}`"
-                class="search-results__tag"
-              >
-                #{{ tag }}
-              </span>
-            </div>
-          </div>
-
-          <div class="search-results__stats">
-            <span>赞 {{ post.likeCount }}</span>
-            <span>评 {{ post.commentCount }}</span>
-            <span>阅 {{ post.viewCount }}</span>
-          </div>
-        </article>
-
-        <div
-          v-if="totalPages > 1"
-          class="search-results__pagination"
-        >
-          <button
-            class="search-results__pagination-button"
-            :disabled="currentPage <= 1"
-            @click="goToPage(currentPage - 1)"
-          >
-            上一页
-          </button>
-          <span class="search-results__pagination-info">
-            第 {{ currentPage }} / {{ totalPages }} 页
+            (耗时 {{ searchTime }}ms)
           </span>
-          <button
-            class="search-results__pagination-button"
-            :disabled="currentPage >= totalPages"
-            @click="goToPage(currentPage + 1)"
-          >
-            下一页
-          </button>
-        </div>
-      </section>
-
-      <section
-        v-else
-        class="search-results__panel"
-      >
-        <h2 class="search-results__panel-title">
-          没有找到相关文章
-        </h2>
-        <p class="search-results__panel-text">
-          试试更短或更通用的关键词，或者从下面的热门搜索开始。
         </p>
-        <div
-          v-if="hotKeywords.length > 0"
-          class="search-results__keywords"
-        >
+      </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="search-results__container">
+      <!-- 筛选器侧边栏 -->
+      <aside class="search-results__filters">
+        <div class="search-results__filters-header">
+          <h2 class="search-results__filters-title">
+            筛选条件
+          </h2>
           <button
-            v-for="keyword in hotKeywords"
-            :key="keyword"
-            class="search-results__keyword"
-            @click="navigateToKeyword(keyword)"
+            v-if="hasActiveFilters"
+            class="search-results__filters-clear"
+            @click="handleClearFilters"
           >
-            {{ keyword }}
+            清空
           </button>
         </div>
-      </section>
-    </main>
+
+        <!-- 排序选项 -->
+        <div class="search-results__filter-section">
+          <h3 class="search-results__filter-title">
+            排序方式
+          </h3>
+          <div class="search-results__filter-options">
+            <button
+              v-for="option in sortOptions"
+              :key="option.value"
+              class="search-results__filter-option"
+              :class="{ 'search-results__filter-option--active': filters.sort === option.value }"
+              @click="handleSortChange(option.value)"
+            >
+              <i :class="option.icon" />
+              <span>{{ option.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 日期范围 -->
+        <div class="search-results__filter-section">
+          <h3 class="search-results__filter-title">
+            发布时间
+          </h3>
+          <div class="search-results__filter-options">
+            <button
+              v-for="range in dateRanges"
+              :key="range.value"
+              class="search-results__filter-option"
+              :class="{ 'search-results__filter-option--active': filters.dateRange === range.value }"
+              @click="handleDateRangeChange(range.value)"
+            >
+              {{ range.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 标签筛选 -->
+        <div
+          v-if="availableTags.length > 0"
+          class="search-results__filter-section"
+        >
+          <h3 class="search-results__filter-title">
+            标签
+          </h3>
+          <div class="search-results__filter-tags">
+            <button
+              v-for="tag in availableTags"
+              :key="tag.id"
+              class="search-results__filter-tag"
+              :class="{ 'search-results__filter-tag--active': filters.tagIds.includes(tag.id) }"
+              @click="handleTagToggle(tag.id)"
+            >
+              #{{ tag.name }}
+              <span class="search-results__filter-tag-count">{{ tag.postCount }}</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 结果列表 -->
+      <main class="search-results__main">
+        <!-- 标签页 -->
+        <div class="search-results__tabs">
+          <button
+            v-for="tab in tabs"
+            :key="tab.value"
+            class="search-results__tab"
+            :class="{ 'search-results__tab--active': activeTab === tab.value }"
+            @click="handleTabChange(tab.value)"
+          >
+            <i :class="tab.icon" />
+            <span>{{ tab.label }}</span>
+            <span
+              v-if="tab.count !== undefined"
+              class="search-results__tab-count"
+            >
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+
+        <!-- 加载状态 -->
+        <div
+          v-if="loading"
+          class="search-results__loading"
+        >
+          <div class="search-results__spinner" />
+          <p>搜索中...</p>
+        </div>
+
+        <!-- 文章结果 -->
+        <div
+          v-else-if="activeTab === 'POST' && posts.length > 0"
+          class="search-results__posts"
+        >
+          <PostCard
+            v-for="post in posts"
+            :key="post.id"
+            :post="post"
+            class="search-results__post-card"
+            @like-change="handleLikeChange"
+            @favorite-change="handleFavoriteChange"
+          />
+
+          <!-- 加载更多 -->
+          <div
+            v-if="hasMorePosts"
+            class="search-results__load-more"
+          >
+            <button
+              class="search-results__load-more-button"
+              :disabled="loadingMore"
+              @click="handleLoadMore"
+            >
+              {{ loadingMore ? '加载中...' : '加载更多' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 用户结果 -->
+        <div
+          v-else-if="activeTab === 'USER' && users.length > 0"
+          class="search-results__users"
+        >
+          <UserCard
+            v-for="user in users"
+            :key="user.id"
+            :user="user"
+            class="search-results__user-card"
+          />
+
+          <!-- 加载更多 -->
+          <div
+            v-if="hasMoreUsers"
+            class="search-results__load-more"
+          >
+            <button
+              class="search-results__load-more-button"
+              :disabled="loadingMore"
+              @click="handleLoadMore"
+            >
+              {{ loadingMore ? '加载中...' : '加载更多' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 空状态 -->
+        <EmptyState
+          v-else-if="!loading"
+          type="no-results"
+          :title="`未找到与 &quot;${searchQuery}&quot; 相关的${activeTab === 'POST' ? '文章' : '用户'}`"
+          description="尝试使用不同的关键词或调整筛选条件"
+          show-action
+          action-text="清空筛选"
+          @action="handleClearFilters"
+        />
+      </main>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
+import { searchApi, type AdvancedSearchParams } from '@/api/search';
+import type { Post, User, Tag } from '@/types';
+import PostCard from '@/components/post/PostCard.vue';
+import UserCard from '@/components/user/UserCard.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
+
+/**
+ * 路由和路由器
+ */
+const route = useRoute();
+
+/**
+ * 搜索关键词
+ */
+const searchQuery = ref('');
+
+/**
+ * 当前激活的标签页
+ */
+const activeTab = ref<'POST' | 'USER'>('POST');
+
+/**
+ * 标签页配置
+ */
+const tabs = computed(() => [
+  {
+    value: 'POST',
+    label: '文章',
+    icon: 'el-icon-document',
+    count: totalPosts.value,
+  },
+  {
+    value: 'USER',
+    label: '用户',
+    icon: 'el-icon-user',
+    count: totalUsers.value,
+  },
+]);
+
+/**
+ * 筛选条件
+ */
+const filters = ref<{
+  sort: 'relevance' | 'latest' | 'popular' | 'hot';
+  dateRange: 'all' | 'today' | 'week' | 'month' | 'year';
+  tagIds: string[];
+}>({
+  sort: 'relevance',
+  dateRange: 'all',
+  tagIds: [],
+});
+
+/**
+ * 排序选项
+ */
+const sortOptions = [
+  { value: 'relevance', label: '相关度', icon: 'el-icon-star-off' },
+  { value: 'latest', label: '最新', icon: 'el-icon-time' },
+  { value: 'popular', label: '最热', icon: 'el-icon-hot-water' },
+  { value: 'hot', label: '热门', icon: 'el-icon-trophy' },
+];
+
+/**
+ * 日期范围选项
+ */
+const dateRanges = [
+  { value: 'all', label: '全部时间' },
+  { value: 'today', label: '今天' },
+  { value: 'week', label: '本周' },
+  { value: 'month', label: '本月' },
+  { value: 'year', label: '今年' },
+];
+
+/**
+ * 可用标签
+ */
+const availableTags = ref<Tag[]>([]);
+
+/**
+ * 文章结果
+ */
+const posts = ref<Post[]>([]);
+const totalPosts = ref(0);
+const currentPostPage = ref(1);
+const hasMorePosts = ref(false);
+
+/**
+ * 用户结果
+ */
+const users = ref<User[]>([]);
+const totalUsers = ref(0);
+const currentUserPage = ref(1);
+const hasMoreUsers = ref(false);
+
+/**
+ * 总结果数
+ */
+const totalResults = computed(() => {
+  return activeTab.value === 'POST' ? totalPosts.value : totalUsers.value;
+});
+
+/**
+ * 搜索耗时
+ */
+const searchTime = ref(0);
+
+/**
+ * 加载状态
+ */
+const loading = ref(false);
+const loadingMore = ref(false);
+
+/**
+ * 点赞/收藏状态变化：更新本地列表（避免 PostCard 直接修改 props）
+ */
+const handleLikeChange = (data: { postId: string; isLiked: boolean; likeCount: number }) => {
+  posts.value = posts.value.map((post) =>
+    post.id === data.postId ? { ...post, isLiked: data.isLiked, likeCount: data.likeCount } : post
+  );
+};
+
+const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favoriteCount: number }) => {
+  posts.value = posts.value.map((post) =>
+    post.id === data.postId
+      ? { ...post, isFavorited: data.isFavorited, favoriteCount: data.favoriteCount }
+      : post
+  );
+};
+
+/**
+ * 是否有激活的筛选条件
+ */
+const hasActiveFilters = computed(() => {
+  return (
+    filters.value.sort !== 'relevance' ||
+    filters.value.dateRange !== 'all' ||
+    filters.value.tagIds.length > 0
+  );
+});
+
+/**
+ * 获取日期范围
+ */
+const getDateRange = (range: string) => {
+  const now = new Date();
+  const start = new Date();
+
+  switch (range) {
+    case 'today':
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'week':
+      start.setDate(now.getDate() - 7);
+      break;
+    case 'month':
+      start.setMonth(now.getMonth() - 1);
+      break;
+    case 'year':
+      start.setFullYear(now.getFullYear() - 1);
+      break;
+    default:
+      return undefined;
+  }
+
+  return {
+    start: start.toISOString(),
+    end: now.toISOString(),
+  };
+};
+
+/**
+ * 构建搜索参数
+ */
+const buildSearchParams = (page: number = 1): AdvancedSearchParams => {
+  return {
+    query: searchQuery.value,
+    type: activeTab.value,
+    page,
+    size: 20,
+    sort: filters.value.sort,
+    dateRange: getDateRange(filters.value.dateRange),
+    tagIds: filters.value.tagIds.length > 0 ? filters.value.tagIds : undefined,
+  };
+};
+
+/**
+ * 执行搜索
+ */
+const performSearch = async (page: number = 1, append: boolean = false) => {
+  if (!searchQuery.value.trim()) return;
+
+  if (append) {
+    loadingMore.value = true;
+  } else {
+    loading.value = true;
+  }
+
+  try {
+    const startTime = Date.now();
+    const params = buildSearchParams(page);
+
+    if (activeTab.value === 'POST') {
+      const result = await searchApi.searchPosts(params);
+      
+      if (append) {
+        posts.value = [...posts.value, ...result.items];
+      } else {
+        posts.value = result.items;
+      }
+      
+      totalPosts.value = result.total;
+      currentPostPage.value = result.page;
+      hasMorePosts.value = result.hasMore;
+      
+      // 高亮关键词
+      highlightKeywords();
+    } else {
+      const result = await searchApi.searchUsers(params);
+      
+      if (append) {
+        users.value = [...users.value, ...result.items];
+      } else {
+        users.value = result.items;
+      }
+      
+      totalUsers.value = result.total;
+      currentUserPage.value = result.page;
+      hasMoreUsers.value = result.hasMore;
+    }
+
+    searchTime.value = Date.now() - startTime;
+  } catch (error) {
+    console.error('搜索失败:', error);
+  } finally {
+    loading.value = false;
+    loadingMore.value = false;
+  }
+};
+
+/**
+ * 高亮关键词
+ */
+const highlightKeywords = () => {
+  // 在下一个 tick 执行，确保 DOM 已更新
+  nextTick(() => {
+    const keywords = searchQuery.value.trim().split(/\s+/);
+    const elements = document.querySelectorAll('.search-results__post-card');
+
+    elements.forEach((element) => {
+      const titleEl = element.querySelector('h3');
+      const excerptEl = element.querySelector('p');
+
+      if (titleEl) {
+        highlightElement(titleEl, keywords);
+      }
+      if (excerptEl) {
+        highlightElement(excerptEl, keywords);
+      }
+    });
+  });
+};
+
+/**
+ * 高亮元素中的关键词
+ */
+const highlightElement = (element: Element, keywords: string[]) => {
+  const text = element.textContent || '';
+  const validKeywords = keywords.filter(k => k.length >= 2);
+  if (validKeywords.length === 0) return;
+
+  const pattern = new RegExp(
+    `(${validKeywords.map(escapeRegExp).join('|')})`, 'gi'
+  );
+  const fragment = document.createDocumentFragment();
+  let lastIndex = 0;
+
+  text.replace(pattern, (match, _p1, offset) => {
+    if (offset > lastIndex) {
+      fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+    }
+    const mark = document.createElement('mark');
+    mark.className = 'search-highlight';
+    mark.textContent = match;
+    fragment.appendChild(mark);
+    lastIndex = offset + match.length;
+    return match;
+  });
+
+  if (lastIndex < text.length) {
+    fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+
+  element.textContent = '';
+  element.appendChild(fragment);
+};
+
+/**
+ * 转义正则表达式特殊字符
+ */
+const escapeRegExp = (str: string): string => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+/**
+ * 加载可用标签
+ */
+const loadAvailableTags = async () => {
+  try {
+    const tags = await searchApi.searchTags({
+      query: searchQuery.value,
+      limit: 20,
+    });
+    availableTags.value = tags;
+  } catch (error) {
+    console.error('加载标签失败:', error);
+  }
+};
+
+/**
+ * 处理标签页切换
+ */
+const handleTabChange = (tab: 'POST' | 'USER') => {
+  if (activeTab.value === tab) return;
+  
+  activeTab.value = tab;
+  performSearch();
+};
+
+/**
+ * 处理排序变化
+ */
+const handleSortChange = (sort: typeof filters.value.sort) => {
+  filters.value.sort = sort;
+  performSearch();
+};
+
+/**
+ * 处理日期范围变化
+ */
+const handleDateRangeChange = (range: typeof filters.value.dateRange) => {
+  filters.value.dateRange = range;
+  performSearch();
+};
+
+/**
+ * 处理标签切换
+ */
+const handleTagToggle = (tagId: string) => {
+  const index = filters.value.tagIds.indexOf(tagId);
+  
+  if (index > -1) {
+    filters.value.tagIds.splice(index, 1);
+  } else {
+    filters.value.tagIds.push(tagId);
+  }
+  
+  performSearch();
+};
+
+/**
+ * 清空筛选条件
+ */
+const handleClearFilters = () => {
+  filters.value = {
+    sort: 'relevance',
+    dateRange: 'all',
+    tagIds: [],
+  };
+  performSearch();
+};
+
+/**
+ * 加载更多
+ */
+const handleLoadMore = () => {
+  const nextPage = activeTab.value === 'POST' ? currentPostPage.value + 1 : currentUserPage.value + 1;
+  performSearch(nextPage, true);
+};
+
+/**
+ * 监听路由查询参数变化
+ */
+watch(
+  () => route.query.q,
+  (newQuery) => {
+    if (newQuery && typeof newQuery === 'string') {
+      searchQuery.value = newQuery;
+      performSearch();
+      loadAvailableTags();
+    }
+  },
+  { immediate: true }
+);
+
+</script>
 
 <style scoped>
 .search-results {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(217, 119, 6, 0.16), transparent 26%),
-    linear-gradient(180deg, #fffaf1 0%, #fff 44%, #f8f5ef 100%);
+  background: var(--color-bg-secondary);
 }
 
 .search-results__header {
-  border-bottom: 1px solid rgba(120, 53, 15, 0.12);
-  background: rgba(255, 250, 241, 0.88);
-  backdrop-filter: blur(10px);
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-xl) 0;
 }
 
-.search-results__header-inner,
-.search-results__body {
-  width: min(960px, calc(100% - 32px));
+.search-results__header-content {
+  max-width: 1200px;
   margin: 0 auto;
-}
-
-.search-results__header-inner {
-  padding: 48px 0 28px;
-}
-
-.search-results__eyebrow {
-  margin: 0 0 8px;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #b45309;
+  padding: 0 var(--space-lg);
 }
 
 .search-results__title {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  color: #3f2a18;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-sm) 0;
 }
 
 .search-results__query {
-  color: #b45309;
+  color: var(--color-cta);
 }
 
-.search-results__summary {
-  margin: 12px 0 0;
-  color: #6b5b4d;
-}
-
-.search-results__body {
-  padding: 28px 0 56px;
-}
-
-.search-results__panel,
-.search-results__card,
-.search-results__state {
-  border: 1px solid rgba(120, 53, 15, 0.12);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 18px 45px rgba(63, 42, 24, 0.08);
-}
-
-.search-results__panel,
-.search-results__state {
-  padding: 28px;
-  text-align: center;
-}
-
-.search-results__panel-title {
-  margin: 0 0 10px;
-  font-size: 1.25rem;
-  color: #3f2a18;
-}
-
-.search-results__panel-text,
-.search-results__empty-text {
+.search-results__count {
+  font-size: 14px;
+  color: var(--color-text-secondary);
   margin: 0;
-  color: #6b5b4d;
 }
 
-.search-results__keywords {
+.search-results__time {
+  color: var(--color-text-tertiary);
+}
+
+.search-results__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: var(--space-xl);
+}
+
+/* 筛选器 */
+.search-results__filters {
+  position: sticky;
+  top: var(--space-xl);
+  height: fit-content;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-lg);
+}
+
+.search-results__filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.search-results__filters-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.search-results__filters-clear {
+  padding: 4px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--color-cta);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-results__filters-clear:hover {
+  background: var(--color-bg-hover);
+}
+
+.search-results__filter-section + .search-results__filter-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.search-results__filter-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.search-results__filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.search-results__filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-results__filter-option:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.search-results__filter-option--active {
+  background: var(--color-cta);
+  color: white;
+}
+
+.search-results__filter-option--active:hover {
+  background: var(--color-primary);
+}
+
+.search-results__filter-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
+  gap: var(--space-xs);
 }
 
-.search-results__keyword {
-  border: 1px solid rgba(180, 83, 9, 0.18);
-  border-radius: 999px;
-  background: #fff7ed;
-  color: #9a3412;
-  padding: 10px 16px;
+.search-results__filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.search-results__keyword:hover {
-  transform: translateY(-1px);
-  border-color: rgba(180, 83, 9, 0.34);
-  box-shadow: 0 10px 24px rgba(180, 83, 9, 0.12);
+.search-results__filter-tag:hover {
+  border-color: var(--color-cta);
+  color: var(--color-cta);
 }
 
-.search-results__state {
+.search-results__filter-tag--active {
+  background: var(--color-cta);
+  border-color: var(--color-cta);
+  color: white;
+}
+
+.search-results__filter-tag-count {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* 主内容 */
+.search-results__main {
+  min-height: 400px;
+}
+
+.search-results__tabs {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.search-results__tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-results__tab:hover {
+  color: var(--color-text-primary);
+}
+
+.search-results__tab--active {
+  color: var(--color-cta);
+  border-bottom-color: var(--color-cta);
+}
+
+.search-results__tab-count {
+  padding: 2px 8px;
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.search-results__tab--active .search-results__tab-count {
+  background: var(--color-cta);
+  color: white;
+}
+
+/* 加载状态 */
+.search-results__loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  padding: var(--space-3xl);
+  color: var(--color-text-secondary);
 }
 
 .search-results__spinner {
-  width: 42px;
-  height: 42px;
-  border: 3px solid rgba(217, 119, 6, 0.18);
-  border-top-color: #d97706;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-cta);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.search-results__error {
-  margin: 0;
-  color: #b91c1c;
-}
-
-.search-results__retry,
-.search-results__pagination-button {
-  border: none;
-  border-radius: 999px;
-  background: #b45309;
-  color: #fff;
-  padding: 10px 18px;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.search-results__retry:hover,
-.search-results__pagination-button:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
-}
-
-.search-results__pagination-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.search-results__results {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.search-results__card {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 24px;
-  cursor: pointer;
-  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
-}
-
-.search-results__card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(180, 83, 9, 0.28);
-  box-shadow: 0 22px 50px rgba(63, 42, 24, 0.12);
-}
-
-.search-results__card-main {
-  min-width: 0;
-}
-
-.search-results__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 10px;
-  font-size: 0.875rem;
-  color: #8a735d;
-}
-
-.search-results__card-title {
-  margin: 0;
-  font-size: 1.35rem;
-  line-height: 1.35;
-  color: #3f2a18;
-}
-
-.search-results__card-excerpt {
-  margin: 12px 0 0;
-  line-height: 1.7;
-  color: #5f5144;
-}
-
-.search-results__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.search-results__tag {
-  border-radius: 999px;
-  background: #fef3c7;
-  color: #92400e;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-
-.search-results__stats {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 84px;
-  text-align: right;
-  font-size: 0.875rem;
-  color: #8a735d;
-}
-
-.search-results__pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding-top: 10px;
-}
-
-.search-results__pagination-info {
-  color: #6b5b4d;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: var(--space-md);
 }
 
 @keyframes spin {
@@ -525,28 +850,97 @@ const goToPage = (page: number) => {
   }
 }
 
-@media (max-width: 768px) {
-  .search-results__header-inner {
-    padding-top: 36px;
+/* 结果列表 */
+.search-results__posts,
+.search-results__users {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.search-results__post-card,
+.search-results__user-card {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 加载更多 */
+.search-results__load-more {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xl) 0;
+}
+
+.search-results__load-more-button {
+  padding: var(--space-md) var(--space-xl);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-results__load-more-button:hover:not(:disabled) {
+  background: var(--color-cta);
+  border-color: var(--color-cta);
+  color: white;
+}
+
+.search-results__load-more-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 关键词高亮 */
+:deep(.search-highlight) {
+  background: rgba(37, 99, 235, 0.2);
+  color: var(--color-cta);
+  font-weight: 600;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* 响应式 */
+@media (max-width: 1023px) {
+  .search-results__container {
+    grid-template-columns: 1fr;
   }
 
-  .search-results__body {
-    padding-top: 20px;
+  .search-results__filters {
+    position: static;
+  }
+}
+
+@media (max-width: 767px) {
+  .search-results__header-content,
+  .search-results__container {
+    padding: var(--space-md);
   }
 
-  .search-results__card {
-    flex-direction: column;
+  .search-results__title {
+    font-size: 20px;
   }
 
-  .search-results__stats {
-    flex-direction: row;
-    justify-content: flex-start;
-    min-width: 0;
-    text-align: left;
+  .search-results__tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .search-results__pagination {
-    flex-wrap: wrap;
+  .search-results__tab {
+    white-space: nowrap;
   }
 }
 </style>

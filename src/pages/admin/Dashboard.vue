@@ -11,19 +11,19 @@ const router = useRouter();
 const modules = [
   {
     title: '用户管理',
-    description: '已按当前后端契约对齐，支持分页查询、状态筛选、禁用与启用。',
+    description: '查看用户状态、筛选账户，并执行启用或禁用等管理操作。',
     path: '/admin/users',
     icon: User,
   },
   {
     title: '文章管理',
-    description: '已打通基础查询与删除通路，后续继续做字段与交互细化。',
+    description: '管理站内文章内容，查看详情并处理不合规或无效文章。',
     path: '/admin/posts',
     icon: Document,
   },
   {
     title: '评论管理',
-    description: '已保留现有页面入口，后续继续按后端 DTO 做进一步收敛。',
+    description: '审核评论内容，及时处理违规、垃圾或不当互动信息。',
     path: '/admin/comments',
     icon: ChatLineSquare,
   },
@@ -41,12 +41,12 @@ function goToModule(path: string) {
       shadow="never"
     >
       <div class="hero-card__content">
-        <span class="hero-card__eyebrow">Admin Overview</span>
+        <span class="hero-card__eyebrow">管理总览</span>
         <h1 class="hero-card__title">
-          当前后台先以已落地接口为准
+          管理站内用户、文章与评论
         </h1>
         <p class="hero-card__description">
-          这一版管理后台不再预设聚合统计接口。优先围绕 zhicore 当前已经可用的用户、文章、评论管理员接口，逐步完成可验证纵切片。
+          在这里处理社区日常运营工作，维护内容质量，并保持用户互动环境稳定有序。
         </p>
         <el-button
           type="primary"
@@ -104,7 +104,6 @@ function goToModule(path: string) {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hero-card__title {

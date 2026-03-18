@@ -315,9 +315,18 @@ class WebSocketManager {
   }
 }
 
+function getDefaultWebSocketUrl(): string {
+  if (typeof window === 'undefined') {
+    return 'ws://localhost:3000/ws';
+  }
+
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws`;
+}
+
 // 创建 WebSocket 实例
 export const wsManager = new WebSocketManager({
-  url: import.meta.env.VITE_WS_URL || 'ws://localhost:8100/ws',
+  url: import.meta.env.VITE_WS_URL || getDefaultWebSocketUrl(),
   reconnectInterval: 1000,
   maxReconnectAttempts: 5,
   heartbeatInterval: 30000, // 30 秒

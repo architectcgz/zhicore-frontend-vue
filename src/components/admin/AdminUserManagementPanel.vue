@@ -150,7 +150,7 @@ function isRowPending(userId: string): boolean {
       show-icon
       class="panel-alert"
     >
-      当前页面已按 zhicore 后端现有接口对齐，支持用户查询、状态筛选、禁用与启用。
+      支持按关键词和状态筛选用户，并执行启用或禁用等管理操作。
     </el-alert>
 
     <el-card

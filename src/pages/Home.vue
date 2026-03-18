@@ -1,152 +1,80 @@
 <!--
   首页组件
   显示最新文章列表、热门标签和热门文章
-  使用 TanStack Query 进行数据获取和状态管理
 -->
 
-<template>
-  <div class="home-page">
-    <!-- 页面头部 -->
-    <div class="page-header">
-      <h1 class="page-title">
-        发现精彩内容
-      </h1>
-      <p class="page-description">
-        探索最新文章和热门话题
-      </p>
-    </div>
-
-    <!-- 主内容区域 -->
-    <div class="content-container">
-      <!-- 文章列表区域 -->
-      <main class="posts-section">
-        <!-- 骨架屏容器（加载中或加载失败时都显示） -->
-        <div
-          v-if="isLoading || error"
-          class="skeleton-container"
-        >
-          <div
-            v-for="i in 3"
-            :key="i"
-            class="skeleton-post-card"
-          >
-            <div class="skeleton-image" />
-            <div class="skeleton-content">
-              <div class="skeleton-title" />
-              <div class="skeleton-text" />
-              <div class="skeleton-text short" />
-              <div class="skeleton-meta">
-                <div class="skeleton-avatar" />
-                <div class="skeleton-info" />
-              </div>
-            </div>
-          </div>
-
-          <!-- 错误提示叠加层 -->
-          <div
-            v-if="error"
-            class="error-overlay"
-          >
-            <div class="error-card">
-              <svg 
-                class="error-icon" 
-                fill="none" 
-                stroke="#ef4444"
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  stroke-linecap="round" 
-                  stroke-linejoin="round" 
-                  stroke-width="2" 
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                />
-              </svg>
-              <p class="error-message">
-                {{ getErrorMessage(error) }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 空状态 -->
-        <div
-          v-else-if="!posts || posts.length === 0"
-          class="empty-container"
-        >
-          <svg 
-            class="empty-icon" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-width="2" 
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
-            />
-          </svg>
-          <p class="empty-message">
-            暂无文章
-          </p>
-          <p class="empty-description">
-            还没有发布任何文章，快来发布第一篇吧！
-          </p>
-        </div>
-
-        <!-- 文章列表 -->
-        <div
-          v-else
-          class="posts-list"
-        >
-          <PostCard
-            v-for="post in displayPosts"
-            :key="post.id"
-            :post="post"
-            @like-change="handleLikeChange"
-            @favorite-change="handleFavoriteChange"
-          />
-        </div>
-      </main>
-    </div>
-
-    <!-- 侧边栏（PC 端显示在右侧，移动端通过抽屉菜单访问） -->
-    <!-- 使用 Teleport 将侧边栏传送到 DefaultLayout 的 aside 插槽位置 -->
-    <Teleport
-      to="#home-sidebar-slot"
-      :disabled="!isMounted"
-    >
-      <HomeSidebar
-        :tags="tags"
-        :trending-posts="trendingPosts"
-        :is-tags-loading="tagsLoading"
-        :is-posts-loading="trendingLoading"
-        :tags-error="tagsError"
-        :posts-error="trendingError"
-      />
-    </Teleport>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { usePostsQuery } from '@/queries/posts/usePostsQuery';
-import { useHotTagsQuery } from '@/queries/tags/useHotTagsQuery';
-import { useHotPostsQuery } from '@/queries/posts/useHotPostsQuery';
-import PostCard from '@/components/post/PostCard.vue';
+import { computed, onMounted, ref } from 'vue';
+import type { CreatorRankingItem, TopicRankingItem } from '@/api/ranking';
 import HomeSidebar from '@/components/home/HomeSidebar.vue';
+import PostCard from '@/components/post/PostCard.vue';
+import { useHotPostsQuery } from '@/queries/posts/useHotPostsQuery';
+import { usePostsQuery } from '@/queries/posts/usePostsQuery';
+import { useHotCreatorsQuery } from '@/queries/ranking/useHotCreatorsQuery';
+import { useHotTopicsQuery } from '@/queries/ranking/useHotTopicsQuery';
+import { useHotTagsQuery } from '@/queries/tags/useHotTagsQuery';
 import type { Post, Tag } from '@/types';
 
-// 用于 Teleport 的挂载状态
+type TopicHighlight = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  posts: number;
+  views: number;
+  likes: number;
+  growth: number;
+};
+
+type CreatorHighlight = {
+  id: string;
+  nickname: string;
+  avatar: string;
+  bio: string;
+  posts: number;
+  followers: number;
+  views: number;
+  score: number;
+};
+
 const isMounted = ref(false);
+const postOverrides = ref<Record<string, Partial<Post>>>({});
+const creatorRankingParams = ref({
+  page: 1,
+  size: 3,
+  period: 'monthly' as const,
+});
+const topicRankingParams = ref({
+  page: 1,
+  size: 6,
+  period: 'weekly' as const,
+});
+
+const quickLinks = [
+  {
+    title: '进入标签广场',
+    description: '按主题寻找正在增长的内容脉络。',
+    to: '/tags',
+    kicker: 'Topics',
+  },
+  {
+    title: '查看趋势榜单',
+    description: '快速定位本周最有讨论度的内容与作者。',
+    to: '/ranking',
+    kicker: 'Ranking',
+  },
+  {
+    title: '开始发布内容',
+    description: '把你的笔记、观察和方案整理成可读文章。',
+    to: '/posts/create',
+    kicker: 'Create',
+  },
+] as const;
 
 onMounted(() => {
   isMounted.value = true;
 });
 
-/**
- * 获取最新文章列表
- */
 const postsQueryParams = {
   page: 1,
   size: 20,
@@ -162,20 +90,12 @@ const {
   ...postsQueryParams,
 });
 
-/**
- * 获取热门标签
- */
 const {
   data: tagsData,
   isLoading: tagsLoading,
   error: tagsError,
-} = useHotTagsQuery({
-  limit: 15,
-});
+} = useHotTagsQuery();
 
-/**
- * 获取热门文章（用于侧边栏）
- */
 const {
   data: trendingData,
   isLoading: trendingLoading,
@@ -185,12 +105,17 @@ const {
   size: 5,
 });
 
-/**
- * 计算属性：文章列表
- */
-const posts = computed<Post[]>(() => {
-  return postsData.value?.items || [];
-});
+const {
+  data: hotCreatorsData,
+  isLoading: creatorsLoading,
+} = useHotCreatorsQuery(creatorRankingParams);
+
+const {
+  data: hotTopicsData,
+  isLoading: topicsLoading,
+} = useHotTopicsQuery(topicRankingParams);
+
+const posts = computed<Post[]>(() => postsData.value?.items || []);
 
 const displayPosts = computed<Post[]>(() => {
   const overrides = postOverrides.value;
@@ -200,48 +125,146 @@ const displayPosts = computed<Post[]>(() => {
   });
 });
 
-/**
- * 计算属性：热门标签列表
- */
-const tags = computed<Tag[]>(() => {
-  return tagsData.value || [];
+const featuredPost = computed<Post | null>(() => displayPosts.value[0] ?? null);
+const secondaryPosts = computed<Post[]>(() => displayPosts.value.slice(1));
+const tags = computed<Tag[]>(() => tagsData.value || []);
+const trendingPosts = computed<Post[]>(() => trendingData.value?.items || []);
+const heroTags = computed<Tag[]>(() => tags.value.slice(0, 4));
+const creatorItems = computed<CreatorRankingItem[]>(() => hotCreatorsData.value?.items || []);
+const topicItems = computed<TopicRankingItem[]>(() => hotTopicsData.value?.items || []);
+
+const topicHighlights = computed<TopicHighlight[]>(() => {
+  if (topicItems.value.length > 0) {
+    return topicItems.value.slice(0, 6).map((item) => ({
+      id: item.id,
+      name: item.tag.name,
+      slug: item.tag.slug,
+      description: item.tag.description || '持续增长中的讨论主题',
+      posts: item.metrics.posts,
+      views: item.metrics.totalViews,
+      likes: item.metrics.totalLikes,
+      growth: item.metrics.growth,
+    }));
+  }
+
+  return tags.value.slice(0, 6).map((tag) => ({
+    id: tag.id,
+    name: tag.name,
+    slug: tag.slug,
+    description: tag.description || '等待更多创作者加入这个主题。',
+    posts: tag.postCount || 0,
+    views: 0,
+    likes: 0,
+    growth: 0,
+  }));
 });
 
-/**
- * 计算属性：热门文章列表
- */
-const trendingPosts = computed<Post[]>(() => {
-  return trendingData.value?.items || [];
+const creatorHighlights = computed<CreatorHighlight[]>(() => {
+  if (creatorItems.value.length > 0) {
+    return creatorItems.value.slice(0, 3).map((item) => ({
+      id: item.user.id,
+      nickname: item.user.nickname,
+      avatar: item.user.avatar,
+      bio: item.user.bio || '持续分享技术与创作观察。',
+      posts: item.metrics.posts,
+      followers: item.metrics.followers,
+      views: item.metrics.totalViews,
+      score: item.score,
+    }));
+  }
+
+  return displayPosts.value
+    .filter((post): post is Post & { author: NonNullable<Post['author']> } => Boolean(post.author))
+    .slice(0, 3)
+    .map((post) => ({
+      id: post.author.id,
+      nickname: post.author.nickname,
+      avatar: post.author.avatar,
+      bio: post.author.bio || '从最新文章中被识别出的活跃作者。',
+      posts: post.author.postsCount || 0,
+      followers: post.author.followersCount || 0,
+      views: post.viewCount || 0,
+      score: post.likeCount || 0,
+    }));
 });
 
-/**
- * 计算属性：主要加载状态
- */
+const summaryStats = computed(() => [
+  {
+    label: '最新内容',
+    value: `${postsData.value?.total ?? displayPosts.value.length}`,
+    detail: '持续更新的创作者文章',
+  },
+  {
+    label: '热议标签',
+    value: `${tags.value.length}`,
+    detail: '高频参与的主题讨论',
+  },
+  {
+    label: '趋势观察',
+    value: `${trendingPosts.value.length}`,
+    detail: '社区关注较高的热门内容',
+  },
+]);
+
+const totalViews = computed(() => {
+  return displayPosts.value.reduce((sum, post) => sum + (post.viewCount || 0), 0);
+});
+
+const insightLine = computed(() => {
+  if (!displayPosts.value.length) {
+    return '新内容发布后，这里会展示社区里的最新动态。';
+  }
+
+  return `当前内容已累计 ${formatCompactNumber(totalViews.value)} 次浏览，覆盖创作、工程与社区讨论。`;
+});
+
+const curationNotes = computed(() => [
+  `热门主题下已有 ${formatCompactNumber(topicHighlights.value.reduce((sum, topic) => sum + topic.posts, 0))} 篇内容`,
+  `${creatorHighlights.value.length} 位活跃作者正在持续更新`,
+  `${trendingPosts.value.length} 篇热门文章值得优先阅读`,
+]);
+
 const isLoading = computed(() => postsLoading.value || (postsFetching.value && !postsData.value));
-
-/**
- * 计算属性：错误状态
- */
+const isSidebarLoading = computed(() => tagsLoading.value || trendingLoading.value);
+const showDiscoverySkeleton = computed(() => topicsLoading.value || creatorsLoading.value);
 const error = computed(() => postsError.value);
 
-const postOverrides = ref<Record<string, Partial<Post>>>({});
-
-/**
- * 获取错误消息
- */
 const getErrorMessage = (err: unknown): string => {
   if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
     return err.message;
   }
+
   if (typeof err === 'string') {
     return err;
   }
+
   return '加载数据时发生错误，请稍后重试';
 };
 
-/**
- * 点赞/收藏状态变化：由父组件更新列表数据（避免子组件直接修改 props）
- */
+const formatCompactNumber = (value: number): string => {
+  if (value >= 10000) {
+    return `${(value / 10000).toFixed(1)}万`;
+  }
+
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}k`;
+  }
+
+  return `${value}`;
+};
+
+const formatGrowth = (value: number): string => {
+  if (value > 0) {
+    return `+${value.toFixed(1)}%`;
+  }
+
+  if (value < 0) {
+    return `${value.toFixed(1)}%`;
+  }
+
+  return '平稳';
+};
+
 const handleLikeChange = (data: { postId: string; isLiked: boolean; likeCount: number }) => {
   const current = postOverrides.value[data.postId] || {};
   postOverrides.value = {
@@ -259,338 +282,963 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 };
 </script>
 
+<template>
+  <div class="home-page">
+    <section class="home-page__hero surface-panel">
+      <div class="home-page__hero-copy">
+        <span class="home-page__eyebrow">今日推荐</span>
+        <h1 class="page-title">发现精彩内容</h1>
+        <p class="page-description">
+          在这里浏览创作者最新观点、技术文章与社区热议，快速找到值得阅读和参与的话题。
+        </p>
+
+        <div class="home-page__actions">
+          <router-link
+            to="/posts"
+            class="home-page__primary-action"
+          >
+            开始阅读
+          </router-link>
+          <router-link
+            to="/posts/create"
+            class="home-page__secondary-action"
+          >
+            发布内容
+          </router-link>
+        </div>
+
+        <div class="home-page__signals">
+          <span class="home-page__signal">{{ insightLine }}</span>
+          <span
+            v-for="tag in heroTags"
+            :key="tag.id"
+            class="home-page__signal home-page__signal--tag"
+          >
+            #{{ tag.name }}
+          </span>
+        </div>
+      </div>
+
+      <div class="home-page__hero-panel">
+        <div class="home-page__stats">
+          <article
+            v-for="stat in summaryStats"
+            :key="stat.label"
+            class="home-page__stat-card"
+          >
+            <span class="home-page__stat-label">{{ stat.label }}</span>
+            <strong class="home-page__stat-value">{{ stat.value }}</strong>
+            <span class="home-page__stat-detail">{{ stat.detail }}</span>
+          </article>
+        </div>
+
+        <article
+          v-if="featuredPost"
+          class="home-page__feature"
+        >
+          <span class="home-page__feature-label">编辑精选</span>
+          <h2 class="home-page__feature-title">{{ featuredPost.title }}</h2>
+          <p class="home-page__feature-text">
+            {{ featuredPost.excerpt || featuredPost.content.slice(0, 110) }}
+          </p>
+          <router-link
+            :to="`/posts/${featuredPost.id}`"
+            class="home-page__feature-link"
+          >
+            查看全文
+          </router-link>
+        </article>
+
+        <div class="home-page__note-strip">
+          <span
+            v-for="note in curationNotes"
+            :key="note"
+            class="home-page__note-pill"
+          >
+            {{ note }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-page__quick-grid">
+      <router-link
+        v-for="link in quickLinks"
+        :key="link.to"
+        :to="link.to"
+        class="home-page__quick-card surface-panel"
+      >
+        <span class="home-page__quick-kicker">
+          {{ link.kicker === 'Topics' ? '主题' : link.kicker === 'Ranking' ? '榜单' : '写作' }}
+        </span>
+        <h2 class="home-page__quick-title">{{ link.title }}</h2>
+        <p class="home-page__quick-description">{{ link.description }}</p>
+      </router-link>
+    </section>
+
+    <div class="content-container">
+      <section class="home-page__discovery">
+        <div class="home-page__section-head home-page__section-head--discovery">
+          <div>
+            <span class="home-page__section-kicker">热门看点</span>
+            <h2 class="home-page__section-title">先看方向，再进入内容流</h2>
+          </div>
+          <p class="home-page__section-description">
+            先了解热门主题与活跃作者，再进入你感兴趣的文章内容。
+          </p>
+        </div>
+
+        <div
+          v-if="showDiscoverySkeleton"
+          class="home-page__discovery-skeleton"
+        >
+          <div
+            v-for="i in 5"
+            :key="i"
+            class="home-page__discovery-skeleton-card"
+          />
+        </div>
+
+        <div
+          v-else
+          class="home-page__discovery-grid"
+        >
+          <section class="home-page__topics surface-panel">
+            <div class="home-page__block-head">
+              <div>
+                <span class="home-page__block-kicker">主题趋势</span>
+                <h3 class="home-page__block-title">热门主题</h3>
+              </div>
+              <router-link
+                to="/tags"
+                class="home-page__block-link"
+              >
+                查看全部
+              </router-link>
+            </div>
+
+            <div class="home-page__topic-grid">
+              <router-link
+                v-for="topic in topicHighlights"
+                :key="topic.id"
+                :to="`/tags/${topic.slug}`"
+                class="home-page__topic-card"
+              >
+                <div class="home-page__topic-top">
+                  <span class="home-page__topic-name">#{{ topic.name }}</span>
+                  <span class="home-page__topic-growth">
+                    {{ formatGrowth(topic.growth) }}
+                  </span>
+                </div>
+                <p class="home-page__topic-description">{{ topic.description }}</p>
+                <div class="home-page__topic-meta">
+                  <span>{{ formatCompactNumber(topic.posts) }} 篇文章</span>
+                  <span>{{ formatCompactNumber(topic.views) }} 阅读</span>
+                </div>
+              </router-link>
+            </div>
+          </section>
+
+          <section class="home-page__creators surface-panel">
+            <div class="home-page__block-head">
+              <div>
+                <span class="home-page__block-kicker">活跃作者</span>
+                <h3 class="home-page__block-title">本周作者</h3>
+              </div>
+              <router-link
+                to="/ranking"
+                class="home-page__block-link"
+              >
+                查看榜单
+              </router-link>
+            </div>
+
+            <div class="home-page__creator-list">
+              <router-link
+                v-for="creator in creatorHighlights"
+                :key="creator.id"
+                :to="`/users/${creator.id}`"
+                class="home-page__creator-card"
+              >
+                <img
+                  :src="creator.avatar || '/images/default-avatar.svg'"
+                  :alt="creator.nickname"
+                  class="home-page__creator-avatar"
+                >
+                <div class="home-page__creator-copy">
+                  <div class="home-page__creator-name-row">
+                    <strong class="home-page__creator-name">{{ creator.nickname }}</strong>
+                    <span class="home-page__creator-score">{{ formatCompactNumber(creator.score) }}</span>
+                  </div>
+                  <p class="home-page__creator-bio">{{ creator.bio }}</p>
+                  <div class="home-page__creator-meta">
+                    <span>{{ formatCompactNumber(creator.posts) }} 篇文章</span>
+                    <span>{{ formatCompactNumber(creator.followers) }} 关注</span>
+                    <span>{{ formatCompactNumber(creator.views) }} 阅读</span>
+                  </div>
+                </div>
+              </router-link>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <main class="posts-section">
+        <div class="home-page__section-head">
+          <div>
+            <span class="home-page__section-kicker">最新更新</span>
+            <h2 class="home-page__section-title">最新发布</h2>
+          </div>
+          <p class="home-page__section-description">
+            按最新发布时间浏览内容，第一时间跟进社区里的新观点与新文章。
+          </p>
+        </div>
+
+        <div
+          v-if="isLoading"
+          class="home-page__skeleton-grid"
+        >
+          <div class="home-page__skeleton-card home-page__skeleton-card--large" />
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="home-page__skeleton-card"
+          />
+        </div>
+
+        <div
+          v-else-if="error"
+          class="home-page__error-inline"
+        >
+          <div class="home-page__error-card">
+            <span class="home-page__error-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 8.5v4.75M12 17.25h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
+              </svg>
+              加载异常
+            </span>
+            <h3 class="home-page__error-title">首页内容暂时没有取到</h3>
+            <p class="home-page__error-text">{{ getErrorMessage(error) }}</p>
+          </div>
+        </div>
+
+        <div
+          v-else-if="displayPosts.length === 0"
+          class="home-page__empty"
+        >
+          <div class="home-page__empty-card">
+            <h3>暂时还没有内容</h3>
+            <p>还没有发布任何文章，欢迎来写下第一篇内容。</p>
+            <router-link
+              to="/posts/create"
+              class="home-page__primary-action"
+            >
+              写第一篇文章
+            </router-link>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="posts-list"
+        >
+          <PostCard
+            v-if="featuredPost"
+            :post="featuredPost"
+            size="large"
+            @like-change="handleLikeChange"
+            @favorite-change="handleFavoriteChange"
+          />
+
+          <div
+            v-if="secondaryPosts.length > 0"
+            class="home-page__post-grid"
+          >
+            <PostCard
+              v-for="post in secondaryPosts"
+              :key="post.id"
+              :post="post"
+              @like-change="handleLikeChange"
+              @favorite-change="handleFavoriteChange"
+            />
+          </div>
+        </div>
+      </main>
+
+      <section class="home-page__cta surface-panel">
+        <div class="home-page__cta-copy">
+          <span class="home-page__block-kicker">开始创作</span>
+          <h2 class="home-page__cta-title">分享你的观察、经验与教程</h2>
+          <p class="home-page__cta-description">
+            开始发布你的观察、教程和经验，让更多读者在这里看到你的内容。
+          </p>
+        </div>
+        <div class="home-page__cta-actions">
+          <router-link
+            to="/posts/create"
+            class="home-page__primary-action"
+          >
+            立即写作
+          </router-link>
+          <router-link
+            to="/drafts"
+            class="home-page__secondary-action home-page__secondary-action--light"
+          >
+            查看草稿
+          </router-link>
+        </div>
+      </section>
+    </div>
+
+    <Teleport
+      to="#home-sidebar-slot"
+      :disabled="!isMounted"
+    >
+      <HomeSidebar
+        :tags="tags"
+        :trending-posts="trendingPosts"
+        :is-loading="isSidebarLoading"
+        :tags-error="tagsError"
+        :posts-error="trendingError"
+      />
+    </Teleport>
+  </div>
+</template>
+
 <style scoped>
-/* 页面容器 */
 .home-page {
-  width: 100%;
-
-  /* 骨架屏色值（默认亮色，暗色由 data-theme 覆盖） */
-  --skeleton-card-bg: var(--color-bg-secondary);
-  --skeleton-shimmer-1: var(--color-bg-tertiary);
-  --skeleton-shimmer-2: var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
 }
 
-[data-theme='dark'] .home-page {
-  --skeleton-card-bg: var(--color-bg-secondary);
-  --skeleton-shimmer-1: var(--color-bg-hover);
-  --skeleton-shimmer-2: var(--color-bg-tertiary);
+.home-page__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.9fr);
+  gap: var(--space-xl);
+  padding: var(--space-2xl);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(circle at top left, rgba(244, 223, 191, 0.18), transparent 24%),
+    var(--gradient-hero);
+  color: var(--color-text-inverse);
+  border: none;
 }
 
-/* 页面头部 */
-.page-header {
-  text-align: center;
-  margin-bottom: var(--space-xl);
+.home-page__hero-copy,
+.home-page__hero-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.home-page__eyebrow,
+.home-page__section-kicker,
+.home-page__block-kicker,
+.home-page__quick-kicker {
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+}
+
+.home-page__eyebrow {
+  margin-bottom: 14px;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .page-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: var(--space-sm);
+  max-width: 11ch;
+  margin-bottom: 18px;
+  font-size: clamp(2.7rem, 5vw, 4.7rem);
+  line-height: 1.05;
+  color: #fffdf9;
+  text-shadow: 0 10px 34px rgba(0, 0, 0, 0.24);
 }
 
 .page-description {
-  font-size: 1.125rem;
-  color: var(--color-text-secondary);
+  max-width: 58ch;
+  margin-bottom: var(--space-xl);
+  color: rgba(255, 250, 242, 0.8);
+  font-size: 1.05rem;
+  line-height: 1.9;
 }
 
-/* 内容容器 */
-.content-container {
-  width: 100%;
+.home-page__actions,
+.home-page__signals,
+.home-page__stats,
+.home-page__cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-/* 文章区域 */
-.posts-section {
-  position: relative;
-  min-height: 400px;
+.home-page__primary-action,
+.home-page__secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-semibold);
 }
 
-.posts-list {
+.home-page__primary-action {
+  background: #fff8ef;
+  color: #12314c;
+}
+
+.home-page__secondary-action {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff8ef;
+  backdrop-filter: blur(10px);
+}
+
+.home-page__secondary-action--light {
+  border-color: var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+}
+
+.home-page__signals {
+  margin-top: var(--space-lg);
+}
+
+.home-page__signal,
+.home-page__note-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 250, 242, 0.82);
+  font-size: 0.86rem;
+  backdrop-filter: blur(8px);
+}
+
+.home-page__signal--tag {
+  color: #fff8ef;
+}
+
+.home-page__hero-panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
 }
 
-/* 加载状态 */
-.loading-container {
+.home-page__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-page__stat-card,
+.home-page__feature {
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(12px);
+}
+
+.home-page__stat-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl) 0;
-  min-height: 400px;
+  gap: 8px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid var(--color-border);
-  border-top-color: var(--color-cta);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.home-page__stat-label {
+  color: rgba(255, 250, 242, 0.72);
+  font-size: 0.8rem;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.home-page__stat-value {
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
 }
 
-.loading-text {
-  margin-top: var(--space-md);
-  color: var(--color-text-secondary);
+.home-page__stat-detail {
+  color: rgba(255, 250, 242, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
-/* 错误状态 */
-.error-container {
+.home-page__feature {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl) 0;
-  min-height: 400px;
+  gap: 12px;
+  padding: 22px;
+  background: rgba(9, 20, 33, 0.26);
 }
 
-.error-icon {
-  width: 64px;
-  height: 64px;
-  color: var(--color-error);
-  margin-bottom: var(--space-md);
+.home-page__feature-label {
+  display: inline-flex;
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff8ef;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.error-message {
-  font-size: 1.125rem;
-  color: var(--color-text);
-  margin-bottom: var(--space-lg);
-  text-align: center;
+.home-page__feature-title {
+  font-size: 1.5rem;
+  line-height: 1.35;
+  color: #fff8ef;
 }
 
-.retry-button {
-  padding: var(--space-sm) var(--space-lg);
-  border: none;
-  border-radius: 8px;
-  background: var(--color-cta);
-  color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+.home-page__feature-text,
+.home-page__feature-link {
+  color: rgba(255, 250, 242, 0.82);
 }
 
-.retry-button:hover {
-  background: var(--color-cta-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.home-page__feature-text {
+  line-height: 1.75;
 }
 
-/* 空状态 */
-.empty-container {
+.home-page__feature-link {
+  width: fit-content;
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-page__note-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.home-page__quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.home-page__quick-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl) 0;
-  min-height: 400px;
+  gap: 12px;
+  padding: var(--space-lg);
+  border-radius: var(--radius-xl);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
-.empty-icon {
-  width: 64px;
-  height: 64px;
+.home-page__quick-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.home-page__quick-kicker,
+.home-page__block-kicker,
+.home-page__section-kicker {
   color: var(--color-text-tertiary);
-  margin-bottom: var(--space-md);
 }
 
-.empty-message {
-  font-size: 1.25rem;
-  font-weight: 600;
+.home-page__quick-title,
+.home-page__section-title,
+.home-page__block-title,
+.home-page__cta-title {
   color: var(--color-text);
-  margin-bottom: var(--space-sm);
 }
 
-.empty-description {
+.home-page__quick-title {
+  font-size: 1.3rem;
+  line-height: 1.35;
+}
+
+.home-page__quick-description,
+.home-page__section-description,
+.home-page__topic-description,
+.home-page__creator-bio,
+.home-page__cta-description {
   color: var(--color-text-secondary);
-  text-align: center;
+  line-height: 1.75;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .page-title {
-    font-size: 2rem;
-  }
-
-  .posts-list {
-    gap: var(--space-md);
-  }
-}
-
-/* 可访问性 */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* 焦点状态 */
-.retry-button:focus-visible {
-  outline: 2px solid var(--color-cta);
-  outline-offset: 2px;
-}
-
-/* 错误叠加层样式 */
-.error-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(4px);
-  z-index: 10;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-[data-theme='dark'] .error-overlay {
-  background: rgba(30, 30, 33, 0.95);
-}
-
-.error-card {
+.content-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 1.5rem;
-  text-align: center;
-  max-width: 400px;
+  gap: var(--space-xl);
 }
 
-.error-card .error-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--color-danger);
-  margin-bottom: 0.75rem;
-}
-
-.error-card .error-message {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* 骨架屏样式 */
-.skeleton-container {
-  position: relative;
+.home-page__discovery,
+.posts-section {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-lg);
 }
 
-.skeleton-post-card {
-  background: var(--skeleton-card-bg);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+.home-page__section-head {
   display: flex;
-  gap: 1.5rem;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: 0 6px;
 }
 
-.skeleton-image {
-  width: 200px;
-  height: 150px;
-  flex-shrink: 0;
-  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
+.home-page__section-head--discovery {
+  align-items: flex-start;
+}
+
+.home-page__section-kicker {
+  margin-bottom: 10px;
+}
+
+.home-page__section-title {
+  font-size: clamp(1.8rem, 3vw, 2.3rem);
+}
+
+.home-page__section-description {
+  max-width: 40ch;
+  text-align: right;
+}
+
+.home-page__discovery-skeleton,
+.home-page__discovery-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+  gap: var(--space-lg);
+}
+
+.home-page__discovery-skeleton-card {
+  min-height: 180px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(90deg, rgba(18, 49, 76, 0.05), rgba(18, 49, 76, 0.12), rgba(18, 49, 76, 0.05));
   background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: 8px;
+  animation: home-skeleton 1.4s ease-in-out infinite;
 }
 
-.skeleton-content {
+.home-page__topics,
+.home-page__creators,
+.home-page__cta {
+  padding: var(--space-lg);
+  border-radius: var(--radius-xl);
+}
+
+.home-page__block-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: var(--space-lg);
+}
+
+.home-page__block-title {
+  margin-top: 6px;
+  font-size: 1.45rem;
+}
+
+.home-page__block-link {
+  color: var(--color-cta);
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-page__topic-grid,
+.home-page__creator-list,
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.home-page__topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.home-page__topic-card,
+.home-page__creator-card {
+  display: flex;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.22);
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+[data-theme='dark'] .home-page__topic-card,
+[data-theme='dark'] .home-page__creator-card {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.home-page__topic-card {
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.home-page__creator-card {
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+}
+
+.home-page__topic-card:hover,
+.home-page__creator-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-dark);
+  background: var(--color-bg-secondary);
+}
+
+.home-page__topic-top,
+.home-page__creator-name-row,
+.home-page__topic-meta,
+.home-page__creator-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.home-page__topic-name,
+.home-page__creator-name {
+  color: var(--color-text);
+}
+
+.home-page__topic-name {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-page__topic-growth,
+.home-page__creator-score {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-hover);
+  color: var(--color-cta);
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-page__topic-meta,
+.home-page__creator-meta {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.home-page__creator-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  object-fit: cover;
+  background: var(--color-bg-tertiary);
+}
+
+.home-page__creator-copy {
   flex: 1;
+  min-width: 0;
+}
+
+.home-page__creator-bio {
+  margin: 6px 0 10px;
+  font-size: 0.9rem;
+}
+
+.home-page__post-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.home-page__skeleton-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.home-page__skeleton-card {
+  min-height: 320px;
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(90deg, rgba(18, 49, 76, 0.05), rgba(18, 49, 76, 0.12), rgba(18, 49, 76, 0.05));
+  background-size: 200% 100%;
+  animation: home-skeleton 1.4s ease-in-out infinite;
+}
+
+.home-page__skeleton-card--large {
+  min-height: 420px;
+}
+
+.home-page__error-inline {
+  display: flex;
+}
+
+.home-page__error-card,
+.home-page__empty-card {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 14px;
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 252, 247, 0.82);
+  border: 1px solid var(--color-border);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
 }
 
-.skeleton-title {
-  height: 1.5rem;
-  width: 70%;
-  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: 4px;
+[data-theme='dark'] .page-title {
+  color: #ffffff;
+  text-shadow: 0 12px 36px rgba(0, 0, 0, 0.42);
 }
 
-.skeleton-text {
-  height: 1rem;
-  width: 100%;
-  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: 4px;
+[data-theme='dark'] .home-page__error-card,
+[data-theme='dark'] .home-page__empty-card {
+  background: rgba(8, 19, 31, 0.82);
 }
 
-.skeleton-text.short {
-  width: 60%;
+.home-page__error-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-semibold);
 }
 
-.skeleton-meta {
+.home-page__error-badge svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--color-danger);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home-page__error-title {
+  color: var(--color-text);
+  font-size: 1.35rem;
+}
+
+.home-page__error-text {
+  max-width: 34rem;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+}
+
+.home-page__empty {
+  display: grid;
+  place-items: center;
+  min-height: 360px;
+}
+
+.home-page__empty-card h3 {
+  color: var(--color-text);
+  font-size: 1.5rem;
+}
+
+.home-page__cta {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: auto;
+  justify-content: space-between;
+  gap: var(--space-lg);
 }
 
-.skeleton-avatar {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
+.home-page__cta-copy {
+  max-width: 48rem;
 }
 
-.skeleton-info {
-  height: 1rem;
-  width: 8rem;
-  background: linear-gradient(90deg, var(--skeleton-shimmer-1) 25%, var(--skeleton-shimmer-2) 50%, var(--skeleton-shimmer-1) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: 4px;
+.home-page__cta-title {
+  margin: 8px 0 12px;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.2;
 }
 
-@keyframes skeleton-loading {
+@keyframes home-skeleton {
   0% {
-    background-position: 200% 0;
+    background-position: 100% 0;
   }
+
   100% {
-    background-position: -200% 0;
+    background-position: -100% 0;
   }
 }
 
-/* 移动端骨架屏调整 */
-@media (max-width: 768px) {
-  .skeleton-post-card {
+@media (max-width: 1199px) {
+  .home-page__hero,
+  .home-page__discovery-skeleton,
+  .home-page__discovery-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page__quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-page__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .home-page__section-head,
+  .home-page__cta {
+    align-items: flex-start;
     flex-direction: column;
   }
 
-  .skeleton-image {
-    width: 100%;
-    height: 200px;
+  .home-page__section-description {
+    text-align: left;
+  }
+
+  .home-page__topic-grid,
+  .home-page__post-grid,
+  .home-page__skeleton-grid,
+  .home-page__quick-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
+@media (max-width: 767px) {
+  .home-page {
+    gap: var(--space-lg);
+  }
+
+  .home-page__hero,
+  .home-page__topics,
+  .home-page__creators,
+  .home-page__cta {
+    padding: var(--space-lg);
+    border-radius: var(--radius-xl);
+  }
+
+  .page-title {
+    font-size: 2.45rem;
+  }
+
+  .home-page__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page__actions,
+  .home-page__cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .home-page__primary-action,
+  .home-page__secondary-action {
+    width: 100%;
+  }
+
+  .home-page__creator-card {
+    align-items: flex-start;
+  }
+}
 </style>

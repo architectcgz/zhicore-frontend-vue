@@ -39,7 +39,7 @@
           <div class="user-info">
             <div class="avatar-section">
               <img 
-                :src="userProfile.avatar || '/default-avatar.png'" 
+                :src="userProfile.avatar || '/images/default-avatar.svg'" 
                 :alt="userProfile.nickname"
                 class="user-avatar"
               >

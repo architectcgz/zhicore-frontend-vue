@@ -14,7 +14,7 @@
       <!-- 用户头像 -->
       <div class="comment-avatar">
         <img
-          :src="comment.user.avatar || '/default-avatar.png'"
+          :src="comment.user.avatar || '/images/default-avatar.svg'"
           :alt="comment.user.nickname"
           class="avatar-img"
           @error="handleAvatarError"
@@ -306,7 +306,8 @@ const processCommentContent = (content: string): string => {
  */
 const handleAvatarError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  img.src = '/default-avatar.png';
+  img.onerror = null;
+  img.src = '/images/default-avatar.svg';
 };
 
 /**

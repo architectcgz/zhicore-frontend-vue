@@ -79,7 +79,8 @@ export interface MessageQueryParams {
 export interface TagQueryParams {
   page?: number;
   size?: number;
-  keyword?: string;
+  sort?: 'name' | 'postCount' | 'latest';
+  search?: string;
 }
 
 /**
@@ -257,12 +258,6 @@ export const queryKeys = {
      * 当前用户查询 key
      */
     current: () => [...queryKeys.users.all, 'current'] as const,
-
-    /**
-     * 热门作者补全查询 key
-     */
-    hotCreators: (filters?: Pick<RankingQueryParams, 'page' | 'size'>) =>
-      [...queryKeys.users.all, 'hot-creators', filters] as const,
   },
 
   // ============================================================================
@@ -380,7 +375,7 @@ export const queryKeys = {
 
     /**
      * 特定标签详情查询 key
-     * @param id - 标签 slug 或 ID
+     * @param id - 标签 ID
      */
     detail: (id: string) => [...queryKeys.tags.details(), id] as const,
 
@@ -392,7 +387,7 @@ export const queryKeys = {
 
     /**
      * 标签下的文章列表查询 key
-     * @param tagId - 标签 slug 或 ID
+     * @param tagId - 标签 ID
      * @param filters - 查询过滤条件（可选）
      */
     posts: (tagId: string, filters?: any) => [...queryKeys.tags.all, 'posts', tagId, filters] as const,
@@ -400,7 +395,18 @@ export const queryKeys = {
     /**
      * 热门标签查询 key
      */
-    hot: (limit?: number) => [...queryKeys.tags.all, 'hot', limit] as const,
+    hot: () => [...queryKeys.tags.all, 'hot'] as const,
+
+    /**
+     * 推荐标签查询 key
+     */
+    recommended: () => [...queryKeys.tags.all, 'recommended'] as const,
+
+    /**
+     * 标签搜索建议查询 key
+     * @param query - 搜索关键词
+     */
+    suggestions: (query: string) => [...queryKeys.tags.all, 'suggestions', query] as const,
   },
 
   // ============================================================================
@@ -490,14 +496,14 @@ export const queryKeys = {
     /**
      * 搜索建议查询 key
      * @param query - 搜索关键词
-     * @param limit - 建议条数上限（可选）
+     * @param type - 搜索类型（可选）
      */
-    suggestions: (query: string, limit?: number) => [...queryKeys.search.all, 'suggestions', query, limit] as const,
+    suggestions: (query: string, type?: string) => [...queryKeys.search.all, 'suggestions', query, type] as const,
 
     /**
      * 热门搜索查询 key
      */
-    hot: (limit?: number) => [...queryKeys.search.all, 'hot', limit] as const,
+    hot: () => [...queryKeys.search.all, 'hot'] as const,
 
     /**
      * 搜索历史查询 key
