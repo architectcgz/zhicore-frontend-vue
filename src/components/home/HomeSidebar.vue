@@ -84,12 +84,12 @@
             v-for="tag in displayTags"
             :key="tag.id"
             class="home-sidebar__tag"
-            :aria-label="`标签: ${tag.name}, ${tag.postCount} 篇文章`"
+            :aria-label="`标签: ${tag.name}, ${tag.postCount ?? 0} 篇文章`"
             @click="handleTagClick(tag)"
           >
             <span class="home-sidebar__tag-hash">#</span>
             <span class="home-sidebar__tag-name">{{ tag.name }}</span>
-            <span class="home-sidebar__tag-count">({{ formatNumber(tag.postCount) }})</span>
+            <span class="home-sidebar__tag-count">({{ formatNumber(tag.postCount ?? 0) }})</span>
           </button>
         </div>
       </div>

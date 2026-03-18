@@ -101,7 +101,12 @@ Key gaps:
 
 - Frontend models still include category support although categories are not part of the inspected backend scope.
 - Draft lifecycle is modeled as `/posts/drafts` in frontend, but backend inventory uses `/posts/{postId}/draft`, `/posts/drafts`, `GET /posts/my`, and explicit publish/unpublish/schedule flows.
-- Tag detail/list screens assume `isFollowing`, `followersCount`, `relatedTags`, and `totalPages` fields that are not part of the shared frontend type model and are not confirmed by the backend inventory.
+- Tag detail/list reads are now aligned to backend-confirmed tag contracts:
+  - tag detail: `GET /api/v1/tags/{slug}`
+  - tag posts: `GET /api/v1/tags/{slug}/posts?page=&size=`
+  - tag search: `GET /api/v1/tags/search?keyword=&limit=`
+  - UI no longer renders speculative `isFollowing`, `followersCount`, `relatedTags`, or paging fields.
+- Remaining: tag follow/related/suggestions/followers are not confirmed in the inspected content service and are currently not implemented in the public-content read slice.
 - The editor path uses post-image upload assumptions instead of contract-aligned upload service usage.
 
 ### Comments

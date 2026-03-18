@@ -168,7 +168,9 @@ const {
   data: tagsData,
   isLoading: tagsLoading,
   error: tagsError,
-} = useHotTagsQuery();
+} = useHotTagsQuery({
+  limit: 15,
+});
 
 /**
  * 获取热门文章（用于侧边栏）

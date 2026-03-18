@@ -2,7 +2,7 @@
 
 ## 2026-03-18
 
-- Current repo: `/root/workspace/projects/zhicore-frontend-vue`
+- Current repo: `/home/azhi/workspace/projects/zhicore-frontend-vue`
 - Admin slice already has substantial in-flight edits:
   - `src/api/admin.ts`
   - `src/layouts/AdminLayout.vue`
@@ -38,3 +38,45 @@
   - `src/queries/messages/*`
 - `npm run build` now succeeds end-to-end. The earlier exit `137` was environmental/transient rather than a persistent build failure.
 - `src/router/routes.ts` was intentionally left out of `tsconfig.admin-slice.json` because its lazy imports pull the full app into type-checking; route behavior for this slice is instead covered by manual review plus a successful full production build.
+- The newly pulled frontend analysis says the highest-value next stage is the public-content read slice, not auth or realtime features.
+- The design doc explicitly recommends:
+  - contract-aligned API clients under `src/api`
+  - DTO normalization before route-level rendering
+  - TanStack Query as the only server-state boundary for page reads
+- The implementation plan defines Phase 1 as:
+  - home feed
+  - post detail
+  - comment list
+  - backend-confirmed ranking reads required by those screens
+- `planning-with-files` context recovery script path from the legacy Claude plugin directory is unavailable in this environment; manual recovery is required.
+- Shared implementation worktree for the current public-content slice:
+  - repo: `/home/azhi/workspace/projects/zhicore-frontend-vue`
+  - worktree: `/home/azhi/workspace/projects/zhicore-frontend-vue-public-content`
+  - branch: `codex/public-content-slice-20260318`
+- Backend-confirmed tag query surface from local backend source:
+  - `GET /api/v1/tags/{slug}`
+  - `GET /api/v1/tags?page=&size=`
+  - `GET /api/v1/tags/search?keyword=&limit=`
+  - `GET /api/v1/tags/{slug}/posts?page=&size=`
+  - `GET /api/v1/tags/hot?limit=`
+- `postCount` is only present on hot-tag responses (`TagStatsDTO`); `TagDTO` from tag detail/list/search does not include it, so those screens must hide the count instead of fabricating `0`.
+- Backend does not provide evidence for the following tag capabilities in the inspected content service:
+  - follow / unfollow
+  - related tags
+  - tag suggestions
+  - tag followers
+- `src/pages/tag/TagDetail.vue` and `src/pages/tag/TagList.vue` were still using speculative fields and flows before this session:
+  - `isFollowing`
+  - `followersCount`
+  - related tags sidebar
+  - unsupported sort assumptions on tag list / tag posts
+  - ID-based tag-post reads instead of slug-based reads
+- The shared `node_modules` baseline had drifted again during this session:
+  - `package.json` required `typescript@5.3.3`
+  - actual installed version was `typescript@5.9.3`
+  - `vue-tsc@1.8.27` crashed with `supportedTSExtensions` until `npm ci` was rerun under Node `v22.22.1`
+- After restoring the dependency baseline with `npm ci` on the main repo under Node `v22.22.1`:
+  - `typescript@5.3.3` is installed again
+  - `npm run build:check:public-content` passes in the worktree
+  - `npm run build` passes in the worktree
+- The contract-aligned `src/api/tag.ts` now keeps the confirmed public-content read surface only; unconfirmed follow/suggestions/related and ID-based helpers were moved to `src/api/tag-legacy.ts` to keep the active slice boundary explicit.

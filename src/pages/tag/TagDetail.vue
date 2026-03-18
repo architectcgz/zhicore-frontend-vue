@@ -1,6 +1,6 @@
 <!--
   标签详情页面
-  功能：展示标签信息、标签下的文章列表、相关标签
+  功能：展示标签信息和标签下的文章列表
 -->
 <template>
   <div class="tag-detail-page">
@@ -17,7 +17,7 @@
 
     <!-- 错误状态 -->
     <div
-      v-else-if="error"
+      v-else-if="errorMessage"
       class="error-container"
     >
       <svg
@@ -35,11 +35,11 @@
         />
       </svg>
       <p class="error-message">
-        {{ error }}
+        {{ errorMessage }}
       </p>
       <button
         class="retry-button"
-        @click="fetchTagDetail"
+        @click="handleRetry"
       >
         重试
       </button>
@@ -65,7 +65,10 @@
           
           <!-- 标签统计 -->
           <div class="tag-stats">
-            <div class="stat-item">
+            <div
+              v-if="tag.postCount !== undefined"
+              class="stat-item"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -81,60 +84,7 @@
               </svg>
               <span>{{ tag.postCount }} 篇文章</span>
             </div>
-            <div class="stat-item">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <span>{{ tag.followersCount || 0 }} 关注者</span>
-            </div>
           </div>
-
-          <!-- 关注按钮 -->
-          <button
-            class="follow-button"
-            :class="{ following: tag.isFollowing }"
-            @click="toggleFollow"
-          >
-            <svg
-              v-if="!tag.isFollowing"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <svg
-              v-else
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            {{ tag.isFollowing ? '已关注' : '关注标签' }}
-          </button>
         </div>
       </div>
 
@@ -142,26 +92,10 @@
       <div class="main-content">
         <!-- 左侧：文章列表 -->
         <div class="posts-section">
-          <!-- 排序选择器 -->
           <div class="posts-header">
             <h2 class="section-title">
               相关文章
             </h2>
-            <select
-              v-model="sortBy"
-              class="sort-select"
-              @change="handleSortChange"
-            >
-              <option value="latest">
-                最新
-              </option>
-              <option value="popular">
-                最热门
-              </option>
-              <option value="hot">
-                热度
-              </option>
-            </select>
           </div>
 
           <!-- 文章列表 -->
@@ -171,6 +105,33 @@
           >
             <div class="loading-spinner" />
             <p>加载文章中...</p>
+          </div>
+
+          <div
+            v-else-if="postsErrorMessage"
+            class="posts-empty"
+          >
+            <svg
+              class="empty-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p>{{ postsErrorMessage }}</p>
+            <button
+              class="retry-button"
+              @click="handlePostsRetry"
+            >
+              重试
+            </button>
           </div>
 
           <div
@@ -298,13 +259,13 @@
 
           <!-- 分页 -->
           <div
-            v-if="postsPagination.totalPages > 1"
+            v-if="totalPages > 1"
             class="pagination"
           >
             <button
               class="pagination-button"
-              :disabled="postsPagination.page === 1"
-              @click="goToPage(postsPagination.page - 1)"
+              :disabled="currentPage === 0"
+              @click="goToPage(currentPage - 1)"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -323,13 +284,13 @@
             </button>
 
             <div class="pagination-info">
-              第 {{ postsPagination.page }} / {{ postsPagination.totalPages }} 页
+              第 {{ displayPage }} / {{ totalPages }} 页
             </div>
 
             <button
               class="pagination-button"
-              :disabled="postsPagination.page === postsPagination.totalPages"
-              @click="goToPage(postsPagination.page + 1)"
+              :disabled="currentPage >= totalPages - 1"
+              @click="goToPage(currentPage + 1)"
             >
               下一页
               <svg
@@ -349,212 +310,80 @@
           </div>
         </div>
 
-        <!-- 右侧：相关标签侧边栏 -->
-        <aside class="sidebar">
-          <div class="sidebar-section">
-            <h3 class="sidebar-title">
-              相关标签
-            </h3>
-            
-            <div
-              v-if="relatedTagsLoading"
-              class="sidebar-loading"
-            >
-              <div class="loading-spinner small" />
-            </div>
-
-            <div
-              v-else-if="relatedTags.length === 0"
-              class="sidebar-empty"
-            >
-              <p>暂无相关标签</p>
-            </div>
-
-            <div
-              v-else
-              class="related-tags"
-            >
-              <a
-                v-for="relatedTag in relatedTags"
-                :key="relatedTag.id"
-                :href="`/tags/${relatedTag.slug}`"
-                class="related-tag"
-                @click.prevent="navigateToTag(relatedTag.slug)"
-              >
-                <span class="tag-name">{{ relatedTag.name }}</span>
-                <span class="tag-count">{{ relatedTag.postCount }} 篇</span>
-              </a>
-            </div>
-          </div>
-        </aside>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { tagApi } from '@/api';
-import type { Tag, Post, PaginatedResponse } from '@/types';
 import { getErrorMessage } from '@/types/errors';
+import { usePostsByTagQuery } from '@/queries/tags/usePostsByTagQuery';
+import { useTagQuery } from '@/queries/tags/useTagQuery';
 
-// 路由
 const route = useRoute();
 const router = useRouter();
+const pageSize = 10;
+const currentPage = ref(0);
+const slug = computed(() => typeof route.params.slug === 'string' ? route.params.slug : '');
 
-// 状态
-const tag = ref<Tag | null>(null);
-const posts = ref<Post[]>([]);
-const relatedTags = ref<Tag[]>([]);
-const loading = ref(false);
-const postsLoading = ref(false);
-const relatedTagsLoading = ref(false);
-const error = ref<string | null>(null);
-const sortBy = ref<'latest' | 'popular' | 'hot'>('latest');
+const {
+  data: tag,
+  isLoading: tagLoading,
+  error: tagError,
+  refetch: refetchTag,
+} = useTagQuery(slug);
 
-// 分页
-const postsPagination = ref({
-  page: 1,
-  size: 10,
-  total: 0,
-  totalPages: 0,
+const {
+  data: postsData,
+  isLoading: postsLoading,
+  error: postsError,
+  refetch: refetchPosts,
+} = usePostsByTagQuery(
+  slug,
+  computed(() => ({
+    page: currentPage.value,
+    size: pageSize,
+  }))
+);
+
+const loading = computed(() => tagLoading.value && !tag.value);
+const errorMessage = computed(() => tagError.value ? getErrorMessage(tagError.value) : null);
+const postsErrorMessage = computed(() => postsError.value ? getErrorMessage(postsError.value) : null);
+const posts = computed(() => postsData.value?.items ?? []);
+const totalPages = computed(() => {
+  if (!postsData.value || postsData.value.total === 0) {
+    return 0;
+  }
+
+  return Math.ceil(postsData.value.total / pageSize);
 });
+const displayPage = computed(() => currentPage.value + 1);
 
-/**
- * 获取标签详情
- */
-const fetchTagDetail = async () => {
-  const slug = route.params.slug as string;
-  if (!slug) return;
-
-  loading.value = true;
-  error.value = null;
-
-  try {
-    tag.value = await tagApi.getTagBySlug(slug);
-    
-    // 并行获取文章和相关标签
-    await Promise.all([
-      fetchPosts(),
-      fetchRelatedTags(),
-    ]);
-  } catch (err: unknown) {
-    error.value = getErrorMessage(err);
-    console.error('获取标签详情失败:', err);
-  } finally {
-    loading.value = false;
-  }
+const handleRetry = () => {
+  void refetchTag();
 };
 
-/**
- * 获取标签下的文章
- */
-const fetchPosts = async () => {
-  if (!tag.value) return;
-
-  postsLoading.value = true;
-
-  try {
-    const response: PaginatedResponse<Post> = await tagApi.getPostsByTag(
-      tag.value.id,
-      {
-        page: postsPagination.value.page,
-        size: postsPagination.value.size,
-        sort: sortBy.value,
-      }
-    );
-
-    posts.value = response.items;
-    postsPagination.value.total = response.total;
-    postsPagination.value.totalPages = response.totalPages;
-  } catch (err: unknown) {
-    console.error('获取文章列表失败:', err);
-  } finally {
-    postsLoading.value = false;
-  }
+const handlePostsRetry = () => {
+  void refetchPosts();
 };
 
-/**
- * 获取相关标签
- */
-const fetchRelatedTags = async () => {
-  if (!tag.value) return;
-
-  relatedTagsLoading.value = true;
-
-  try {
-    relatedTags.value = await tagApi.getRelatedTags(tag.value.id, 10);
-  } catch (err: unknown) {
-    console.error('获取相关标签失败:', err);
-  } finally {
-    relatedTagsLoading.value = false;
-  }
-};
-
-/**
- * 处理排序变化
- */
-const handleSortChange = () => {
-  postsPagination.value.page = 1;
-  fetchPosts();
-};
-
-/**
- * 跳转到指定页
- */
 const goToPage = (page: number) => {
-  postsPagination.value.page = page;
-  fetchPosts();
+  if (page < 0 || page >= totalPages.value) {
+    return;
+  }
+
+  currentPage.value = page;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-/**
- * 切换关注状态
- */
-const toggleFollow = async () => {
-  if (!tag.value) return;
-
-  try {
-    if (tag.value.isFollowing) {
-      const result = await tagApi.unfollowTag(tag.value.id);
-      tag.value.isFollowing = result.isFollowing;
-      tag.value.followersCount = result.followersCount;
-    } else {
-      const result = await tagApi.followTag(tag.value.id);
-      tag.value.isFollowing = result.isFollowing;
-      tag.value.followersCount = result.followersCount;
-    }
-  } catch (err: unknown) {
-    console.error('切换关注状态失败:', err);
-    error.value = getErrorMessage(err);
-  }
-};
-
-/**
- * 导航到文章详情页
- */
 const navigateToPost = (postId: string) => {
   router.push(`/posts/${postId}`);
 };
 
-/**
- * 导航到标签详情页
- */
-const navigateToTag = (slug: string) => {
-  router.push(`/tags/${slug}`);
-};
-
-// 监听路由变化
-watch(() => route.params.slug, () => {
-  if (route.name === 'TagDetail') {
-    fetchTagDetail();
-  }
-});
-
-// 生命周期
-onMounted(() => {
-  fetchTagDetail();
+watch(slug, () => {
+  currentPage.value = 0;
 });
 </script>
 
@@ -683,48 +512,11 @@ onMounted(() => {
   height: 20px;
 }
 
-.follow-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-lg);
-  border: 2px solid white;
-  border-radius: 8px;
-  background: transparent;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.follow-button svg {
-  width: 20px;
-  height: 20px;
-}
-
-.follow-button:hover {
-  background: white;
-  color: var(--color-cta);
-}
-
-.follow-button.following {
-  background: white;
-  color: var(--color-cta);
-}
-
-.follow-button.following:hover {
-  background: rgba(255, 255, 255, 0.9);
-}
-
 /* 主要内容区域 */
 .main-content {
-  max-width: 1200px;
+  max-width: 960px;
   margin: 0 auto;
   padding: var(--space-xl) var(--space-lg);
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: var(--space-xl);
 }
 
 /* 文章区域 */
@@ -743,27 +535,6 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text);
-}
-
-.sort-select {
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  background: var(--color-background);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.sort-select:hover {
-  border-color: var(--color-cta);
-}
-
-.sort-select:focus {
-  outline: none;
-  border-color: var(--color-cta);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* 文章加载/空状态 */
@@ -787,6 +558,10 @@ onMounted(() => {
   width: 64px;
   height: 64px;
   color: var(--color-text-tertiary);
+}
+
+.posts-empty .retry-button {
+  margin-top: var(--space-md);
 }
 
 /* 文章列表 */
@@ -947,83 +722,7 @@ onMounted(() => {
   color: var(--color-text-secondary);
 }
 
-/* 侧边栏 */
-.sidebar {
-  position: sticky;
-  top: var(--space-lg);
-  height: fit-content;
-}
-
-.sidebar-section {
-  padding: var(--space-lg);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-background);
-}
-
-.sidebar-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--space-md);
-}
-
-.sidebar-loading,
-.sidebar-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md) 0;
-}
-
-.sidebar-empty p {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.related-tags {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.related-tag {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: 8px;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.related-tag:hover {
-  background: var(--color-background-secondary);
-}
-
-.related-tag .tag-name {
-  font-size: 0.875rem;
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.related-tag .tag-count {
-  font-size: 0.75rem;
-  color: var(--color-text-tertiary);
-}
-
 /* 响应式设计 */
-@media (max-width: 1024px) {
-  .main-content {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-  }
-}
-
 @media (max-width: 768px) {
   .tag-header {
     padding: var(--space-lg) var(--space-md);

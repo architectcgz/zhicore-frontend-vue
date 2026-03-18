@@ -1,6 +1,6 @@
 <!--
   标签列表页面
-  功能：展示所有标签，支持网格/云视图切换、搜索和筛选
+  功能：展示所有标签，支持网格/云视图切换和搜索
 -->
 <template>
   <div class="tag-list-page">
@@ -14,7 +14,7 @@
       </p>
     </div>
 
-    <!-- 搜索和筛选栏 -->
+    <!-- 搜索栏 -->
     <div class="search-filter-bar">
       <!-- 搜索框 -->
       <div class="search-box">
@@ -37,7 +37,6 @@
           type="text"
           placeholder="搜索标签..."
           class="search-input"
-          @input="handleSearch"
         >
         <button
           v-if="searchKeyword"
@@ -58,33 +57,6 @@
             />
           </svg>
         </button>
-      </div>
-
-      <!-- 排序选择器 -->
-      <div class="sort-selector">
-        <label
-          for="sort-select"
-          class="sort-label"
-        >排序：</label>
-        <select
-          id="sort-select"
-          v-model="sortBy"
-          class="sort-select"
-          @change="handleSortChange"
-        >
-          <option value="popular">
-            最热门
-          </option>
-          <option value="postCount">
-            文章数
-          </option>
-          <option value="name">
-            名称
-          </option>
-          <option value="latest">
-            最新
-          </option>
-        </select>
       </div>
 
       <!-- 视图切换按钮 -->
@@ -143,7 +115,7 @@
 
     <!-- 错误状态 -->
     <div
-      v-else-if="error"
+      v-else-if="errorMessage"
       class="error-container"
     >
       <svg
@@ -161,11 +133,11 @@
         />
       </svg>
       <p class="error-message">
-        {{ error }}
+        {{ errorMessage }}
       </p>
       <button
         class="retry-button"
-        @click="fetchTags"
+        @click="handleRetry"
       >
         重试
       </button>
@@ -173,7 +145,7 @@
 
     <!-- 空状态 -->
     <div
-      v-else-if="!loading && !error && tags && tags.length === 0"
+      v-else-if="!loading && !errorMessage && tags.length === 0"
       class="empty-container"
     >
       <svg
@@ -215,7 +187,10 @@
             <h3 class="tag-name">
               {{ tag.name }}
             </h3>
-            <span class="tag-post-count">{{ tag.postCount }} 篇文章</span>
+            <span
+              v-if="tag.postCount !== undefined"
+              class="tag-post-count"
+            >{{ tag.postCount }} 篇文章</span>
           </div>
           <p
             v-if="tag.description"
@@ -224,41 +199,7 @@
             {{ tag.description }}
           </p>
           <div class="tag-card-footer">
-            <button
-              class="follow-button"
-              :class="{ following: tag.isFollowing }"
-              @click.stop="toggleFollow(tag)"
-            >
-              <svg
-                v-if="!tag.isFollowing"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              {{ tag.isFollowing ? '已关注' : '关注' }}
-            </button>
+            <span class="tag-slug">#{{ tag.slug }}</span>
           </div>
         </div>
       </div>
@@ -282,13 +223,13 @@
 
       <!-- 分页 -->
       <div
-        v-if="pagination.totalPages > 1"
+        v-if="showPagination"
         class="pagination"
       >
         <button
           class="pagination-button"
-          :disabled="pagination.page === 1"
-          @click="goToPage(pagination.page - 1)"
+          :disabled="currentPage === 0"
+          @click="goToPage(currentPage - 1)"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -307,13 +248,13 @@
         </button>
 
         <div class="pagination-info">
-          第 {{ pagination.page }} / {{ pagination.totalPages }} 页
+          第 {{ displayPage }} / {{ totalPages }} 页
         </div>
 
         <button
           class="pagination-button"
-          :disabled="pagination.page === pagination.totalPages"
-          @click="goToPage(pagination.page + 1)"
+          :disabled="currentPage >= totalPages - 1"
+          @click="goToPage(currentPage + 1)"
         >
           下一页
           <svg
@@ -336,149 +277,92 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { tagApi } from '@/api';
-import type { Tag, PaginatedResponse } from '@/types';
 import { getErrorMessage } from '@/types/errors';
 import { useDebounce } from '@/composables/useDebounce';
+import { useTagsQuery } from '@/queries/tags/useTagsQuery';
+import type { Tag } from '@/types';
 
-// 路由
 const router = useRouter();
-
-// 状态
-const tags = ref<Tag[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
 const searchKeyword = ref('');
-const sortBy = ref<'popular' | 'postCount' | 'name' | 'latest'>('popular');
 const viewMode = ref<'grid' | 'cloud'>('grid');
+const currentPage = ref(0);
+const pageSize = 24;
+const debouncedKeyword = useDebounce(searchKeyword, 500);
 
-// 分页
-const pagination = ref({
-  page: 1,
-  size: 24,
-  total: 0,
-  totalPages: 0,
-});
+const queryParams = computed(() => ({
+  page: currentPage.value,
+  size: pageSize,
+  keyword: debouncedKeyword.value.trim() || undefined,
+}));
 
-// 防抖搜索
-useDebounce(searchKeyword, 500);
+const {
+  data,
+  isLoading,
+  error,
+  refetch,
+} = useTagsQuery(queryParams);
 
-/**
- * 获取标签列表
- */
-const fetchTags = async () => {
-  loading.value = true;
-  error.value = null;
-
-  try {
-    const response: PaginatedResponse<Tag> = await tagApi.getTags({
-      page: pagination.value.page,
-      size: pagination.value.size,
-      sort: sortBy.value,
-      keyword: searchKeyword.value || undefined,
-    });
-
-    tags.value = response.items;
-    pagination.value.total = response.total;
-    pagination.value.totalPages = response.totalPages;
-  } catch (err: unknown) {
-    error.value = getErrorMessage(err);
-    console.error('获取标签列表失败:', err);
-  } finally {
-    loading.value = false;
+const tags = computed<Tag[]>(() => data.value?.items ?? []);
+const loading = computed(() => isLoading.value);
+const errorMessage = computed(() => error.value ? getErrorMessage(error.value) : null);
+const isSearchMode = computed(() => !!queryParams.value.keyword);
+const totalPages = computed(() => {
+  if (!data.value || data.value.total === 0 || isSearchMode.value) {
+    return 0;
   }
+
+  return Math.ceil(data.value.total / pageSize);
+});
+const displayPage = computed(() => currentPage.value + 1);
+const showPagination = computed(() => totalPages.value > 1 && !isSearchMode.value);
+
+const handleRetry = () => {
+  void refetch();
 };
 
-/**
- * 处理搜索
- */
-const handleSearch = () => {
-  pagination.value.page = 1;
-  fetchTags();
-};
-
-/**
- * 清除搜索
- */
 const clearSearch = () => {
   searchKeyword.value = '';
-  pagination.value.page = 1;
-  fetchTags();
 };
 
-/**
- * 处理排序变化
- */
-const handleSortChange = () => {
-  pagination.value.page = 1;
-  fetchTags();
-};
-
-/**
- * 跳转到指定页
- */
 const goToPage = (page: number) => {
-  pagination.value.page = page;
-  fetchTags();
+  if (page < 0 || page >= totalPages.value) {
+    return;
+  }
+
+  currentPage.value = page;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-/**
- * 导航到标签详情页
- */
 const navigateToTag = (slug: string) => {
   router.push(`/tags/${slug}`);
 };
 
-/**
- * 切换关注状态
- */
-const toggleFollow = async (tag: Tag) => {
-  try {
-    if (tag.isFollowing) {
-      await tagApi.unfollowTag(tag.id);
-      tag.isFollowing = false;
-    } else {
-      await tagApi.followTag(tag.id);
-      tag.isFollowing = true;
-    }
-  } catch (err: unknown) {
-    console.error('切换关注状态失败:', err);
-    error.value = getErrorMessage(err);
-  }
-};
-
-/**
- * 获取标签云样式
- * 根据文章数量调整字体大小
- */
 const getTagCloudStyle = (tag: Tag) => {
-  // 防止 tags 为空或未定义
-  if (!tags.value || tags.value.length === 0) {
+  const tagsWithCount = tags.value.filter(item => item.postCount !== undefined);
+
+  if (tagsWithCount.length === 0 || tag.postCount === undefined) {
     return {
       fontSize: '16px',
     };
   }
-  
-  const maxPostCount = Math.max(...tags.value.map(t => t.postCount));
-  const minPostCount = Math.min(...tags.value.map(t => t.postCount));
+
+  const counts = tagsWithCount.map(item => item.postCount ?? 0);
+  const maxPostCount = Math.max(...counts);
+  const minPostCount = Math.min(...counts);
   const range = maxPostCount - minPostCount || 1;
-  
-  // 字体大小范围：14px - 32px
   const minSize = 14;
   const maxSize = 32;
-  const fontSize = minSize + ((tag.postCount - minPostCount) / range) * (maxSize - minSize);
-  
+  const fontSize = minSize + (((tag.postCount ?? minPostCount) - minPostCount) / range) * (maxSize - minSize);
+
   return {
     fontSize: `${fontSize}px`,
   };
 };
 
-// 生命周期
-onMounted(() => {
-  fetchTags();
+watch(searchKeyword, () => {
+  currentPage.value = 0;
 });
 </script>
 
@@ -575,40 +459,6 @@ onMounted(() => {
 .clear-button svg {
   width: 100%;
   height: 100%;
-}
-
-/* 排序选择器 */
-.sort-selector {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.sort-label {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.sort-select {
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  background: var(--color-background);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.sort-select:hover {
-  border-color: var(--color-cta);
-}
-
-.sort-select:focus {
-  outline: none;
-  border-color: var(--color-cta);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* 视图切换 */
@@ -806,40 +656,6 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
-.follow-button {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-background);
-  color: var(--color-text);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.follow-button svg {
-  width: 16px;
-  height: 16px;
-}
-
-.follow-button:hover {
-  border-color: var(--color-cta);
-  color: var(--color-cta);
-}
-
-.follow-button.following {
-  background: var(--color-cta);
-  border-color: var(--color-cta);
-  color: white;
-}
-
-.follow-button.following:hover {
-  background: var(--color-cta-hover);
-}
-
 /* 云视图 */
 .tags-cloud {
   display: flex;
@@ -926,10 +742,6 @@ onMounted(() => {
 
   .search-box {
     min-width: 100%;
-  }
-
-  .sort-selector {
-    justify-content: space-between;
   }
 
   .view-toggle {

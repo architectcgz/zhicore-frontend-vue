@@ -3,12 +3,44 @@
  * 包含标签的 CRUD 操作、标签文章获取等功能
  */
 
+import { normalizePageResponse, type BackendPageResult } from '@/api/contracts';
+import { normalizePost } from '@/api/post';
 import { httpClient } from '@/utils/request';
-import type { 
-  Tag, 
+import type {
+  Tag,
   Post,
-  PaginatedResponse 
+  PaginatedResponse
 } from '@/types';
+
+interface BackendTagDTO {
+  id: number | string;
+  name: string;
+  slug: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface BackendTagStatsDTO {
+  id: number | string;
+  name: string;
+  slug: string;
+  postCount?: number;
+}
+
+type BackendTagPostSummary = Parameters<typeof normalizePost>[0];
+
+function normalizeTag(source: BackendTagDTO | BackendTagStatsDTO): Tag {
+  return {
+    id: String(source.id),
+    name: source.name,
+    slug: source.slug,
+    description: 'description' in source ? source.description : undefined,
+    postCount: 'postCount' in source ? source.postCount ?? 0 : undefined,
+    createdAt: 'createdAt' in source ? source.createdAt ?? '' : '',
+    updatedAt: 'updatedAt' in source ? source.updatedAt ?? '' : '',
+  };
+}
 
 /**
  * 标签创建请求接口
@@ -34,9 +66,7 @@ export interface TagUpdateRequest {
 export interface TagQueryParams {
   page?: number;
   size?: number;
-  sort?: 'name' | 'postCount' | 'latest' | 'popular';
   keyword?: string;
-  minPostCount?: number;
 }
 
 /**
@@ -63,16 +93,11 @@ export class TagApi {
    * @returns 分页标签列表
    */
   async getTags(params?: TagQueryParams): Promise<PaginatedResponse<Tag>> {
-    return httpClient.get<PaginatedResponse<Tag>>('/tags', params);
-  }
-
-  /**
-   * 根据 ID 获取标签详情
-   * @param tagId 标签 ID
-   * @returns 标签详情
-   */
-  async getTagById(tagId: string): Promise<Tag> {
-    return httpClient.get<Tag>(`/tags/${tagId}`);
+    const pageResult = await httpClient.get<BackendPageResult<BackendTagDTO>>('/tags', {
+      page: params?.page,
+      size: params?.size,
+    });
+    return normalizePageResponse(pageResult, normalizeTag);
   }
 
   /**
@@ -81,7 +106,8 @@ export class TagApi {
    * @returns 标签详情
    */
   async getTagBySlug(slug: string): Promise<Tag> {
-    return httpClient.get<Tag>(`/tags/slug/${slug}`);
+    const tag = await httpClient.get<BackendTagDTO>(`/tags/${slug}`);
+    return normalizeTag(tag);
   }
 
   /**
@@ -112,23 +138,6 @@ export class TagApi {
   }
 
   /**
-   * 根据标签获取文章列表
-   * @param tagId 标签 ID
-   * @param params 查询参数
-   * @returns 标签下的文章列表
-   */
-  async getPostsByTag(
-    tagId: string,
-    params?: { 
-      page?: number; 
-      size?: number; 
-      sort?: 'latest' | 'popular' | 'hot';
-    }
-  ): Promise<PaginatedResponse<Post>> {
-    return httpClient.get<PaginatedResponse<Post>>(`/tags/${tagId}/posts`, params);
-  }
-
-  /**
    * 根据标签 slug 获取文章列表
    * @param slug 标签 slug
    * @param params 查询参数
@@ -136,13 +145,17 @@ export class TagApi {
    */
   async getPostsByTagSlug(
     slug: string,
-    params?: { 
-      page?: number; 
-      size?: number; 
+    params?: {
+      page?: number;
+      size?: number;
       sort?: 'latest' | 'popular' | 'hot';
     }
   ): Promise<PaginatedResponse<Post>> {
-    return httpClient.get<PaginatedResponse<Post>>(`/tags/slug/${slug}/posts`, params);
+    const pageResult = await httpClient.get<BackendPageResult<BackendTagPostSummary>>(`/tags/${slug}/posts`, {
+      page: params?.page,
+      size: params?.size,
+    });
+    return normalizePageResponse(pageResult, normalizePost);
   }
 
   /**
@@ -151,26 +164,10 @@ export class TagApi {
    * @returns 热门标签列表
    */
   async getHotTags(params?: { limit?: number; period?: 'day' | 'week' | 'month' }): Promise<Tag[]> {
-    return httpClient.get<Tag[]>('/tags/hot', params);
-  }
-
-  /**
-   * 获取推荐标签
-   * @param params 查询参数
-   * @returns 推荐标签列表
-   */
-  async getRecommendedTags(params?: { limit?: number; userId?: string }): Promise<Tag[]> {
-    return httpClient.get<Tag[]>('/tags/recommended', params);
-  }
-
-  /**
-   * 获取相关标签
-   * @param tagId 标签 ID
-   * @param limit 数量限制
-   * @returns 相关标签列表
-   */
-  async getRelatedTags(tagId: string, limit: number = 10): Promise<Tag[]> {
-    return httpClient.get<Tag[]>(`/tags/${tagId}/related`, { limit });
+    const tags = await httpClient.get<BackendTagStatsDTO[]>('/tags/hot', {
+      limit: params?.limit,
+    });
+    return tags.map(normalizeTag);
   }
 
   /**
@@ -183,17 +180,11 @@ export class TagApi {
     query: string,
     params?: { limit?: number; exact?: boolean }
   ): Promise<Tag[]> {
-    return httpClient.get<Tag[]>('/tags/search', { query, ...params });
-  }
-
-  /**
-   * 获取标签自动补全建议
-   * @param query 搜索关键词
-   * @param limit 数量限制
-   * @returns 标签建议列表
-   */
-  async getTagSuggestions(query: string, limit: number = 10): Promise<string[]> {
-    return httpClient.get<string[]>('/tags/suggestions', { query, limit });
+    const tags = await httpClient.get<BackendTagDTO[]>('/tags/search', {
+      keyword: query,
+      limit: params?.limit,
+    });
+    return tags.map(normalizeTag);
   }
 
   /**
@@ -202,50 +193,6 @@ export class TagApi {
    */
   async getTagStats(): Promise<TagStats> {
     return httpClient.get<TagStats>('/tags/stats');
-  }
-
-  /**
-   * 关注标签
-   * @param tagId 标签 ID
-   * @returns 关注状态
-   */
-  async followTag(tagId: string): Promise<{ isFollowing: boolean; followersCount: number }> {
-    return httpClient.post<{ isFollowing: boolean; followersCount: number }>(`/tags/${tagId}/follow`);
-  }
-
-  /**
-   * 取消关注标签
-   * @param tagId 标签 ID
-   * @returns 关注状态
-   */
-  async unfollowTag(tagId: string): Promise<{ isFollowing: boolean; followersCount: number }> {
-    return httpClient.delete<{ isFollowing: boolean; followersCount: number }>(`/tags/${tagId}/follow`);
-  }
-
-  /**
-   * 获取用户关注的标签
-   * @param userId 用户 ID
-   * @param params 查询参数
-   * @returns 用户关注的标签列表
-   */
-  async getUserFollowedTags(
-    userId: string,
-    params?: { page?: number; size?: number }
-  ): Promise<PaginatedResponse<Tag>> {
-    return httpClient.get<PaginatedResponse<Tag>>(`/users/${userId}/followed-tags`, params);
-  }
-
-  /**
-   * 获取标签的关注者
-   * @param tagId 标签 ID
-   * @param params 查询参数
-   * @returns 标签关注者列表
-   */
-  async getTagFollowers(
-    tagId: string,
-    params?: { page?: number; size?: number }
-  ): Promise<PaginatedResponse<any>> {
-    return httpClient.get<PaginatedResponse<any>>(`/tags/${tagId}/followers`, params);
   }
 
   /**

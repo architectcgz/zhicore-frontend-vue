@@ -96,7 +96,10 @@
               @click="handleTagToggle(tag.id)"
             >
               #{{ tag.name }}
-              <span class="search-results__filter-tag-count">{{ tag.postCount }}</span>
+              <span
+                v-if="tag.postCount !== undefined"
+                class="search-results__filter-tag-count"
+              >{{ tag.postCount }}</span>
             </button>
           </div>
         </div>

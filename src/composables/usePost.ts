@@ -12,6 +12,7 @@
 import { ref, computed, type Ref } from 'vue';
 import { postApi } from '@/api/post';
 import { tagApi } from '@/api/tag';
+import { legacyTagApi } from '@/api/tag-legacy';
 import type { UploadResponse, Tag } from '@/types';
 import { ElMessage } from 'element-plus';
 import { getErrorMessage } from '@/types/errors';
@@ -146,7 +147,7 @@ export function useTagSearch() {
 
     loading.value = true;
     try {
-      suggestions.value = await tagApi.getTagSuggestions(query, 10);
+      suggestions.value = await legacyTagApi.getTagSuggestions(query, 10);
     } catch (err: unknown) {
       console.error('搜索标签建议失败:', err);
       suggestions.value = [];

@@ -79,8 +79,7 @@ export interface MessageQueryParams {
 export interface TagQueryParams {
   page?: number;
   size?: number;
-  sort?: 'name' | 'postCount' | 'latest';
-  search?: string;
+  keyword?: string;
 }
 
 /**
@@ -375,7 +374,7 @@ export const queryKeys = {
 
     /**
      * 特定标签详情查询 key
-     * @param id - 标签 ID
+     * @param id - 标签 slug 或 ID
      */
     detail: (id: string) => [...queryKeys.tags.details(), id] as const,
 
@@ -387,7 +386,7 @@ export const queryKeys = {
 
     /**
      * 标签下的文章列表查询 key
-     * @param tagId - 标签 ID
+     * @param tagId - 标签 slug 或 ID
      * @param filters - 查询过滤条件（可选）
      */
     posts: (tagId: string, filters?: any) => [...queryKeys.tags.all, 'posts', tagId, filters] as const,
@@ -395,18 +394,7 @@ export const queryKeys = {
     /**
      * 热门标签查询 key
      */
-    hot: () => [...queryKeys.tags.all, 'hot'] as const,
-
-    /**
-     * 推荐标签查询 key
-     */
-    recommended: () => [...queryKeys.tags.all, 'recommended'] as const,
-
-    /**
-     * 标签搜索建议查询 key
-     * @param query - 搜索关键词
-     */
-    suggestions: (query: string) => [...queryKeys.tags.all, 'suggestions', query] as const,
+    hot: (limit?: number) => [...queryKeys.tags.all, 'hot', limit] as const,
   },
 
   // ============================================================================

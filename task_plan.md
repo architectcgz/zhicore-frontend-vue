@@ -1,36 +1,38 @@
-# ZhiCore Frontend Overnight Plan
+# ZhiCore Frontend Alignment Plan
 
 ## Goal
-By morning, finish the current ZhiCore frontend admin/user-management slice to a handoff-ready state: design aligned, code coherent, tests runnable locally on the user's computer, and a clear verification record.
+Continue ZhiCore frontend development with a contract-first pipeline. This round targets the first public-content vertical slice so the home page, post detail page, and comment read path move closer to the backend inventory without broad refactors.
 
 ## Status
-- Current phase: in_progress
-- Owner: OpenClaw + Codex worker supervision
-- Handoff target: morning local inheritance/integration testing by user
+- Current phase: completed
+- Active workflow: `planning-with-files` + `leader`
+- Current slice: public content tag read flow follow-up
 
 ## Phases
-- [x] Inspect current repo state and in-flight admin slice changes
-- [x] Install dependencies locally in repo
-- [x] Fix verification pipeline blockers
-  - [x] Make targeted admin API test discoverable/runnable
-  - [x] Resolve vue-tsc version-compatibility blocker
-  - [x] Distinguish remaining resource-limit failures from real code failures
-- [x] Re-verify admin slice
-  - [x] targeted tests
-  - [x] type/build checks
-- [ ] Review diffs and trim unnecessary edits
-- [ ] Commit with clear message
-- [x] Leave morning handoff summary
+- [x] Restore planning context from existing repo documents
+- [x] Read the pulled frontend analysis, design, and implementation plan
+- [x] Produce a minimal implementation plan for the current slice
+- [x] Create one shared git worktree for the implementation pipeline
+- [x] Run architecture analysis for the slice
+- [x] Implement the slice with minimal diff
+- [x] Review the changes
+- [x] Validate with targeted checks
+- [x] Sync documentation and update planning files
+
+## Current Slice Scope
+- Home hot tags sidebar
+- Tag list read flow
+- Tag detail read flow
+- Backend-confirmed tag search and slug-post reads used by the above screens
 
 ## Constraints
-- Keep scope focused on current admin slice and verification pipeline needed to support it.
-- Avoid broad unrelated refactors.
-- Prefer minimal safe fixes.
-- Put project docs under docs/ subfolders.
+- Keep changes limited to the first public-content vertical slice.
+- Follow backend-confirmed contracts only; hide unsupported assumptions instead of inventing fields.
+- Prefer query-hook and adapter cleanup over page-level hacks.
+- Avoid broad refactors outside touched modules.
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
 |---|---:|---|
-| `vue-tsc` crashed with `Search string not found: /supportedTSExtensions.../` | 1 | Resolved by exact-pinning `typescript` to `5.3.3`; current repo-wide `vue-tsc` now runs and reports real pre-existing type errors instead of crashing |
-| `vitest` could not find `src/api/admin.test.ts` | 1 | Resolved by relocating the test to `test/api/admin.test.ts`, which matches the existing Vitest include pattern |
-| `npm run build` previously exited `137` after chunking/gzip | 1 | Re-ran successfully; this was an environment/transient resource failure, not a persistent code/build configuration issue |
+| `session-catchup.py` not found under `/home/azhi/.claude/plugins/planning-with-files/scripts/` | 1 | Use the active Codex skill directory and restore context manually from `task_plan.md`, `findings.md`, `progress.md`, and current repo docs |
+| `vue-tsc` crashed with `Search string not found: /supportedTSExtensions.../` in the previous session | 1 | Already resolved upstream by exact-pinning `typescript` to `5.3.3`; keep this as a known environment baseline |

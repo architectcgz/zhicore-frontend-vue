@@ -24,3 +24,49 @@
   - `npm run build:check:admin` -> passed
   - `npx vue-tsc --noEmit --pretty false` -> fails on unrelated existing repo-wide type errors
   - `npm run build` -> passed
+- Pulled latest `origin/master` into local `master`:
+  - fast-forward `35ec54d` -> `a563624`
+- Restored planning context by reading:
+  - `task_plan.md`
+  - `findings.md`
+  - `progress.md`
+  - `docs/analysis/frontend/backend-frontend-gap-analysis.md`
+  - `docs/design/frontend/backend-alignment-design.md`
+  - `docs/plans/frontend/backend-alignment-implementation-plan.md`
+- Switched the active task from the admin-slice handoff to the next development stage: public-content contract alignment.
+- Confirmed leader-pipeline prerequisites:
+  - explicit runner exists at `/home/azhi/.codex/tools/run_agent_with_model.sh`
+  - no shared implementation worktree exists yet
+- Created and reused one shared implementation worktree:
+  - `/home/azhi/workspace/projects/zhicore-frontend-vue-public-content`
+  - branch `codex/public-content-slice-20260318`
+- Completed a public-content tag follow-up implementation in the shared worktree:
+  - aligned hot tags API normalization and query keying
+  - added `build:check:public-content`
+  - aligned tag detail reads to backend-confirmed slug endpoint
+  - aligned tag post reads to backend-confirmed slug posts endpoint
+  - aligned tag list search to backend-confirmed `keyword` search endpoint
+  - removed unsupported tag follow / related / extra sort assumptions from `TagDetail.vue` and `TagList.vue`
+  - moved tag detail/list server state onto tag query hooks
+  - expanded `tsconfig.public-content-slice.json` to cover tag detail/list files and tag query hooks
+- Validation and environment repair:
+  - `npm run build:check:public-content` initially failed because shared `node_modules` had drifted to `typescript@5.9.3`
+  - installed Node `v22.22.1` via `nvm`
+  - reran `npm ci` in `/home/azhi/workspace/projects/zhicore-frontend-vue`
+  - `npm ls vue-tsc typescript` now shows `vue-tsc@1.8.27` + `typescript@5.3.3`
+  - `npm run build:check:public-content` -> passed
+  - `npm run build` -> passed
+- Began explicit leader pipeline closeout for this tag read slice:
+  - architecture analysis completed locally and via runner context
+  - review / test / doc phases pending final agent output
+- Addressed a review-found behavior gap in `src/pages/tag/TagDetail.vue`:
+  - added article-list error feedback and retry handling when `/tags/{slug}/posts` fails after tag detail succeeds
+  - removed leftover follow / related / sort styles from tag detail and tag list pages to match the active UI
+- Final closeout:
+  - targeted review completed with no remaining blocking issues in the public-content tag read slice after the above fix
+  - `git diff --check` cleaned up for the touched slice
+  - `npm run build:check:public-content` -> passed under Node `v22.22.1`
+  - `npm run build` -> passed under Node `v22.22.1`
+  - synchronized minimal planning/docs updates for this slice in both the main repo and the shared worktree
+  - removed fabricated `postCount = 0` behavior for tag detail/list/search and hid counts when the backend DTO does not provide them
+  - split unconfirmed tag endpoints out of `src/api/tag.ts` into `src/api/tag-legacy.ts`

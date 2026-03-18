@@ -9,11 +9,14 @@
     "src/api/contracts.ts",
     "src/api/post.ts",
     "src/api/ranking.ts",
+    "src/api/tag.ts",
     "src/components/comment/CommentItem.vue",
     "src/components/comment/CommentList.vue",
     "src/components/home/HomeSidebar.vue",
     "src/components/post/PostCard.vue",
     "src/pages/Home.vue",
+    "src/pages/tag/TagDetail.vue",
+    "src/pages/tag/TagList.vue",
     "src/pages/post/PostDetail.vue",
     "src/queries/comments/useCommentsQuery.ts",
     "src/queries/comments/useDeleteCommentMutation.ts",
@@ -23,6 +26,10 @@
     "src/queries/posts/usePostQuery.ts",
     "src/queries/posts/usePostsQuery.ts",
     "src/queries/query-keys.ts",
+    "src/queries/tags/useHotTagsQuery.ts",
+    "src/queries/tags/usePostsByTagQuery.ts",
+    "src/queries/tags/useTagQuery.ts",
+    "src/queries/tags/useTagsQuery.ts",
     "src/types/index.ts"
   ]
 }
