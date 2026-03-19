@@ -4,7 +4,7 @@ import { normalizeAdminUser, normalizePageResponse } from '@/api/admin';
 describe('admin api adapters', () => {
   it('normalizes backend user data to frontend user shape', () => {
     const normalized = normalizeAdminUser({
-      id: 1001,
+      id: '1001',
       username: 'alice',
       email: 'alice@example.com',
       nickname: 'Alice',
@@ -36,7 +36,7 @@ describe('admin api adapters', () => {
         hasNext: true,
         records: [
           {
-            id: 7,
+            id: '7',
             username: 'bob',
             email: 'bob@example.com',
             nickname: 'Bob',

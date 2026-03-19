@@ -14,11 +14,11 @@ import type {
 } from '@/types';
 
 interface BackendHotPostDTO {
-  id: number | string;
+  id: string;
   title: string;
   excerpt?: string;
   coverImageUrl?: string;
-  ownerId?: number | string;
+  ownerId?: string;
   ownerName?: string;
   ownerAvatar?: string;
   publishedAt?: string;
@@ -29,8 +29,8 @@ interface BackendHotPostDTO {
 }
 
 interface BackendPostDetailDTO {
-  id: number | string;
-  ownerId?: number | string;
+  id: string;
+  ownerId?: string;
   ownerName?: string;
   ownerAvatar?: string;
   title: string;

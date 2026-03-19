@@ -77,7 +77,7 @@ interface BackendPageResult<T> {
 }
 
 interface BackendAdminUser {
-  id: number;
+  id: string;
   username: string;
   email: string;
   nickname: string;
@@ -88,9 +88,9 @@ interface BackendAdminUser {
 }
 
 interface BackendAdminPost {
-  id: number;
+  id: string;
   title: string;
-  authorId: number;
+  authorId: string;
   authorName: string;
   status: string;
   viewCount: number;
@@ -101,10 +101,10 @@ interface BackendAdminPost {
 }
 
 interface BackendAdminComment {
-  id: number;
-  postId: number;
+  id: string;
+  postId: string;
   postTitle: string;
-  userId: number;
+  userId: string;
   userName: string;
   content: string;
   likeCount: number;
@@ -187,9 +187,9 @@ export interface PageParams {
   size?: number;
   keyword?: string;
   status?: string;
-  authorId?: string | number;
-  postId?: string | number;
-  userId?: string | number;
+  authorId?: string;
+  postId?: string;
+  userId?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

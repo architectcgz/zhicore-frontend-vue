@@ -12,8 +12,8 @@ import type {
 } from '@/types';
 
 interface BackendCommentAuthor {
-  id?: number | string;
-  userId?: number | string;
+  id?: string;
+  userId?: string;
   nickName?: string;
   nickname?: string;
   userName?: string;
@@ -25,9 +25,9 @@ interface BackendCommentAuthor {
 }
 
 interface BackendCommentVO {
-  id: number | string;
-  postId: number | string;
-  rootId?: number | string;
+  id: string;
+  postId: string;
+  rootId?: string;
   content: string;
   author?: BackendCommentAuthor;
   likeCount?: number;

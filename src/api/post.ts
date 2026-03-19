@@ -13,8 +13,8 @@ import type {
 } from '@/types';
 
 interface BackendPostSummary {
-  id: number | string;
-  ownerId?: number | string;
+  id: string;
+  ownerId?: string;
   ownerName?: string;
   ownerAvatar?: string;
   title: string;
@@ -35,7 +35,7 @@ interface BackendPostSummary {
 }
 
 export function normalizeUserSummary(source: {
-  ownerId?: number | string;
+  ownerId?: string;
   ownerName?: string;
   ownerAvatar?: string;
   role?: string;
