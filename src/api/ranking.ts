@@ -28,6 +28,35 @@ interface BackendHotPostDTO {
   viewCount?: number;
 }
 
+interface BackendPostDetailDTO {
+  id: number | string;
+  ownerId?: number | string;
+  ownerName?: string;
+  ownerAvatar?: string;
+  title: string;
+  raw?: string;
+  html?: string;
+  excerpt?: string;
+  coverImageUrl?: string;
+  status?: string;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  likeCount?: number;
+  commentCount?: number;
+  favoriteCount?: number;
+  viewCount?: number;
+  liked?: boolean;
+  favorited?: boolean;
+}
+
+export interface BackendRankingScoreDTO {
+  entityId: string;
+  score: number;
+  rank: number;
+  updatedAt?: string;
+}
+
 /**
  * 排行榜查询参数接口
  */
@@ -96,10 +125,129 @@ export interface RankingStats {
   };
 }
 
+type PostRankingPeriod = 'hot' | 'daily' | 'weekly' | 'monthly';
+
+type RankingPageWindow = {
+  page: number;
+  size: number;
+  startIndex: number;
+  endIndex: number;
+  requestCount: number;
+};
+
+function getRankingPageWindow(params?: Pick<RankingQueryParams, 'page' | 'size'>): RankingPageWindow {
+  const page = Math.max(1, params?.page ?? 1);
+  const size = Math.max(1, params?.size ?? 20);
+  const startIndex = (page - 1) * size;
+  const endIndex = startIndex + size;
+
+  return {
+    page,
+    size,
+    startIndex,
+    endIndex,
+    requestCount: Math.min(100, endIndex + 1),
+  };
+}
+
+export function buildPostRankingItem(post: Post, score: BackendRankingScoreDTO): PostRankingItem {
+  return {
+    id: String(score.entityId),
+    title: post.title,
+    score: score.score,
+    rank: score.rank,
+    change: 0,
+    type: 'POST',
+    post,
+    metrics: {
+      views: post.viewCount ?? 0,
+      likes: post.likeCount ?? 0,
+      comments: post.commentCount ?? 0,
+      shares: 0,
+      favorites: post.favoriteCount ?? 0,
+    },
+  };
+}
+
+export function mapPostScoresToRankingItems(
+  scores: BackendRankingScoreDTO[],
+  posts: Post[]
+): PostRankingItem[] {
+  const postsById = new Map(posts.map((post) => [post.id, post]));
+
+  return scores.flatMap((score) => {
+    const post = postsById.get(String(score.entityId));
+
+    return post ? [buildPostRankingItem(post, score)] : [];
+  });
+}
+
+export function buildApproximateRankingPage<T>(
+  items: T[],
+  pageWindow: RankingPageWindow,
+  hasMore: boolean
+): PaginatedResponse<T> {
+  const total = hasMore
+    ? pageWindow.endIndex + 1
+    : pageWindow.startIndex + items.length;
+
+  return {
+    items,
+    total,
+    page: pageWindow.page,
+    size: pageWindow.size,
+    hasMore,
+  };
+}
+
 /**
  * 排行榜 API 服务类
  */
 export class RankingApi {
+  private async getPostScoreList(
+    period: PostRankingPeriod,
+    pageWindow: RankingPageWindow
+  ): Promise<BackendRankingScoreDTO[]> {
+    if (period === 'hot') {
+      return httpClient.get<BackendRankingScoreDTO[]>('/ranking/posts/hot/scores', {
+        page: 0,
+        size: pageWindow.requestCount,
+      });
+    }
+
+    return httpClient.get<BackendRankingScoreDTO[]>(`/ranking/posts/${period}/scores`, {
+      limit: pageWindow.requestCount,
+    });
+  }
+
+  private async getPostsByIds(postIds: string[]): Promise<Post[]> {
+    const results = await Promise.allSettled(
+      postIds.map((postId) =>
+        httpClient
+          .get<BackendPostDetailDTO>(`/posts/${postId}`, undefined, {
+            skipErrorHandler: true,
+          })
+          .then((post) => normalizePost(post))
+      )
+    );
+
+    return results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  }
+
+  private async getPostRankingPage(
+    period: PostRankingPeriod,
+    params?: Pick<RankingQueryParams, 'page' | 'size'>
+  ): Promise<PaginatedResponse<PostRankingItem>> {
+    const pageWindow = getRankingPageWindow(params);
+    const scores = await this.getPostScoreList(period, pageWindow);
+    const pageScores = scores.slice(pageWindow.startIndex, pageWindow.endIndex);
+    const posts = await this.getPostsByIds(pageScores.map((score) => String(score.entityId)));
+    const items = mapPostScoresToRankingItems(pageScores, posts);
+    const hasMore = scores.length > pageWindow.endIndex;
+
+    return buildApproximateRankingPage(items, pageWindow, hasMore);
+  }
+
   /**
    * 获取热门文章详情列表
    * 首页垂直切片使用后端确认的 details 端点。
@@ -119,7 +267,7 @@ export class RankingApi {
    * @returns 热门文章排行榜
    */
   async getHotPosts(params?: RankingQueryParams): Promise<PaginatedResponse<PostRankingItem>> {
-    return httpClient.get<PaginatedResponse<PostRankingItem>>('/ranking/posts/hot', params);
+    return this.getPostRankingPage('hot', params);
   }
 
   /**
@@ -128,7 +276,7 @@ export class RankingApi {
    * @returns 日榜文章列表
    */
   async getDailyPosts(params?: Omit<RankingQueryParams, 'period'>): Promise<PaginatedResponse<PostRankingItem>> {
-    return httpClient.get<PaginatedResponse<PostRankingItem>>('/ranking/posts/daily', params);
+    return this.getPostRankingPage('daily', params);
   }
 
   /**
@@ -137,7 +285,7 @@ export class RankingApi {
    * @returns 周榜文章列表
    */
   async getWeeklyPosts(params?: Omit<RankingQueryParams, 'period'>): Promise<PaginatedResponse<PostRankingItem>> {
-    return httpClient.get<PaginatedResponse<PostRankingItem>>('/ranking/posts/weekly', params);
+    return this.getPostRankingPage('weekly', params);
   }
 
   /**
@@ -146,7 +294,7 @@ export class RankingApi {
    * @returns 月榜文章列表
    */
   async getMonthlyPosts(params?: Omit<RankingQueryParams, 'period'>): Promise<PaginatedResponse<PostRankingItem>> {
-    return httpClient.get<PaginatedResponse<PostRankingItem>>('/ranking/posts/monthly', params);
+    return this.getPostRankingPage('monthly', params);
   }
 
   /**

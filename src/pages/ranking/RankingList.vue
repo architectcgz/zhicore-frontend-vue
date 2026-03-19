@@ -59,15 +59,13 @@
       v-else-if="error"
       class="error-container"
     >
-      <p class="error-message">
-        {{ error }}
-      </p>
-      <button
-        class="retry-button"
-        @click="fetchRankingData"
-      >
-        重试
-      </button>
+      <SiteErrorState
+        title="加载排行榜失败"
+        :message="error"
+        mode="section"
+        retry-text="重试加载"
+        @retry="fetchRankingData"
+      />
     </div>
 
     <!-- 排行榜内容 -->
@@ -332,6 +330,7 @@ import { getErrorMessage } from '@/types/errors';
 import PostRankingCard from '@/components/ranking/PostRankingCard.vue';
 import CreatorRankingCard from '@/components/ranking/CreatorRankingCard.vue';
 import TopicRankingCard from '@/components/ranking/TopicRankingCard.vue';
+import SiteErrorState from '@/components/common/SiteErrorState.vue';
 
 // 标签页类型
 type TabType = 'posts' | 'creators' | 'topics';

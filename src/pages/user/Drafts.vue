@@ -42,13 +42,13 @@
           v-else-if="error"
           class="error-container"
         >
-          <div class="error-message">
-            <i class="el-icon-warning" />
-            <p>{{ error }}</p>
-            <el-button @click="handleRetry">
-              重试
-            </el-button>
-          </div>
+          <SiteErrorState
+            title="加载草稿失败"
+            :message="error"
+            mode="section"
+            retry-text="重试加载"
+            @retry="handleRetry"
+          />
         </div>
 
         <!-- 空状态 -->
@@ -203,6 +203,7 @@ import { usePost } from '@/composables/usePost';
 import type { Post } from '@/types';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
+import SiteErrorState from '@/components/common/SiteErrorState.vue';
 
 // 路由
 const router = useRouter();

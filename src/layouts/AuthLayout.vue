@@ -4,13 +4,19 @@
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTheme } from '@/composables/useTheme';
 import ThemeToggle from '@/components/common/ThemeToggle.vue';
 
 const route = useRoute();
 useTheme();
+const isTopbarDocked = ref(false);
+const authFlipRoutes = new Set(['Login', 'Register', 'login', 'register']);
+
+const isFlipRoute = computed(() => authFlipRoutes.has(String(route.name ?? '')));
+const panelTransitionName = computed(() => (isFlipRoute.value ? 'auth-card-flip' : 'auth-panel-fade'));
+const panelTransitionKey = computed(() => String(route.name ?? route.path));
 
 const pageTitle = computed(() => {
   switch (route.name) {
@@ -51,6 +57,23 @@ const featureList = computed(() => [
   '首页主题流与趋势发现入口',
   '围绕创作者主页构建个人影响力',
 ]);
+
+const updateTopbarDockedState = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  isTopbarDocked.value = window.scrollY > 12;
+};
+
+onMounted(() => {
+  updateTopbarDockedState();
+  window.addEventListener('scroll', updateTopbarDockedState, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateTopbarDockedState);
+});
 </script>
 
 <template>
@@ -59,7 +82,10 @@ const featureList = computed(() => [
     <div class="auth-layout__ambient auth-layout__ambient--right" />
 
     <div class="auth-layout__shell">
-      <header class="auth-layout__topbar surface-panel">
+      <header
+        class="auth-layout__topbar surface-panel"
+        :class="{ 'auth-layout__topbar--docked': isTopbarDocked }"
+      >
         <router-link
           to="/"
           class="auth-layout__logo"
@@ -110,7 +136,17 @@ const featureList = computed(() => [
         </section>
 
         <section class="auth-layout__panel">
-          <slot />
+          <Transition
+            :name="panelTransitionName"
+            mode="out-in"
+          >
+            <div
+              :key="panelTransitionKey"
+              class="auth-layout__panel-card"
+            >
+              <slot />
+            </div>
+          </Transition>
         </section>
       </main>
 
@@ -173,7 +209,7 @@ const featureList = computed(() => [
   z-index: 1;
   width: min(1360px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 18px 0 24px;
+  padding: 0 0 24px;
 }
 
 .auth-layout__topbar,
@@ -186,22 +222,32 @@ const featureList = computed(() => [
 }
 
 .auth-layout__topbar {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 20;
   justify-content: space-between;
   gap: var(--space-md);
   min-height: 76px;
-  margin-bottom: calc(var(--space-xl) + 4px);
+  margin-bottom: var(--space-lg);
   padding: 14px 18px;
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-auth-header-shell);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 92%, transparent) 0%, color-mix(in srgb, var(--color-surface-overlay) 86%, transparent) 100%);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow-md);
+  transform: translateY(18px);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+  will-change: transform;
 }
 
 .auth-layout__logo {
   gap: 12px;
+}
+
+.auth-layout__topbar--docked {
+  transform: translateY(0);
 }
 
 .auth-layout__logo-mark {
@@ -210,7 +256,7 @@ const featureList = computed(() => [
   justify-content: center;
   width: 46px;
   height: 46px;
-  border-radius: 16px;
+  border-radius: var(--radius-auth-header-button);
   background: var(--gradient-hero);
   color: var(--color-text-inverse);
   font-family: var(--font-brand);
@@ -232,6 +278,10 @@ const featureList = computed(() => [
   justify-content: flex-end;
 }
 
+.auth-layout__theme :deep(.theme-toggle__button) {
+  border-radius: var(--radius-auth-header-button);
+}
+
 .auth-layout__main {
   position: relative;
   z-index: 1;
@@ -243,6 +293,7 @@ const featureList = computed(() => [
 
 .auth-layout__showcase {
   padding: var(--space-2xl) var(--space-xl) var(--space-2xl) 0;
+  margin-top: -72px;
 }
 
 .auth-layout__eyebrow {
@@ -329,6 +380,47 @@ const featureList = computed(() => [
 .auth-layout__panel {
   display: flex;
   justify-content: flex-end;
+  perspective: 1400px;
+  perspective-origin: center center;
+}
+
+.auth-layout__panel-card {
+  width: 100%;
+  display: flex;
+  justify-content: inherit;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.auth-card-flip-enter-active,
+.auth-card-flip-leave-active {
+  transition:
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 380ms ease;
+}
+
+.auth-card-flip-enter-from {
+  opacity: 0;
+  transform: rotateY(-86deg) scale(0.97);
+}
+
+.auth-card-flip-leave-to {
+  opacity: 0;
+  transform: rotateY(86deg) scale(0.97);
+}
+
+.auth-panel-fade-enter-active,
+.auth-panel-fade-leave-active {
+  transition:
+    transform 260ms ease,
+    opacity 220ms ease;
+}
+
+.auth-panel-fade-enter-from,
+.auth-panel-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 .auth-layout__footer {
@@ -374,6 +466,7 @@ const featureList = computed(() => [
 
   .auth-layout__showcase {
     padding: 0;
+    margin-top: -44px;
   }
 
   .auth-layout__panel {
@@ -384,7 +477,6 @@ const featureList = computed(() => [
 @media (max-width: 767px) {
   .auth-layout__shell {
     width: min(100%, calc(100% - 12px));
-    padding-top: 12px;
   }
 
   .auth-layout__topbar,
@@ -395,10 +487,28 @@ const featureList = computed(() => [
 
   .auth-layout__topbar {
     padding: 14px;
+    transform: translateY(10px);
+    border-radius: var(--radius-auth-header-shell-mobile);
+  }
+
+  .auth-layout__topbar--docked {
+    transform: translateY(0);
+  }
+
+  .auth-card-flip-enter-from {
+    transform: rotateY(-38deg) scale(0.985);
+  }
+
+  .auth-card-flip-leave-to {
+    transform: rotateY(38deg) scale(0.985);
   }
 
   .auth-layout__title {
     font-size: 2.5rem;
+  }
+
+  .auth-layout__showcase {
+    margin-top: -28px;
   }
 
   .auth-layout__metrics {
@@ -412,6 +522,15 @@ const featureList = computed(() => [
 
   .auth-layout__theme {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card-flip-enter-active,
+  .auth-card-flip-leave-active,
+  .auth-panel-fade-enter-active,
+  .auth-panel-fade-leave-active {
+    transition-duration: 0.01ms;
   }
 }
 </style>

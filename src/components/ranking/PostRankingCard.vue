@@ -148,7 +148,7 @@ const formatNumber = (num: number): string => {
 
 // 跳转到文章详情
 const goToPost = () => {
-  router.push({ name: 'PostDetail', params: { id: props.item.post.id } });
+  router.push({ name: 'PostDetail', params: { id: String(props.item.post.id) } });
 };
 </script>
 

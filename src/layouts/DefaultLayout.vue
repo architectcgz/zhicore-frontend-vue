@@ -23,7 +23,30 @@ const updateIsMobile = () => {
 };
 
 const isHomeRoute = computed(() => route.name === 'Home');
+const isPostDetailRoute = computed(() => route.name === 'PostDetail');
+const cardlessRouteNames = new Set([
+  'UserProfile',
+  'Settings',
+  'Posts',
+  'CategoryList',
+  'CategoryDetail',
+  'TagList',
+  'TagDetail',
+  'Ranking',
+]);
+const isCardlessContentRoute = computed(() => {
+  const routeName = String(route.name ?? '');
+  if (cardlessRouteNames.has(routeName)) {
+    return true;
+  }
 
+  // /posts 当前只有父路由，不挂载具体页面组件；保留无卡片主区域以避免落回默认卡片壳。
+  if (route.path === '/posts') {
+    return true;
+  }
+
+  return false;
+});
 const showSidebar = computed(() => {
   if (!isMobile.value) {
     return false;
@@ -72,7 +95,13 @@ onUnmounted(() => {
       @toggle-sidebar="toggleSidebar"
     />
 
-    <div class="default-layout__main">
+    <div
+      class="default-layout__main"
+      :class="{
+        'default-layout__main--with-aside': showAside,
+        'default-layout__main--post-detail': isPostDetailRoute,
+      }"
+    >
       <AppSidebar
         v-if="showSidebar"
         class="default-layout__sidebar"
@@ -81,14 +110,30 @@ onUnmounted(() => {
         @close="closeSidebar"
       />
 
+      <div
+        v-if="isPostDetailRoute"
+        id="post-detail-reading-slot"
+        class="default-layout__portal default-layout__portal--reading"
+      />
+
       <main class="default-layout__content">
         <div
           class="default-layout__content-inner"
-          :class="{ 'default-layout__content-inner--home': isHomeRoute }"
+          :class="{
+            'default-layout__content-inner--home': isHomeRoute,
+            'default-layout__content-inner--transparent': isPostDetailRoute,
+            'default-layout__content-inner--plain': isCardlessContentRoute,
+          }"
         >
           <slot />
         </div>
       </main>
+
+      <div
+        v-if="isPostDetailRoute"
+        id="post-detail-action-slot"
+        class="default-layout__portal default-layout__portal--action"
+      />
 
       <aside
         v-if="showAside"
@@ -96,7 +141,7 @@ onUnmounted(() => {
       >
         <div
           id="home-sidebar-slot"
-          class="default-layout__aside-shell surface-panel"
+          class="default-layout__aside-shell"
         />
       </aside>
     </div>
@@ -132,15 +177,41 @@ onUnmounted(() => {
 .default-layout__main {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
   gap: var(--space-xl);
-  width: min(1520px, calc(100% - 40px));
+  width: min(1640px, calc(100% - 40px));
   margin: 130px auto 0;
   padding: var(--space-xl) 0 var(--space-3xl);
 }
 
+.default-layout__main--with-aside {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.default-layout__main--post-detail {
+  grid-template-columns: 240px minmax(0, 1fr) 124px;
+  align-items: start;
+}
+
 .default-layout__content {
   min-width: 0;
+}
+
+.default-layout__portal {
+  min-width: 0;
+}
+
+.default-layout__portal--reading {
+  position: sticky;
+  top: 104px;
+  align-self: start;
+}
+
+.default-layout__portal--action {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  width: 124px;
+  justify-self: end;
 }
 
 .default-layout__content-inner {
@@ -161,6 +232,22 @@ onUnmounted(() => {
   backdrop-filter: none;
 }
 
+.default-layout__content-inner--transparent {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.default-layout__content-inner--plain {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .default-layout__aside {
   position: sticky;
   top: 112px;
@@ -168,9 +255,9 @@ onUnmounted(() => {
 }
 
 .default-layout__aside-shell {
-  min-height: 320px;
-  padding: var(--space-lg);
-  border-radius: var(--radius-2xl);
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
 }
 
 .default-layout__footer {
@@ -196,15 +283,30 @@ onUnmounted(() => {
 
 @media (max-width: 1199px) {
   .default-layout__main {
-    grid-template-columns: minmax(0, 1fr) 320px;
     width: min(100%, calc(100% - 24px));
     gap: var(--space-lg);
     margin-top: 124px;
     padding-top: var(--space-lg);
   }
 
+  .default-layout__main--with-aside {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .default-layout__main--post-detail {
+    grid-template-columns: minmax(0, 1fr) 124px;
+  }
+
+  .default-layout__portal--reading {
+    display: none;
+  }
+
   .default-layout__content-inner {
     padding: var(--space-lg);
+  }
+
+  .default-layout__content-inner--transparent {
+    padding: 0;
   }
 }
 
@@ -215,6 +317,19 @@ onUnmounted(() => {
 
   .default-layout__aside {
     display: none;
+  }
+
+  .default-layout__main--post-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .default-layout__portal--reading {
+    display: none;
+  }
+
+  .default-layout__portal--action {
+    width: 100%;
+    justify-self: stretch;
   }
 }
 
@@ -236,6 +351,14 @@ onUnmounted(() => {
 
   .default-layout__content-inner--home {
     padding: 0;
+  }
+
+  .default-layout__content-inner--transparent {
+    padding: 0;
+  }
+
+  .default-layout__portal--action {
+    display: none;
   }
 
   .default-layout__sidebar {

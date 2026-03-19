@@ -148,6 +148,7 @@ export interface PaginatedResponse<T> {
   page: number;
   size: number;
   hasMore: boolean;
+  cursor?: string | null;
 }
 
 // 用户相关类型

@@ -27,6 +27,23 @@ export type RequestBody = Record<string, any> | FormData;
 
 // 请求超时时间（毫秒）
 const REQUEST_TIMEOUT = 10000;
+const LARGE_INTEGER_TOKEN_PATTERN = /([:[,]\s*)(-?\d{16,})(?=\s*[,}\]])/g;
+
+export function parseJsonPreservingLargeIntegers<T = unknown>(data: unknown): T {
+  if (typeof data !== 'string') {
+    return data as T;
+  }
+
+  const trimmedData = data.trim();
+
+  if (!trimmedData || !['{', '['].includes(trimmedData[0])) {
+    return data as T;
+  }
+
+  const normalizedData = trimmedData.replace(LARGE_INTEGER_TOKEN_PATTERN, '$1"$2"');
+
+  return JSON.parse(normalizedData) as T;
+}
 
 // 最大重试次数（暂未使用，保留供将来使用）
 // const MAX_RETRIES = 3;
@@ -115,6 +132,9 @@ function createAxiosInstance(): AxiosInstance {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
+    transformResponse: [
+      (data) => parseJsonPreservingLargeIntegers(data),
+    ],
   });
 
   // 请求拦截器

@@ -1,38 +1,32 @@
 <!--
   首页侧边栏组件
-  显示热门标签和热门文章
+  显示热门文章
 -->
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import type { Post, Tag } from '@/types';
+import type { Post } from '@/types';
 
 interface Props {
-  tags?: Tag[];
   trendingPosts?: Post[];
   isLoading?: boolean;
-  tagsError?: Error | null;
   postsError?: Error | null;
 }
 
 interface Emits {
-  (e: 'tag-click', tag: Tag): void;
   (e: 'post-click', post: Post): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  tags: undefined,
   trendingPosts: undefined,
   isLoading: false,
-  tagsError: null,
   postsError: null,
 });
 
 const emit = defineEmits<Emits>();
 const router = useRouter();
 
-const displayTags = computed(() => props.tags?.slice(0, 15) ?? []);
 const displayPosts = computed(() => props.trendingPosts?.slice(0, 10) ?? []);
 
 const getErrorMessage = (err: unknown): string => {
@@ -75,14 +69,9 @@ const getRankBadgeClass = (index: number): string => {
   return 'home-sidebar__rank-badge--other';
 };
 
-const handleTagClick = (tag: Tag) => {
-  emit('tag-click', tag);
-  router.push(`/tags/${tag.slug}`);
-};
-
 const handlePostClick = (post: Post) => {
   emit('post-click', post);
-  router.push(`/posts/${post.id}`);
+  router.push(`/posts/${String(post.id)}`);
 };
 </script>
 
@@ -93,94 +82,7 @@ const handlePostClick = (post: Post) => {
     aria-label="侧边栏"
   >
     <section
-      class="home-sidebar__section surface-panel"
-      aria-labelledby="tags-heading"
-    >
-      <div
-        v-if="isLoading || tagsError"
-        class="home-sidebar__skeleton"
-      >
-        <div class="home-sidebar__skeleton-title" />
-        <div class="home-sidebar__tags">
-          <div
-            v-for="i in 8"
-            :key="i"
-            class="home-sidebar__skeleton-tag"
-          />
-        </div>
-
-        <div
-          v-if="tagsError"
-          class="home-sidebar__error-overlay"
-        >
-          <div class="home-sidebar__error-card">
-            <svg
-              class="home-sidebar__error-icon"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 8.5v4.75M12 17.25h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
-            </svg>
-            <p class="home-sidebar__error-message">
-              {{ getErrorMessage(tagsError) }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div v-else-if="displayTags.length > 0">
-        <div class="home-sidebar__section-head">
-          <div>
-            <p class="home-sidebar__section-kicker">
-              话题热度
-            </p>
-            <h2
-              id="tags-heading"
-              class="home-sidebar__section-title"
-            >
-              <svg
-                class="home-sidebar__section-icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M7 7h.01M7.75 3h5.1c.46 0 .9.18 1.22.5l6.43 6.43a1.73 1.73 0 0 1 0 2.45l-7.12 7.12a1.73 1.73 0 0 1-2.45 0L3.5 12.07A1.73 1.73 0 0 1 3 10.85v-4.1C3 4.68 4.68 3 6.75 3Z" />
-              </svg>
-              热门标签
-            </h2>
-          </div>
-          <p class="home-sidebar__section-description">
-            跟进社区话题热度和内容增长。
-          </p>
-        </div>
-
-        <div class="home-sidebar__tags">
-          <button
-            v-for="tag in displayTags"
-            :key="tag.id"
-            class="home-sidebar__tag"
-            type="button"
-            :aria-label="`标签: ${tag.name}, ${tag.postCount} 篇文章`"
-            @click="handleTagClick(tag)"
-          >
-            <span class="home-sidebar__tag-hash">#</span>
-            <span class="home-sidebar__tag-name">{{ tag.name }}</span>
-            <span class="home-sidebar__tag-count">{{ formatNumber(tag.postCount) }}</span>
-          </button>
-        </div>
-      </div>
-
-      <div
-        v-else
-        class="home-sidebar__empty"
-      >
-        <p class="home-sidebar__empty-text">
-          暂无热门标签
-        </p>
-      </div>
-    </section>
-
-    <section
-      class="home-sidebar__section surface-panel"
+      class="home-sidebar__section home-sidebar__section--recommend"
       aria-labelledby="posts-heading"
     >
       <div
@@ -336,8 +238,43 @@ const handlePostClick = (post: Post) => {
 .home-sidebar__section {
   position: relative;
   overflow: hidden;
-  padding: var(--space-lg);
-  border-radius: var(--radius-xl);
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-home-sidebar-section);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.home-sidebar__section--recommend {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-secondary) 94%, transparent) 0%,
+      color-mix(in srgb, var(--color-surface-overlay) 88%, transparent) 100%
+    );
+}
+
+.home-sidebar__section--recommend::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--color-cta) 16%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent) 100%
+    );
+  transition: opacity var(--transition-base);
 }
 
 .home-sidebar__section-head {
@@ -398,20 +335,16 @@ const handlePostClick = (post: Post) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface-overlay);
+  padding: 8px 10px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   color: var(--color-text);
   transition:
-    transform var(--transition-base),
-    border-color var(--transition-base),
     background-color var(--transition-base);
 }
 
 .home-sidebar__tag:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-border-dark);
   background: var(--color-bg-secondary);
 }
 
@@ -440,9 +373,14 @@ const handlePostClick = (post: Post) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px 0 0;
-  border-radius: var(--radius-md);
-  transition: transform var(--transition-base);
+  margin: 0 calc(var(--space-xs) * -1);
+  padding: 10px var(--space-xs) 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    box-shadow var(--transition-base),
+    color var(--transition-base);
 }
 
 .home-sidebar__post:first-child {
@@ -450,7 +388,26 @@ const handlePostClick = (post: Post) => {
 }
 
 .home-sidebar__post:hover {
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--color-bg-secondary) 94%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-cta) 38%, transparent);
+}
+
+.home-sidebar__post:hover .home-sidebar__post-title,
+.home-sidebar__post:focus-visible .home-sidebar__post-title {
+  color: var(--color-cta);
+}
+
+.home-sidebar__post:hover .home-sidebar__rank-badge,
+.home-sidebar__post:focus-visible .home-sidebar__rank-badge {
+  color: var(--color-cta);
+}
+
+.home-sidebar__post:focus-visible {
+  background: color-mix(in srgb, var(--color-bg-secondary) 94%, transparent);
+  box-shadow:
+    inset 2px 0 0 color-mix(in srgb, var(--color-cta) 38%, transparent),
+    var(--shadow-focus);
+  outline: none;
 }
 
 .home-sidebar__post-content {
@@ -463,28 +420,30 @@ const handlePostClick = (post: Post) => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  padding-top: 3px;
   font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-size: 0.9rem;
 }
 
 .home-sidebar__rank-badge--first {
-  background: linear-gradient(135deg, #f6c778 0%, #d4a14b 100%);
+  color: var(--color-cta);
 }
 
 .home-sidebar__rank-badge--second {
-  background: linear-gradient(135deg, #d7dee8 0%, #a8b7c7 100%);
+  color: var(--color-text);
 }
 
 .home-sidebar__rank-badge--third {
-  background: linear-gradient(135deg, #e6bf9a 0%, #c78956 100%);
+  color: var(--color-text);
 }
 
 .home-sidebar__rank-badge--other {
-  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .home-sidebar__post-info {
@@ -531,9 +490,9 @@ const handlePostClick = (post: Post) => {
   align-items: center;
   justify-content: center;
   min-height: 120px;
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.24);
+  padding: var(--space-md) 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .home-sidebar__empty-text {
@@ -610,12 +569,12 @@ const handlePostClick = (post: Post) => {
   display: grid;
   place-items: center;
   padding: var(--space-md);
-  background: rgba(255, 248, 242, 0.82);
-  backdrop-filter: blur(6px);
+  background: rgba(255, 248, 242, 0.52);
+  backdrop-filter: none;
 }
 
 [data-theme='dark'] .home-sidebar__error-overlay {
-  background: rgba(8, 19, 31, 0.82);
+  background: rgba(8, 19, 31, 0.52);
 }
 
 .home-sidebar__error-card {
@@ -653,7 +612,7 @@ const handlePostClick = (post: Post) => {
   }
 
   .home-sidebar__section {
-    padding: var(--space-md);
+    padding: var(--space-sm);
   }
 }
 </style>

@@ -33,6 +33,7 @@ const isDocked = ref(false);
 const navLinks = [
   { name: '首页', path: '/', label: '发现' },
   { name: '文章', path: '/posts', label: '内容' },
+  { name: '分类', path: '/categories', label: '分类' },
   { name: '标签', path: '/tags', label: '话题' },
   { name: '排行榜', path: '/ranking', label: '趋势' },
 ];
@@ -425,6 +426,7 @@ onUnmounted(() => {
 
 .app-header__container {
   position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: auto minmax(280px, 1fr) auto;
   align-items: center;
@@ -433,9 +435,9 @@ onUnmounted(() => {
   min-height: 84px;
   margin: 0 auto 10px;
   padding: 14px 18px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-header-shell);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 92%, transparent) 0%, color-mix(in srgb, var(--color-surface-overlay) 86%, transparent) 100%);
   box-shadow: var(--shadow-md);
@@ -472,7 +474,7 @@ onUnmounted(() => {
   width: 42px;
   height: 42px;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-header-button-compact);
   background: var(--color-surface-overlay);
   align-items: center;
   justify-content: center;
@@ -500,7 +502,7 @@ onUnmounted(() => {
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: 16px;
+  border-radius: var(--radius-header-button);
   background: var(--gradient-hero);
   color: var(--color-text-inverse);
   font-family: var(--font-brand);
@@ -525,6 +527,7 @@ onUnmounted(() => {
 .app-header__nav-link {
   gap: 10px;
   padding: 10px 14px;
+  border-radius: var(--radius-header-button);
   color: var(--color-text-secondary);
   transition:
     transform var(--transition-base),
@@ -565,6 +568,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 460px;
   padding: 6px 6px 6px 14px;
+  border-radius: var(--radius-header-button);
   border-color: rgba(18, 49, 76, 0.16);
   background: color-mix(in srgb, var(--color-surface-overlay) 94%, transparent);
   box-shadow: var(--shadow-inner);
@@ -607,7 +611,7 @@ onUnmounted(() => {
 .app-header__search-button,
 .app-header__create-button {
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-header-button);
   background: var(--gradient-hero);
   color: var(--color-text-inverse);
   font-weight: var(--font-weight-semibold);
@@ -646,7 +650,7 @@ onUnmounted(() => {
   min-height: 44px;
   padding: 0 10px 0 16px;
   border: 1px solid var(--color-border-dark);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-header-button);
   background: var(--gradient-card);
   color: var(--color-text);
   box-shadow: var(--shadow-sm);
@@ -671,7 +675,7 @@ onUnmounted(() => {
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 999px;
+  border-radius: var(--radius-header-button-compact);
   background: var(--gradient-hero);
   color: var(--color-text-inverse);
 }
@@ -690,6 +694,7 @@ onUnmounted(() => {
 .app-header__user-button {
   position: relative;
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-header-button);
   color: var(--color-text);
   background: transparent;
 }
@@ -737,7 +742,7 @@ onUnmounted(() => {
 .app-header__user-info-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 14px;
+  border-radius: var(--radius-header-button-compact);
   object-fit: cover;
   background: var(--color-bg-tertiary);
 }
@@ -880,7 +885,7 @@ onUnmounted(() => {
     min-height: 76px;
     margin: 0 auto 8px;
     padding: 10px 12px;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-header-shell-mobile);
   }
 
   .app-header__hamburger {
@@ -890,7 +895,7 @@ onUnmounted(() => {
   .app-header__logo-mark {
     width: 40px;
     height: 40px;
-    border-radius: 14px;
+    border-radius: var(--radius-header-button-compact);
   }
 
   .app-header__search {

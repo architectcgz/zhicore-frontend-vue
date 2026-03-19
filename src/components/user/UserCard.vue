@@ -4,7 +4,7 @@
 -->
 <template>
   <div
-    class="user-card"
+    :class="['user-card', `user-card--${props.variant}`]"
     @click="handleClick"
   >
     <div class="user-avatar">
@@ -61,9 +61,12 @@ import type { User } from '@/types';
 // Props
 interface Props {
   user: User;
+  variant?: 'card' | 'plain';
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  variant: 'card',
+});
 
 // Emits
 const emit = defineEmits<{
@@ -155,10 +158,32 @@ const handleImageError = (event: Event) => {
   border-color: var(--color-primary);
 }
 
+.user-card--plain {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+.user-card--plain:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--color-border);
+  background-color: var(--color-bg-secondary);
+}
+
 .user-avatar {
   display: flex;
   justify-content: center;
   margin-bottom: var(--space-md);
+}
+
+.user-card--plain .user-avatar {
+  margin-bottom: 0;
 }
 
 .user-avatar img {
@@ -174,10 +199,20 @@ const handleImageError = (event: Event) => {
   border-color: var(--color-primary);
 }
 
+.user-card--plain .user-avatar img {
+  width: 48px;
+  height: 48px;
+}
+
 .user-info {
   flex: 1;
   text-align: center;
   margin-bottom: var(--space-md);
+}
+
+.user-card--plain .user-info {
+  text-align: left;
+  margin-bottom: 0;
 }
 
 .user-name {
@@ -202,10 +237,19 @@ const handleImageError = (event: Event) => {
   text-align: left;
 }
 
+.user-card--plain .user-bio {
+  margin-bottom: var(--space-sm);
+}
+
 .user-stats {
   display: flex;
   justify-content: center;
   gap: var(--space-lg);
+}
+
+.user-card--plain .user-stats {
+  justify-content: flex-start;
+  gap: var(--space-md);
 }
 
 .stat-item {
@@ -231,6 +275,11 @@ const handleImageError = (event: Event) => {
   justify-content: center;
 }
 
+.user-card--plain .user-actions {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
 /* 响应式设计 */
 @media (max-width: 480px) {
   .user-card {
@@ -252,6 +301,19 @@ const handleImageError = (event: Event) => {
 
   .stat-number {
     font-size: 1rem;
+  }
+
+  .user-card--plain {
+    align-items: flex-start;
+  }
+
+  .user-card--plain .user-avatar img {
+    width: 42px;
+    height: 42px;
+  }
+
+  .user-card--plain .user-actions {
+    margin-left: 0;
   }
 }
 

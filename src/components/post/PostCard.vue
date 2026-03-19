@@ -13,10 +13,12 @@ interface Props {
   post: Post;
   maxDisplayTags?: number;
   showCover?: boolean;
+  showPlaceholderTitle?: boolean;
   showExcerpt?: boolean;
   showStats?: boolean;
   showActions?: boolean;
   size?: 'small' | 'medium' | 'large';
+  variant?: 'card' | 'plain';
 }
 
 interface Emits {
@@ -31,10 +33,12 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   maxDisplayTags: 3,
   showCover: true,
+  showPlaceholderTitle: true,
   showExcerpt: true,
   showStats: true,
   showActions: true,
   size: 'medium',
+  variant: 'card',
 });
 
 const emit = defineEmits<Emits>();
@@ -67,6 +71,7 @@ const displayExcerpt = computed(() => {
 const cardClass = computed(() => [
   'post-card',
   `post-card--${props.size}`,
+  `post-card--${props.variant}`,
   {
     'post-card--with-cover': props.showCover,
     'post-card--loading': likeLoading.value || favoriteLoading.value,
@@ -158,7 +163,10 @@ const handleCategoryClick = () => {
 
   isActionClick.value = true;
   emit('category-click', props.post.category);
-  router.push(`/categories/${props.post.category.slug}`);
+  router.push({
+    path: `/categories/${props.post.category.id || props.post.category.slug}`,
+    query: { name: props.post.category.name, id: props.post.category.id },
+  });
 };
 
 const handleLike = async () => {
@@ -257,7 +265,10 @@ const handleAvatarError = (event: Event) => {
         class="post-card__image post-card__image--placeholder"
       >
         <span class="post-card__placeholder-kicker">推荐阅读</span>
-        <strong class="post-card__placeholder-title">{{ post.title }}</strong>
+        <strong
+          v-if="props.showPlaceholderTitle"
+          class="post-card__placeholder-title"
+        >{{ post.title }}</strong>
       </div>
 
       <div class="post-card__media-overlay">
@@ -773,6 +784,57 @@ const handleAvatarError = (event: Event) => {
 
 .post-card--small .post-card__media {
   min-height: 180px;
+}
+
+.post-card--plain {
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.post-card--plain:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.post-card--plain .post-card__media {
+  border-radius: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.post-card--plain .post-card__body {
+  padding: var(--space-md) 0 var(--space-lg);
+}
+
+.post-card--plain .post-card__category {
+  border: none;
+  background: var(--color-bg-secondary);
+}
+
+.post-card--plain .post-card__tag {
+  border: none;
+  background: var(--color-bg-secondary);
+}
+
+.post-card--plain .post-card__actions {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.post-card--plain .post-card__action-button {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.post-card--plain .post-card__action-button:hover {
+  transform: none;
+  border-color: transparent;
 }
 
 @keyframes post-card-spin {

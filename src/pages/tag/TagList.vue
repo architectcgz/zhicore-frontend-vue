@@ -146,29 +146,13 @@
       v-else-if="error"
       class="error-container"
     >
-      <svg
-        class="error-icon"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <p class="error-message">
-        {{ error }}
-      </p>
-      <button
-        class="retry-button"
-        @click="fetchTags"
-      >
-        重试
-      </button>
+      <SiteErrorState
+        title="加载标签失败"
+        :message="error"
+        mode="page"
+        retry-text="重试加载"
+        @retry="fetchTags"
+      />
     </div>
 
     <!-- 空状态 -->
@@ -342,6 +326,7 @@ import { tagApi } from '@/api';
 import type { Tag, PaginatedResponse } from '@/types';
 import { getErrorMessage } from '@/types/errors';
 import { useDebounce } from '@/composables/useDebounce';
+import SiteErrorState from '@/components/common/SiteErrorState.vue';
 
 // 路由
 const router = useRouter();

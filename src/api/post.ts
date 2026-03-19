@@ -117,6 +117,7 @@ export interface PostUpdateRequest extends Partial<PostCreateRequest> {
  */
 export interface PostQueryParams {
   page?: number;
+  cursor?: string;
   size?: number;
   sort?: 'latest' | 'popular' | 'hot';
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -130,13 +131,35 @@ export interface PostQueryParams {
  * 文章 API 服务类
  */
 export class PostApi {
+  private normalizePostQueryParams(params?: PostQueryParams): PostQueryParams | undefined {
+    if (!params) {
+      return undefined;
+    }
+
+    const normalizedParams: PostQueryParams = { ...params };
+    const isLatestSort = normalizedParams.sort === 'latest';
+
+    if (isLatestSort) {
+      delete normalizedParams.page;
+    } else {
+      delete normalizedParams.cursor;
+    }
+
+    if (!normalizedParams.cursor) {
+      delete normalizedParams.cursor;
+    }
+
+    return normalizedParams;
+  }
+
   /**
    * 获取文章列表
    * @param params 查询参数
    * @returns 分页文章列表
    */
   async getPosts(params?: PostQueryParams): Promise<PaginatedResponse<Post>> {
-    const pageResult = await httpClient.get<BackendHybridPageResult<BackendPostSummary>>('/posts', params);
+    const queryParams = this.normalizePostQueryParams(params);
+    const pageResult = await httpClient.get<BackendHybridPageResult<BackendPostSummary>>('/posts', queryParams);
     return normalizePageResponse(pageResult, normalizePost);
   }
 

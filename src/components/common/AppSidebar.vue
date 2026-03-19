@@ -41,6 +41,7 @@ const router = useRouter();
 const navLinks = [
   { name: '首页', path: '/', icon: House },
   { name: '文章', path: '/posts', icon: Document },
+  { name: '分类', path: '/categories', icon: DocumentCopy },
   { name: '标签', path: '/tags', icon: CollectionTag },
   { name: '排行榜', path: '/ranking', icon: Trophy },
 ];

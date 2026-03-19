@@ -18,12 +18,50 @@
       v-else-if="error"
       class="error-container"
     >
-      <div class="error-message">
-        <i class="el-icon-warning" />
-        <p>{{ error }}</p>
-        <el-button @click="handleRetry">
-          重试
-        </el-button>
+      <div
+        v-if="isUnauthorizedError"
+        class="auth-required-state"
+      >
+        <div
+          class="auth-required-icon"
+          aria-hidden="true"
+        >
+          401
+        </div>
+        <h2 class="auth-required-title">
+          请先登录
+        </h2>
+        <p class="auth-required-description">
+          当前页面需要登录后访问。登录后可查看完整的用户资料、收藏和关注信息。
+        </p>
+        <div class="auth-required-actions">
+          <el-button
+            type="primary"
+            @click="handleGoLogin"
+          >
+            去登录
+          </el-button>
+          <el-button @click="handleGoHome">
+            返回首页
+          </el-button>
+          <el-button
+            text
+            @click="handleRetry"
+          >
+            重新加载
+          </el-button>
+        </div>
+      </div>
+      <div
+        v-else
+      >
+        <SiteErrorState
+          title="加载用户信息失败"
+          :message="displayErrorMessage"
+          mode="section"
+          retry-text="重试加载"
+          @retry="handleRetry"
+        />
       </div>
     </div>
 
@@ -133,10 +171,13 @@
                 v-else-if="posts.error"
                 class="error-content"
               >
-                <p>{{ posts.error }}</p>
-                <el-button @click="loadUserPosts">
-                  重试
-                </el-button>
+                <SiteErrorState
+                  title="加载文章失败"
+                  :message="posts.error"
+                  mode="section"
+                  retry-text="重试加载"
+                  @retry="loadUserPosts"
+                />
               </div>
               <div
                 v-else-if="posts.list.length === 0"
@@ -200,10 +241,13 @@
                 v-else-if="favorites.error"
                 class="error-content"
               >
-                <p>{{ favorites.error }}</p>
-                <el-button @click="loadUserFavorites">
-                  重试
-                </el-button>
+                <SiteErrorState
+                  title="加载收藏失败"
+                  :message="favorites.error"
+                  mode="section"
+                  retry-text="重试加载"
+                  @retry="loadUserFavorites"
+                />
               </div>
               <div
                 v-else-if="favorites.list.length === 0"
@@ -259,10 +303,13 @@
                 v-else-if="following.error"
                 class="error-content"
               >
-                <p>{{ following.error }}</p>
-                <el-button @click="loadUserFollowing">
-                  重试
-                </el-button>
+                <SiteErrorState
+                  title="加载关注失败"
+                  :message="following.error"
+                  mode="section"
+                  retry-text="重试加载"
+                  @retry="loadUserFollowing"
+                />
               </div>
               <div
                 v-else-if="following.list.length === 0"
@@ -276,12 +323,13 @@
               </div>
               <div
                 v-else
-                class="users-grid"
+                class="users-list"
               >
                 <UserCard
                   v-for="user in following.list"
                   :key="user.id"
                   :user="user"
+                  variant="plain"
                   @click="handleUserClick(user.id)"
                 />
               </div>
@@ -316,10 +364,13 @@
                 v-else-if="followers.error"
                 class="error-content"
               >
-                <p>{{ followers.error }}</p>
-                <el-button @click="loadUserFollowers">
-                  重试
-                </el-button>
+                <SiteErrorState
+                  title="加载粉丝失败"
+                  :message="followers.error"
+                  mode="section"
+                  retry-text="重试加载"
+                  @retry="loadUserFollowers"
+                />
               </div>
               <div
                 v-else-if="followers.list.length === 0"
@@ -333,12 +384,13 @@
               </div>
               <div
                 v-else
-                class="users-grid"
+                class="users-list"
               >
                 <UserCard
                   v-for="user in followers.list"
                   :key="user.id"
                   :user="user"
+                  variant="plain"
                   @click="handleUserClick(user.id)"
                 />
               </div>
@@ -372,6 +424,7 @@ import { useCreateConversationMutation } from '@/queries/messages';
 import type { User, Post } from '@/types';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
+import SiteErrorState from '@/components/common/SiteErrorState.vue';
 import PostCard from '@/components/post/PostCard.vue';
 import UserCard from '@/components/user/UserCard.vue';
 import CheckInWidget from '@/components/user/CheckInWidget.vue';
@@ -391,6 +444,7 @@ const {
   userProfile, 
   loading, 
   error, 
+  errorStatus,
   followLoading,
   isFollowing,
   fetchUserProfile, 
@@ -450,6 +504,16 @@ const isCurrentUser = computed(() => {
   return authStore.user?.id === userId.value;
 });
 
+const isUnauthorizedError = computed(() => errorStatus.value === 401);
+
+const displayErrorMessage = computed(() => {
+  if (isUnauthorizedError.value) {
+    return '请先登录后再试。';
+  }
+
+  return error.value || '加载用户信息失败，请稍后重试';
+});
+
 // 生命周期
 onMounted(() => {
   loadUserProfile();
@@ -480,6 +544,17 @@ const loadUserProfile = async () => {
  */
 const handleRetry = () => {
   loadUserProfile();
+};
+
+const handleGoLogin = () => {
+  router.push({
+    path: '/auth/login',
+    query: { redirect: route.fullPath },
+  });
+};
+
+const handleGoHome = () => {
+  router.push('/');
 };
 
 /**
@@ -809,14 +884,45 @@ const handleCreatePost = () => {
   font-size: 1rem;
 }
 
-.error-message {
+.auth-required-state {
+  width: min(560px, 100%);
+  padding: var(--space-lg) 0;
   text-align: center;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.error-message i {
-  font-size: 3rem;
-  color: var(--color-danger);
-  margin-bottom: var(--space-md);
+.auth-required-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-md);
+  border-radius: 50%;
+  border: 1px solid var(--color-warning);
+  background: var(--color-warning-light);
+  color: var(--color-warning-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+}
+
+.auth-required-title {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+}
+
+.auth-required-description {
+  margin: 0 0 var(--space-lg) 0;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.auth-required-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
 }
 
 .profile-container {
@@ -958,10 +1064,10 @@ const handleCreatePost = () => {
   margin-bottom: var(--space-lg);
 }
 
-.users-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: var(--space-lg);
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-bottom: var(--space-lg);
 }
 
@@ -1018,13 +1124,20 @@ const handleCreatePost = () => {
     gap: var(--space-md);
   }
 
-  .users-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-md);
+  .users-list {
+    margin-bottom: var(--space-md);
   }
 }
 
 @media (max-width: 480px) {
+  .auth-required-state {
+    padding: var(--space-md) 0;
+  }
+
+  .auth-required-actions {
+    flex-direction: column;
+  }
+
   .header-background {
     height: 150px;
   }

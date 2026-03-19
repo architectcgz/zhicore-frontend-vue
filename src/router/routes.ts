@@ -174,6 +174,36 @@ export const routes: AppRouteRecordRaw[] = [
     },
   },
 
+  // ========== 分类相关路由 ==========
+  {
+    path: '/categories',
+    name: 'Categories',
+    children: [
+      {
+        path: '',
+        name: 'CategoryList',
+        component: () => import('@/pages/category/CategoryList.vue'),
+        meta: {
+          title: '分类',
+          layout: 'default',
+          showInMenu: true,
+          icon: 'category',
+          order: 4,
+        },
+      },
+      {
+        path: ':id',
+        name: 'CategoryDetail',
+        component: () => import('@/pages/category/CategoryDetail.vue'),
+        meta: {
+          title: '分类详情',
+          layout: 'default',
+        },
+        props: true,
+      },
+    ],
+  },
+
   // ========== 标签相关路由 ==========
   {
     path: '/tags',
@@ -188,7 +218,7 @@ export const routes: AppRouteRecordRaw[] = [
           layout: 'default',
           showInMenu: true,
           icon: 'tag',
-          order: 4,
+          order: 5,
         },
       },
       {

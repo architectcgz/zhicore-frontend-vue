@@ -4,6 +4,7 @@
  */
 
 import { ref, computed } from 'vue';
+import { isAxiosError } from 'axios';
 import { userApi, type UserUpdateRequest } from '@/api/user';
 import { uploadApi } from '@/api/upload';
 import type { User, Post, PaginatedResponse } from '@/types';
@@ -19,6 +20,7 @@ export function useUser() {
   const userProfile = ref<User | null>(null);
   const loading = ref(false);
   const error = ref('');
+  const errorStatus = ref<number | null>(null);
   const followLoading = ref(false);
   const isFollowing = ref(false);
 
@@ -28,13 +30,17 @@ export function useUser() {
   const fetchUserProfile = async (userId: string) => {
     loading.value = true;
     error.value = '';
+    errorStatus.value = null;
 
     try {
       userProfile.value = await userApi.getUserById(userId);
       // TODO: 检查是否已关注该用户
       isFollowing.value = false;
     } catch (err: unknown) {
-      error.value = getErrorMessage(err) || '加载用户信息失败';
+      errorStatus.value = isAxiosError(err) ? (err.response?.status ?? null) : null;
+      error.value = errorStatus.value === 401
+        ? '请先登录后查看用户主页'
+        : (getErrorMessage(err) || '加载用户信息失败');
       console.error('获取用户资料失败:', err);
     } finally {
       loading.value = false;
@@ -202,6 +208,7 @@ export function useUser() {
     userProfile,
     loading,
     error,
+    errorStatus,
     followLoading,
     isFollowing,
     fetchUserProfile,

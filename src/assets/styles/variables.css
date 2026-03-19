@@ -124,6 +124,18 @@
   --radius-2xl: 2rem;
   --radius-full: 9999px;
 
+  /* ========== 场景化圆角令牌（页面级） ========== */
+  --radius-home-hero: var(--radius-lg);
+  --radius-home-hero-mobile: var(--radius-md);
+  --radius-home-sidebar-section: calc(var(--radius-md) - 4px);
+  --radius-header-shell: var(--radius-lg);
+  --radius-header-shell-mobile: var(--radius-md);
+  --radius-header-button: var(--radius-md);
+  --radius-header-button-compact: calc(var(--radius-md) - 2px);
+  --radius-auth-header-shell: var(--radius-lg);
+  --radius-auth-header-shell-mobile: var(--radius-md);
+  --radius-auth-header-button: var(--radius-md);
+
   /* ========== 过渡动画 ========== */
   --transition-fast: 150ms ease;
   --transition-base: 220ms ease;

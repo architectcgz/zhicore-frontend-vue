@@ -447,15 +447,15 @@ document.title = '注册 - 知构';
 
 <style scoped>
 .register-page {
-  width: min(100%, 560px);
+  width: min(100%, 540px);
 }
 
 .register-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  padding: var(--space-xl);
+  gap: var(--space-md);
+  padding: var(--space-lg);
   border-radius: var(--radius-2xl);
   overflow: hidden;
   background:
@@ -476,13 +476,13 @@ document.title = '注册 - 知构';
 }
 
 .register-card__header {
-  padding-bottom: var(--space-md);
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--color-border-light);
 }
 
 .register-card__eyebrow {
   display: inline-flex;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--color-text-tertiary);
   font-size: 0.74rem;
   letter-spacing: 0.14em;
@@ -490,28 +490,28 @@ document.title = '注册 - 知构';
 }
 
 .register-card__title {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   color: var(--color-text);
-  font-size: 2rem;
+  font-size: 1.85rem;
   line-height: 1.1;
 }
 
 .register-card__subtitle {
   color: var(--color-text-secondary);
-  line-height: 1.75;
+  line-height: 1.62;
 }
 
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 12px;
 }
 
 .register-form__field,
 .register-form__agreement {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .register-form__label {
@@ -522,10 +522,10 @@ document.title = '注册 - 知构';
 
 .register-form__input {
   width: 100%;
-  min-height: 52px;
-  padding: 0 16px;
+  min-height: 48px;
+  padding: 0 14px;
   border: 1px solid var(--color-border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--color-bg-secondary) 82%, transparent);
   color: var(--color-text);
   transition:
@@ -555,7 +555,7 @@ document.title = '注册 - 知构';
 }
 
 .register-form__input--password {
-  padding-right: 52px;
+  padding-right: 48px;
 }
 
 .register-form__toggle {
@@ -610,10 +610,10 @@ document.title = '注册 - 知构';
 .register-form__strength {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: 8px;
+  padding: 12px;
   border: 1px solid var(--color-border-light);
-  border-radius: 16px;
+  border-radius: 14px;
   background: color-mix(in srgb, var(--color-surface-overlay) 92%, transparent);
   box-shadow: var(--shadow-inner);
 }
@@ -655,7 +655,7 @@ document.title = '注册 - 知构';
   display: flex;
   gap: 10px;
   color: var(--color-text-secondary);
-  line-height: 1.8;
+  line-height: 1.6;
 }
 
 .register-form__checkbox {
@@ -676,9 +676,9 @@ document.title = '注册 - 知构';
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 52px;
+  min-height: 48px;
   border: none;
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--gradient-hero);
   color: var(--color-text-inverse);
   font-weight: var(--font-weight-semibold);
@@ -708,7 +708,7 @@ document.title = '注册 - 知构';
 }
 
 .register-card__footer {
-  padding-top: var(--space-md);
+  padding-top: 10px;
   border-top: 1px solid var(--color-border-light);
 }
 
@@ -735,12 +735,12 @@ document.title = '注册 - 知构';
   }
 
   .register-card {
-    padding: var(--space-lg);
+    padding: var(--space-md);
     border-radius: var(--radius-xl);
   }
 
   .register-card__title {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
   }
 
   .register-form__checklist {

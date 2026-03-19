@@ -54,15 +54,34 @@ export function useInfinitePostsQuery(
     // 使用 computed 确保 queryKey 响应式更新
     queryKey: computed(() => queryKeys.posts.list(queryParams.value)),
     // 查询函数，pageParam 由 TanStack Query 管理
-    queryFn: ({ pageParam = 1 }) =>
-      postApi.getPosts({ ...queryParams.value, page: pageParam as number }),
+    queryFn: ({ pageParam = 1 }) => {
+      const isLatestSort = queryParams.value.sort === 'latest';
+
+      if (isLatestSort) {
+        const cursor = typeof pageParam === 'string' ? pageParam : undefined;
+        return postApi.getPosts({ ...queryParams.value, cursor });
+      }
+
+      return postApi.getPosts({ ...queryParams.value, page: pageParam as number });
+    },
     // 获取下一页参数的函数
     getNextPageParam: (lastPage) => {
-      // 如果还有更多数据，返回下一页页码；否则返回 undefined
-      return lastPage.hasMore ? lastPage.page + 1 : undefined;
+      if (!lastPage.hasMore) {
+        return undefined;
+      }
+
+      if (queryParams.value.sort === 'latest') {
+        return lastPage.cursor ?? undefined;
+      }
+
+      return lastPage.page + 1;
     },
     // 获取上一页参数的函数（可选，用于双向滚动）
     getPreviousPageParam: (firstPage) => {
+      if (queryParams.value.sort === 'latest') {
+        return undefined;
+      }
+
       // 如果不是第一页，返回上一页页码；否则返回 undefined
       return firstPage.page > 1 ? firstPage.page - 1 : undefined;
     },

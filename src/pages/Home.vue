@@ -4,8 +4,9 @@
 -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { CreatorRankingItem, TopicRankingItem } from '@/api/ranking';
+import SiteErrorState from '@/components/common/SiteErrorState.vue';
 import HomeSidebar from '@/components/home/HomeSidebar.vue';
 import PostCard from '@/components/post/PostCard.vue';
 import { useHotPostsQuery } from '@/queries/posts/useHotPostsQuery';
@@ -39,6 +40,9 @@ type CreatorHighlight = {
 
 const isMounted = ref(false);
 const postOverrides = ref<Record<string, Partial<Post>>>({});
+const featuredIndex = ref(0);
+let featuredTimer: ReturnType<typeof setInterval> | null = null;
+const homeSecondaryPostLimit = 4;
 const creatorRankingParams = ref({
   page: 1,
   size: 3,
@@ -71,12 +75,7 @@ const quickLinks = [
   },
 ] as const;
 
-onMounted(() => {
-  isMounted.value = true;
-});
-
 const postsQueryParams = {
-  page: 1,
   size: 20,
   sort: 'latest',
 } as const;
@@ -86,6 +85,7 @@ const {
   isLoading: postsLoading,
   isFetching: postsFetching,
   error: postsError,
+  refetch: refetchPosts,
 } = usePostsQuery({
   ...postsQueryParams,
 });
@@ -93,7 +93,6 @@ const {
 const {
   data: tagsData,
   isLoading: tagsLoading,
-  error: tagsError,
 } = useHotTagsQuery();
 
 const {
@@ -125,8 +124,23 @@ const displayPosts = computed<Post[]>(() => {
   });
 });
 
-const featuredPost = computed<Post | null>(() => displayPosts.value[0] ?? null);
-const secondaryPosts = computed<Post[]>(() => displayPosts.value.slice(1));
+const featuredCandidates = computed<Post[]>(() => displayPosts.value.slice(0, 5));
+const featuredPost = computed<Post | null>(() => {
+  if (!featuredCandidates.value.length) {
+    return null;
+  }
+
+  return featuredCandidates.value[featuredIndex.value] ?? featuredCandidates.value[0];
+});
+const secondaryPosts = computed<Post[]>(() => {
+  if (!featuredPost.value) {
+    return displayPosts.value.slice(0, homeSecondaryPostLimit);
+  }
+
+  return displayPosts.value
+    .filter((post) => post.id !== featuredPost.value?.id)
+    .slice(0, homeSecondaryPostLimit);
+});
 const tags = computed<Tag[]>(() => tagsData.value || []);
 const trendingPosts = computed<Post[]>(() => trendingData.value?.items || []);
 const heroTags = computed<Tag[]>(() => tags.value.slice(0, 4));
@@ -224,6 +238,44 @@ const curationNotes = computed(() => [
   `${trendingPosts.value.length} 篇热门文章值得优先阅读`,
 ]);
 
+onMounted(() => {
+  isMounted.value = true;
+
+  if (featuredCandidates.value.length <= 1) {
+    return;
+  }
+
+  featuredTimer = setInterval(() => {
+    featuredIndex.value = (featuredIndex.value + 1) % featuredCandidates.value.length;
+  }, 6000);
+});
+
+onUnmounted(() => {
+  if (!featuredTimer) {
+    return;
+  }
+
+  clearInterval(featuredTimer);
+  featuredTimer = null;
+});
+
+watch(featuredCandidates, (list) => {
+  if (featuredIndex.value >= list.length) {
+    featuredIndex.value = 0;
+  }
+
+  if (featuredTimer) {
+    clearInterval(featuredTimer);
+    featuredTimer = null;
+  }
+
+  if (list.length > 1) {
+    featuredTimer = setInterval(() => {
+      featuredIndex.value = (featuredIndex.value + 1) % list.length;
+    }, 6000);
+  }
+});
+
 const isLoading = computed(() => postsLoading.value || (postsFetching.value && !postsData.value));
 const isSidebarLoading = computed(() => tagsLoading.value || trendingLoading.value);
 const showDiscoverySkeleton = computed(() => topicsLoading.value || creatorsLoading.value);
@@ -265,6 +317,36 @@ const formatGrowth = (value: number): string => {
   return '平稳';
 };
 
+const handleHomeRetry = () => {
+  void refetchPosts();
+};
+
+const switchFeatured = (nextIndex: number) => {
+  if (!featuredCandidates.value.length) {
+    return;
+  }
+
+  const maxIndex = featuredCandidates.value.length - 1;
+  featuredIndex.value = Math.min(maxIndex, Math.max(0, nextIndex));
+};
+
+const handleFeaturedWheel = (event: WheelEvent) => {
+  if (featuredCandidates.value.length <= 1) {
+    return;
+  }
+
+  if (event.deltaY > 0) {
+    switchFeatured((featuredIndex.value + 1) % featuredCandidates.value.length);
+    return;
+  }
+
+  if (event.deltaY < 0) {
+    switchFeatured(
+      (featuredIndex.value - 1 + featuredCandidates.value.length) % featuredCandidates.value.length
+    );
+  }
+};
+
 const handleLikeChange = (data: { postId: string; isLiked: boolean; likeCount: number }) => {
   const current = postOverrides.value[data.postId] || {};
   postOverrides.value = {
@@ -284,7 +366,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 
 <template>
   <div class="home-page">
-    <section class="home-page__hero surface-panel">
+    <section class="home-page__hero">
       <div class="home-page__hero-copy">
         <span class="home-page__eyebrow">今日推荐</span>
         <h1 class="page-title">
@@ -337,6 +419,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         <article
           v-if="featuredPost"
           class="home-page__feature"
+          @wheel.prevent="handleFeaturedWheel"
         >
           <span class="home-page__feature-label">编辑精选</span>
           <h2 class="home-page__feature-title">
@@ -351,6 +434,20 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
           >
             查看全文
           </router-link>
+          <div
+            v-if="featuredCandidates.length > 1"
+            class="home-page__feature-switch"
+          >
+            <button
+              v-for="(item, index) in featuredCandidates"
+              :key="item.id"
+              class="home-page__feature-dot"
+              :class="{ 'home-page__feature-dot--active': index === featuredIndex }"
+              type="button"
+              :aria-label="`切换到第 ${index + 1} 条精彩内容`"
+              @click="switchFeatured(index)"
+            />
+          </div>
         </article>
 
         <div class="home-page__note-strip">
@@ -370,7 +467,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         v-for="link in quickLinks"
         :key="link.to"
         :to="link.to"
-        class="home-page__quick-card surface-panel"
+        class="home-page__quick-card"
       >
         <span class="home-page__quick-kicker">
           {{ link.kicker === 'Topics' ? '主题' : link.kicker === 'Ranking' ? '榜单' : '写作' }}
@@ -413,7 +510,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
           v-else
           class="home-page__discovery-grid"
         >
-          <section class="home-page__topics surface-panel">
+          <section class="home-page__topics">
             <div class="home-page__block-head">
               <div>
                 <span class="home-page__block-kicker">主题趋势</span>
@@ -453,7 +550,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
             </div>
           </section>
 
-          <section class="home-page__creators surface-panel">
+          <section class="home-page__creators">
             <div class="home-page__block-head">
               <div>
                 <span class="home-page__block-kicker">活跃作者</span>
@@ -530,23 +627,13 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
           v-else-if="error"
           class="home-page__error-inline"
         >
-          <div class="home-page__error-card">
-            <span class="home-page__error-badge">
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M12 8.5v4.75M12 17.25h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
-              </svg>
-              加载异常
-            </span>
-            <h3 class="home-page__error-title">
-              首页内容暂时没有取到
-            </h3>
-            <p class="home-page__error-text">
-              {{ getErrorMessage(error) }}
-            </p>
-          </div>
+          <SiteErrorState
+            title="首页内容暂时不可用"
+            :message="getErrorMessage(error)"
+            mode="section"
+            retry-text="重新加载"
+            @retry="handleHomeRetry"
+          />
         </div>
 
         <div
@@ -573,6 +660,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
             v-if="featuredPost"
             :post="featuredPost"
             size="large"
+            variant="plain"
+            class="home-page__feed-post-card home-page__feed-post-card--featured"
+            :show-placeholder-title="false"
             @like-change="handleLikeChange"
             @favorite-change="handleFavoriteChange"
           />
@@ -585,6 +675,9 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
               v-for="post in secondaryPosts"
               :key="post.id"
               :post="post"
+              variant="plain"
+              class="home-page__feed-post-card home-page__feed-post-card--compact"
+              :show-placeholder-title="false"
               @like-change="handleLikeChange"
               @favorite-change="handleFavoriteChange"
             />
@@ -592,7 +685,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
         </div>
       </main>
 
-      <section class="home-page__cta surface-panel">
+      <section class="home-page__cta">
         <div class="home-page__cta-copy">
           <span class="home-page__block-kicker">开始创作</span>
           <h2 class="home-page__cta-title">
@@ -624,10 +717,8 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
       :disabled="!isMounted"
     >
       <HomeSidebar
-        :tags="tags"
         :trending-posts="trendingPosts"
         :is-loading="isSidebarLoading"
-        :tags-error="tagsError"
         :posts-error="trendingError"
       />
     </Teleport>
@@ -646,7 +737,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.9fr);
   gap: var(--space-xl);
   padding: var(--space-2xl);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-home-hero);
   background:
     radial-gradient(circle at top left, rgba(244, 223, 191, 0.18), transparent 24%),
     var(--gradient-hero);
@@ -765,16 +856,17 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 
 .home-page__stat-card,
 .home-page__feature {
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
+  border-radius: 0;
+  backdrop-filter: none;
 }
 
 .home-page__stat-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 18px;
-  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 0 14px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .home-page__stat-label {
@@ -796,16 +888,17 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 22px;
-  background: rgba(9, 20, 33, 0.26);
+  padding: 12px 0;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .home-page__feature-label {
   display: inline-flex;
   width: fit-content;
-  padding: 7px 12px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.14);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: #fff8ef;
   font-size: 0.76rem;
   letter-spacing: 0.08em;
@@ -832,6 +925,25 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   font-weight: var(--font-weight-semibold);
 }
 
+.home-page__feature-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-page__feature-dot {
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 248, 239, 0.35);
+}
+
+.home-page__feature-dot--active {
+  width: 20px;
+  background: #fff8ef;
+}
+
 .home-page__note-strip {
   display: flex;
   flex-wrap: wrap;
@@ -848,16 +960,15 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: var(--space-lg);
-  border-radius: var(--radius-xl);
+  padding: var(--space-md) 0 var(--space-lg);
+  border-radius: 0;
+  border-bottom: 1px solid var(--color-border);
   transition:
-    transform var(--transition-base),
-    box-shadow var(--transition-base);
+    background-color var(--transition-base);
 }
 
 .home-page__quick-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
+  background: var(--color-bg-hover);
 }
 
 .home-page__quick-kicker,
@@ -944,7 +1055,10 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 .home-page__creators,
 .home-page__cta {
   padding: var(--space-lg);
-  border-radius: var(--radius-xl);
+  border-radius: 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
 }
 
 .home-page__block-head {
@@ -970,7 +1084,64 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 .posts-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
+}
+
+.home-page__feed-post-card {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-secondary);
+}
+
+.home-page__feed-post-card--featured {
+  border-color: var(--color-border);
+  background: var(--color-surface-overlay);
+}
+
+.home-page__feed-post-card--featured.post-card--large :deep(.post-card__media) {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border-bottom: none;
+}
+
+.home-page__feed-post-card--featured :deep(.post-card__body) {
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
+  gap: 12px;
+}
+
+.home-page__feed-post-card--featured :deep(.post-card__title) {
+  font-size: clamp(1.55rem, 2.3vw, 1.95rem);
+}
+
+.home-page__feed-post-card--featured :deep(.post-card__excerpt) {
+  -webkit-line-clamp: 2;
+}
+
+.home-page__feed-post-card--compact :deep(.post-card__media) {
+  min-height: 188px;
+}
+
+.home-page__feed-post-card--compact :deep(.post-card__body) {
+  padding: var(--space-md);
+  gap: 10px;
+}
+
+.home-page__feed-post-card--compact :deep(.post-card__title) {
+  font-size: 1.15rem;
+}
+
+.home-page__feed-post-card--compact :deep(.post-card__excerpt) {
+  font-size: 0.92rem;
+  -webkit-line-clamp: 2;
+}
+
+.home-page__feed-post-card--compact :deep(.post-card__tags) {
+  display: none;
+}
+
+.home-page__feed-post-card--compact :deep(.post-card__actions) {
+  padding-top: var(--space-xs);
 }
 
 .home-page__topic-grid {
@@ -981,18 +1152,18 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 .home-page__topic-card,
 .home-page__creator-card {
   display: flex;
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  border-bottom: 1px solid var(--color-border-light);
+  border-radius: 0;
+  background: transparent;
   transition:
-    transform var(--transition-base),
     border-color var(--transition-base),
     background-color var(--transition-base);
 }
 
 [data-theme='dark'] .home-page__topic-card,
 [data-theme='dark'] .home-page__creator-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 
 .home-page__topic-card {
@@ -1009,7 +1180,6 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 
 .home-page__topic-card:hover,
 .home-page__creator-card:hover {
-  transform: translateY(-2px);
   border-color: var(--color-border-dark);
   background: var(--color-bg-secondary);
 }
@@ -1075,7 +1245,7 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 .home-page__post-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .home-page__skeleton-grid {
@@ -1101,19 +1271,18 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   display: flex;
 }
 
-.home-page__error-card,
 .home-page__empty-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
   padding: var(--space-xl);
-  border-radius: var(--radius-xl);
-  background: rgba(255, 252, 247, 0.82);
+  border-radius: 0;
+  background: transparent;
   border: 1px solid var(--color-border);
   text-align: center;
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 [data-theme='dark'] .page-title {
@@ -1121,43 +1290,8 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   text-shadow: 0 12px 36px rgba(0, 0, 0, 0.42);
 }
 
-[data-theme='dark'] .home-page__error-card,
 [data-theme='dark'] .home-page__empty-card {
-  background: rgba(8, 19, 31, 0.82);
-}
-
-.home-page__error-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  padding: 0 12px;
-  border-radius: var(--radius-full);
-  background: var(--color-danger-light);
-  color: var(--color-danger);
-  font-size: 0.82rem;
-  font-weight: var(--font-weight-semibold);
-}
-
-.home-page__error-badge svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: var(--color-danger);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.home-page__error-title {
-  color: var(--color-text);
-  font-size: 1.35rem;
-}
-
-.home-page__error-text {
-  max-width: 34rem;
-  color: var(--color-text-secondary);
-  line-height: 1.75;
+  background: transparent;
 }
 
 .home-page__empty {
@@ -1231,6 +1365,10 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
   .home-page__quick-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .home-page__feed-post-card--featured :deep(.post-card__body) {
+    padding: var(--space-md);
+  }
 }
 
 @media (max-width: 767px) {
@@ -1238,12 +1376,16 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
     gap: var(--space-lg);
   }
 
-  .home-page__hero,
   .home-page__topics,
   .home-page__creators,
   .home-page__cta {
     padding: var(--space-lg);
-    border-radius: var(--radius-xl);
+    border-radius: 0;
+  }
+
+  .home-page__hero {
+    padding: var(--space-lg);
+    border-radius: var(--radius-home-hero-mobile);
   }
 
   .page-title {
@@ -1268,6 +1410,10 @@ const handleFavoriteChange = (data: { postId: string; isFavorited: boolean; favo
 
   .home-page__creator-card {
     align-items: flex-start;
+  }
+
+  .home-page__feed-post-card--compact :deep(.post-card__media) {
+    min-height: 168px;
   }
 }
 </style>
