@@ -9,7 +9,7 @@
   >
     <div class="creator-avatar-container">
       <img
-        :src="item.user.avatar"
+        :src="item.user.avatar || undefined"
         :alt="item.user.nickname"
         class="creator-avatar"
       >

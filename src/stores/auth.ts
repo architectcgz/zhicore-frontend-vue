@@ -622,11 +622,15 @@ export const useAuthStore = defineStore('auth', () => {
     if (user.value) {
       user.value = { ...user.value, ...userData };
       userStorage.saveUser(user.value);
+      const payload = {
+        ...userData,
+        avatar: userData.avatar ?? undefined,
+      };
       
       // 广播用户信息更新到其他标签页
       tabSyncManager.broadcast('user_update', {
         userId: user.value.id,
-        ...userData
+        ...payload
       });
     }
   }

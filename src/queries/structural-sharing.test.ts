@@ -42,7 +42,7 @@ describe('Structural Sharing', () => {
         } as PaginatedResponse<Post>);
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({
@@ -94,7 +94,7 @@ describe('Structural Sharing', () => {
         } as PaginatedResponse<Post>);
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({
@@ -150,7 +150,7 @@ describe('Structural Sharing', () => {
         });
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({
@@ -198,7 +198,7 @@ describe('Structural Sharing', () => {
         });
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({
@@ -246,7 +246,7 @@ describe('Structural Sharing', () => {
         });
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({
@@ -298,7 +298,7 @@ describe('Structural Sharing', () => {
         });
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({
@@ -354,7 +354,7 @@ describe('Structural Sharing', () => {
         });
       });
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const query = useQuery({

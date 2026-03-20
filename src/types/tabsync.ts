@@ -115,7 +115,7 @@ export interface NotificationAllReadPayload {
 export interface UserUpdatePayload {
   userId: string;
   username?: string;
-  avatar?: string;
+  avatar?: string | null;
   nickname?: string;
   [key: string]: any; // 允许其他用户字段
 }

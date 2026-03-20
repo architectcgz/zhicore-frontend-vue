@@ -143,14 +143,14 @@ describe('认证功能集成测试', () => {
 
       // 密码强度指示器应该不显示（因为密码太短）
       // 但输入框应该有值
-      expect(passwordInput.element.value).toBe('123');
+      expect((passwordInput.element as HTMLInputElement).value).toBe('123');
 
       // 输入强密码
       await passwordInput.setValue('StrongPassword123!');
       await wrapper.vm.$nextTick();
 
       // 检查密码输入框的值
-      expect(passwordInput.element.value).toBe('StrongPassword123!');
+      expect((passwordInput.element as HTMLInputElement).value).toBe('StrongPassword123!');
     });
 
     it('应该验证密码确认', async () => {
@@ -169,8 +169,8 @@ describe('认证功能集成测试', () => {
       await wrapper.vm.$nextTick();
 
       // 检查输入框的值
-      expect(passwordInput.element.value).toBe('password123');
-      expect(confirmPasswordInput.element.value).toBe('different123');
+      expect((passwordInput.element as HTMLInputElement).value).toBe('password123');
+      expect((confirmPasswordInput.element as HTMLInputElement).value).toBe('different123');
     });
 
     it('应该要求同意服务条款', async () => {
@@ -184,11 +184,11 @@ describe('认证功能集成测试', () => {
       expect(agreeCheckbox.exists()).toBe(true);
 
       // 检查复选框初始状态
-      expect(agreeCheckbox.element.checked).toBe(false);
+      expect((agreeCheckbox.element as HTMLInputElement).checked).toBe(false);
 
       // 勾选复选框
       await agreeCheckbox.setValue(true);
-      expect(agreeCheckbox.element.checked).toBe(true);
+      expect((agreeCheckbox.element as HTMLInputElement).checked).toBe(true);
     });
   });
 

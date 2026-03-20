@@ -173,6 +173,7 @@ describe('TanStack Query 缓存失效集成测试', () => {
               content: '新内容',
               summary: '新摘要',
               tags: [],
+              status: 'PUBLISHED',
             };
             createMutation.mutate(postData);
           };
@@ -705,6 +706,7 @@ describe('TanStack Query 缓存失效集成测试', () => {
               content: '新内容',
               summary: '新摘要',
               tags: [],
+              status: 'PUBLISHED',
             };
             createMutation.mutate(postData);
           };

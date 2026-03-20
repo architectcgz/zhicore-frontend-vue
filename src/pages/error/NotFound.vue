@@ -251,7 +251,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { postApi } from '@/api/post';
-import type { Post } from '@/types/models';
+import type { Post } from '@/types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
@@ -286,7 +286,10 @@ const handleSearch = () => {
 /**
  * 格式化日期
  */
-const formatDate = (date: string) => {
+const formatDate = (date?: string) => {
+  if (!date) {
+    return '刚刚';
+  }
   return dayjs(date).fromNow();
 };
 

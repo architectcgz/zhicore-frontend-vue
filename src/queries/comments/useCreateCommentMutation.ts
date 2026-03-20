@@ -108,7 +108,7 @@ export function useCreateCommentMutation() {
     },
     
     // 成功后失效查询以获取真实数据
-    onSuccess: (newComment: Comment, commentData: CommentCreateRequest) => {
+    onSuccess: (_newComment: Comment, commentData: CommentCreateRequest) => {
       // 使评论列表失效以获取真实数据
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.comments.list(commentData.postId) 

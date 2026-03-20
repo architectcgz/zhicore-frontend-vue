@@ -30,7 +30,7 @@ type TopicHighlight = {
 type CreatorHighlight = {
   id: string;
   nickname: string;
-  avatar: string;
+  avatar: string | null;
   bio: string;
   posts: number;
   followers: number;

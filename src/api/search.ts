@@ -13,6 +13,8 @@ import type {
   SearchSuggestion
 } from '@/types';
 
+export type { SearchRequest };
+
 /**
  * 搜索结果接口
  */

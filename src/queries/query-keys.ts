@@ -60,7 +60,8 @@ export interface NotificationQueryParams {
 export interface ConversationQueryParams {
   page?: number;
   size?: number;
-  sort?: 'latest' | 'unread';
+  sort?: 'latest' | 'oldest' | 'unread';
+  hasUnread?: boolean;
 }
 
 /**
@@ -79,7 +80,8 @@ export interface MessageQueryParams {
 export interface TagQueryParams {
   page?: number;
   size?: number;
-  sort?: 'name' | 'postCount' | 'latest';
+  sort?: 'name' | 'postCount' | 'latest' | 'popular';
+  keyword?: string;
   search?: string;
 }
 
@@ -89,7 +91,7 @@ export interface TagQueryParams {
 export interface RankingQueryParams {
   page?: number;
   size?: number;
-  period?: 'daily' | 'weekly' | 'monthly';
+  period?: 'all' | 'daily' | 'weekly' | 'monthly' | 'yearly';
   categoryId?: string;
 }
 
@@ -101,6 +103,7 @@ export interface SearchRequest {
   type?: 'POST' | 'USER' | 'TAG';
   page?: number;
   size?: number;
+  sort?: 'relevance' | 'latest' | 'popular' | 'hot';
 }
 
 /**

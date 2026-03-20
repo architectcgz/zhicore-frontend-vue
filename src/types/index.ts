@@ -148,6 +148,7 @@ export interface PaginatedResponse<T> {
   page: number;
   size: number;
   hasMore: boolean;
+  totalPages?: number;
   cursor?: string | null;
 }
 
@@ -157,12 +158,13 @@ export interface User {
   username: string;
   email: string;
   nickname: string;
-  avatar: string;
-  bio: string;
+  avatar: string | null;
+  bio: string | null;
   role: 'USER' | 'ADMIN';
   followersCount: number;
   followingCount: number;
   postsCount: number;
+  isFollowing?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -177,9 +179,10 @@ export interface Post {
   content: string;
   rawContent?: string;
   htmlContent?: string;
-  excerpt: string;
-  coverImage?: string;
-  authorId: string;
+  excerpt?: string;
+  summary?: string;
+  coverImage?: string | null;
+  authorId?: string;
   author: User;
   tags: Tag[];
   categoryId?: string;
@@ -203,7 +206,7 @@ export interface Comment {
   userId: string;
   user: User;
   content: string;
-  parentId?: string;
+  parentId?: string | null;
   parent?: Comment;
   replies: Comment[];
   repliesCount: number;
@@ -221,6 +224,8 @@ export interface Tag {
   slug: string;
   description?: string;
   postCount: number;
+  isFollowing?: boolean;
+  followersCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -257,7 +262,9 @@ export interface Message {
   id: string;
   conversationId: string;
   senderId: string;
+  sender?: User;
   receiverId: string;
+  receiver?: User;
   content: string;
   messageType: 'TEXT' | 'IMAGE' | 'FILE';
   isRead: boolean;
@@ -286,8 +293,8 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
-  confirmPassword: string;
-  agreeToTerms: boolean;
+  confirmPassword?: string;
+  agreeToTerms?: boolean;
 }
 
 export interface AuthResponse {
@@ -321,9 +328,41 @@ export interface NotificationStats {
 // 搜索相关类型
 export interface SearchRequest {
   query: string;
-  type?: 'POST' | 'USER';
+  type?: 'POST' | 'USER' | 'TAG';
   page?: number;
   size?: number;
+}
+
+export interface PostCreateRequest {
+  title: string;
+  content: string;
+  excerpt?: string;
+  summary?: string;
+  coverImageId?: string;
+  tags: string[];
+  categoryId?: string;
+  status: 'DRAFT' | 'PUBLISHED';
+}
+
+export interface PostQueryParams {
+  page?: number;
+  cursor?: string;
+  size?: number;
+  sort?: 'latest' | 'popular' | 'hot';
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  authorId?: string;
+  categoryId?: string;
+  tagId?: string;
+  keyword?: string;
+}
+
+export interface CommentQueryParams {
+  postId?: string;
+  parentId?: string;
+  page?: number;
+  size?: number;
+  sort?: 'latest' | 'oldest' | 'hot';
+  loadReplies?: boolean;
 }
 
 export interface SearchSuggestion {

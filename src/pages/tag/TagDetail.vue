@@ -212,7 +212,7 @@
                 <div class="post-meta">
                   <div class="author-info">
                     <img
-                      :src="post.author.avatar"
+                      :src="post.author.avatar || undefined"
                       :alt="post.author.nickname"
                       class="author-avatar"
                     >
@@ -452,7 +452,8 @@ const fetchPosts = async () => {
 
     posts.value = response.items;
     postsPagination.value.total = response.total;
-    postsPagination.value.totalPages = response.totalPages;
+    postsPagination.value.totalPages =
+      response.totalPages ?? Math.max(1, Math.ceil(response.total / Math.max(response.size, 1)));
   } catch (err: unknown) {
     console.error('获取文章列表失败:', err);
   } finally {

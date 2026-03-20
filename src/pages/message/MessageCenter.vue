@@ -53,7 +53,7 @@
         >
           <div class="conversation-avatar">
             <img 
-              :src="getOtherUser(conversation).avatar" 
+              :src="getOtherUser(conversation).avatar || undefined" 
               :alt="getOtherUser(conversation).nickname"
               class="avatar-img"
             >
@@ -116,7 +116,7 @@
         <div class="message-header">
           <div class="message-header-left">
             <img 
-              :src="getOtherUser(currentConversation).avatar" 
+              :src="getOtherUser(currentConversation).avatar || undefined" 
               :alt="getOtherUser(currentConversation).nickname"
               class="avatar-sm"
             >
@@ -168,8 +168,8 @@
               :class="{ 'message-sent': message.senderId === currentUserId }"
             >
               <img 
-                :src="message.sender.avatar" 
-                :alt="message.sender.nickname"
+                :src="getMessageSender(message).avatar || '/images/default-avatar.svg'" 
+                :alt="getMessageSender(message).nickname"
                 class="message-avatar"
               >
               <div class="message-bubble">
@@ -295,7 +295,7 @@ import { useMessagesQuery } from '@/queries/messages/useMessagesQuery';
 import { useSendMessageMutation } from '@/queries/messages/useSendMessageMutation';
 import { useMarkConversationAsReadMutation } from '@/queries/messages/useMarkConversationAsReadMutation';
 import { useCreateConversationMutation } from '@/queries/messages/useCreateConversationMutation';
-import type { Conversation, User } from '@/types';
+import type { Conversation, User, Message } from '@/types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
@@ -387,6 +387,31 @@ const groupedMessages = computed(() => {
  */
 function getOtherUser(conversation: Conversation): User {
   return conversation.participants.find(p => p.id !== currentUserId.value) || conversation.participants[0];
+}
+
+function getMessageSender(message: Message): User {
+  if (message.sender) {
+    return message.sender;
+  }
+
+  if (currentConversation.value) {
+    return getOtherUser(currentConversation.value);
+  }
+
+  return {
+    id: '',
+    username: 'unknown',
+    email: '',
+    nickname: '未知用户',
+    avatar: null,
+    bio: null,
+    role: 'USER',
+    followersCount: 0,
+    followingCount: 0,
+    postsCount: 0,
+    createdAt: '',
+    updatedAt: '',
+  };
 }
 
 /**

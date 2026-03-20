@@ -58,7 +58,7 @@ export function useSendMessageMutation() {
       
       return { previousMessages };
     },
-    onError: (err, messageData, context) => {
+    onError: (_err, messageData, context) => {
       // 回滚乐观更新
       if (context?.previousMessages && messageData.conversationId) {
         queryClient.setQueryData(

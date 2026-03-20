@@ -14,7 +14,7 @@ import { queryKeys } from '../query-keys';
 export interface LikeCommentParams {
   commentId: string;
   isLiked: boolean;
-  postId: string;
+  postId?: string;
 }
 
 /**
@@ -53,8 +53,15 @@ export function useLikeCommentMutation() {
     },
 
     onSettled: (_, __, variables) => {
+      if (variables.postId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.comments.list(variables.postId),
+        });
+        return;
+      }
+
       queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(variables.postId),
+        queryKey: queryKeys.comments.lists(),
       });
     },
   });

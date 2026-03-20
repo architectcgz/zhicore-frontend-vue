@@ -38,16 +38,17 @@ export function useFollowTagMutation() {
       
       // 乐观更新标签信息
       if (previousTag) {
+        const previousFollowersCount = previousTag.followersCount ?? 0;
         queryClient.setQueryData<Tag>(queryKeys.tags.detail(tagId), {
           ...previousTag,
           isFollowing: !isFollowing,
-          followersCount: isFollowing ? previousTag.followersCount - 1 : previousTag.followersCount + 1,
+          followersCount: isFollowing ? previousFollowersCount - 1 : previousFollowersCount + 1,
         });
       }
       
       return { previousTag };
     },
-    onError: (err, { tagId }, context) => {
+    onError: (_err, { tagId }, context) => {
       // 回滚乐观更新
       if (context?.previousTag) {
         queryClient.setQueryData(queryKeys.tags.detail(tagId), context.previousTag);

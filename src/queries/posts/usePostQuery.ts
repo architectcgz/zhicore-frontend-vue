@@ -33,15 +33,15 @@ import type { Post } from '@/types';
  *
  * **Validates: Requirements 3.1, 3.7**
  */
-export function usePostQuery(postId: Ref<string> | string) {
+export function usePostQuery(postId: Ref<string | undefined> | string | undefined) {
   // 将 postId 转换为 computed，统一处理 Ref 和普通 string
-  const id = computed(() => (typeof postId === 'string' ? postId : postId.value));
+  const id = computed(() => (typeof postId === 'string' ? postId : postId?.value));
 
   return useQuery<Post>({
     // 使用 computed 确保 queryKey 响应式更新
-    queryKey: computed(() => queryKeys.posts.detail(id.value)),
+    queryKey: computed(() => queryKeys.posts.detail(id.value || '')),
     // 查询函数
-    queryFn: () => postApi.getPostById(id.value),
+    queryFn: () => postApi.getPostById(id.value as string),
     // 仅在 ID 存在时启用查询
     enabled: computed(() => !!id.value),
     // 使用统一的文章内容缓存配置

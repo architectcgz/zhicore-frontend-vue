@@ -21,11 +21,11 @@ const selectedReadStatus = ref<'ALL' | 'UNREAD' | 'READ'>('ALL');
 const isInitialLoading = ref(true);
 
 // 计算属性
-const notifications = computed(() => notificationStore.notifications);
-const isLoadingMore = computed(() => notificationStore.isLoadingMore);
-const hasMore = computed(() => notificationStore.hasMore);
-const total = computed(() => notificationStore.total);
-const unreadCount = computed(() => notificationStore.unreadCount);
+const notifications = computed<Notification[]>(() => notificationStore.notifications);
+const isLoadingMore = computed<boolean>(() => notificationStore.isLoadingMore);
+const hasMore = computed<boolean>(() => notificationStore.hasMore);
+const total = computed<number>(() => notificationStore.total);
+const unreadCount = computed<number>(() => notificationStore.unreadCount);
 
 /**
  * 按时间分组通知

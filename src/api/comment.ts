@@ -195,8 +195,8 @@ export class CommentApi {
    * @param commentId 评论 ID
    * @returns 点赞后的评论信息
    */
-  async likeComment(commentId: string): Promise<void> {
-    return httpClient.post<void>(`/comments/${commentId}/like`);
+  async likeComment(commentId: string): Promise<Comment> {
+    return httpClient.post<Comment>(`/comments/${commentId}/like`);
   }
 
   /**
@@ -204,8 +204,8 @@ export class CommentApi {
    * @param commentId 评论 ID
    * @returns 取消点赞后的评论信息
    */
-  async unlikeComment(commentId: string): Promise<void> {
-    return httpClient.delete<void>(`/comments/${commentId}/like`);
+  async unlikeComment(commentId: string): Promise<Comment> {
+    return httpClient.delete<Comment>(`/comments/${commentId}/like`);
   }
 
   /**

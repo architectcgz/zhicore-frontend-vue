@@ -332,11 +332,12 @@ export function setupRouterGuards(router: Router): void {
       const evaluateGuard = (guard: (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => void) => {
         let called = false;
         let nextArg: Parameters<NavigationGuardNext>[0] | undefined;
-
-        guard(to, from, (arg?: Parameters<NavigationGuardNext>[0]) => {
+        const captureNext = ((arg?: Parameters<NavigationGuardNext>[0]) => {
           called = true;
           nextArg = arg;
-        });
+        }) as NavigationGuardNext;
+
+        guard(to, from, captureNext);
 
         return called ? nextArg : undefined;
       };

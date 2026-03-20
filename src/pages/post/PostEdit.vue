@@ -15,12 +15,12 @@
 
     <!-- 错误状态 -->
     <div
-      v-else-if="error"
+      v-else-if="errorMessage"
       class="error-container"
     >
       <SiteErrorState
         title="加载文章失败"
-        :message="error"
+        :message="errorMessage"
         mode="page"
         retry-text="重试加载"
         @retry="handleRetry"
@@ -282,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { usePost, useTagSearch, useAutoSave, type PostEditorState } from '@/composables/usePost';
@@ -292,6 +292,7 @@ import PostEditor from '@/components/post/PostEditor.vue';
 import MarkdownPreview from '@/components/post/MarkdownPreview.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import SiteErrorState from '@/components/common/SiteErrorState.vue';
+import { getErrorMessage } from '@/types/errors';
 
 // 路由
 const router = useRouter();
@@ -330,6 +331,7 @@ const editorState = reactive<PostEditorState>({
 const showPreview = ref(true);
 const categories = ref<Category[]>([]);
 const hasUnsavedChanges = ref(false);
+const errorMessage = computed(() => (error.value ? getErrorMessage(error.value) : ''));
 
 // 自动保存功能
 const autoSave = useAutoSave(async () => {
@@ -385,7 +387,7 @@ watch(post, (newPost) => {
   if (newPost) {
     editorState.title = newPost.title;
     editorState.content = newPost.content;
-    editorState.excerpt = newPost.excerpt;
+    editorState.excerpt = newPost.excerpt || '';
     editorState.coverImage = newPost.coverImage;
     editorState.tags = newPost.tags.map(tag => tag.name);
     editorState.categoryId = newPost.categoryId;

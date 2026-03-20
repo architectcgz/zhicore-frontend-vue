@@ -78,6 +78,7 @@ export function normalizePost(source: BackendPostSummary): Post {
     rawContent: source.raw,
     htmlContent: source.html,
     excerpt: source.excerpt || '',
+    summary: source.excerpt || '',
     coverImage: source.coverImageUrl,
     authorId: String(source.ownerId ?? ''),
     author: normalizeAuthor(source),
@@ -102,6 +103,8 @@ export interface PostCreateRequest {
   title: string;
   content: string;
   excerpt?: string;
+  summary?: string;
+  coverImage?: string;
   coverImageId?: string; // 封面图文件ID
   tags: string[];
   categoryId?: string;
@@ -205,8 +208,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 点赞后的文章信息
    */
-  async likePost(postId: string): Promise<void> {
-    return httpClient.post<void>(`/posts/${postId}/like`);
+  async likePost(postId: string): Promise<Post> {
+    return httpClient.post<Post>(`/posts/${postId}/like`);
   }
 
   /**
@@ -214,8 +217,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 取消点赞后的文章信息
    */
-  async unlikePost(postId: string): Promise<void> {
-    return httpClient.delete<void>(`/posts/${postId}/like`);
+  async unlikePost(postId: string): Promise<Post> {
+    return httpClient.delete<Post>(`/posts/${postId}/like`);
   }
 
   /**
@@ -223,8 +226,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 收藏后的文章信息
    */
-  async favoritePost(postId: string): Promise<void> {
-    return httpClient.post<void>(`/posts/${postId}/favorite`);
+  async favoritePost(postId: string): Promise<Post> {
+    return httpClient.post<Post>(`/posts/${postId}/favorite`);
   }
 
   /**
@@ -232,8 +235,8 @@ export class PostApi {
    * @param postId 文章 ID
    * @returns 取消收藏后的文章信息
    */
-  async unfavoritePost(postId: string): Promise<void> {
-    return httpClient.delete<void>(`/posts/${postId}/favorite`);
+  async unfavoritePost(postId: string): Promise<Post> {
+    return httpClient.delete<Post>(`/posts/${postId}/favorite`);
   }
 
   /**

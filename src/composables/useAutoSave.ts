@@ -10,7 +10,7 @@
  * - 自动启动/停止
  */
 
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, type Ref } from 'vue';
 import { ElMessage } from 'element-plus';
 
 /**
@@ -55,17 +55,17 @@ export interface AutoSaveReturn {
   /**
    * 是否正在保存
    */
-  isSaving: Readonly<typeof ref<boolean>>;
+  isSaving: Readonly<Ref<boolean>>;
   
   /**
    * 上次保存时间
    */
-  lastSaveTime: Readonly<typeof ref<Date | null>>;
+  lastSaveTime: Readonly<Ref<Date | null>>;
   
   /**
    * 保存错误信息
    */
-  saveError: Readonly<typeof ref<Error | null>>;
+  saveError: Readonly<Ref<Error | null>>;
   
   /**
    * 手动触发保存
@@ -256,9 +256,9 @@ export function useAutoSave(
   });
 
   return {
-    isSaving: isSaving as Readonly<typeof isSaving>,
-    lastSaveTime: lastSaveTime as Readonly<typeof lastSaveTime>,
-    saveError: saveError as Readonly<typeof saveError>,
+    isSaving,
+    lastSaveTime,
+    saveError,
     save,
     startAutoSave,
     stopAutoSave,

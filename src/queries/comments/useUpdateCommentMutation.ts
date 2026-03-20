@@ -87,7 +87,7 @@ export function useUpdateCommentMutation() {
     },
     
     // 错误处理：回滚乐观更新
-    onError: (err: any, variables: UpdateCommentParams, context: any) => {
+    onError: (err: any, _variables: UpdateCommentParams, context: any) => {
       // 如果请求失败，恢复之前的数据
       context?.previousData.forEach(({ queryKey, data }: { queryKey: any; data: any }) => {
         queryClient.setQueryData(queryKey, data);
@@ -97,7 +97,7 @@ export function useUpdateCommentMutation() {
     },
     
     // 成功后失效查询以确保数据同步
-    onSuccess: (updatedComment: Comment, { postId }: UpdateCommentParams) => {
+    onSuccess: (_updatedComment: Comment, { postId }: UpdateCommentParams) => {
       // 使评论列表失效
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.comments.list(postId) 

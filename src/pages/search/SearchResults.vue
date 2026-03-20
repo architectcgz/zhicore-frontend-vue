@@ -227,11 +227,14 @@ const searchQuery = ref('');
  * 当前激活的标签页
  */
 const activeTab = ref<'POST' | 'USER'>('POST');
+type SearchTab = 'POST' | 'USER';
+type SearchSort = 'relevance' | 'latest' | 'popular' | 'hot';
+type SearchDateRange = 'all' | 'today' | 'week' | 'month' | 'year';
 
 /**
  * 标签页配置
  */
-const tabs = computed(() => [
+const tabs = computed<Array<{ value: SearchTab; label: string; icon: string; count: number }>>(() => [
   {
     value: 'POST',
     label: '文章',
@@ -250,8 +253,8 @@ const tabs = computed(() => [
  * 筛选条件
  */
 const filters = ref<{
-  sort: 'relevance' | 'latest' | 'popular' | 'hot';
-  dateRange: 'all' | 'today' | 'week' | 'month' | 'year';
+  sort: SearchSort;
+  dateRange: SearchDateRange;
   tagIds: string[];
 }>({
   sort: 'relevance',
@@ -262,7 +265,7 @@ const filters = ref<{
 /**
  * 排序选项
  */
-const sortOptions = [
+const sortOptions: Array<{ value: SearchSort; label: string; icon: string }> = [
   { value: 'relevance', label: '相关度', icon: 'el-icon-star-off' },
   { value: 'latest', label: '最新', icon: 'el-icon-time' },
   { value: 'popular', label: '最热', icon: 'el-icon-hot-water' },
@@ -272,7 +275,7 @@ const sortOptions = [
 /**
  * 日期范围选项
  */
-const dateRanges = [
+const dateRanges: Array<{ value: SearchDateRange; label: string }> = [
   { value: 'all', label: '全部时间' },
   { value: 'today', label: '今天' },
   { value: 'week', label: '本周' },
@@ -528,7 +531,7 @@ const loadAvailableTags = async () => {
 /**
  * 处理标签页切换
  */
-const handleTabChange = (tab: 'POST' | 'USER') => {
+const handleTabChange = (tab: SearchTab) => {
   if (activeTab.value === tab) return;
   
   activeTab.value = tab;
@@ -538,7 +541,7 @@ const handleTabChange = (tab: 'POST' | 'USER') => {
 /**
  * 处理排序变化
  */
-const handleSortChange = (sort: typeof filters.value.sort) => {
+const handleSortChange = (sort: SearchSort) => {
   filters.value.sort = sort;
   performSearch();
 };
@@ -546,7 +549,7 @@ const handleSortChange = (sort: typeof filters.value.sort) => {
 /**
  * 处理日期范围变化
  */
-const handleDateRangeChange = (range: typeof filters.value.dateRange) => {
+const handleDateRangeChange = (range: SearchDateRange) => {
   filters.value.dateRange = range;
   performSearch();
 };

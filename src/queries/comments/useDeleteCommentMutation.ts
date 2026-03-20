@@ -14,7 +14,7 @@ import { queryKeys } from '../query-keys';
  */
 export interface DeleteCommentParams {
   commentId: string;
-  postId: string;
+  postId?: string;
 }
 
 /**
@@ -43,16 +43,23 @@ export function useDeleteCommentMutation() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ commentId }: DeleteCommentParams) => commentApi.deleteComment(commentId),
+    mutationFn: (params: DeleteCommentParams | string) =>
+      commentApi.deleteComment(typeof params === 'string' ? params : params.commentId),
 
     onError: (err: unknown) => {
       console.error('删除评论失败:', err);
     },
 
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(variables.postId),
-      });
+      if (typeof variables !== 'string' && variables.postId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.comments.list(variables.postId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.comments.lists(),
+        });
+      }
       ElMessage.success('评论删除成功');
     },
   });

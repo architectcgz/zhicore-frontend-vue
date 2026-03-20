@@ -305,7 +305,7 @@ const passwordRules: FormRules = {
   confirmPassword: [
     { required: true, message: '请确认新密码', trigger: 'blur' },
     {
-      validator: (rule, value, callback) => {
+      validator: (_rule, value, callback) => {
         if (value !== passwordForm.newPassword) {
           callback(new Error('两次输入的密码不一致'));
         } else {
@@ -424,21 +424,24 @@ const handleAvatarUpload = async (file: File): Promise<boolean> => {
  */
 const handleChangePassword = async () => {
   if (!passwordFormRef.value) return;
+  if (!authStore.user?.id) {
+    ElMessage.error('用户信息不存在');
+    return;
+  }
 
   try {
     await passwordFormRef.value.validate();
     
     passwordSaving.value = true;
     
-    const success = await changePassword(
+    await changePassword(
+      authStore.user.id,
       passwordForm.currentPassword,
       passwordForm.newPassword
     );
 
-    if (success) {
-      ElMessage.success('密码修改成功');
-      handleResetPassword();
-    }
+    ElMessage.success('密码修改成功');
+    handleResetPassword();
   } catch (error) {
     console.error('修改密码失败:', error);
   } finally {

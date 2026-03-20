@@ -12,7 +12,9 @@
 import { ref, computed, type Ref } from 'vue';
 import { postApi } from '@/api/post';
 import { tagApi } from '@/api/tag';
-import type { UploadResponse, Tag } from '@/types';
+import { userApi } from '@/api/user';
+import { useAuthStore } from '@/stores/auth';
+import type { UploadResponse, Tag, Post, PaginatedResponse, PostStatus } from '@/types';
 import { ElMessage } from 'element-plus';
 import { getErrorMessage } from '@/types/errors';
 import {
@@ -35,11 +37,11 @@ export interface PostEditorState {
   title: string;
   content: string;
   excerpt: string;
-  coverImage?: string; // 封面图 URL（用于前端显示）
+  coverImage?: string | null; // 封面图 URL（用于前端显示）
   coverImageId?: string; // 封面图 fileId（用于提交给后端）
   tags: string[];
   categoryId?: string;
-  status: 'DRAFT' | 'PUBLISHED';
+  status: PostStatus;
 }
 
 /**
@@ -64,9 +66,12 @@ export interface PostEditorState {
  * await updatePost.mutateAsync({ postId: 'post-123', postData: { title: '新标题' } });
  * ```
  */
-export function usePost(postId?: Ref<string | undefined> | string) {
+export function usePost(postId?: Ref<string | undefined> | string | undefined) {
+  const authStore = useAuthStore();
   // 使用 TanStack Query hooks
-  const postQuery = postId ? usePostQuery(postId) : { data: ref(undefined), isLoading: ref(false), isFetching: ref(false), error: ref(null), refetch: () => Promise.resolve({} as any) };
+  const postQuery = postId !== undefined
+    ? usePostQuery(postId)
+    : { data: ref(undefined), isLoading: ref(false), isFetching: ref(false), error: ref(null), refetch: () => Promise.resolve({} as any) };
   const createPostMutation = useCreatePostMutation();
   const updatePostMutation = useUpdatePostMutation();
   const deletePostMutation = useDeletePostMutation();
@@ -91,6 +96,36 @@ export function usePost(postId?: Ref<string | undefined> | string) {
       ElMessage.error(errorMsg);
       return null;
     }
+  };
+
+  const getUserDrafts = async (page: number = 1, size: number = 20): Promise<PaginatedResponse<Post>> => {
+    const userId = authStore.user?.id;
+    if (!userId) {
+      throw new Error('用户未登录，无法获取草稿列表');
+    }
+    return userApi.getUserDrafts(userId, { page, size });
+  };
+
+  const deleteDraft = async (draftId: string): Promise<boolean> => {
+    await postApi.deleteDraft(draftId);
+    return true;
+  };
+
+  const duplicateDraft = async (draftId: string): Promise<Post | null> => {
+    const draft = await postApi.getPostById(draftId);
+    return postApi.saveDraft({
+      title: `${draft.title}（副本）`,
+      content: draft.content,
+      excerpt: draft.excerpt,
+      coverImageId: undefined,
+      tags: draft.tags.map((tag) => tag.name),
+      categoryId: draft.categoryId,
+      status: 'DRAFT',
+    });
+  };
+
+  const publishDraftById = async (draftId: string): Promise<Post> => {
+    return publishDraftMutation.mutateAsync(draftId);
   };
 
   return {
@@ -121,6 +156,10 @@ export function usePost(postId?: Ref<string | undefined> | string) {
 
     // 其他方法
     uploadImage,
+    getUserDrafts,
+    deleteDraft,
+    duplicateDraft,
+    publishDraftById,
   };
 }
 

@@ -140,7 +140,7 @@
                   </span>
                 </div>
                 <div class="meta-right">
-                  <el-dropdown @command="(command) => handleDraftAction(command, draft)">
+                  <el-dropdown @command="createDraftActionHandler(draft)">
                     <el-button
                       size="small"
                       type="text"
@@ -209,7 +209,7 @@ import SiteErrorState from '@/components/common/SiteErrorState.vue';
 const router = useRouter();
 
 // 组合式函数
-const { getUserDrafts, deleteDraft, publishDraft, duplicateDraft } = usePost();
+const { getUserDrafts, deleteDraft, publishDraftById, duplicateDraft } = usePost();
 
 // 响应式状态
 const loading = ref(false);
@@ -307,6 +307,12 @@ const handleDraftAction = async (command: string, draft: Post) => {
   }
 };
 
+const createDraftActionHandler = (draft: Post) => {
+  return (command: string | number | object) => {
+    void handleDraftAction(String(command), draft);
+  };
+};
+
 /**
  * 处理发布草稿
  */
@@ -322,7 +328,7 @@ const handlePublishDraft = async (draft: Post) => {
       }
     );
 
-    const result = await publishDraft(draft.id);
+    const result = await publishDraftById(draft.id);
     if (result) {
       ElMessage.success('草稿发布成功');
       // 从草稿列表中移除

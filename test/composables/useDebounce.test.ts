@@ -3,7 +3,7 @@
  * Unit tests for useDebounce composable
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { debounce, useDebounce, useDebounceFn } from '@/composables/useDebounce';
 

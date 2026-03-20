@@ -10,6 +10,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { Notification } from '@/types';
 import { useQueryClient } from '@tanstack/vue-query';
+import { notificationApi, type NotificationQueryParams } from '@/api/notification';
 
 /**
  * 通知客户端状态接口
@@ -24,6 +25,12 @@ export const useNotificationStore = defineStore('notification', () => {
   // UI 状态
   const isPanelOpen = ref(false);
   const lastViewedTime = ref<number>(Date.now());
+  const notifications = ref<Notification[]>([]);
+  const isLoadingMore = ref(false);
+  const hasMore = ref(false);
+  const total = ref(0);
+  const currentPage = ref(1);
+  const lastQueryParams = ref<NotificationQueryParams>({});
 
   // Query client for cache updates
   const queryClient = useQueryClient();
@@ -59,20 +66,19 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 实时更新
    */
   function addNotification(notification: Notification) {
-    // 更新 TanStack Query 缓存
-    queryClient.setQueryData(['notifications'], (oldData: any) => {
-      if (!oldData) return { notifications: [notification], total: 1 };
-      
-      return {
-        notifications: [notification, ...oldData.notifications],
-        total: oldData.total + 1,
-      };
+    notifications.value = [notification, ...notifications.value];
+    total.value += 1;
+    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+      items: notifications.value,
+      total: total.value,
+      page: currentPage.value,
+      size: lastQueryParams.value.size ?? notifications.value.length,
+      hasMore: hasMore.value,
     });
 
     // 更新未读数量
-    queryClient.setQueryData(['notifications', 'unread-count'], (oldCount: number = 0) => {
-      return oldCount + 1;
-    });
+    unreadCount.value += 1;
+    queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
   }
 
   /**
@@ -80,22 +86,21 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 实时更新
    */
   function updateNotification(notificationId: string, updates: Partial<Notification>) {
-    queryClient.setQueryData(['notifications'], (oldData: any) => {
-      if (!oldData) return oldData;
-
-      return {
-        ...oldData,
-        notifications: oldData.notifications.map((n: Notification) =>
-          n.id === notificationId ? { ...n, ...updates } : n
-        ),
-      };
+    notifications.value = notifications.value.map((n) =>
+      n.id === notificationId ? { ...n, ...updates } : n
+    );
+    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+      items: notifications.value,
+      total: total.value,
+      page: currentPage.value,
+      size: lastQueryParams.value.size ?? notifications.value.length,
+      hasMore: hasMore.value,
     });
 
     // 如果标记为已读，更新未读数量
     if (updates.isRead === true) {
-      queryClient.setQueryData(['notifications', 'unread-count'], (oldCount: number = 0) => {
-        return Math.max(0, oldCount - 1);
-      });
+      unreadCount.value = Math.max(0, unreadCount.value - 1);
+      queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
     }
   }
 
@@ -104,8 +109,8 @@ export const useNotificationStore = defineStore('notification', () => {
    * 从服务器获取最新的未读数量
    */
   async function syncUnreadCount() {
-    // 触发 TanStack Query 重新获取未读数量
-    await queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+    unreadCount.value = await notificationApi.getUnreadCount();
+    queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
   }
 
   /**
@@ -113,21 +118,115 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 或用户操作
    */
   async function markAsRead(notificationId: string) {
-    // 乐观更新
+    await notificationApi.markAsRead(notificationId);
     updateNotification(notificationId, { isRead: true });
-
-    // 实际的 API 调用应该通过 TanStack Query mutation 完成
-    // 这里只是更新缓存，实际的网络请求由 mutation 处理
   }
 
   // 未读数量的 getter（从 TanStack Query 缓存读取）
   const unreadCount = ref(0);
+
+  async function fetchRecentNotifications(limit: number = 10): Promise<Notification[]> {
+    return notificationApi.getRecentNotifications(limit);
+  }
+
+  async function fetchNotifications(params: NotificationQueryParams = {}) {
+    const requestParams = {
+      ...params,
+      page: 1,
+      size: params.size ?? 20,
+    };
+
+    lastQueryParams.value = { ...params };
+    const response = await notificationApi.getNotifications(requestParams);
+    notifications.value = response.items;
+    total.value = response.total;
+    hasMore.value = response.hasMore;
+    currentPage.value = response.page;
+    unreadCount.value = response.items.filter((item) => !item.isRead).length;
+
+    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], response);
+    queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+  }
+
+  async function loadMoreNotifications(params: NotificationQueryParams = lastQueryParams.value) {
+    if (isLoadingMore.value || !hasMore.value) {
+      return;
+    }
+
+    isLoadingMore.value = true;
+    try {
+      const nextPage = currentPage.value + 1;
+      const response = await notificationApi.getNotifications({
+        ...params,
+        page: nextPage,
+        size: params.size ?? lastQueryParams.value.size ?? 20,
+      });
+
+      notifications.value = [...notifications.value, ...response.items];
+      total.value = response.total;
+      hasMore.value = response.hasMore;
+      currentPage.value = response.page;
+
+      queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+        ...response,
+        items: notifications.value,
+      });
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+
+  async function markAllAsRead() {
+    await notificationApi.markAllAsRead();
+    notifications.value = notifications.value.map((item) => ({ ...item, isRead: true }));
+    unreadCount.value = 0;
+    queryClient.setQueryData(['notifications', 'count'], 0);
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  }
+
+  async function deleteNotification(notificationId: string) {
+    await notificationApi.deleteNotification(notificationId);
+    const target = notifications.value.find((item) => item.id === notificationId);
+    notifications.value = notifications.value.filter((item) => item.id !== notificationId);
+    total.value = Math.max(0, total.value - 1);
+    if (target && !target.isRead) {
+      unreadCount.value = Math.max(0, unreadCount.value - 1);
+      queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+    }
+    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+      items: notifications.value,
+      total: total.value,
+      page: currentPage.value,
+      size: lastQueryParams.value.size ?? notifications.value.length,
+      hasMore: hasMore.value,
+    });
+  }
+
+  async function clearAllNotifications() {
+    await notificationApi.clearAllNotifications();
+    notifications.value = [];
+    total.value = 0;
+    hasMore.value = false;
+    unreadCount.value = 0;
+    queryClient.setQueryData(['notifications', 'count'], 0);
+    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+      items: [],
+      total: 0,
+      page: 1,
+      size: lastQueryParams.value.size ?? 20,
+      hasMore: false,
+    });
+  }
 
   return {
     // UI 状态
     isPanelOpen,
     lastViewedTime,
     unreadCount,
+    notifications,
+    isLoadingMore,
+    hasMore,
+    total,
 
     // UI 操作
     openPanel,
@@ -139,5 +238,11 @@ export const useNotificationStore = defineStore('notification', () => {
     updateNotification,
     syncUnreadCount,
     markAsRead,
+    markAllAsRead,
+    fetchRecentNotifications,
+    fetchNotifications,
+    loadMoreNotifications,
+    deleteNotification,
+    clearAllNotifications,
   };
 });

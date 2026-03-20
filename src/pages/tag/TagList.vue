@@ -367,7 +367,8 @@ const fetchTags = async () => {
 
     tags.value = response.items;
     pagination.value.total = response.total;
-    pagination.value.totalPages = response.totalPages;
+    pagination.value.totalPages =
+      response.totalPages ?? Math.max(1, Math.ceil(response.total / Math.max(response.size, 1)));
   } catch (err: unknown) {
     error.value = getErrorMessage(err);
     console.error('获取标签列表失败:', err);

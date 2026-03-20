@@ -298,7 +298,9 @@ export function usePrefetchRelatedPosts() {
  * });
  * ```
  */
-export const routePrefetchConfig = {
+type RoutePrefetchHandler = (params?: any) => Promise<void>;
+
+export const routePrefetchConfig: Record<string, RoutePrefetchHandler> = {
   /**
    * 文章列表页预取
    */

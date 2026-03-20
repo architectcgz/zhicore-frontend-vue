@@ -233,18 +233,20 @@ describe('DefaultLayout 侧边栏显示逻辑', () => {
       },
     });
 
-    expect(wrapper.vm.isSidebarOpen).toBe(false);
+    const vm = wrapper.vm as unknown as { isSidebarOpen: boolean };
+
+    expect(vm.isSidebarOpen).toBe(false);
     expect(wrapper.find('.default-layout__sidebar').exists()).toBe(false);
 
     await wrapper.find('.app-header').trigger('click');
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.vm.isSidebarOpen).toBe(true);
+    expect(vm.isSidebarOpen).toBe(true);
     expect(wrapper.find('.default-layout__sidebar').exists()).toBe(true);
 
     await wrapper.find('.app-header').trigger('click');
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.vm.isSidebarOpen).toBe(false);
+    expect(vm.isSidebarOpen).toBe(false);
   });
 });

@@ -47,7 +47,7 @@ export function useFollowUserMutation() {
       
       return { previousUser };
     },
-    onError: (err, { userId }, context) => {
+    onError: (_err, { userId }, context) => {
       // 回滚乐观更新
       if (context?.previousUser) {
         queryClient.setQueryData(queryKeys.users.detail(userId), context.previousUser);

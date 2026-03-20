@@ -43,7 +43,7 @@ describe('Query Cancellation Utils', () => {
     it('should cancel a specific query', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const cancelQuery = useCancelQuery();
@@ -79,7 +79,7 @@ describe('Query Cancellation Utils', () => {
     it('should cancel all matching queries', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const cancelQueries = useCancelQueries();
@@ -131,7 +131,7 @@ describe('Query Cancellation Utils', () => {
     it('should cancel query when component unmounts', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const postId = ref('123');
@@ -173,7 +173,7 @@ describe('Query Cancellation Utils', () => {
     it('should cancel multiple queries when component unmounts', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             useQuery({
@@ -222,7 +222,7 @@ describe('Query Cancellation Utils', () => {
     it('should return true when query is running', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const isRunning = useIsQueryRunning();
@@ -251,7 +251,7 @@ describe('Query Cancellation Utils', () => {
     });
 
     it('should return false when query is not running', () => {
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const isRunning = useIsQueryRunning();
@@ -278,7 +278,7 @@ describe('Query Cancellation Utils', () => {
         new Promise((resolve) => setTimeout(() => resolve({ id: '123' }), 100))
       );
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const waitForQuery = useWaitForQuery();
@@ -312,7 +312,7 @@ describe('Query Cancellation Utils', () => {
     it('should timeout if query takes too long', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 5000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const waitForQuery = useWaitForQuery();
@@ -346,7 +346,7 @@ describe('Query Cancellation Utils', () => {
     it('should cancel all added queries', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const batch = useBatchCancellation();
@@ -390,7 +390,7 @@ describe('Query Cancellation Utils', () => {
     });
 
     it('should track query count', () => {
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const batch = useBatchCancellation();
@@ -424,7 +424,7 @@ describe('Query Cancellation Utils', () => {
     it('should return correct status for running query', async () => {
       const mockFn = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 1000)));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const getStatus = useQueryCancellationStatus();
@@ -456,7 +456,7 @@ describe('Query Cancellation Utils', () => {
     it('should return correct status for completed query', async () => {
       const mockFn = vi.fn(() => Promise.resolve({ id: '123' }));
 
-      const wrapper = mount(
+      const wrapper: any = mount(
         {
           setup() {
             const getStatus = useQueryCancellationStatus();

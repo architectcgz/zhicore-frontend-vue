@@ -260,7 +260,7 @@ const autoSave = useAutoSave(async () => {
     title: editorState.title,
     content: editorState.content,
     excerpt: generateExcerpt(editorState.content),
-    coverImage: editorState.coverImage,
+    coverImageId: editorState.coverImageId,
     tags: editorState.tags,
     categoryId: editorState.categoryId,
     status: 'DRAFT',

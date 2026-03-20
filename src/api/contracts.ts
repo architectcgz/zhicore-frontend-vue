@@ -38,6 +38,7 @@ export function normalizePageResponse<TSource, TTarget>(
     page,
     size,
     hasMore,
+    totalPages: pageResult.pages,
     cursor: pageResult.cursor ?? null,
   };
 }

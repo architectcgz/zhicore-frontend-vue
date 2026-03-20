@@ -28,7 +28,7 @@
       <div class="post-meta">
         <div class="author-info">
           <img
-            :src="item.post.author.avatar"
+            :src="item.post.author.avatar || undefined"
             :alt="item.post.author.nickname"
             class="author-avatar"
           >
