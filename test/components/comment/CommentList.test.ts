@@ -3,8 +3,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
-import { createPinia, setActivePinia } from 'pinia';
+import { mount, flushPromises } from '@vue/test-utils';
+import { createPinia } from 'pinia';
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
 import CommentList from '@/components/comment/CommentList.vue';
 import { commentApi } from '@/api/comment';
 import type { Comment, PaginatedResponse } from '@/types';
@@ -21,7 +22,7 @@ vi.mock('@/api/comment', () => ({
 }));
 
 // Mock components
-vi.mock('./CommentItem.vue', () => ({
+vi.mock('@/components/comment/CommentItem.vue', () => ({
   default: {
     name: 'CommentItem',
     template: '<div class="comment-item-mock">{{ comment.content }}</div>',
@@ -47,6 +48,8 @@ vi.mock('@/components/common/EmptyState.vue', () => ({
 }));
 
 describe('CommentList', () => {
+  let queryClient: QueryClient;
+
   const mockComments: Comment[] = [
     {
       id: '1',
@@ -88,31 +91,42 @@ describe('CommentList', () => {
   };
 
   beforeEach(() => {
-    setActivePinia(createPinia());
     vi.clearAllMocks();
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
   });
+
+  const createWrapper = () =>
+    mount(CommentList, {
+      props: {
+        postId: 'post-1',
+      },
+      global: {
+        plugins: [
+          createPinia(),
+          [VueQueryPlugin, { queryClient }],
+        ],
+      },
+    });
 
   it('应该正确渲染评论列表', async () => {
     // Mock API 响应
     vi.mocked(commentApi.getCommentsByPostId).mockResolvedValue(mockResponse);
 
-    const wrapper = mount(CommentList, {
-      props: {
-        postId: 'post-1',
-      },
-    });
-
-    // 等待异步操作完成
-    await wrapper.vm.$nextTick();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    const wrapper = createWrapper();
+    await flushPromises();
 
     // 验证 API 调用
     expect(commentApi.getCommentsByPostId).toHaveBeenCalledWith('post-1', {
-      page: 1,
-      size: 20,
       sort: 'latest',
-      loadReplies: false,
+      page: 0,
     });
+    expect(wrapper.find('.comment-item-mock').exists()).toBe(true);
   });
 
   it('应该显示加载状态', () => {
@@ -120,11 +134,7 @@ describe('CommentList', () => {
       () => new Promise(() => {}) // 永不解决的 Promise
     );
 
-    const wrapper = mount(CommentList, {
-      props: {
-        postId: 'post-1',
-      },
-    });
+    const wrapper = createWrapper();
 
     expect(wrapper.find('.loading-container').exists()).toBe(true);
     expect(wrapper.find('.loading-spinner-mock').exists()).toBe(true);
@@ -141,14 +151,8 @@ describe('CommentList', () => {
 
     vi.mocked(commentApi.getCommentsByPostId).mockResolvedValue(emptyResponse);
 
-    const wrapper = mount(CommentList, {
-      props: {
-        postId: 'post-1',
-      },
-    });
-
-    await wrapper.vm.$nextTick();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    const wrapper = createWrapper();
+    await flushPromises();
 
     expect(wrapper.find('.empty-state-mock').exists()).toBe(true);
   });
@@ -156,56 +160,38 @@ describe('CommentList', () => {
   it('应该支持排序切换', async () => {
     vi.mocked(commentApi.getCommentsByPostId).mockResolvedValue(mockResponse);
 
-    const wrapper = mount(CommentList, {
-      props: {
-        postId: 'post-1',
-      },
-    });
-
-    await wrapper.vm.$nextTick();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    const wrapper = createWrapper();
+    await flushPromises();
 
     // 点击热门排序
     const hotSortBtn = wrapper.find('.sort-btn:nth-child(2)');
     await hotSortBtn.trigger('click');
+    await flushPromises();
 
     // 验证 API 再次调用，使用热门排序
     expect(commentApi.getCommentsByPostId).toHaveBeenCalledWith('post-1', {
-      page: 1,
-      size: 20,
       sort: 'hot',
-      loadReplies: false,
+      page: 0,
     });
   });
 
   it('应该发出评论数量变化事件', async () => {
     vi.mocked(commentApi.getCommentsByPostId).mockResolvedValue(mockResponse);
 
-    const wrapper = mount(CommentList, {
-      props: {
-        postId: 'post-1',
-      },
-    });
-
-    await wrapper.vm.$nextTick();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    const wrapper = createWrapper();
+    await flushPromises();
 
     // 验证事件发出
-    expect(wrapper.emitted('comment-count-change')).toBeTruthy();
-    expect(wrapper.emitted('comment-count-change')?.[0]).toEqual([1]);
+    const events = wrapper.emitted('comment-count-change');
+    expect(events).toBeTruthy();
+    expect(events?.at(-1)).toEqual([1]);
   });
 
   it('应该显示正确的评论数量', async () => {
     vi.mocked(commentApi.getCommentsByPostId).mockResolvedValue(mockResponse);
 
-    const wrapper = mount(CommentList, {
-      props: {
-        postId: 'post-1',
-      },
-    });
-
-    await wrapper.vm.$nextTick();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    const wrapper = createWrapper();
+    await flushPromises();
 
     expect(wrapper.find('.comment-count').text()).toBe('共 1 条评论');
   });

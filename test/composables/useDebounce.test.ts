@@ -141,6 +141,7 @@ describe('useDebounce', () => {
     const debouncedNumber = useDebounce(numberValue, 300);
 
     numberValue.value = 42;
+    await nextTick();
     vi.advanceTimersByTime(300);
     await nextTick();
     expect(debouncedNumber.value).toBe(42);
@@ -149,6 +150,7 @@ describe('useDebounce', () => {
     const debouncedObject = useDebounce(objectValue, 300);
 
     objectValue.value = { name: 'updated' };
+    await nextTick();
     vi.advanceTimersByTime(300);
     await nextTick();
     expect(debouncedObject.value).toEqual({ name: 'updated' });

@@ -210,7 +210,7 @@ export const queryKeys = {
      * @param postId - 文章 ID
      * @param filters - 查询过滤条件（可选）
      */
-    list: (postId: string, filters?: CommentQueryParams) =>
+    list: (postId: string, filters: CommentQueryParams = {}) =>
       [...queryKeys.comments.lists(), postId, filters] as const,
 
     /**

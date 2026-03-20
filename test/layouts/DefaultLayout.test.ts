@@ -52,7 +52,7 @@ describe('DefaultLayout 侧边栏显示逻辑', () => {
     mockMatchMedia(false);
   });
 
-  it('PC 端非首页不应显示侧边栏（忽略 meta.showSidebar 默认值）', async () => {
+  it('PC 端非首页不应显示侧边栏与首页右侧插槽', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -85,11 +85,13 @@ describe('DefaultLayout 侧边栏显示逻辑', () => {
     // 等待组件更新
     await wrapper.vm.$nextTick();
 
-    // 验证侧边栏不存在
+    // PC 下不显示移动抽屉侧边栏
     expect(wrapper.find('.default-layout__sidebar').exists()).toBe(false);
+    // 非首页不显示右侧 Home 插槽
+    expect(wrapper.find('.default-layout__aside').exists()).toBe(false);
   });
 
-  it('PC 端首页应显示侧边栏', async () => {
+  it('PC 端首页应显示右侧 Home 插槽而不是移动抽屉', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -122,8 +124,10 @@ describe('DefaultLayout 侧边栏显示逻辑', () => {
     // 等待组件更新
     await wrapper.vm.$nextTick();
 
-    // 验证侧边栏存在
-    expect(wrapper.find('.default-layout__sidebar').exists()).toBe(true);
+    // PC 下不显示移动抽屉侧边栏
+    expect(wrapper.find('.default-layout__sidebar').exists()).toBe(false);
+    // 首页显示右侧插槽容器
+    expect(wrapper.find('.default-layout__aside').exists()).toBe(true);
   });
 
   it('移动端当路由 meta.showSidebar 未设置时，应默认显示侧边栏', async () => {

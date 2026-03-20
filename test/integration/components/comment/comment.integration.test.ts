@@ -73,8 +73,11 @@ describe('评论功能集成测试', () => {
     
     // 设置认证状态
     const authStore = useAuthStore();
-    authStore.user = mockUser;
-    authStore.accessToken = 'mock-token';
+    authStore.$patch({
+      user: mockUser,
+      accessToken: 'mock-token',
+      refreshToken: 'mock-refresh-token',
+    });
   });
 
   it('应该能够发表评论', async () => {
@@ -98,10 +101,10 @@ describe('评论功能集成测试', () => {
     await textarea.setValue('新发表的评论');
 
     // 提交评论
-    const submitBtn = wrapper.find('.submit-btn');
-    await submitBtn.trigger('click');
+    await wrapper.find('form').trigger('submit');
 
     // 等待异步操作
+    await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
 
     // 验证 API 调用
@@ -122,12 +125,10 @@ describe('评论功能集成测试', () => {
       },
     });
 
-    // 尝试提交空评论
+    // 空内容时提交按钮应禁用
     const submitBtn = wrapper.find('.submit-btn');
-    await submitBtn.trigger('click');
-
-    // 应该显示错误信息
-    expect(wrapper.find('.error-message').exists()).toBe(true);
+    expect(submitBtn.attributes('disabled')).toBeDefined();
+    expect(commentApi.createComment).not.toHaveBeenCalled();
   });
 
   it('应该支持回复评论', async () => {
@@ -156,8 +157,9 @@ describe('评论功能集成测试', () => {
     await textarea.setValue('这是一条回复');
 
     // 提交回复
-    const submitBtn = wrapper.find('.submit-btn');
-    await submitBtn.trigger('click');
+    await wrapper.find('form').trigger('submit');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
 
     // 验证 API 调用
     expect(commentApi.createComment).toHaveBeenCalledWith({
@@ -179,11 +181,8 @@ describe('评论功能集成测试', () => {
     const textarea = wrapper.find('.comment-textarea');
     await textarea.setValue(longContent);
 
-    // 尝试提交
-    const submitBtn = wrapper.find('.submit-btn');
-    await submitBtn.trigger('click');
-
-    // 应该显示错误信息
+    // 通过 form submit 触发表单校验
+    await wrapper.find('form').trigger('submit');
     expect(wrapper.find('.error-message').exists()).toBe(true);
     expect(wrapper.find('.error-message').text()).toContain('不能超过1000个字符');
   });
@@ -205,8 +204,11 @@ describe('评论功能集成测试', () => {
   it('未登录用户应该看到登录提示', () => {
     // 清除认证状态
     const authStore = useAuthStore();
-    authStore.user = null;
-    authStore.accessToken = null;
+    authStore.$patch({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+    });
 
     const wrapper = mount(CommentForm, {
       props: {
@@ -216,6 +218,8 @@ describe('评论功能集成测试', () => {
 
     // 应该显示登录提示
     expect(wrapper.find('.login-prompt').exists()).toBe(true);
-    expect(wrapper.text()).toContain('请先登录后发表评论');
+    expect(wrapper.find('.login-link').exists()).toBe(true);
+    expect(wrapper.text()).toContain('请先');
+    expect(wrapper.text()).toContain('后发表评论');
   });
 });

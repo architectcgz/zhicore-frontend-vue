@@ -91,13 +91,57 @@ class TokenStorage {
     refreshToken: string | null;
     expiresAt: number | null;
   } {
-    // 优先从内存获取
+    // 浏览器环境优先从 localStorage 获取，避免进程内旧内存 token 污染当前状态
+    try {
+      if (typeof window !== 'undefined') {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+        const expiresAt = this.getTokenExpiresAt();
+
+        // 未持久化 token 时，确保内存 token 不残留
+        if (!accessToken || !refreshToken) {
+          this.memoryTokens.accessToken = null;
+          this.memoryTokens.refreshToken = null;
+          return {
+            accessToken: null,
+            refreshToken: null,
+            expiresAt: null,
+          };
+        }
+
+        const trimmedAccessToken = accessToken.trim();
+        const trimmedRefreshToken = refreshToken.trim();
+
+        // 过滤空白 token，并清理内存镜像
+        if (!trimmedAccessToken || !trimmedRefreshToken) {
+          this.memoryTokens.accessToken = null;
+          this.memoryTokens.refreshToken = null;
+          return {
+            accessToken: null,
+            refreshToken: null,
+            expiresAt: null,
+          };
+        }
+
+        // 同步到内存
+        this.memoryTokens.accessToken = trimmedAccessToken;
+        this.memoryTokens.refreshToken = trimmedRefreshToken;
+
+        return {
+          accessToken: trimmedAccessToken,
+          refreshToken: trimmedRefreshToken,
+          expiresAt,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load tokens from localStorage:', error);
+    }
+
+    // localStorage 不可用时退回内存 token（如受限环境）
     if (this.memoryTokens.accessToken && this.memoryTokens.refreshToken) {
-      // 验证 token 不是空白字符串
-      // Validate tokens are not just whitespace
       const accessToken = this.memoryTokens.accessToken.trim();
       const refreshToken = this.memoryTokens.refreshToken.trim();
-      
+
       if (accessToken && refreshToken) {
         return {
           accessToken,
@@ -105,36 +149,6 @@ class TokenStorage {
           expiresAt: this.getTokenExpiresAt(),
         };
       }
-    }
-
-    // 从 localStorage 获取
-    try {
-      if (typeof window !== 'undefined') {
-        const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-        const expiresAt = this.getTokenExpiresAt();
-
-        // 验证 token 存在且不是空白字符串
-        // Validate tokens exist and are not just whitespace
-        if (accessToken && refreshToken) {
-          const trimmedAccessToken = accessToken.trim();
-          const trimmedRefreshToken = refreshToken.trim();
-          
-          if (trimmedAccessToken && trimmedRefreshToken) {
-            // 同步到内存
-            this.memoryTokens.accessToken = trimmedAccessToken;
-            this.memoryTokens.refreshToken = trimmedRefreshToken;
-
-            return { 
-              accessToken: trimmedAccessToken, 
-              refreshToken: trimmedRefreshToken, 
-              expiresAt 
-            };
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load tokens from localStorage:', error);
     }
 
     return {
@@ -246,10 +260,6 @@ class UserStorage {
 
 // 用户信息存储管理器实例
 const userStorage = new UserStorage();
-
-// Module-scope singleton for global initialization tracking
-// Ensures initAuth() only executes once across all component instances
-let _globalInitialized = false;
 
 export const useAuthStore = defineStore('auth', () => {
   // ========== 状态 ==========
@@ -500,15 +510,8 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 初始化认证状态
    * 从本地存储恢复认证信息
-   * Uses singleton pattern to ensure initialization only happens once
    */
   async function initAuth(): Promise<void> {
-    // Check global singleton first - if already initialized globally, just sync local state
-    if (_globalInitialized) {
-      isInitialized.value = true;
-      return;
-    }
-    
     // Check local initialization state
     if (isInitialized.value) {
       return;
@@ -575,16 +578,14 @@ export const useAuthStore = defineStore('auth', () => {
       // 设置标签页同步监听器
       setupTabSyncListeners();
       
-      // Mark as initialized both locally and globally
+      // 标记本地初始化完成
       isInitialized.value = true;
-      _globalInitialized = true;
     } catch (error) {
       console.error('Auth initialization failed:', error);
       clearAuth();
       
       // Even on error, mark as initialized to prevent retry loops
       isInitialized.value = true;
-      _globalInitialized = true;
     }
   }
 
