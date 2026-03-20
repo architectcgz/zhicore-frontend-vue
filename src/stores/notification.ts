@@ -31,9 +31,46 @@ export const useNotificationStore = defineStore('notification', () => {
   const total = ref(0);
   const currentPage = ref(1);
   const lastQueryParams = ref<NotificationQueryParams>({});
+  const unreadCount = ref(0);
 
   // Query client for cache updates
   const queryClient = useQueryClient();
+
+  const getNotificationListQueryKey = () =>
+    ['notifications', 'list', lastQueryParams.value] as const;
+  const notificationCountQueryKey = ['notifications', 'count'] as const;
+
+  function matchesCurrentFilters(notification: Notification): boolean {
+    const { type, isRead } = lastQueryParams.value;
+
+    if (type && notification.type !== type) {
+      return false;
+    }
+
+    if (typeof isRead === 'boolean' && notification.isRead !== isRead) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function setUnreadCount(count: number) {
+    unreadCount.value = Math.max(0, count);
+    queryClient.setQueryData(notificationCountQueryKey, unreadCount.value);
+  }
+
+  function updateNotificationListCache() {
+    const size =
+      lastQueryParams.value.size ??
+      (notifications.value.length > 0 ? notifications.value.length : 20);
+    queryClient.setQueryData(getNotificationListQueryKey(), {
+      items: notifications.value,
+      total: total.value,
+      page: currentPage.value,
+      size,
+      hasMore: hasMore.value,
+    });
+  }
 
   /**
    * 打开通知面板
@@ -66,19 +103,16 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 实时更新
    */
   function addNotification(notification: Notification) {
-    notifications.value = [notification, ...notifications.value];
-    total.value += 1;
-    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
-      items: notifications.value,
-      total: total.value,
-      page: currentPage.value,
-      size: lastQueryParams.value.size ?? notifications.value.length,
-      hasMore: hasMore.value,
-    });
+    if (matchesCurrentFilters(notification)) {
+      notifications.value = [notification, ...notifications.value];
+      total.value += 1;
+      updateNotificationListCache();
+    }
 
     // 更新未读数量
-    unreadCount.value += 1;
-    queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+    if (!notification.isRead) {
+      setUnreadCount(unreadCount.value + 1);
+    }
   }
 
   /**
@@ -86,22 +120,42 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 实时更新
    */
   function updateNotification(notificationId: string, updates: Partial<Notification>) {
-    notifications.value = notifications.value.map((n) =>
-      n.id === notificationId ? { ...n, ...updates } : n
-    );
-    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
-      items: notifications.value,
-      total: total.value,
-      page: currentPage.value,
-      size: lastQueryParams.value.size ?? notifications.value.length,
-      hasMore: hasMore.value,
-    });
+    const targetIndex = notifications.value.findIndex((n) => n.id === notificationId);
 
-    // 如果标记为已读，更新未读数量
-    if (updates.isRead === true) {
-      unreadCount.value = Math.max(0, unreadCount.value - 1);
-      queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+    // 不在当前列表中时，至少保证未读计数方向正确
+    if (targetIndex === -1) {
+      if (updates.isRead === true) {
+        setUnreadCount(unreadCount.value - 1);
+      } else if (updates.isRead === false) {
+        setUnreadCount(unreadCount.value + 1);
+      }
+      return;
     }
+
+    const previous = notifications.value[targetIndex];
+    const next = { ...previous, ...updates };
+    const matchedBefore = matchesCurrentFilters(previous);
+    const matchedAfter = matchesCurrentFilters(next);
+
+    if (matchedBefore && matchedAfter) {
+      notifications.value[targetIndex] = next;
+    } else if (matchedBefore && !matchedAfter) {
+      notifications.value.splice(targetIndex, 1);
+      total.value = Math.max(0, total.value - 1);
+    } else if (!matchedBefore && matchedAfter) {
+      notifications.value.unshift(next);
+      total.value += 1;
+    }
+
+    if (previous.isRead !== next.isRead) {
+      if (!previous.isRead && next.isRead) {
+        setUnreadCount(unreadCount.value - 1);
+      } else if (previous.isRead && !next.isRead) {
+        setUnreadCount(unreadCount.value + 1);
+      }
+    }
+
+    updateNotificationListCache();
   }
 
   /**
@@ -109,8 +163,8 @@ export const useNotificationStore = defineStore('notification', () => {
    * 从服务器获取最新的未读数量
    */
   async function syncUnreadCount() {
-    unreadCount.value = await notificationApi.getUnreadCount();
-    queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+    const latestUnreadCount = await notificationApi.getUnreadCount();
+    setUnreadCount(latestUnreadCount);
   }
 
   /**
@@ -118,12 +172,16 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 或用户操作
    */
   async function markAsRead(notificationId: string) {
+    const target = notifications.value.find((item) => item.id === notificationId);
     await notificationApi.markAsRead(notificationId);
-    updateNotification(notificationId, { isRead: true });
-  }
+    if (target) {
+      updateNotification(notificationId, { isRead: true });
+      return;
+    }
 
-  // 未读数量的 getter（从 TanStack Query 缓存读取）
-  const unreadCount = ref(0);
+    // 当前列表可能未包含该通知（例如下拉最近通知），仍需更新全局未读数
+    setUnreadCount(unreadCount.value - 1);
+  }
 
   async function fetchRecentNotifications(limit: number = 10): Promise<Notification[]> {
     return notificationApi.getRecentNotifications(limit);
@@ -136,16 +194,17 @@ export const useNotificationStore = defineStore('notification', () => {
       size: params.size ?? 20,
     };
 
-    lastQueryParams.value = { ...params };
-    const response = await notificationApi.getNotifications(requestParams);
+    lastQueryParams.value = { ...params, size: requestParams.size };
+    const [response, latestUnreadCount] = await Promise.all([
+      notificationApi.getNotifications(requestParams),
+      notificationApi.getUnreadCount(),
+    ]);
     notifications.value = response.items;
     total.value = response.total;
     hasMore.value = response.hasMore;
     currentPage.value = response.page;
-    unreadCount.value = response.items.filter((item) => !item.isRead).length;
-
-    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], response);
-    queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+    queryClient.setQueryData(getNotificationListQueryKey(), response);
+    setUnreadCount(latestUnreadCount);
   }
 
   async function loadMoreNotifications(params: NotificationQueryParams = lastQueryParams.value) {
@@ -167,7 +226,7 @@ export const useNotificationStore = defineStore('notification', () => {
       hasMore.value = response.hasMore;
       currentPage.value = response.page;
 
-      queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+      queryClient.setQueryData(getNotificationListQueryKey(), {
         ...response,
         items: notifications.value,
       });
@@ -178,9 +237,17 @@ export const useNotificationStore = defineStore('notification', () => {
 
   async function markAllAsRead() {
     await notificationApi.markAllAsRead();
-    notifications.value = notifications.value.map((item) => ({ ...item, isRead: true }));
-    unreadCount.value = 0;
-    queryClient.setQueryData(['notifications', 'count'], 0);
+    if (lastQueryParams.value.isRead === false) {
+      // 当前视图是“未读”，全部已读后列表应为空
+      notifications.value = [];
+      total.value = 0;
+      hasMore.value = false;
+      currentPage.value = 1;
+    } else {
+      notifications.value = notifications.value.map((item) => ({ ...item, isRead: true }));
+    }
+    setUnreadCount(0);
+    updateNotificationListCache();
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
   }
 
@@ -188,18 +255,13 @@ export const useNotificationStore = defineStore('notification', () => {
     await notificationApi.deleteNotification(notificationId);
     const target = notifications.value.find((item) => item.id === notificationId);
     notifications.value = notifications.value.filter((item) => item.id !== notificationId);
-    total.value = Math.max(0, total.value - 1);
-    if (target && !target.isRead) {
-      unreadCount.value = Math.max(0, unreadCount.value - 1);
-      queryClient.setQueryData(['notifications', 'count'], unreadCount.value);
+    if (target) {
+      total.value = Math.max(0, total.value - 1);
     }
-    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
-      items: notifications.value,
-      total: total.value,
-      page: currentPage.value,
-      size: lastQueryParams.value.size ?? notifications.value.length,
-      hasMore: hasMore.value,
-    });
+    if (target && !target.isRead) {
+      setUnreadCount(unreadCount.value - 1);
+    }
+    updateNotificationListCache();
   }
 
   async function clearAllNotifications() {
@@ -207,9 +269,9 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications.value = [];
     total.value = 0;
     hasMore.value = false;
-    unreadCount.value = 0;
-    queryClient.setQueryData(['notifications', 'count'], 0);
-    queryClient.setQueryData(['notifications', 'list', lastQueryParams.value], {
+    currentPage.value = 1;
+    setUnreadCount(0);
+    queryClient.setQueryData(getNotificationListQueryKey(), {
       items: [],
       total: 0,
       page: 1,
@@ -236,6 +298,7 @@ export const useNotificationStore = defineStore('notification', () => {
     // WebSocket 实时更新辅助方法
     addNotification,
     updateNotification,
+    setUnreadCount,
     syncUnreadCount,
     markAsRead,
     markAllAsRead,

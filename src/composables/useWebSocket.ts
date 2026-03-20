@@ -89,7 +89,7 @@ export function useWebSocket() {
     // 处理未读数量更新
     const unsubscribeUnreadCount = wsManager.on('unread_count', (data: { count: number }) => {
       console.log('Unread count updated:', data.count);
-      notificationStore.unreadCount = data.count;
+      notificationStore.setUnreadCount(data.count);
     });
     unsubscribeFunctions.push(unsubscribeUnreadCount);
 

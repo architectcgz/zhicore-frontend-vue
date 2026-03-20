@@ -5,12 +5,13 @@
  * Feature: blog-frontend-vue
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { nextTick } from 'vue';
 import * as fc from 'fast-check';
 import { PBT_CONFIG } from '../setup';
 import { createTestPinia } from '../utils';
 import { useAuthStore } from '@/stores/auth';
+import { authApi } from '@/api/auth';
 
 describe('认证属性测试', () => {
   beforeEach(() => {
@@ -102,47 +103,55 @@ describe('认证属性测试', () => {
    * For any expired token, authentication state should be unauthenticated
    */
   it('Property 1.1: Token Expiration Consistency', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.record({
-          accessToken: fc.string({ minLength: 20, maxLength: 100 }),
-          refreshToken: fc.string({ minLength: 20, maxLength: 100 }),
-          expiresAt: fc.integer({ min: 0, max: Date.now() - 1000 }), // 过期时间在过去
-        }),
-        async (tokenData) => {
-          // 清理并创建新的 Pinia 实例
-          // Clean up and create fresh Pinia instance
-          localStorage.clear();
-          createTestPinia();
-          
-          // 设置过期的 token（使用正确的键名）
-          localStorage.setItem('zhicore-access-token', tokenData.accessToken);
-          localStorage.setItem('zhicore-refresh-token', tokenData.refreshToken);
-          localStorage.setItem('zhicore-token-expires-at', tokenData.expiresAt.toString());
+    const refreshSpy = vi
+      .spyOn(authApi, 'refreshToken')
+      .mockRejectedValue(new Error('mock refresh failure for property test'));
 
-          const authStore = useAuthStore();
-          await authStore.initAuth();
+    try {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            accessToken: fc.string({ minLength: 20, maxLength: 100 }),
+            refreshToken: fc.string({ minLength: 20, maxLength: 100 }),
+            expiresAt: fc.integer({ min: 0, max: Date.now() - 1000 }), // 过期时间在过去
+          }),
+          async (tokenData) => {
+            // 清理并创建新的 Pinia 实例
+            // Clean up and create fresh Pinia instance
+            localStorage.clear();
+            createTestPinia();
+            
+            // 设置过期的 token（使用正确的键名）
+            localStorage.setItem('zhicore-access-token', tokenData.accessToken);
+            localStorage.setItem('zhicore-refresh-token', tokenData.refreshToken);
+            localStorage.setItem('zhicore-token-expires-at', tokenData.expiresAt.toString());
 
-          // 验证：过期的 token 不应该导致认证状态为 true
-          // Verify: expired token should not result in authenticated state
-          const now = Date.now();
-          const expiresAt = parseInt(localStorage.getItem('zhicore-token-expires-at') || '0');
-          const isExpired = expiresAt < now;
+            const authStore = useAuthStore();
+            await authStore.initAuth();
 
-          if (isExpired) {
-            // 过期的 token 应该被清除或标记为未认证
-            // Expired token should be cleared or marked as unauthenticated
-            expect(authStore.isAuthenticated).toBe(false);
+            // 验证：过期的 token 不应该导致认证状态为 true
+            // Verify: expired token should not result in authenticated state
+            const now = Date.now();
+            const expiresAt = parseInt(localStorage.getItem('zhicore-token-expires-at') || '0');
+            const isExpired = expiresAt < now;
+
+            if (isExpired) {
+              // 过期的 token 应该被清除或标记为未认证
+              // Expired token should be cleared or marked as unauthenticated
+              expect(authStore.isAuthenticated).toBe(false);
+            }
+
+            localStorage.clear();
           }
-
-          localStorage.clear();
+        ),
+        {
+          numRuns: PBT_CONFIG.numRuns,
+          verbose: PBT_CONFIG.verbose,
         }
-      ),
-      {
-        numRuns: PBT_CONFIG.numRuns,
-        verbose: PBT_CONFIG.verbose,
-      }
-    );
+      );
+    } finally {
+      refreshSpy.mockRestore();
+    }
   });
 
   /**
