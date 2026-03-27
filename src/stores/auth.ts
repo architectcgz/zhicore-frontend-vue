@@ -261,6 +261,48 @@ class UserStorage {
 // 用户信息存储管理器实例
 const userStorage = new UserStorage();
 
+type UserLike = Partial<User> & {
+  id?: string | number | null;
+  userName?: string | null;
+  nickName?: string | null;
+  avatarUrl?: string | null;
+  roles?: string[] | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  followersCount?: number | string | null;
+  followingCount?: number | string | null;
+  postsCount?: number | string | null;
+};
+
+function toCount(value: number | string | null | undefined): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeUserData(rawUser: UserLike): User {
+  const username = rawUser.username ?? rawUser.userName ?? '';
+  const roles = Array.isArray(rawUser.roles) ? rawUser.roles : [];
+  const hasAdminRole = roles.some(role => {
+    const normalizedRole = String(role).replace(/^ROLE_/, '').toUpperCase();
+    return normalizedRole === 'ADMIN';
+  });
+
+  return {
+    id: rawUser.id != null ? String(rawUser.id) : '',
+    username,
+    email: rawUser.email ?? '',
+    nickname: rawUser.nickname ?? rawUser.nickName ?? username,
+    avatar: rawUser.avatar ?? rawUser.avatarUrl ?? null,
+    bio: rawUser.bio ?? null,
+    role: rawUser.role ?? (hasAdminRole ? 'ADMIN' : 'USER'),
+    followersCount: toCount(rawUser.followersCount),
+    followingCount: toCount(rawUser.followingCount),
+    postsCount: toCount(rawUser.postsCount),
+    createdAt: rawUser.createdAt ?? '',
+    updatedAt: rawUser.updatedAt ?? rawUser.createdAt ?? '',
+  };
+}
+
 export const useAuthStore = defineStore('auth', () => {
   // ========== 状态 ==========
   
@@ -361,6 +403,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       // 保存认证信息
       await setAuthData(response);
+      await ensureCurrentUserLoaded();
       
       return response;
     } catch (error) {
@@ -384,6 +427,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       // 保存认证信息
       await setAuthData(response);
+      await ensureCurrentUserLoaded();
       
       return response;
     } catch (error) {
@@ -458,12 +502,13 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const userData = await authApi.getCurrentUser();
+      const normalizedUser = normalizeUserData(userData as UserLike);
       
       // 更新用户信息
-      user.value = userData;
-      userStorage.saveUser(userData);
+      user.value = normalizedUser;
+      userStorage.saveUser(normalizedUser);
       
-      return userData;
+      return normalizedUser;
     } catch (error) {
       console.error('Fetch current user failed:', error);
       throw error;
@@ -482,13 +527,33 @@ export const useAuthStore = defineStore('auth', () => {
     // 更新状态
     accessToken.value = newAccessToken;
     refreshToken.value = newRefreshToken;
-    user.value = userData;
     loginTime.value = Date.now();
     tokenExpiresAt.value = Date.now() + (expiresIn * 1000);
     
     // 持久化存储
     tokenStorage.saveTokens(newAccessToken, newRefreshToken, expiresIn);
-    userStorage.saveUser(userData);
+
+    if (userData) {
+      const normalizedUser = normalizeUserData(userData as UserLike);
+      user.value = normalizedUser;
+      userStorage.saveUser(normalizedUser);
+    }
+  }
+
+  /**
+   * 在 token-only 认证响应后补抓当前用户，确保路由守卫能恢复登录态
+   */
+  async function ensureCurrentUserLoaded(): Promise<void> {
+    if (user.value || !accessToken.value) {
+      return;
+    }
+
+    try {
+      await fetchCurrentUser();
+    } catch (error) {
+      clearAuth();
+      throw error;
+    }
   }
 
   /**
@@ -541,7 +606,8 @@ export const useAuthStore = defineStore('auth', () => {
         // 加载用户信息
         const userData = userStorage.loadUser();
         if (userData) {
-          user.value = userData;
+          user.value = normalizeUserData(userData as UserLike);
+          userStorage.saveUser(user.value);
         }
         
         // 检查 Token 是否过期

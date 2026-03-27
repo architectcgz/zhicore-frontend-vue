@@ -168,17 +168,6 @@ onSuccess: (newComment, commentData) => {
 
 ## 通知相关缓存失效规则
 
-### 标记通知为已读 (useMarkAsReadMutation)
-
-**更新缓存**:
-- `queryKeys.notifications.detail(notificationId)` - 直接更新通知状态
-
-**失效查询**:
-- `queryKeys.notifications.unread()` - 未读通知列表
-- `queryKeys.notifications.count()` - 未读计数
-
-**原因**: 标记已读后需要更新未读列表和计数
-
 ### 标记所有通知为已读 (useMarkAllAsReadMutation)
 
 **失效查询**:

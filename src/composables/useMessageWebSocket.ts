@@ -5,16 +5,40 @@
 
 import { onMounted, onUnmounted } from 'vue';
 import { useQueryClient } from '@tanstack/vue-query';
-import { wsManager } from '@/utils/websocket';
+import { messageRealtimeClient } from '@/utils/stomp';
 import { useAuthStore } from '@/stores/auth';
+import { isRealtimeEnabled } from '@/utils/realtime';
 import { queryKeys } from '@/queries/query-keys';
 import type { Message, PaginatedResponse } from '@/types';
-import type { ConnectionEventData, NewMessagePayload, MessageReadPayload } from '@/types/websocket';
+
+type MessagePushType = 'NEW_MESSAGE' | 'MESSAGE_READ' | 'MESSAGE_RECALLED';
+
+interface MessageRealtimePayload {
+  messageId: string | number;
+  conversationId: string | number;
+  senderId: string | number;
+  senderNickName?: string;
+  senderAvatarUrl?: string | null;
+  type?: Message['messageType'];
+  contentPreview?: string;
+  sentAt?: string;
+  pushType: MessagePushType;
+}
 
 /**
  * 使用消息 WebSocket
  */
 export function useMessageWebSocket() {
+  if (!isRealtimeEnabled()) {
+    return {
+      sendMessageViaWebSocket: (_message: { conversationId: string; receiverId: string; content: string }) => {},
+      sendTypingStatus: (_conversationId: string, _isTyping: boolean) => {},
+      markAsReadViaWebSocket: (_conversationId: string, _messageIds: string[]) => {},
+      initWebSocket: () => {},
+      cleanup: () => {},
+    };
+  }
+
   const queryClient = useQueryClient();
   const authStore = useAuthStore();
 
@@ -30,146 +54,127 @@ export function useMessageWebSocket() {
       return;
     }
 
-    // 连接 WebSocket
-    wsManager.connect(authStore.accessToken);
+    if (unsubscribeFunctions.length === 0) {
+      const unsubscribeMessages = messageRealtimeClient.subscribe<MessageRealtimePayload>(
+        '/user/queue/messages',
+        handleMessagePush
+      );
+      unsubscribeFunctions.push(unsubscribeMessages);
+    }
 
-    // 监听新消息
-    const unsubscribeNewMessage = wsManager.on('new_message', handleNewMessage);
-    unsubscribeFunctions.push(unsubscribeNewMessage);
+    void Promise.resolve(messageRealtimeClient.connect(authStore.accessToken))
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.messages.all });
+      })
+      .catch(error => {
+        console.error('Failed to initialize realtime messages:', error);
+      });
+  }
 
-    // 监听消息已读
-    const unsubscribeMessageRead = wsManager.on('message_read', handleMessageRead);
-    unsubscribeFunctions.push(unsubscribeMessageRead);
+  /**
+   * 处理消息推送
+   */
+  function handleMessagePush(data: MessageRealtimePayload) {
+    console.log('Received message push:', data);
 
-    // 监听消息删除
-    const unsubscribeMessageDeleted = wsManager.on('message_deleted', handleMessageDeleted);
-    unsubscribeFunctions.push(unsubscribeMessageDeleted);
+    if (data.pushType === 'MESSAGE_READ') {
+      handleMessageRead(data);
+      return;
+    }
 
-    // 监听正在输入
-    const unsubscribeTyping = wsManager.on('typing', handleTyping);
-    unsubscribeFunctions.push(unsubscribeTyping);
+    if (data.pushType === 'MESSAGE_RECALLED') {
+      handleMessageDeleted(data);
+      return;
+    }
 
-    // 监听在线状态
-    const unsubscribeOnlineStatus = wsManager.on('online_status', handleOnlineStatus);
-    unsubscribeFunctions.push(unsubscribeOnlineStatus);
-
-    // 监听连接状态
-    const unsubscribeConnected = wsManager.on('connected', handleConnected);
-    unsubscribeFunctions.push(unsubscribeConnected);
-
-    const unsubscribeDisconnected = wsManager.on('disconnected', handleDisconnected);
-    unsubscribeFunctions.push(unsubscribeDisconnected);
+    handleNewMessage(data);
   }
 
   /**
    * 处理新消息
    */
-  function handleNewMessage(data: NewMessagePayload) {
-    console.log('Received new message:', data);
-    
-    // 将 NewMessagePayload 转换为 Message 类型
-    const message: Message = {
-      id: data.messageId,
-      conversationId: data.conversationId,
-      senderId: data.senderId,
-      receiverId: '', // 需要从会话信息中获取
-      content: data.content,
-      messageType: 'TEXT', // 默认为文本消息
-      isRead: false,
-      sequence: 0, // 需要从服务器获取
-      createdAt: new Date(data.timestamp).toISOString(),
-    };
-    
-    // 添加消息到 TanStack Query 缓存
+  function handleNewMessage(data: MessageRealtimePayload) {
+    const message = mapMessagePayload(data);
     const messagesQueryKey = queryKeys.messages.messagesList(message.conversationId);
+
     queryClient.setQueryData<PaginatedResponse<Message>>(messagesQueryKey, (old) => {
-      if (!old) return old;
+      if (!old) {
+        return old;
+      }
+
+      if (old.items.some(item => item.id === message.id)) {
+        return old;
+      }
+
       return {
         ...old,
         items: [...old.items, message],
         total: old.total + 1,
       };
     });
-    
-    // 失效会话列表（更新最后消息和未读数）
+
     queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
   }
 
   /**
    * 处理消息已读
    */
-  function handleMessageRead(data: MessageReadPayload) {
-    console.log('Messages marked as read:', data);
-    
-    // 更新消息缓存中的已读状态
-    const messagesQueryKey = queryKeys.messages.messagesList(data.conversationId);
-    const messageIds = data.messageIds || (data.messageId ? [data.messageId] : []);
-    
+  function handleMessageRead(data: MessageRealtimePayload) {
+    const conversationId = String(data.conversationId);
+    const messageId = String(data.messageId);
+    const messagesQueryKey = queryKeys.messages.messagesList(conversationId);
+
     queryClient.setQueryData<PaginatedResponse<Message>>(messagesQueryKey, (old) => {
-      if (!old) return old;
+      if (!old) {
+        return old;
+      }
+
       return {
         ...old,
-        items: old.items.map(msg => 
-          messageIds.includes(msg.id) ? { ...msg, isRead: true } : msg
+        items: old.items.map(message =>
+          message.id === messageId ? { ...message, isRead: true } : message
         ),
       };
     });
-    
-    // 失效会话列表（更新未读数）
+
     queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
   }
 
   /**
-   * 处理消息删除
+   * 处理消息撤回
    */
-  function handleMessageDeleted(data: { messageId: string; conversationId: string }) {
-    console.log('Message deleted:', data);
-    
-    // 从 TanStack Query 缓存中删除消息
-    const messagesQueryKey = queryKeys.messages.messagesList(data.conversationId);
+  function handleMessageDeleted(data: MessageRealtimePayload) {
+    const conversationId = String(data.conversationId);
+    const messageId = String(data.messageId);
+    const messagesQueryKey = queryKeys.messages.messagesList(conversationId);
+
     queryClient.setQueryData<PaginatedResponse<Message>>(messagesQueryKey, (old) => {
-      if (!old) return old;
+      if (!old) {
+        return old;
+      }
+
       return {
         ...old,
-        items: old.items.filter(msg => msg.id !== data.messageId),
-        total: old.total - 1,
+        items: old.items.filter(message => message.id !== messageId),
+        total: Math.max(0, old.total - 1),
       };
     });
+
+    queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
   }
 
-  /**
-   * 处理正在输入
-   */
-  function handleTyping(data: { userId: string; conversationId: string; isTyping: boolean }) {
-    console.log('User typing:', data);
-    
-    // TODO: 显示正在输入指示器
-  }
-
-  /**
-   * 处理在线状态
-   */
-  function handleOnlineStatus(data: { userId: string; isOnline: boolean }) {
-    console.log('User online status:', data);
-    
-    // TODO: 更新用户在线状态
-  }
-
-  /**
-   * 处理连接成功
-   */
-  function handleConnected(data: ConnectionEventData) {
-    console.log('WebSocket connected:', data);
-    
-    // 失效所有消息相关查询，触发重新获取
-    queryClient.invalidateQueries({ queryKey: queryKeys.messages.all });
-  }
-
-  /**
-   * 处理断开连接
-   */
-  function handleDisconnected(data: ConnectionEventData) {
-    console.log('WebSocket disconnected:', data);
+  function mapMessagePayload(data: MessageRealtimePayload): Message {
+    return {
+      id: String(data.messageId),
+      conversationId: String(data.conversationId),
+      senderId: String(data.senderId),
+      receiverId: '',
+      content: data.contentPreview || '',
+      messageType: data.type || 'TEXT',
+      isRead: false,
+      sequence: 0,
+      createdAt: data.sentAt || new Date().toISOString(),
+    };
   }
 
   /**
@@ -180,28 +185,29 @@ export function useMessageWebSocket() {
     receiverId: string;
     content: string;
   }) {
-    wsManager.send('send_message', message);
+    void message;
   }
 
   /**
    * 发送正在输入状态
    */
   function sendTypingStatus(conversationId: string, isTyping: boolean) {
-    const authStore = useAuthStore();
-    wsManager.send('typing', {
-      userId: authStore.user?.id || '',
-      conversationId,
-      isTyping,
-    });
+    void conversationId;
+    void isTyping;
   }
 
   /**
    * 标记消息为已读（通过 WebSocket）
    */
   function markAsReadViaWebSocket(conversationId: string, messageIds: string[]) {
-    wsManager.send('mark_read', {
+    const lastReadMessageId = messageIds.at(-1);
+    if (!lastReadMessageId) {
+      return;
+    }
+
+    messageRealtimeClient.publish('/app/read', {
       conversationId,
-      messageIds,
+      lastReadMessageId,
     });
   }
 
@@ -214,7 +220,7 @@ export function useMessageWebSocket() {
     unsubscribeFunctions.length = 0;
 
     // 断开 WebSocket 连接
-    wsManager.disconnect();
+    messageRealtimeClient.disconnect();
   }
 
   // 生命周期钩子

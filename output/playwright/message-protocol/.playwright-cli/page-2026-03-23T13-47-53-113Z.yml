@@ -1,0 +1,193 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "知 知构" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: 知
+          - generic [ref=e9]: 知构
+        - navigation [ref=e10]:
+          - link "发现 首页" [ref=e11] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e12]: 发现
+            - generic [ref=e13]: 首页
+          - link "内容 文章" [ref=e14] [cursor=pointer]:
+            - /url: /posts
+            - generic [ref=e15]: 内容
+            - generic [ref=e16]: 文章
+          - link "分类 分类" [ref=e17] [cursor=pointer]:
+            - /url: /categories
+            - generic [ref=e18]: 分类
+            - generic [ref=e19]: 分类
+          - link "话题 标签" [ref=e20] [cursor=pointer]:
+            - /url: /tags
+            - generic [ref=e21]: 话题
+            - generic [ref=e22]: 标签
+          - link "趋势 排行榜" [ref=e23] [cursor=pointer]:
+            - /url: /ranking
+            - generic [ref=e24]: 趋势
+            - generic [ref=e25]: 排行榜
+      - generic [ref=e27]:
+        - img [ref=e29]
+        - textbox "搜索文章、作者、标签" [ref=e32]
+        - button "搜索" [ref=e33] [cursor=pointer]:
+          - img [ref=e34]
+          - text: 搜索
+      - generic [ref=e37]:
+        - button "切换主题，当前为自动" [ref=e39] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e44]: 自动
+          - img [ref=e46]
+        - button "登录 / 创建账号" [ref=e48] [cursor=pointer]:
+          - generic [ref=e49]: 登录 / 创建账号
+          - img [ref=e51]
+    - main [ref=e54]:
+      - generic [ref=e57]:
+        - heading "404" [level=1] [ref=e58]
+        - heading "哎呀！页面未找到" [level=2] [ref=e59]
+        - paragraph [ref=e60]: 您访问的页面不存在，可能已被移动或删除。
+        - generic [ref=e61]:
+          - generic [ref=e62]: 搜索内容
+          - generic [ref=e63]:
+            - img
+            - searchbox "搜索文章、话题或作者..." [ref=e64]
+            - button "搜索" [ref=e65] [cursor=pointer]
+        - generic [ref=e66]:
+          - link "返回首页" [ref=e67] [cursor=pointer]:
+            - /url: /
+            - img [ref=e68]
+            - text: 返回首页
+          - link "浏览标签" [ref=e70] [cursor=pointer]:
+            - /url: /tags
+            - img [ref=e71]
+            - text: 浏览标签
+        - generic [ref=e73]:
+          - heading "快速导航" [level=3] [ref=e74]
+          - generic [ref=e75]:
+            - link "首页 返回首页" [ref=e76] [cursor=pointer]:
+              - /url: /
+              - img [ref=e77]
+              - generic [ref=e79]: 首页
+              - generic [ref=e80]: 返回首页
+            - link "标签 浏览所有标签" [ref=e81] [cursor=pointer]:
+              - /url: /tags
+              - img [ref=e82]
+              - generic [ref=e84]: 标签
+              - generic [ref=e85]: 浏览所有标签
+            - link "排行榜 热门内容" [ref=e86] [cursor=pointer]:
+              - /url: /ranking
+              - img [ref=e87]
+              - generic [ref=e89]: 排行榜
+              - generic [ref=e90]: 热门内容
+    - contentinfo [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - heading "知构" [level=2] [ref=e96]
+              - paragraph [ref=e97]: 分享知识，连接世界
+            - paragraph [ref=e98]: 一个专注于技术分享和知识交流的现代化内容社区平台。 我们致力于为开发者和创作者提供优质的内容创作和阅读体验。
+            - generic [ref=e99]:
+              - heading "关注我们" [level=3] [ref=e100]
+              - generic [ref=e101]:
+                - button "🐙 GitHub" [ref=e102] [cursor=pointer]:
+                  - generic [ref=e103]: 🐙
+                  - generic [ref=e104]: GitHub
+                - button "📱 微博" [ref=e105] [cursor=pointer]:
+                  - generic [ref=e106]: 📱
+                  - generic [ref=e107]: 微博
+                - button "💬 微信" [ref=e108] [cursor=pointer]:
+                  - generic [ref=e109]: 💬
+                  - generic [ref=e110]: 微信
+                - button "🐧 QQ" [ref=e111] [cursor=pointer]:
+                  - generic [ref=e112]: 🐧
+                  - generic [ref=e113]: QQ
+                - button "📧 邮箱" [ref=e114] [cursor=pointer]:
+                  - generic [ref=e115]: 📧
+                  - generic [ref=e116]: 邮箱
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - heading "产品" [level=3] [ref=e119]
+              - list [ref=e120]:
+                - listitem [ref=e121]:
+                  - link "首页" [ref=e122] [cursor=pointer]:
+                    - /url: /
+                - listitem [ref=e123]:
+                  - link "文章" [ref=e124] [cursor=pointer]:
+                    - /url: /posts
+                - listitem [ref=e125]:
+                  - link "标签" [ref=e126] [cursor=pointer]:
+                    - /url: /tags
+                - listitem [ref=e127]:
+                  - link "排行榜" [ref=e128] [cursor=pointer]:
+                    - /url: /ranking
+                - listitem [ref=e129]:
+                  - link "搜索" [ref=e130] [cursor=pointer]:
+                    - /url: /search
+            - generic [ref=e131]:
+              - heading "社区" [level=3] [ref=e132]
+              - list [ref=e133]:
+                - listitem [ref=e134]:
+                  - link "用户指南" [ref=e135] [cursor=pointer]:
+                    - /url: /guide
+                - listitem [ref=e136]:
+                  - link "写作规范" [ref=e137] [cursor=pointer]:
+                    - /url: /writing-guide
+                - listitem [ref=e138]:
+                  - link "社区规则" [ref=e139] [cursor=pointer]:
+                    - /url: /community-rules
+                - listitem [ref=e140]:
+                  - link "反馈建议" [ref=e141] [cursor=pointer]:
+                    - /url: /feedback
+                - listitem [ref=e142]:
+                  - link "开发者API" [ref=e143] [cursor=pointer]:
+                    - /url: /api-docs
+            - generic [ref=e144]:
+              - heading "支持" [level=3] [ref=e145]
+              - list [ref=e146]:
+                - listitem [ref=e147]:
+                  - link "帮助中心" [ref=e148] [cursor=pointer]:
+                    - /url: /help
+                - listitem [ref=e149]:
+                  - link "联系我们" [ref=e150] [cursor=pointer]:
+                    - /url: /contact
+                - listitem [ref=e151]:
+                  - link "问题反馈" [ref=e152] [cursor=pointer]:
+                    - /url: /issues
+                - listitem [ref=e153]:
+                  - link "功能建议" [ref=e154] [cursor=pointer]:
+                    - /url: /suggestions
+                - listitem [ref=e155]:
+                  - link "状态页面" [ref=e156] [cursor=pointer]:
+                    - /url: /status
+            - generic [ref=e157]:
+              - heading "法律" [level=3] [ref=e158]
+              - list [ref=e159]:
+                - listitem [ref=e160]:
+                  - link "服务条款" [ref=e161] [cursor=pointer]:
+                    - /url: /terms
+                - listitem [ref=e162]:
+                  - link "隐私政策" [ref=e163] [cursor=pointer]:
+                    - /url: /privacy
+                - listitem [ref=e164]:
+                  - link "Cookie政策" [ref=e165] [cursor=pointer]:
+                    - /url: /cookies
+                - listitem [ref=e166]:
+                  - link "版权声明" [ref=e167] [cursor=pointer]:
+                    - /url: /copyright
+                - listitem [ref=e168]:
+                  - link "免责声明" [ref=e169] [cursor=pointer]:
+                    - /url: /disclaimer
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - paragraph [ref=e173]: © 2026 知构. 保留所有权利.
+            - paragraph [ref=e174]:
+              - link "京ICP备12345678号-1" [ref=e175] [cursor=pointer]:
+                - /url: https://beian.miit.gov.cn/
+          - generic [ref=e178]:
+            - text: Powered by
+            - link "Vue.js" [ref=e179] [cursor=pointer]:
+              - /url: https://vuejs.org
+  - alert [ref=e180]:
+    - img [ref=e182]
+    - paragraph [ref=e184]: sort 仅支持：LATEST、POPULAR

@@ -101,7 +101,7 @@ describe('useAuth', () => {
 
       const { login } = useAuth();
       const credentials: LoginRequest = {
-        username: 'testuser',
+        email: 'test@example.com',
         password: 'password123',
       };
 
@@ -117,7 +117,7 @@ describe('useAuth', () => {
 
       const { login } = useAuth();
       const credentials: LoginRequest = {
-        username: 'testuser',
+        email: 'test@example.com',
         password: 'wrongpassword',
       };
 
@@ -132,7 +132,7 @@ describe('useAuth', () => {
 
       const { login } = useAuth();
       const credentials: LoginRequest = {
-        username: 'testuser',
+        email: 'test@example.com',
         password: 'password123',
       };
 

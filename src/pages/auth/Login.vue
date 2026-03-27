@@ -28,27 +28,27 @@
       >
         <div class="login-form__field">
           <label
-            for="username"
+            for="email"
             class="login-form__label"
           >
-            用户名或邮箱
+            邮箱
           </label>
           <input
-            id="username"
-            v-model="username"
-            type="text"
-            autocomplete="username"
+            id="email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
             :class="[
               'login-form__input',
-              usernameError ? 'login-form__input--error' : ''
+              emailError ? 'login-form__input--error' : ''
             ]"
-            placeholder="请输入用户名或邮箱"
+            placeholder="请输入邮箱"
           >
           <p
-            v-if="usernameError"
+            v-if="emailError"
             class="login-form__error"
           >
-            {{ usernameError }}
+            {{ emailError }}
           </p>
         </div>
 
@@ -224,11 +224,11 @@ const isLoading = ref(false);
 const showPassword = ref(false);
 
 const validationSchema = yup.object({
-  username: yup
+  email: yup
     .string()
-    .required('请输入用户名或邮箱')
-    .min(3, '用户名至少3个字符')
-    .max(50, '用户名不能超过50个字符'),
+    .required('请输入邮箱')
+    .email('请输入有效的邮箱地址')
+    .max(255, '邮箱不能超过255个字符'),
   password: yup
     .string()
     .required('请输入密码')
@@ -240,17 +240,17 @@ const validationSchema = yup.object({
 const { handleSubmit, errors } = useForm({
   validationSchema,
   initialValues: {
-    username: '',
+    email: '',
     password: '',
     rememberMe: false,
   },
 });
 
-const { value: username } = useField<string>('username');
+const { value: email } = useField<string>('email');
 const { value: password } = useField<string>('password');
 const { value: rememberMe } = useField<boolean>('rememberMe');
 
-const usernameError = computed(() => errors.value.username);
+const emailError = computed(() => errors.value.email);
 const passwordError = computed(() => errors.value.password);
 
 const onSubmit = handleSubmit(async (values) => {
@@ -258,7 +258,7 @@ const onSubmit = handleSubmit(async (values) => {
 
   try {
     const loginData: LoginRequest = {
-      username: values.username,
+      email: values.email,
       password: values.password,
       rememberMe: values.rememberMe,
     };

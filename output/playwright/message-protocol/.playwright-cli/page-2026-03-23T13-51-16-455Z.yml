@@ -1,0 +1,538 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e98]:
+    - banner [ref=e99]:
+      - generic [ref=e100]:
+        - link "知 知构" [ref=e101] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e102]: 知
+          - generic [ref=e103]: 知构
+        - navigation [ref=e104]:
+          - link "发现 首页" [ref=e105] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e106]: 发现
+            - generic [ref=e107]: 首页
+          - link "内容 文章" [ref=e108] [cursor=pointer]:
+            - /url: /posts
+            - generic [ref=e109]: 内容
+            - generic [ref=e110]: 文章
+          - link "分类 分类" [ref=e111] [cursor=pointer]:
+            - /url: /categories
+            - generic [ref=e112]: 分类
+            - generic [ref=e113]: 分类
+          - link "话题 标签" [ref=e114] [cursor=pointer]:
+            - /url: /tags
+            - generic [ref=e115]: 话题
+            - generic [ref=e116]: 标签
+          - link "趋势 排行榜" [ref=e117] [cursor=pointer]:
+            - /url: /ranking
+            - generic [ref=e118]: 趋势
+            - generic [ref=e119]: 排行榜
+      - generic [ref=e121]:
+        - img [ref=e123]
+        - textbox "搜索文章、作者、标签" [ref=e126]
+        - button "搜索" [ref=e127] [cursor=pointer]:
+          - img [ref=e128]
+          - text: 搜索
+      - generic [ref=e131]:
+        - button "切换主题，当前为自动" [ref=e133] [cursor=pointer]:
+          - img [ref=e135]
+          - generic [ref=e138]: 自动
+          - img [ref=e140]
+        - button "写文章" [ref=e142] [cursor=pointer]
+        - button "通知" [ref=e144] [cursor=pointer]:
+          - img [ref=e145]
+        - button "消息" [ref=e148] [cursor=pointer]:
+          - img [ref=e149]
+        - button "用户菜单" [ref=e152] [cursor=pointer]:
+          - generic [ref=e153]: 全
+          - generic [ref=e154]:
+            - generic [ref=e155]: 全链路作者
+            - generic [ref=e156]: 创作者
+          - img [ref=e158]
+    - generic [ref=e160]:
+      - main [ref=e161]:
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - generic [ref=e165]:
+              - generic [ref=e166]: 今日推荐
+              - heading "发现精彩内容" [level=1] [ref=e167]
+              - paragraph [ref=e168]: 在这里浏览创作者最新观点、技术文章与社区热议，快速找到值得阅读和参与的话题。
+              - generic [ref=e169]:
+                - link "开始阅读" [ref=e170] [cursor=pointer]:
+                  - /url: /posts
+                - link "发布内容" [ref=e171] [cursor=pointer]:
+                  - /url: /posts/create
+              - generic [ref=e173]: 当前内容已累计 0 次浏览，覆盖创作、工程与社区讨论。
+            - generic [ref=e174]:
+              - generic [ref=e175]:
+                - article [ref=e176]:
+                  - generic [ref=e177]: 最新内容
+                  - strong [ref=e178]: "18"
+                  - generic [ref=e179]: 持续更新的创作者文章
+                - article [ref=e180]:
+                  - generic [ref=e181]: 热议标签
+                  - strong [ref=e182]: "0"
+                  - generic [ref=e183]: 高频参与的主题讨论
+                - article [ref=e184]:
+                  - generic [ref=e185]: 趋势观察
+                  - strong [ref=e186]: "4"
+                  - generic [ref=e187]: 社区关注较高的热门内容
+              - article [ref=e188]:
+                - generic [ref=e189]: 编辑精选
+                - heading "searchfix-20260323-164157" [level=2] [ref=e190]
+                - paragraph
+                - link "查看全文" [ref=e191] [cursor=pointer]:
+                  - /url: /posts/161313324569460740
+                - generic [ref=e192]:
+                  - button "切换到第 1 条精彩内容" [ref=e193] [cursor=pointer]
+                  - button "切换到第 2 条精彩内容" [ref=e194] [cursor=pointer]
+                  - button "切换到第 3 条精彩内容" [ref=e195] [cursor=pointer]
+                  - button "切换到第 4 条精彩内容" [ref=e196] [cursor=pointer]
+                  - button "切换到第 5 条精彩内容" [ref=e197] [cursor=pointer]
+              - generic [ref=e198]:
+                - generic [ref=e199]: 热门主题下已有 0 篇内容
+                - generic [ref=e200]: 3 位活跃作者正在持续更新
+                - generic [ref=e201]: 4 篇热门文章值得优先阅读
+          - generic [ref=e202]:
+            - link "主题 进入标签广场 按主题寻找正在增长的内容脉络。" [ref=e203] [cursor=pointer]:
+              - /url: /tags
+              - generic [ref=e204]: 主题
+              - heading "进入标签广场" [level=2] [ref=e205]
+              - paragraph [ref=e206]: 按主题寻找正在增长的内容脉络。
+            - link "榜单 查看趋势榜单 快速定位本周最有讨论度的内容与作者。" [ref=e207] [cursor=pointer]:
+              - /url: /ranking
+              - generic [ref=e208]: 榜单
+              - heading "查看趋势榜单" [level=2] [ref=e209]
+              - paragraph [ref=e210]: 快速定位本周最有讨论度的内容与作者。
+            - link "写作 开始发布内容 把你的笔记、观察和方案整理成可读文章。" [ref=e211] [cursor=pointer]:
+              - /url: /posts/create
+              - generic [ref=e212]: 写作
+              - heading "开始发布内容" [level=2] [ref=e213]
+              - paragraph [ref=e214]: 把你的笔记、观察和方案整理成可读文章。
+          - generic [ref=e215]:
+            - generic [ref=e216]:
+              - generic [ref=e217]:
+                - generic [ref=e218]:
+                  - generic [ref=e219]: 热门看点
+                  - heading "先看方向，再进入内容流" [level=2] [ref=e220]
+                - paragraph [ref=e221]: 先了解热门主题与活跃作者，再进入你感兴趣的文章内容。
+              - generic [ref=e222]:
+                - generic [ref=e224]:
+                  - generic [ref=e225]:
+                    - generic [ref=e226]: 主题趋势
+                    - heading "热门主题" [level=3] [ref=e227]
+                  - link "查看全部" [ref=e228] [cursor=pointer]:
+                    - /url: /tags
+                - generic [ref=e229]:
+                  - generic [ref=e230]:
+                    - generic [ref=e231]:
+                      - generic [ref=e232]: 活跃作者
+                      - heading "本周作者" [level=3] [ref=e233]
+                    - link "查看榜单" [ref=e234] [cursor=pointer]:
+                      - /url: /ranking
+                  - generic [ref=e235]:
+                    - link "全链路作者 全链路作者 0 从最新文章中被识别出的活跃作者。 0 篇文章 0 关注 0 阅读" [ref=e236] [cursor=pointer]:
+                      - /url: /users/161313324569460738
+                      - img "全链路作者" [ref=e237]
+                      - generic [ref=e238]:
+                        - generic [ref=e239]:
+                          - strong [ref=e240]: 全链路作者
+                          - generic [ref=e241]: "0"
+                        - paragraph [ref=e242]: 从最新文章中被识别出的活跃作者。
+                        - generic [ref=e243]:
+                          - generic [ref=e244]: 0 篇文章
+                          - generic [ref=e245]: 0 关注
+                          - generic [ref=e246]: 0 阅读
+                    - link "api_seed_author_c_1773908242 api_seed_author_c_1773908242 0 从最新文章中被识别出的活跃作者。 0 篇文章 0 关注 0 阅读" [ref=e247] [cursor=pointer]:
+                      - /url: /users/160300433435271177
+                      - img "api_seed_author_c_1773908242" [ref=e248]
+                      - generic [ref=e249]:
+                        - generic [ref=e250]:
+                          - strong [ref=e251]: api_seed_author_c_1773908242
+                          - generic [ref=e252]: "0"
+                        - paragraph [ref=e253]: 从最新文章中被识别出的活跃作者。
+                        - generic [ref=e254]:
+                          - generic [ref=e255]: 0 篇文章
+                          - generic [ref=e256]: 0 关注
+                          - generic [ref=e257]: 0 阅读
+                    - link "api_seed_author_b_1773908242 api_seed_author_b_1773908242 0 从最新文章中被识别出的活跃作者。 0 篇文章 0 关注 0 阅读" [ref=e258] [cursor=pointer]:
+                      - /url: /users/160300433435271174
+                      - img "api_seed_author_b_1773908242" [ref=e259]
+                      - generic [ref=e260]:
+                        - generic [ref=e261]:
+                          - strong [ref=e262]: api_seed_author_b_1773908242
+                          - generic [ref=e263]: "0"
+                        - paragraph [ref=e264]: 从最新文章中被识别出的活跃作者。
+                        - generic [ref=e265]:
+                          - generic [ref=e266]: 0 篇文章
+                          - generic [ref=e267]: 0 关注
+                          - generic [ref=e268]: 0 阅读
+            - main [ref=e269]:
+              - generic [ref=e270]:
+                - generic [ref=e271]:
+                  - generic [ref=e272]: 最新更新
+                  - heading "最新发布" [level=2] [ref=e273]
+                - paragraph [ref=e274]: 按最新发布时间浏览内容，第一时间跟进社区里的新观点与新文章。
+              - generic [ref=e275]:
+                - article [ref=e276]:
+                  - generic [ref=e277]:
+                    - generic [ref=e279]: 推荐阅读
+                    - generic:
+                      - generic: 1 分钟阅读
+                  - generic [ref=e280]:
+                    - generic [ref=e282]: 昨天
+                    - heading "searchfix-20260323-164157" [level=3] [ref=e283]
+                    - paragraph
+                    - generic [ref=e284]:
+                      - generic [ref=e285]:
+                        - button "全链路作者" [ref=e286] [cursor=pointer]:
+                          - img "全链路作者" [ref=e287]
+                        - generic [ref=e288]:
+                          - button "全链路作者" [ref=e289] [cursor=pointer]
+                          - generic [ref=e290]: 1 分钟 · 精选内容
+                      - generic [ref=e291]:
+                        - generic [ref=e292]:
+                          - img [ref=e293]
+                          - text: "0"
+                        - generic [ref=e296]:
+                          - img [ref=e297]
+                          - text: "0"
+                    - generic [ref=e299]:
+                      - button "0" [ref=e300] [cursor=pointer]:
+                        - img [ref=e301]
+                        - generic [ref=e303]: "0"
+                      - button "0" [ref=e304] [cursor=pointer]:
+                        - img [ref=e305]
+                        - generic [ref=e307]: "0"
+                      - generic [ref=e308]:
+                        - text: 阅读全文
+                        - img [ref=e309]
+                - generic [ref=e311]:
+                  - article [ref=e312]:
+                    - generic [ref=e313]:
+                      - generic [ref=e315]: 推荐阅读
+                      - generic:
+                        - generic: 1 分钟阅读
+                    - generic [ref=e316]:
+                      - generic [ref=e318]: 4天前
+                      - heading "API联调文章D-1773908242" [level=3] [ref=e319]
+                      - paragraph
+                      - generic [ref=e320]:
+                        - generic [ref=e321]:
+                          - button "api_seed_author_c_1773908242" [ref=e322] [cursor=pointer]:
+                            - img "api_seed_author_c_1773908242" [ref=e323]
+                          - generic [ref=e324]:
+                            - button "api_seed_author_c_1773908242" [ref=e325] [cursor=pointer]
+                            - generic [ref=e326]: 1 分钟 · 精选内容
+                        - generic [ref=e327]:
+                          - generic [ref=e328]:
+                            - img [ref=e329]
+                            - text: "0"
+                          - generic [ref=e332]:
+                            - img [ref=e333]
+                            - text: "0"
+                      - generic [ref=e335]:
+                        - button "0" [ref=e336] [cursor=pointer]:
+                          - img [ref=e337]
+                          - generic [ref=e339]: "0"
+                        - button "0" [ref=e340] [cursor=pointer]:
+                          - img [ref=e341]
+                          - generic [ref=e343]: "0"
+                        - generic [ref=e344]:
+                          - text: 阅读全文
+                          - img [ref=e345]
+                  - article [ref=e347]:
+                    - generic [ref=e348]:
+                      - generic [ref=e350]: 推荐阅读
+                      - generic:
+                        - generic: 1 分钟阅读
+                    - generic [ref=e351]:
+                      - generic [ref=e353]: 4天前
+                      - heading "API联调文章C-1773908242" [level=3] [ref=e354]
+                      - paragraph
+                      - generic [ref=e355]:
+                        - generic [ref=e356]:
+                          - button "api_seed_author_b_1773908242" [ref=e357] [cursor=pointer]:
+                            - img "api_seed_author_b_1773908242" [ref=e358]
+                          - generic [ref=e359]:
+                            - button "api_seed_author_b_1773908242" [ref=e360] [cursor=pointer]
+                            - generic [ref=e361]: 1 分钟 · 精选内容
+                        - generic [ref=e362]:
+                          - generic [ref=e363]:
+                            - img [ref=e364]
+                            - text: "0"
+                          - generic [ref=e367]:
+                            - img [ref=e368]
+                            - text: "0"
+                      - generic [ref=e370]:
+                        - button "0" [ref=e371] [cursor=pointer]:
+                          - img [ref=e372]
+                          - generic [ref=e374]: "0"
+                        - button "0" [ref=e375] [cursor=pointer]:
+                          - img [ref=e376]
+                          - generic [ref=e378]: "0"
+                        - generic [ref=e379]:
+                          - text: 阅读全文
+                          - img [ref=e380]
+                  - article [ref=e382]:
+                    - generic [ref=e383]:
+                      - generic [ref=e385]: 推荐阅读
+                      - generic:
+                        - generic: 1 分钟阅读
+                    - generic [ref=e386]:
+                      - generic [ref=e388]: 4天前
+                      - heading "API联调文章B-1773908242" [level=3] [ref=e389]
+                      - paragraph
+                      - generic [ref=e390]:
+                        - generic [ref=e391]:
+                          - button "api_seed_author_a_1773908242" [ref=e392] [cursor=pointer]:
+                            - img "api_seed_author_a_1773908242" [ref=e393]
+                          - generic [ref=e394]:
+                            - button "api_seed_author_a_1773908242" [ref=e395] [cursor=pointer]
+                            - generic [ref=e396]: 1 分钟 · 精选内容
+                        - generic [ref=e397]:
+                          - generic [ref=e398]:
+                            - img [ref=e399]
+                            - text: "0"
+                          - generic [ref=e402]:
+                            - img [ref=e403]
+                            - text: "0"
+                      - generic [ref=e405]:
+                        - button "0" [ref=e406] [cursor=pointer]:
+                          - img [ref=e407]
+                          - generic [ref=e409]: "0"
+                        - button "0" [ref=e410] [cursor=pointer]:
+                          - img [ref=e411]
+                          - generic [ref=e413]: "0"
+                        - generic [ref=e414]:
+                          - text: 阅读全文
+                          - img [ref=e415]
+                  - article [ref=e417]:
+                    - generic [ref=e418]:
+                      - generic [ref=e420]: 推荐阅读
+                      - generic:
+                        - generic: 1 分钟阅读
+                    - generic [ref=e421]:
+                      - generic [ref=e423]: 4天前
+                      - heading "API联调文章A-1773908242" [level=3] [ref=e424]
+                      - paragraph
+                      - generic [ref=e425]:
+                        - generic [ref=e426]:
+                          - button "api_seed_author_a_1773908242" [ref=e427] [cursor=pointer]:
+                            - img "api_seed_author_a_1773908242" [ref=e428]
+                          - generic [ref=e429]:
+                            - button "api_seed_author_a_1773908242" [ref=e430] [cursor=pointer]
+                            - generic [ref=e431]: 1 分钟 · 精选内容
+                        - generic [ref=e432]:
+                          - generic [ref=e433]:
+                            - img [ref=e434]
+                            - text: "0"
+                          - generic [ref=e437]:
+                            - img [ref=e438]
+                            - text: "0"
+                      - generic [ref=e440]:
+                        - button "0" [ref=e441] [cursor=pointer]:
+                          - img [ref=e442]
+                          - generic [ref=e444]: "0"
+                        - button "0" [ref=e445] [cursor=pointer]:
+                          - img [ref=e446]
+                          - generic [ref=e448]: "0"
+                        - generic [ref=e449]:
+                          - text: 阅读全文
+                          - img [ref=e450]
+            - generic [ref=e452]:
+              - generic [ref=e453]:
+                - generic [ref=e454]: 开始创作
+                - heading "分享你的观察、经验与教程" [level=2] [ref=e455]
+                - paragraph [ref=e456]: 开始发布你的观察、教程和经验，让更多读者在这里看到你的内容。
+              - generic [ref=e457]:
+                - link "立即写作" [ref=e458] [cursor=pointer]:
+                  - /url: /posts/create
+                - link "查看草稿" [ref=e459] [cursor=pointer]:
+                  - /url: /drafts
+          - complementary "侧边栏" [ref=e460]:
+            - region "热门文章" [ref=e461]:
+              - generic [ref=e462]:
+                - generic [ref=e463]:
+                  - generic [ref=e464]:
+                    - paragraph [ref=e465]: 阅读推荐
+                    - heading "热门文章" [level=2] [ref=e466]:
+                      - img [ref=e467]
+                      - text: 热门文章
+                  - paragraph [ref=e469]: 优先阅读当前最受关注的内容。
+                - generic [ref=e470]:
+                  - 'article "第 1 名: Docker tag replay validation 2026-03-16T11:43:40" [ref=e471] [cursor=pointer]':
+                    - generic [ref=e472]:
+                      - generic "排名第 1" [ref=e473]: "1"
+                      - generic [ref=e474]:
+                        - heading "Docker tag replay validation 2026-03-16T11:43:40" [level=3] [ref=e475]
+                        - generic [ref=e476]:
+                          - generic [ref=e477]:
+                            - img [ref=e478]
+                            - generic [ref=e481]: "浏览量:"
+                            - text: "0"
+                          - generic [ref=e482]:
+                            - img [ref=e483]
+                            - generic [ref=e485]: "点赞数:"
+                            - text: "0"
+                  - 'article "第 2 名: docker-loadtest-like-fav-20260316-notags" [ref=e487] [cursor=pointer]':
+                    - generic [ref=e488]:
+                      - generic "排名第 2" [ref=e489]: "2"
+                      - generic [ref=e490]:
+                        - heading "docker-loadtest-like-fav-20260316-notags" [level=3] [ref=e491]
+                        - generic [ref=e492]:
+                          - generic [ref=e493]:
+                            - img [ref=e494]
+                            - generic [ref=e497]: "浏览量:"
+                            - text: "0"
+                          - generic [ref=e498]:
+                            - img [ref=e499]
+                            - generic [ref=e501]: "点赞数:"
+                            - text: "0"
+                  - 'article "第 3 名: replay-20260316-1332" [ref=e503] [cursor=pointer]':
+                    - generic [ref=e504]:
+                      - generic "排名第 3" [ref=e505]: "3"
+                      - generic [ref=e506]:
+                        - heading "replay-20260316-1332" [level=3] [ref=e507]
+                        - generic [ref=e508]:
+                          - generic [ref=e509]:
+                            - img [ref=e510]
+                            - generic [ref=e513]: "浏览量:"
+                            - text: "0"
+                          - generic [ref=e514]:
+                            - img [ref=e515]
+                            - generic [ref=e517]: "点赞数:"
+                            - text: "0"
+                  - 'article "第 4 名: concurrency check" [ref=e519] [cursor=pointer]':
+                    - generic [ref=e520]:
+                      - generic "排名第 4" [ref=e521]: "4"
+                      - generic [ref=e522]:
+                        - heading "concurrency check" [level=3] [ref=e523]
+                        - generic [ref=e524]:
+                          - generic [ref=e525]:
+                            - img [ref=e526]
+                            - generic [ref=e529]: "浏览量:"
+                            - text: "0"
+                          - generic [ref=e530]:
+                            - img [ref=e531]
+                            - generic [ref=e533]: "点赞数:"
+                            - text: "0"
+      - complementary
+    - contentinfo [ref=e534]:
+      - generic [ref=e535]:
+        - generic [ref=e536]:
+          - generic [ref=e537]:
+            - generic [ref=e538]:
+              - heading "知构" [level=2] [ref=e539]
+              - paragraph [ref=e540]: 分享知识，连接世界
+            - paragraph [ref=e541]: 一个专注于技术分享和知识交流的现代化内容社区平台。 我们致力于为开发者和创作者提供优质的内容创作和阅读体验。
+            - generic [ref=e542]:
+              - heading "关注我们" [level=3] [ref=e543]
+              - generic [ref=e544]:
+                - button "🐙 GitHub" [ref=e545] [cursor=pointer]:
+                  - generic [ref=e546]: 🐙
+                  - generic [ref=e547]: GitHub
+                - button "📱 微博" [ref=e548] [cursor=pointer]:
+                  - generic [ref=e549]: 📱
+                  - generic [ref=e550]: 微博
+                - button "💬 微信" [ref=e551] [cursor=pointer]:
+                  - generic [ref=e552]: 💬
+                  - generic [ref=e553]: 微信
+                - button "🐧 QQ" [ref=e554] [cursor=pointer]:
+                  - generic [ref=e555]: 🐧
+                  - generic [ref=e556]: QQ
+                - button "📧 邮箱" [ref=e557] [cursor=pointer]:
+                  - generic [ref=e558]: 📧
+                  - generic [ref=e559]: 邮箱
+          - generic [ref=e560]:
+            - generic [ref=e561]:
+              - heading "产品" [level=3] [ref=e562]
+              - list [ref=e563]:
+                - listitem [ref=e564]:
+                  - link "首页" [ref=e565] [cursor=pointer]:
+                    - /url: /
+                - listitem [ref=e566]:
+                  - link "文章" [ref=e567] [cursor=pointer]:
+                    - /url: /posts
+                - listitem [ref=e568]:
+                  - link "标签" [ref=e569] [cursor=pointer]:
+                    - /url: /tags
+                - listitem [ref=e570]:
+                  - link "排行榜" [ref=e571] [cursor=pointer]:
+                    - /url: /ranking
+                - listitem [ref=e572]:
+                  - link "搜索" [ref=e573] [cursor=pointer]:
+                    - /url: /search
+            - generic [ref=e574]:
+              - heading "社区" [level=3] [ref=e575]
+              - list [ref=e576]:
+                - listitem [ref=e577]:
+                  - link "用户指南" [ref=e578] [cursor=pointer]:
+                    - /url: /guide
+                - listitem [ref=e579]:
+                  - link "写作规范" [ref=e580] [cursor=pointer]:
+                    - /url: /writing-guide
+                - listitem [ref=e581]:
+                  - link "社区规则" [ref=e582] [cursor=pointer]:
+                    - /url: /community-rules
+                - listitem [ref=e583]:
+                  - link "反馈建议" [ref=e584] [cursor=pointer]:
+                    - /url: /feedback
+                - listitem [ref=e585]:
+                  - link "开发者API" [ref=e586] [cursor=pointer]:
+                    - /url: /api-docs
+            - generic [ref=e587]:
+              - heading "支持" [level=3] [ref=e588]
+              - list [ref=e589]:
+                - listitem [ref=e590]:
+                  - link "帮助中心" [ref=e591] [cursor=pointer]:
+                    - /url: /help
+                - listitem [ref=e592]:
+                  - link "联系我们" [ref=e593] [cursor=pointer]:
+                    - /url: /contact
+                - listitem [ref=e594]:
+                  - link "问题反馈" [ref=e595] [cursor=pointer]:
+                    - /url: /issues
+                - listitem [ref=e596]:
+                  - link "功能建议" [ref=e597] [cursor=pointer]:
+                    - /url: /suggestions
+                - listitem [ref=e598]:
+                  - link "状态页面" [ref=e599] [cursor=pointer]:
+                    - /url: /status
+            - generic [ref=e600]:
+              - heading "法律" [level=3] [ref=e601]
+              - list [ref=e602]:
+                - listitem [ref=e603]:
+                  - link "服务条款" [ref=e604] [cursor=pointer]:
+                    - /url: /terms
+                - listitem [ref=e605]:
+                  - link "隐私政策" [ref=e606] [cursor=pointer]:
+                    - /url: /privacy
+                - listitem [ref=e607]:
+                  - link "Cookie政策" [ref=e608] [cursor=pointer]:
+                    - /url: /cookies
+                - listitem [ref=e609]:
+                  - link "版权声明" [ref=e610] [cursor=pointer]:
+                    - /url: /copyright
+                - listitem [ref=e611]:
+                  - link "免责声明" [ref=e612] [cursor=pointer]:
+                    - /url: /disclaimer
+        - generic [ref=e614]:
+          - generic [ref=e615]:
+            - paragraph [ref=e616]: © 2026 知构. 保留所有权利.
+            - paragraph [ref=e617]:
+              - link "京ICP备12345678号-1" [ref=e618] [cursor=pointer]:
+                - /url: https://beian.miit.gov.cn/
+          - generic [ref=e621]:
+            - text: Powered by
+            - link "Vue.js" [ref=e622] [cursor=pointer]:
+              - /url: https://vuejs.org
+  - alert [ref=e623]:
+    - img [ref=e625]
+    - paragraph [ref=e627]: 登录成功！
+  - alert [ref=e628]:
+    - img [ref=e630]
+    - paragraph [ref=e632]: 页面渲染出错，请刷新页面
+  - alert [ref=e633]:
+    - img [ref=e635]
+    - paragraph [ref=e637]: 服务器内部错误

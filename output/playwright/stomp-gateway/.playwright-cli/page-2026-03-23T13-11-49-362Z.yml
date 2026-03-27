@@ -1,0 +1,76 @@
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - link "返回知构首页" [ref=e7] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]: 知
+      - generic [ref=e9]: 知构
+    - button "切换主题，当前为自动" [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - img [ref=e18]
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]: 知构账号
+      - heading "登录知构" [level=1] [ref=e23]
+      - paragraph [ref=e24]: 回到你的写作后台、草稿和关注内容。
+      - generic [ref=e25]:
+        - generic [ref=e28]: 统一的内容发布与草稿管理
+        - generic [ref=e31]: 首页主题流与趋势发现入口
+        - generic [ref=e34]: 围绕创作者主页构建个人影响力
+      - generic [ref=e35]:
+        - article [ref=e36]:
+          - generic [ref=e37]: 内容状态
+          - strong [ref=e38]: 在线
+          - generic [ref=e39]: 随时进入写作与阅读
+        - article [ref=e40]:
+          - generic [ref=e41]: 主题场域
+          - strong [ref=e42]: 活跃
+          - generic [ref=e43]: 围绕标签与趋势发现内容
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]: 账号登录
+        - heading "欢迎回来" [level=2] [ref=e50]
+        - paragraph [ref=e51]: 登录您的账户，继续浏览内容流、草稿和个人主页。
+        - generic [ref=e52]:
+          - generic [ref=e53]: 内容流同步
+          - generic [ref=e54]: 草稿自动保存
+          - generic [ref=e55]: 个人主页管理
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]: 邮箱
+          - textbox "邮箱" [ref=e59]:
+            - /placeholder: 请输入邮箱
+        - generic [ref=e60]:
+          - generic [ref=e61]: 密码
+          - generic [ref=e62]:
+            - textbox "密码" [ref=e63]:
+              - /placeholder: 请输入密码
+            - button [ref=e64] [cursor=pointer]:
+              - img [ref=e65]
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - checkbox "记住我" [ref=e70]
+            - generic [ref=e71]: 记住我
+          - link "忘记密码？" [ref=e72] [cursor=pointer]:
+            - /url: /auth/forgot-password
+        - button "登录" [ref=e73] [cursor=pointer]
+        - generic [ref=e74]: 或者使用
+        - generic [ref=e75]:
+          - button "GitHub" [ref=e76] [cursor=pointer]:
+            - img [ref=e77]
+            - generic [ref=e79]: GitHub
+          - button "Google" [ref=e80] [cursor=pointer]:
+            - img [ref=e81]
+            - generic [ref=e86]: Google
+      - paragraph [ref=e88]:
+        - text: 还没有账户？
+        - link "立即注册" [ref=e89] [cursor=pointer]:
+          - /url: /auth/register
+  - contentinfo [ref=e90]:
+    - paragraph [ref=e91]: © 2026 知构. 保留所有权利.
+    - generic [ref=e92]:
+      - link "隐私政策" [ref=e93] [cursor=pointer]:
+        - /url: /privacy
+      - link "服务条款" [ref=e94] [cursor=pointer]:
+        - /url: /terms
+      - link "帮助中心" [ref=e95] [cursor=pointer]:
+        - /url: /help

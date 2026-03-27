@@ -254,6 +254,8 @@ export interface Notification {
   relatedId?: string;
   relatedType?: 'POST' | 'COMMENT' | 'USER';
   isRead: boolean;
+  totalCount?: number;
+  unreadCount?: number;
   createdAt: string;
 }
 
@@ -284,7 +286,7 @@ export interface Conversation {
 
 // 认证相关类型
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
   rememberMe?: boolean;
 }
@@ -300,8 +302,9 @@ export interface RegisterRequest {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
+  user?: User;
   expiresIn: number;
+  tokenType?: string;
 }
 
 // 通知查询参数接口

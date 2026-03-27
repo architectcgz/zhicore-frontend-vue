@@ -300,13 +300,13 @@ const { data: notifications, isLoading } = useNotificationsQuery();
 
 ```typescript
 // 旧代码：使用 Pinia Store
-await notificationStore.markAsRead(notificationId);
+await notificationStore.markAllAsRead();
 
 // 新代码：使用 TanStack Query Mutation
-import { useMarkAsReadMutation } from '@/queries/notifications';
+import { useMarkAllAsReadMutation } from '@/queries/notifications/useMarkAllAsReadMutation';
 
-const { mutate: markAsRead } = useMarkAsReadMutation();
-markAsRead(notificationId);
+const { mutate: markAllAsRead } = useMarkAllAsReadMutation();
+markAllAsRead();
 ```
 
 ## 最佳实践

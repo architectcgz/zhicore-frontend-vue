@@ -6,15 +6,22 @@
 import { onMounted, onUnmounted, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
-import { wsManager } from '@/utils/websocket';
+import { notificationRealtimeClient } from '@/utils/stomp';
+import { mapAggregatedNotificationRecord, type AggregatedNotificationRecord } from '@/utils/notification';
+import { isRealtimeEnabled } from '@/utils/realtime';
 import { ElNotification } from 'element-plus';
 import type { Notification } from '@/types';
-import type {
-  WebSocketMessage,
-  NotificationPayload,
-  ConnectionEventData,
-  ErrorEventData,
-} from '@/types/websocket';
+import type { WebSocketMessage } from '@/types';
+
+interface UnreadCountRealtimePayload {
+  unreadCount?: number;
+  count?: number;
+}
+
+interface AnnouncementPayload {
+  title: string;
+  content: string;
+}
 
 /**
  * WebSocket 连接状态
@@ -29,6 +36,15 @@ export interface WebSocketStatus {
  * @returns WebSocket 相关方法和状态
  */
 export function useWebSocket() {
+  if (!isRealtimeEnabled()) {
+    return {
+      initWebSocket: () => {},
+      disconnectWebSocket: () => {},
+      sendMessage: (_message: WebSocketMessage) => {},
+      isConnected: () => false,
+    };
+  }
+
   const authStore = useAuthStore();
   const notificationStore = useNotificationStore();
 
@@ -44,89 +60,65 @@ export function useWebSocket() {
       return;
     }
 
-    console.log('Initializing WebSocket connection');
-    wsManager.connect(authStore.accessToken);
-
-    // 注册消息处理器
     setupMessageHandlers();
+
+    void Promise.resolve(notificationRealtimeClient.connect(authStore.accessToken))
+      .then(() => Promise.resolve(notificationStore.syncUnreadCount()).catch(error => {
+        console.error('Failed to sync realtime unread count:', error);
+      }))
+      .catch(error => {
+        console.error('Failed to initialize realtime notifications:', error);
+      });
   };
 
   /**
    * 设置消息处理器
    */
   const setupMessageHandlers = () => {
+    if (unsubscribeFunctions.length > 0) {
+      return;
+    }
+
     // 处理新通知
-    const unsubscribeNotification = wsManager.on('notification', (data: NotificationPayload) => {
-      console.log('Received new notification:', data);
-      
-      // 将 NotificationPayload 转换为 Notification 类型
-      const notification: Notification = {
-        id: data.id,
-        userId: '', // WebSocket 通知不包含 userId，使用空字符串
-        type: data.type,
-        title: data.title,
-        content: data.content,
-        relatedId: data.relatedId,
-        isRead: false,
-        createdAt: new Date().toISOString(),
-      };
-      
-      // 添加到通知 store
-      notificationStore.addNotification(notification);
-      
-      // 显示通知提示
-      showNotificationToast(notification);
-    });
+    const unsubscribeNotification = notificationRealtimeClient.subscribe<AggregatedNotificationRecord>(
+      '/user/queue/notifications',
+      (data) => {
+        console.log('Received new notification:', data);
+
+        const notification = mapNotificationPayload(data);
+        notificationStore.addNotification(notification);
+        showNotificationToast(notification);
+      }
+    );
     unsubscribeFunctions.push(unsubscribeNotification);
 
-    // 处理通知已读
-    const unsubscribeNotificationRead = wsManager.on('notification_read', (data: { notificationId: string }) => {
-      console.log('Notification marked as read:', data.notificationId);
-      notificationStore.updateNotification(data.notificationId, { isRead: true });
-    });
-    unsubscribeFunctions.push(unsubscribeNotificationRead);
-
     // 处理未读数量更新
-    const unsubscribeUnreadCount = wsManager.on('unread_count', (data: { count: number }) => {
-      console.log('Unread count updated:', data.count);
-      notificationStore.setUnreadCount(data.count);
-    });
+    const unsubscribeUnreadCount = notificationRealtimeClient.subscribe<UnreadCountRealtimePayload>(
+      '/user/queue/unread-count',
+      (data) => {
+        const unreadCount = data.unreadCount ?? data.count ?? 0;
+        console.log('Unread count updated:', unreadCount);
+        notificationStore.setUnreadCount(unreadCount);
+      }
+    );
     unsubscribeFunctions.push(unsubscribeUnreadCount);
 
-    // 处理连接成功
-    const unsubscribeConnected = wsManager.on('connected', (_data: ConnectionEventData) => {
-      console.log('WebSocket connected successfully');
-      // 同步未读数量
-      notificationStore.syncUnreadCount().catch(error => {
-        console.error('Failed to sync unread count:', error);
-      });
-    });
-    unsubscribeFunctions.push(unsubscribeConnected);
-
-    // 处理连接断开
-    const unsubscribeDisconnected = wsManager.on('disconnected', (data: ConnectionEventData) => {
-      console.log('WebSocket disconnected:', data);
-    });
-    unsubscribeFunctions.push(unsubscribeDisconnected);
-
-    // 处理连接错误
-    const unsubscribeError = wsManager.on('error', (data: ErrorEventData) => {
-      console.error('WebSocket error:', data);
-    });
-    unsubscribeFunctions.push(unsubscribeError);
-
-    // 处理最大重连次数
-    const unsubscribeMaxReconnect = wsManager.on('max_reconnect_attempts', (_data: { attempts: number; timestamp: number }) => {
-      console.error('Max reconnect attempts reached');
-      ElNotification({
-        title: '连接失败',
-        message: '无法连接到服务器，请刷新页面重试',
-        type: 'error',
-        duration: 0,
-      });
-    });
-    unsubscribeFunctions.push(unsubscribeMaxReconnect);
+    const unsubscribeAnnouncement = notificationRealtimeClient.subscribe<AnnouncementPayload>(
+      '/topic/announcements',
+      (data) => {
+        ElNotification({
+          title: data.title,
+          message: data.content,
+          type: 'warning',
+          duration: 5000,
+        });
+      }
+    );
+    unsubscribeFunctions.push(unsubscribeAnnouncement);
   };
+
+  const mapNotificationPayload = (data: AggregatedNotificationRecord): Notification =>
+    mapAggregatedNotificationRecord(data);
 
   /**
    * 显示通知提示
@@ -145,14 +137,6 @@ export function useWebSocket() {
       message: notification.content,
       type: typeMap[notification.type] || 'info',
       duration: 5000,
-      onClick: () => {
-        // 点击通知时标记为已读
-        if (!notification.isRead) {
-          notificationStore.markAsRead(notification.id).catch(error => {
-            console.error('Failed to mark notification as read:', error);
-          });
-        }
-      },
     });
   };
 
@@ -167,7 +151,7 @@ export function useWebSocket() {
     unsubscribeFunctions.length = 0;
     
     // 断开连接
-    wsManager.disconnect();
+    notificationRealtimeClient.disconnect();
   };
 
   /**
@@ -175,7 +159,7 @@ export function useWebSocket() {
    * @param message 完整的 WebSocket 消息对象
    */
   const sendMessage = (message: WebSocketMessage) => {
-    wsManager.send(message.type, message.data);
+    void message;
   };
 
   /**
@@ -183,7 +167,7 @@ export function useWebSocket() {
    * @returns 是否已连接
    */
   const isConnected = () => {
-    return wsManager.isConnected();
+    return notificationRealtimeClient.isConnected();
   };
 
   // 监听认证状态变化
@@ -201,8 +185,8 @@ export function useWebSocket() {
   // 监听页面可见性变化
   if (typeof document !== 'undefined') {
     const handleVisibilityChange = () => {
-      if (authStore.accessToken) {
-        wsManager.handleVisibilityChange(authStore.accessToken);
+      if (!document.hidden && authStore.accessToken) {
+        void Promise.resolve(notificationRealtimeClient.connect(authStore.accessToken));
       }
     };
 

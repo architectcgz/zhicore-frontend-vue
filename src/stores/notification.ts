@@ -22,6 +22,13 @@ export interface NotificationClientState {
 }
 
 export const useNotificationStore = defineStore('notification', () => {
+  const notificationActionTextMap: Record<Notification['type'], string> = {
+    LIKE: '赞了你的内容',
+    COMMENT: '评论了你的文章',
+    FOLLOW: '关注了你',
+    SYSTEM: '发送了系统通知',
+  };
+
   // UI 状态
   const isPanelOpen = ref(false);
   const lastViewedTime = ref<number>(Date.now());
@@ -29,7 +36,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const isLoadingMore = ref(false);
   const hasMore = ref(false);
   const total = ref(0);
-  const currentPage = ref(1);
+  const currentPage = ref(0);
   const lastQueryParams = ref<NotificationQueryParams>({});
   const unreadCount = ref(0);
 
@@ -39,6 +46,53 @@ export const useNotificationStore = defineStore('notification', () => {
   const getNotificationListQueryKey = () =>
     ['notifications', 'list', lastQueryParams.value] as const;
   const notificationCountQueryKey = ['notifications', 'count'] as const;
+
+  function buildNotificationGroupId(notification: Notification): string {
+    return [
+      notification.type,
+      notification.relatedType ?? 'UNKNOWN',
+      notification.relatedId ?? 'NONE',
+    ].join(':');
+  }
+
+  function normalizeNotification(notification: Notification): Notification {
+    const normalizedUnreadCount = notification.unreadCount ?? (notification.isRead ? 0 : 1);
+    const normalizedTotalCount = notification.totalCount ?? 1;
+
+    return {
+      ...notification,
+      id: buildNotificationGroupId(notification),
+      totalCount: normalizedTotalCount,
+      unreadCount: normalizedUnreadCount,
+      isRead: normalizedUnreadCount === 0,
+    };
+  }
+
+  function isAggregatedSnapshot(notification: Notification): boolean {
+    return notification.totalCount != null || notification.unreadCount != null;
+  }
+
+  function buildAggregatedContent(notification: Notification, totalCount: number): string {
+    const actionText = notificationActionTextMap[notification.type];
+    if (!actionText) {
+      return notification.content;
+    }
+
+    const actorPrefixSource = notification.content?.endsWith(actionText)
+      ? notification.content.slice(0, -actionText.length)
+      : '';
+    const actorPrefix = actorPrefixSource.replace(/等\d+人$/, '').trim();
+
+    if (!actorPrefix) {
+      return totalCount > 1 ? actionText : notification.content;
+    }
+
+    if (totalCount <= 1) {
+      return `${actorPrefix}${actionText}`;
+    }
+
+    return `${actorPrefix}等${totalCount}人${actionText}`;
+  }
 
   function matchesCurrentFilters(notification: Notification): boolean {
     const { type, isRead } = lastQueryParams.value;
@@ -103,15 +157,61 @@ export const useNotificationStore = defineStore('notification', () => {
    * 用于 WebSocket 实时更新
    */
   function addNotification(notification: Notification) {
-    if (matchesCurrentFilters(notification)) {
-      notifications.value = [notification, ...notifications.value];
+    const normalizedNotification = normalizeNotification(notification);
+    const aggregatedSnapshot = isAggregatedSnapshot(notification);
+    const targetIndex = notifications.value.findIndex(
+      (item) => buildNotificationGroupId(item) === normalizedNotification.id,
+    );
+
+    if (targetIndex !== -1) {
+      const previous = normalizeNotification(notifications.value[targetIndex]);
+      const mergedNotification: Notification = aggregatedSnapshot
+        ? {
+            ...previous,
+            ...normalizedNotification,
+            id: previous.id,
+            totalCount: normalizedNotification.totalCount ?? previous.totalCount ?? 1,
+            unreadCount: normalizedNotification.unreadCount ?? previous.unreadCount ?? 0,
+          }
+        : {
+            ...previous,
+            ...normalizedNotification,
+            id: previous.id,
+            totalCount: (previous.totalCount ?? 1) + (normalizedNotification.totalCount ?? 1),
+            unreadCount: (previous.unreadCount ?? (previous.isRead ? 0 : 1)) + (normalizedNotification.unreadCount ?? 0),
+          };
+      mergedNotification.content = aggregatedSnapshot
+        ? normalizedNotification.content || buildAggregatedContent(previous, mergedNotification.totalCount ?? 1)
+        : buildAggregatedContent(previous, mergedNotification.totalCount ?? 1);
+      mergedNotification.isRead = (mergedNotification.unreadCount ?? 0) === 0;
+
+      if (matchesCurrentFilters(mergedNotification)) {
+        const remainingNotifications = notifications.value.filter((_, index) => index !== targetIndex);
+        notifications.value = [mergedNotification, ...remainingNotifications];
+      } else {
+        notifications.value = notifications.value.filter((_, index) => index !== targetIndex);
+        total.value = Math.max(0, total.value - 1);
+      }
+
+      const unreadDelta = aggregatedSnapshot
+        ? (mergedNotification.unreadCount ?? 0) - (previous.unreadCount ?? 0)
+        : (normalizedNotification.unreadCount ?? 0);
+      if (unreadDelta !== 0) {
+        setUnreadCount(unreadCount.value + unreadDelta);
+      }
+      updateNotificationListCache();
+      return;
+    }
+
+    if (matchesCurrentFilters(normalizedNotification)) {
+      notifications.value = [normalizedNotification, ...notifications.value];
       total.value += 1;
       updateNotificationListCache();
     }
 
     // 更新未读数量
-    if (!notification.isRead) {
-      setUnreadCount(unreadCount.value + 1);
+    if ((normalizedNotification.unreadCount ?? 0) > 0) {
+      setUnreadCount(unreadCount.value + (normalizedNotification.unreadCount ?? 0));
     }
   }
 
@@ -167,22 +267,6 @@ export const useNotificationStore = defineStore('notification', () => {
     setUnreadCount(latestUnreadCount);
   }
 
-  /**
-   * 标记通知为已读
-   * 用于 WebSocket 或用户操作
-   */
-  async function markAsRead(notificationId: string) {
-    const target = notifications.value.find((item) => item.id === notificationId);
-    await notificationApi.markAsRead(notificationId);
-    if (target) {
-      updateNotification(notificationId, { isRead: true });
-      return;
-    }
-
-    // 当前列表可能未包含该通知（例如下拉最近通知），仍需更新全局未读数
-    setUnreadCount(unreadCount.value - 1);
-  }
-
   async function fetchRecentNotifications(limit: number = 10): Promise<Notification[]> {
     return notificationApi.getRecentNotifications(limit);
   }
@@ -190,7 +274,7 @@ export const useNotificationStore = defineStore('notification', () => {
   async function fetchNotifications(params: NotificationQueryParams = {}) {
     const requestParams = {
       ...params,
-      page: 1,
+      page: 0,
       size: params.size ?? 20,
     };
 
@@ -242,42 +326,17 @@ export const useNotificationStore = defineStore('notification', () => {
       notifications.value = [];
       total.value = 0;
       hasMore.value = false;
-      currentPage.value = 1;
+      currentPage.value = 0;
     } else {
-      notifications.value = notifications.value.map((item) => ({ ...item, isRead: true }));
+      notifications.value = notifications.value.map((item) => ({
+        ...item,
+        isRead: true,
+        unreadCount: 0,
+      }));
     }
     setUnreadCount(0);
     updateNotificationListCache();
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
-  }
-
-  async function deleteNotification(notificationId: string) {
-    await notificationApi.deleteNotification(notificationId);
-    const target = notifications.value.find((item) => item.id === notificationId);
-    notifications.value = notifications.value.filter((item) => item.id !== notificationId);
-    if (target) {
-      total.value = Math.max(0, total.value - 1);
-    }
-    if (target && !target.isRead) {
-      setUnreadCount(unreadCount.value - 1);
-    }
-    updateNotificationListCache();
-  }
-
-  async function clearAllNotifications() {
-    await notificationApi.clearAllNotifications();
-    notifications.value = [];
-    total.value = 0;
-    hasMore.value = false;
-    currentPage.value = 1;
-    setUnreadCount(0);
-    queryClient.setQueryData(getNotificationListQueryKey(), {
-      items: [],
-      total: 0,
-      page: 1,
-      size: lastQueryParams.value.size ?? 20,
-      hasMore: false,
-    });
   }
 
   return {
@@ -300,12 +359,9 @@ export const useNotificationStore = defineStore('notification', () => {
     updateNotification,
     setUnreadCount,
     syncUnreadCount,
-    markAsRead,
     markAllAsRead,
     fetchRecentNotifications,
     fetchNotifications,
     loadMoreNotifications,
-    deleteNotification,
-    clearAllNotifications,
   };
 });

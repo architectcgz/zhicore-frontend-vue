@@ -1,0 +1,79 @@
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - link "返回知构首页" [ref=e7] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]: 知
+      - generic [ref=e9]: 知构
+    - button "切换主题，当前为自动" [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: 自动
+      - img [ref=e19]
+  - main [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]: 知构账号
+      - heading "登录知构" [level=1] [ref=e24]
+      - paragraph [ref=e25]: 回到你的写作后台、草稿和关注内容。
+      - generic [ref=e26]:
+        - generic [ref=e29]: 统一的内容发布与草稿管理
+        - generic [ref=e32]: 首页主题流与趋势发现入口
+        - generic [ref=e35]: 围绕创作者主页构建个人影响力
+      - generic [ref=e36]:
+        - article [ref=e37]:
+          - generic [ref=e38]: 内容状态
+          - strong [ref=e39]: 在线
+          - generic [ref=e40]: 随时进入写作与阅读
+        - article [ref=e41]:
+          - generic [ref=e42]: 主题场域
+          - strong [ref=e43]: 活跃
+          - generic [ref=e44]: 围绕标签与趋势发现内容
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]: 账号登录
+        - heading "欢迎回来" [level=2] [ref=e51]
+        - paragraph [ref=e52]: 登录您的账户，继续浏览内容流、草稿和个人主页。
+        - generic [ref=e53]:
+          - generic [ref=e54]: 内容流同步
+          - generic [ref=e55]: 草稿自动保存
+          - generic [ref=e56]: 个人主页管理
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]: 邮箱
+          - textbox "邮箱" [ref=e60]:
+            - /placeholder: 请输入邮箱
+            - text: Test123456!fullchain_1774155584_author@example.com
+        - generic [ref=e61]:
+          - generic [ref=e62]: 密码
+          - generic [ref=e63]:
+            - textbox "密码" [ref=e64]:
+              - /placeholder: 请输入密码
+            - button [ref=e65] [cursor=pointer]:
+              - img [ref=e66]
+          - paragraph [ref=e97]: 请输入密码
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - checkbox "记住我" [ref=e71]
+            - generic [ref=e72]: 记住我
+          - link "忘记密码？" [ref=e73] [cursor=pointer]:
+            - /url: /auth/forgot-password
+        - button "登录" [active] [ref=e74] [cursor=pointer]
+        - generic [ref=e75]: 或者使用
+        - generic [ref=e76]:
+          - button "GitHub" [ref=e77] [cursor=pointer]:
+            - img [ref=e78]
+            - generic [ref=e80]: GitHub
+          - button "Google" [ref=e81] [cursor=pointer]:
+            - img [ref=e82]
+            - generic [ref=e87]: Google
+      - paragraph [ref=e89]:
+        - text: 还没有账户？
+        - link "立即注册" [ref=e90] [cursor=pointer]:
+          - /url: /auth/register
+  - contentinfo [ref=e91]:
+    - paragraph [ref=e92]: © 2026 知构. 保留所有权利.
+    - generic [ref=e93]:
+      - link "隐私政策" [ref=e94] [cursor=pointer]:
+        - /url: /privacy
+      - link "服务条款" [ref=e95] [cursor=pointer]:
+        - /url: /terms
+      - link "帮助中心" [ref=e96] [cursor=pointer]:
+        - /url: /help

@@ -1,0 +1,13 @@
+{
+  "finalUrl": "http://localhost:3000/",
+  "wsRequests": [],
+  "websocketUrls": [
+    "ws://localhost:3000/?token=q6xsnH0LbSMr"
+  ],
+  "consoleIssues": [
+    {
+      "type": "error",
+      "text": "[VUE_ERROR] TypeError: Cannot read properties of null (reading 'insertBefore')\n    at insert (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:10766:12)\n    at move (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:8737:7)\n    at move (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:8680:7)\n    at moveTeleport (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:3341:9)\n    at Object.process (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:3285:11)\n    at patch (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:7620:16)\n    at patchBlockChildren (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:7974:7)\n    at patchElement (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:7892:7)\n    at processElement (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:7746:9)\n    at patch (http://localhost:3000/node_modules/.vite/deps/chunk-SLIA5NSX.js?v=ef188b5f:7596:11) {componentName: Home, propsData: Proxy(Object), info: component update}"
+    }
+  ]
+}

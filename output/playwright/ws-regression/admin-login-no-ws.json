@@ -1,0 +1,8 @@
+{
+  "finalUrl": "http://localhost:3000/admin/users",
+  "wsRequests": [],
+  "appWebsocketUrls": [],
+  "allWebsocketUrls": [
+    "ws://localhost:3000/?token=q6xsnH0LbSMr"
+  ]
+}

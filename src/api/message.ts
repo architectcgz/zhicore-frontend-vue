@@ -5,6 +5,7 @@
 
 import { httpClient } from '@/utils/request';
 import type { 
+  User,
   Message, 
   Conversation, 
   PaginatedResponse 
@@ -51,6 +52,156 @@ export interface MessageStats {
   unreadMessages: number;
 }
 
+export interface BackendConversationDTO {
+  id: string | number;
+  otherUserId: string | number;
+  otherUserNickName?: string | null;
+  otherUserAvatarUrl?: string | null;
+  lastMessageContent?: string | null;
+  lastMessageAt?: string | null;
+  unreadCount?: number;
+  createdAt?: string | null;
+}
+
+export interface BackendMessageDTO {
+  id: string | number;
+  conversationId: string | number;
+  senderId: string | number;
+  senderNickName?: string | null;
+  senderAvatarUrl?: string | null;
+  receiverId: string | number;
+  type?: NonNullable<MessageSendRequest['messageType']>;
+  content?: string | null;
+  mediaUrl?: string | null;
+  isRead?: boolean;
+  read?: boolean;
+  createdAt?: string | null;
+}
+
+export interface BackendSendMessagePayload {
+  receiverId: string;
+  type: NonNullable<MessageSendRequest['messageType']>;
+  content?: string;
+  mediaUrl?: string;
+}
+
+function toId(value: string | number | null | undefined): string {
+  return value == null ? '' : String(value);
+}
+
+function buildUser(id: string, nickname?: string | null, avatar?: string | null): User {
+  return {
+    id,
+    username: nickname || `user-${id}`,
+    email: '',
+    nickname: nickname || `用户${id}`,
+    avatar: avatar ?? null,
+    bio: null,
+    role: 'USER',
+    followersCount: 0,
+    followingCount: 0,
+    postsCount: 0,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
+export function mapConversationDto(dto: BackendConversationDTO): Conversation {
+  const otherUserId = toId(dto.otherUserId);
+  const updatedAt = dto.lastMessageAt || dto.createdAt || '';
+
+  return {
+    id: toId(dto.id),
+    participantIds: otherUserId ? [otherUserId] : [],
+    participants: otherUserId
+      ? [buildUser(otherUserId, dto.otherUserNickName, dto.otherUserAvatarUrl)]
+      : [],
+    lastMessage: dto.lastMessageContent || dto.lastMessageAt
+      ? {
+          id: `conversation-preview-${toId(dto.id)}`,
+          conversationId: toId(dto.id),
+          senderId: otherUserId,
+          receiverId: '',
+          content: dto.lastMessageContent || '',
+          messageType: 'TEXT',
+          isRead: true,
+          sequence: 0,
+          createdAt: updatedAt,
+        }
+      : undefined,
+    unreadCount: dto.unreadCount ?? 0,
+    updatedAt,
+  };
+}
+
+export function buildConversationPage(
+  conversations: BackendConversationDTO[],
+): PaginatedResponse<Conversation> {
+  return {
+    items: conversations.map(mapConversationDto),
+    total: conversations.length,
+    page: 1,
+    size: conversations.length,
+    hasMore: false,
+  };
+}
+
+export function mapMessageDto(dto: BackendMessageDTO, index: number = 0): Message {
+  return {
+    id: toId(dto.id),
+    conversationId: toId(dto.conversationId),
+    senderId: toId(dto.senderId),
+    receiverId: toId(dto.receiverId),
+    content: dto.content || '',
+    messageType: dto.type || 'TEXT',
+    isRead: dto.isRead ?? dto.read ?? false,
+    sequence: index + 1,
+    createdAt: dto.createdAt || '',
+  };
+}
+
+export function buildMessagePage(messages: BackendMessageDTO[]): PaginatedResponse<Message> {
+  return {
+    items: messages.map((message, index) => mapMessageDto(message, index)),
+    total: messages.length,
+    page: 1,
+    size: messages.length,
+    hasMore: false,
+  };
+}
+
+export function toSendMessagePayload(messageData: MessageSendRequest): BackendSendMessagePayload {
+  const messageType = messageData.messageType || 'TEXT';
+
+  return {
+    receiverId: messageData.receiverId,
+    type: messageType,
+    content: messageData.content,
+  };
+}
+
+function buildConversationQueryParams(params?: ConversationQueryParams): Record<string, unknown> | undefined {
+  if (!params?.size) {
+    return undefined;
+  }
+
+  return {
+    limit: params.size,
+  };
+}
+
+function buildMessageQueryParams(
+  params?: Omit<MessageQueryParams, 'conversationId'>
+): Record<string, unknown> | undefined {
+  if (!params?.size) {
+    return undefined;
+  }
+
+  return {
+    limit: params.size,
+  };
+}
+
 /**
  * 私信 API 服务类
  */
@@ -61,7 +212,11 @@ export class MessageApi {
    * @returns 分页会话列表
    */
   async getConversations(params?: ConversationQueryParams): Promise<PaginatedResponse<Conversation>> {
-    return httpClient.get<PaginatedResponse<Conversation>>('/messages/conversations', params);
+    const response = await httpClient.get<BackendConversationDTO[]>(
+      '/messages/conversations',
+      buildConversationQueryParams(params)
+    );
+    return buildConversationPage(response);
   }
 
   /**
@@ -70,7 +225,8 @@ export class MessageApi {
    * @returns 会话详情
    */
   async getConversationById(conversationId: string): Promise<Conversation> {
-    return httpClient.get<Conversation>(`/messages/conversations/${conversationId}`);
+    const response = await httpClient.get<BackendConversationDTO>(`/messages/conversations/${conversationId}`);
+    return mapConversationDto(response);
   }
 
   /**
@@ -79,7 +235,11 @@ export class MessageApi {
    * @returns 会话信息
    */
   async getOrCreateConversation(userId: string): Promise<Conversation> {
-    return httpClient.post<Conversation>('/messages/conversations', { userId });
+    const response = await httpClient.get<BackendConversationDTO | null>(`/messages/conversations/user/${userId}`);
+    if (!response) {
+      throw new Error('会话不存在，当前后端尚未提供空会话预创建接口');
+    }
+    return mapConversationDto(response);
   }
 
   /**
@@ -88,7 +248,7 @@ export class MessageApi {
    * @returns 分页消息列表
    */
   async getMessages(params: MessageQueryParams): Promise<PaginatedResponse<Message>> {
-    return httpClient.get<PaginatedResponse<Message>>('/messages/history', params);
+    return this.getMessagesByConversationId(params.conversationId, params);
   }
 
   /**
@@ -101,7 +261,11 @@ export class MessageApi {
     conversationId: string,
     params?: Omit<MessageQueryParams, 'conversationId'>
   ): Promise<PaginatedResponse<Message>> {
-    return httpClient.get<PaginatedResponse<Message>>(`/messages/conversations/${conversationId}/messages`, params);
+    const response = await httpClient.get<BackendMessageDTO[]>(
+      `/messages/conversations/${conversationId}/messages`,
+      buildMessageQueryParams(params)
+    );
+    return buildMessagePage(response);
   }
 
   /**
@@ -110,7 +274,11 @@ export class MessageApi {
    * @returns 发送的消息
    */
   async sendMessage(messageData: MessageSendRequest): Promise<Message> {
-    return httpClient.post<Message>('/messages/send', messageData);
+    const response = await httpClient.post<BackendMessageDTO>(
+      '/messages/send',
+      toSendMessagePayload(messageData)
+    );
+    return mapMessageDto(response);
   }
 
   /**
@@ -127,8 +295,8 @@ export class MessageApi {
    * @param conversationId 会话 ID
    * @returns 操作结果
    */
-  async markConversationAsRead(conversationId: string): Promise<{ count: number }> {
-    return httpClient.post<{ count: number }>(`/messages/conversations/${conversationId}/read`);
+  async markConversationAsRead(conversationId: string): Promise<void> {
+    return httpClient.post<void>(`/messages/conversations/${conversationId}/read`);
   }
 
   /**
@@ -161,8 +329,7 @@ export class MessageApi {
    * @returns 未读消息数量
    */
   async getUnreadCount(): Promise<number> {
-    const response = await httpClient.get<{ count: number }>('/messages/unread/count');
-    return response.count;
+    return httpClient.get<number>('/messages/unread/count');
   }
 
   /**

@@ -56,7 +56,7 @@ describe('认证功能集成测试', () => {
       });
 
       // 检查表单元素是否存在
-      expect(wrapper.find('input[type="text"]').exists()).toBe(true);
+      expect(wrapper.find('input[type="email"]').exists()).toBe(true);
       expect(wrapper.find('input[type="password"]').exists()).toBe(true);
       expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
       expect(wrapper.find('button[type="submit"]').exists()).toBe(true);
@@ -105,6 +105,21 @@ describe('认证功能集成测试', () => {
       // 注意：由于 Vue 的响应式特性，这里需要重新查找元素
       const updatedInput = wrapper.find('#password');
       expect(updatedInput.exists()).toBe(true);
+    });
+
+    it('应该使用 email 输入框而不是 username 输入框', async () => {
+      const wrapper = mount(Login, {
+        global: {
+          plugins: [pinia, router],
+        },
+      });
+
+      const emailInput = wrapper.find('#email');
+      expect(emailInput.exists()).toBe(true);
+      expect(wrapper.find('#username').exists()).toBe(false);
+
+      await emailInput.setValue('author@example.com');
+      expect((emailInput.element as HTMLInputElement).value).toBe('author@example.com');
     });
   });
 

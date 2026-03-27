@@ -1,0 +1,468 @@
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - img "Logo" [ref=e7]
+      - generic [ref=e8]: 管理后台
+    - menubar [ref=e9]:
+      - menuitem "仪表板" [ref=e10] [cursor=pointer]:
+        - img [ref=e12]
+        - text: 仪表板
+      - menuitem "用户管理" [ref=e14] [cursor=pointer]:
+        - img [ref=e16]
+        - text: 用户管理
+      - menuitem "文章管理" [ref=e18] [cursor=pointer]:
+        - img [ref=e20]
+        - text: 文章管理
+      - menuitem "评论管理" [ref=e22] [cursor=pointer]:
+        - img [ref=e24]
+        - text: 评论管理
+  - generic [ref=e27]:
+    - banner [ref=e28]:
+      - generic [ref=e29]:
+        - button [ref=e30] [cursor=pointer]:
+          - img [ref=e33]
+        - navigation "Breadcrumb" [ref=e35]:
+          - generic [ref=e36]:
+            - link "管理后台" [ref=e37]
+            - text: /
+          - link "用户管理" [ref=e39]
+      - generic [ref=e40]:
+        - button "返回前台" [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]: 返回前台
+        - button "f fullchain_1774155584_admin" [ref=e44] [cursor=pointer]:
+          - generic [ref=e45]: f
+          - generic [ref=e46]: fullchain_1774155584_admin
+    - main [ref=e47]:
+      - generic [ref=e49]:
+        - generic [ref=e51]:
+          - heading "用户管理" [level=1] [ref=e52]
+          - paragraph [ref=e53]: 查看用户信息，筛选账号状态，并处理启用或禁用等管理操作。
+        - generic [ref=e54]:
+          - alert [ref=e55]:
+            - img [ref=e57]
+            - paragraph [ref=e60]: 支持按关键词和状态筛选用户，并执行启用或禁用等管理操作。
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - generic [ref=e65]: 关键词
+              - generic [ref=e68]:
+                - img [ref=e71]
+                - textbox "关键词" [ref=e73]:
+                  - /placeholder: 用户名 / 昵称 / 邮箱
+            - generic [ref=e74]:
+              - generic [ref=e75]: 状态
+              - generic [ref=e78] [cursor=pointer]:
+                - generic:
+                  - combobox "状态" [ref=e80]
+                  - generic [ref=e81]: 全部
+                - img [ref=e84]
+            - generic [ref=e87]:
+              - button "搜索" [ref=e88] [cursor=pointer]:
+                - img [ref=e90]
+                - generic [ref=e92]: 搜索
+              - button "重置" [ref=e93] [cursor=pointer]:
+                - img [ref=e95]
+                - generic [ref=e97]: 重置
+              - button "刷新" [ref=e98] [cursor=pointer]:
+                - img [ref=e100]
+                - generic [ref=e102]: 刷新
+          - generic [ref=e104]:
+            - generic [ref=e106]:
+              - table [ref=e108]:
+                - rowgroup [ref=e116]:
+                  - row "用户信息 邮箱 角色 状态 注册时间 操作" [ref=e117]:
+                    - columnheader "用户信息" [ref=e118]:
+                      - generic [ref=e119]: 用户信息
+                    - columnheader "邮箱" [ref=e120]:
+                      - generic [ref=e121]: 邮箱
+                    - columnheader "角色" [ref=e122]:
+                      - generic [ref=e123]: 角色
+                    - columnheader "状态" [ref=e124]:
+                      - generic [ref=e125]: 状态
+                    - columnheader "注册时间" [ref=e126]:
+                      - generic [ref=e127]: 注册时间
+                    - columnheader "操作" [ref=e128]:
+                      - generic [ref=e129]: 操作
+              - table [ref=e134]:
+                - rowgroup [ref=e142]:
+                  - row "F fullchain_1774155584_admin @fullchain_1774155584_admin · ID 161313324569460737 fullchain_1774155584_admin@example.com 管理员 普通用户 已禁用 2026/3/22 04:59:44 启用" [ref=e143]:
+                    - cell "F fullchain_1774155584_admin @fullchain_1774155584_admin · ID 161313324569460737" [ref=e144]:
+                      - generic [ref=e146]:
+                        - generic [ref=e147]: F
+                        - generic [ref=e148]:
+                          - generic [ref=e149]: fullchain_1774155584_admin
+                          - generic [ref=e150]: "@fullchain_1774155584_admin · ID 161313324569460737"
+                    - cell "fullchain_1774155584_admin@example.com" [ref=e151]:
+                      - generic [ref=e152]: fullchain_1774155584_admin@example.com
+                    - cell "管理员 普通用户" [ref=e153]:
+                      - generic [ref=e155]:
+                        - generic [ref=e157]: 管理员
+                        - generic [ref=e159]: 普通用户
+                    - cell "已禁用" [ref=e160]:
+                      - generic [ref=e163]: 已禁用
+                    - cell "2026/3/22 04:59:44" [ref=e164]:
+                      - generic [ref=e165]: 2026/3/22 04:59:44
+                    - cell "启用" [ref=e166]:
+                      - button "启用" [ref=e168] [cursor=pointer]:
+                        - generic [ref=e169]: 启用
+                  - row "C chain_test_user @chain_test_user · ID 161313324569460736 chain_test_1774155333@example.com 普通用户 已禁用 2026/3/22 04:55:33 启用" [ref=e170]:
+                    - cell "C chain_test_user @chain_test_user · ID 161313324569460736" [ref=e171]:
+                      - generic [ref=e173]:
+                        - generic [ref=e174]: C
+                        - generic [ref=e175]:
+                          - generic [ref=e176]: chain_test_user
+                          - generic [ref=e177]: "@chain_test_user · ID 161313324569460736"
+                    - cell "chain_test_1774155333@example.com" [ref=e178]:
+                      - generic [ref=e179]: chain_test_1774155333@example.com
+                    - cell "普通用户" [ref=e180]:
+                      - generic [ref=e184]: 普通用户
+                    - cell "已禁用" [ref=e185]:
+                      - generic [ref=e188]: 已禁用
+                    - cell "2026/3/22 04:55:33" [ref=e189]:
+                      - generic [ref=e190]: 2026/3/22 04:55:33
+                    - cell "启用" [ref=e191]:
+                      - button "启用" [ref=e193] [cursor=pointer]:
+                        - generic [ref=e194]: 启用
+                  - row "L loadtest_202603221130 @loadtest_202603221130 · ID 161313324556877824 loadtest_202603221130@example.com 普通用户 已禁用 2026/3/22 03:27:34 启用" [ref=e195]:
+                    - cell "L loadtest_202603221130 @loadtest_202603221130 · ID 161313324556877824" [ref=e196]:
+                      - generic [ref=e198]:
+                        - generic [ref=e199]: L
+                        - generic [ref=e200]:
+                          - generic [ref=e201]: loadtest_202603221130
+                          - generic [ref=e202]: "@loadtest_202603221130 · ID 161313324556877824"
+                    - cell "loadtest_202603221130@example.com" [ref=e203]:
+                      - generic [ref=e204]: loadtest_202603221130@example.com
+                    - cell "普通用户" [ref=e205]:
+                      - generic [ref=e209]: 普通用户
+                    - cell "已禁用" [ref=e210]:
+                      - generic [ref=e213]: 已禁用
+                    - cell "2026/3/22 03:27:34" [ref=e214]:
+                      - generic [ref=e215]: 2026/3/22 03:27:34
+                    - cell "启用" [ref=e216]:
+                      - button "启用" [ref=e218] [cursor=pointer]:
+                        - generic [ref=e219]: 启用
+                  - row "L loadtest_1774107217 @loadtest_1774107217 · ID 161135058034364416 loadtest_1774107217@example.com 普通用户 已禁用 2026/3/21 15:33:37 启用" [ref=e220]:
+                    - cell "L loadtest_1774107217 @loadtest_1774107217 · ID 161135058034364416" [ref=e221]:
+                      - generic [ref=e223]:
+                        - generic [ref=e224]: L
+                        - generic [ref=e225]:
+                          - generic [ref=e226]: loadtest_1774107217
+                          - generic [ref=e227]: "@loadtest_1774107217 · ID 161135058034364416"
+                    - cell "loadtest_1774107217@example.com" [ref=e228]:
+                      - generic [ref=e229]: loadtest_1774107217@example.com
+                    - cell "普通用户" [ref=e230]:
+                      - generic [ref=e234]: 普通用户
+                    - cell "已禁用" [ref=e235]:
+                      - generic [ref=e238]: 已禁用
+                    - cell "2026/3/21 15:33:37" [ref=e239]:
+                      - generic [ref=e240]: 2026/3/21 15:33:37
+                    - cell "启用" [ref=e241]:
+                      - button "启用" [ref=e243] [cursor=pointer]:
+                        - generic [ref=e244]: 启用
+                  - row "全 全链路作者 @fullchain_1774155584_author · ID 161313324569460738 fullchain_1774155584_author@example.com 普通用户 已禁用 2026/3/21 12:59:44 启用" [ref=e245]:
+                    - cell "全 全链路作者 @fullchain_1774155584_author · ID 161313324569460738" [ref=e246]:
+                      - generic [ref=e248]:
+                        - generic [ref=e249]: 全
+                        - generic [ref=e250]:
+                          - generic [ref=e251]: 全链路作者
+                          - generic [ref=e252]: "@fullchain_1774155584_author · ID 161313324569460738"
+                    - cell "fullchain_1774155584_author@example.com" [ref=e253]:
+                      - generic [ref=e254]: fullchain_1774155584_author@example.com
+                    - cell "普通用户" [ref=e255]:
+                      - generic [ref=e259]: 普通用户
+                    - cell "已禁用" [ref=e260]:
+                      - generic [ref=e263]: 已禁用
+                    - cell "2026/3/21 12:59:44" [ref=e264]:
+                      - generic [ref=e265]: 2026/3/21 12:59:44
+                    - cell "启用" [ref=e266]:
+                      - button "启用" [ref=e268] [cursor=pointer]:
+                        - generic [ref=e269]: 启用
+                  - row "A api_seed_author_c_1773908242 @api_seed_author_c_1773908242 · ID 160300433435271177 api_seed_author_c_1773908242@example.com 普通用户 已禁用 2026/3/19 08:17:23 启用" [ref=e270]:
+                    - cell "A api_seed_author_c_1773908242 @api_seed_author_c_1773908242 · ID 160300433435271177" [ref=e271]:
+                      - generic [ref=e273]:
+                        - generic [ref=e274]: A
+                        - generic [ref=e275]:
+                          - generic [ref=e276]: api_seed_author_c_1773908242
+                          - generic [ref=e277]: "@api_seed_author_c_1773908242 · ID 160300433435271177"
+                    - cell "api_seed_author_c_1773908242@example.com" [ref=e278]:
+                      - generic [ref=e279]: api_seed_author_c_1773908242@example.com
+                    - cell "普通用户" [ref=e280]:
+                      - generic [ref=e284]: 普通用户
+                    - cell "已禁用" [ref=e285]:
+                      - generic [ref=e288]: 已禁用
+                    - cell "2026/3/19 08:17:23" [ref=e289]:
+                      - generic [ref=e290]: 2026/3/19 08:17:23
+                    - cell "启用" [ref=e291]:
+                      - button "启用" [ref=e293] [cursor=pointer]:
+                        - generic [ref=e294]: 启用
+                  - row "A api_seed_author_b_1773908242 @api_seed_author_b_1773908242 · ID 160300433435271174 api_seed_author_b_1773908242@example.com 普通用户 已禁用 2026/3/19 08:17:23 启用" [ref=e295]:
+                    - cell "A api_seed_author_b_1773908242 @api_seed_author_b_1773908242 · ID 160300433435271174" [ref=e296]:
+                      - generic [ref=e298]:
+                        - generic [ref=e299]: A
+                        - generic [ref=e300]:
+                          - generic [ref=e301]: api_seed_author_b_1773908242
+                          - generic [ref=e302]: "@api_seed_author_b_1773908242 · ID 160300433435271174"
+                    - cell "api_seed_author_b_1773908242@example.com" [ref=e303]:
+                      - generic [ref=e304]: api_seed_author_b_1773908242@example.com
+                    - cell "普通用户" [ref=e305]:
+                      - generic [ref=e309]: 普通用户
+                    - cell "已禁用" [ref=e310]:
+                      - generic [ref=e313]: 已禁用
+                    - cell "2026/3/19 08:17:23" [ref=e314]:
+                      - generic [ref=e315]: 2026/3/19 08:17:23
+                    - cell "启用" [ref=e316]:
+                      - button "启用" [ref=e318] [cursor=pointer]:
+                        - generic [ref=e319]: 启用
+                  - row "A api_seed_author_a_1773908242 @api_seed_author_a_1773908242 · ID 160300433431076865 api_seed_author_a_1773908242@example.com 普通用户 已禁用 2026/3/19 08:17:22 启用" [ref=e320]:
+                    - cell "A api_seed_author_a_1773908242 @api_seed_author_a_1773908242 · ID 160300433431076865" [ref=e321]:
+                      - generic [ref=e323]:
+                        - generic [ref=e324]: A
+                        - generic [ref=e325]:
+                          - generic [ref=e326]: api_seed_author_a_1773908242
+                          - generic [ref=e327]: "@api_seed_author_a_1773908242 · ID 160300433431076865"
+                    - cell "api_seed_author_a_1773908242@example.com" [ref=e328]:
+                      - generic [ref=e329]: api_seed_author_a_1773908242@example.com
+                    - cell "普通用户" [ref=e330]:
+                      - generic [ref=e334]: 普通用户
+                    - cell "已禁用" [ref=e335]:
+                      - generic [ref=e338]: 已禁用
+                    - cell "2026/3/19 08:17:22" [ref=e339]:
+                      - generic [ref=e340]: 2026/3/19 08:17:22
+                    - cell "启用" [ref=e341]:
+                      - button "启用" [ref=e343] [cursor=pointer]:
+                        - generic [ref=e344]: 启用
+                  - row "F fullchain_1774155584_reader @fullchain_1774155584_reader · ID 161313324569460739 fullchain_1774155584_reader@example.com 普通用户 已禁用 2026/3/19 04:59:45 启用" [ref=e345]:
+                    - cell "F fullchain_1774155584_reader @fullchain_1774155584_reader · ID 161313324569460739" [ref=e346]:
+                      - generic [ref=e348]:
+                        - generic [ref=e349]: F
+                        - generic [ref=e350]:
+                          - generic [ref=e351]: fullchain_1774155584_reader
+                          - generic [ref=e352]: "@fullchain_1774155584_reader · ID 161313324569460739"
+                    - cell "fullchain_1774155584_reader@example.com" [ref=e353]:
+                      - generic [ref=e354]: fullchain_1774155584_reader@example.com
+                    - cell "普通用户" [ref=e355]:
+                      - generic [ref=e359]: 普通用户
+                    - cell "已禁用" [ref=e360]:
+                      - generic [ref=e363]: 已禁用
+                    - cell "2026/3/19 04:59:45" [ref=e364]:
+                      - generic [ref=e365]: 2026/3/19 04:59:45
+                    - cell "启用" [ref=e366]:
+                      - button "启用" [ref=e368] [cursor=pointer]:
+                        - generic [ref=e369]: 启用
+                  - row "C crosstest_1773707616 @crosstest_1773707616 · ID 159457225096560653 crosstest_1773707616@example.com 普通用户 已禁用 2026/3/17 00:33:36 启用" [ref=e370]:
+                    - cell "C crosstest_1773707616 @crosstest_1773707616 · ID 159457225096560653" [ref=e371]:
+                      - generic [ref=e373]:
+                        - generic [ref=e374]: C
+                        - generic [ref=e375]:
+                          - generic [ref=e376]: crosstest_1773707616
+                          - generic [ref=e377]: "@crosstest_1773707616 · ID 159457225096560653"
+                    - cell "crosstest_1773707616@example.com" [ref=e378]:
+                      - generic [ref=e379]: crosstest_1773707616@example.com
+                    - cell "普通用户" [ref=e380]:
+                      - generic [ref=e384]: 普通用户
+                    - cell "已禁用" [ref=e385]:
+                      - generic [ref=e388]: 已禁用
+                    - cell "2026/3/17 00:33:36" [ref=e389]:
+                      - generic [ref=e390]: 2026/3/17 00:33:36
+                    - cell "启用" [ref=e391]:
+                      - button "启用" [ref=e393] [cursor=pointer]:
+                        - generic [ref=e394]: 启用
+                  - row "T testuser_1773707227 @testuser_1773707227 · ID 159457225096560648 test_1773707227@example.com 普通用户 已禁用 2026/3/17 00:27:07 启用" [ref=e395]:
+                    - cell "T testuser_1773707227 @testuser_1773707227 · ID 159457225096560648" [ref=e396]:
+                      - generic [ref=e398]:
+                        - generic [ref=e399]: T
+                        - generic [ref=e400]:
+                          - generic [ref=e401]: testuser_1773707227
+                          - generic [ref=e402]: "@testuser_1773707227 · ID 159457225096560648"
+                    - cell "test_1773707227@example.com" [ref=e403]:
+                      - generic [ref=e404]: test_1773707227@example.com
+                    - cell "普通用户" [ref=e405]:
+                      - generic [ref=e409]: 普通用户
+                    - cell "已禁用" [ref=e410]:
+                      - generic [ref=e413]: 已禁用
+                    - cell "2026/3/17 00:27:07" [ref=e414]:
+                      - generic [ref=e415]: 2026/3/17 00:27:07
+                    - cell "启用" [ref=e416]:
+                      - button "启用" [ref=e418] [cursor=pointer]:
+                        - generic [ref=e419]: 启用
+                  - row "T testuser_1773707183 @testuser_1773707183 · ID 159457225096560641 test_1773707183@example.com 普通用户 已禁用 2026/3/17 00:26:23 启用" [ref=e420]:
+                    - cell "T testuser_1773707183 @testuser_1773707183 · ID 159457225096560641" [ref=e421]:
+                      - generic [ref=e423]:
+                        - generic [ref=e424]: T
+                        - generic [ref=e425]:
+                          - generic [ref=e426]: testuser_1773707183
+                          - generic [ref=e427]: "@testuser_1773707183 · ID 159457225096560641"
+                    - cell "test_1773707183@example.com" [ref=e428]:
+                      - generic [ref=e429]: test_1773707183@example.com
+                    - cell "普通用户" [ref=e430]:
+                      - generic [ref=e434]: 普通用户
+                    - cell "已禁用" [ref=e435]:
+                      - generic [ref=e438]: 已禁用
+                    - cell "2026/3/17 00:26:23" [ref=e439]:
+                      - generic [ref=e440]: 2026/3/17 00:26:23
+                    - cell "启用" [ref=e441]:
+                      - button "启用" [ref=e443] [cursor=pointer]:
+                        - generic [ref=e444]: 启用
+                  - row "T testuser_1773707165 @testuser_1773707165 · ID 159457225096560640 test_1773707165@example.com 普通用户 已禁用 2026/3/17 00:26:05 启用" [ref=e445]:
+                    - cell "T testuser_1773707165 @testuser_1773707165 · ID 159457225096560640" [ref=e446]:
+                      - generic [ref=e448]:
+                        - generic [ref=e449]: T
+                        - generic [ref=e450]:
+                          - generic [ref=e451]: testuser_1773707165
+                          - generic [ref=e452]: "@testuser_1773707165 · ID 159457225096560640"
+                    - cell "test_1773707165@example.com" [ref=e453]:
+                      - generic [ref=e454]: test_1773707165@example.com
+                    - cell "普通用户" [ref=e455]:
+                      - generic [ref=e459]: 普通用户
+                    - cell "已禁用" [ref=e460]:
+                      - generic [ref=e463]: 已禁用
+                    - cell "2026/3/17 00:26:05" [ref=e464]:
+                      - generic [ref=e465]: 2026/3/17 00:26:05
+                    - cell "启用" [ref=e466]:
+                      - button "启用" [ref=e468] [cursor=pointer]:
+                        - generic [ref=e469]: 启用
+                  - row "C comment_chain_ok_1773648154 @comment_chain_ok_1773648154 · ID 159208352373547010 comment_chain_ok_1773648154@example.com 普通用户 已禁用 2026/3/16 08:02:34 启用" [ref=e470]:
+                    - cell "C comment_chain_ok_1773648154 @comment_chain_ok_1773648154 · ID 159208352373547010" [ref=e471]:
+                      - generic [ref=e473]:
+                        - generic [ref=e474]: C
+                        - generic [ref=e475]:
+                          - generic [ref=e476]: comment_chain_ok_1773648154
+                          - generic [ref=e477]: "@comment_chain_ok_1773648154 · ID 159208352373547010"
+                    - cell "comment_chain_ok_1773648154@example.com" [ref=e478]:
+                      - generic [ref=e479]: comment_chain_ok_1773648154@example.com
+                    - cell "普通用户" [ref=e480]:
+                      - generic [ref=e484]: 普通用户
+                    - cell "已禁用" [ref=e485]:
+                      - generic [ref=e488]: 已禁用
+                    - cell "2026/3/16 08:02:34" [ref=e489]:
+                      - generic [ref=e490]: 2026/3/16 08:02:34
+                    - cell "启用" [ref=e491]:
+                      - button "启用" [ref=e493] [cursor=pointer]:
+                        - generic [ref=e494]: 启用
+                  - row "C comment_chain_1773647851 @comment_chain_1773647851 · ID 159208352373547008 comment_chain_1773647851@example.com 普通用户 已禁用 2026/3/16 07:57:31 启用" [ref=e495]:
+                    - cell "C comment_chain_1773647851 @comment_chain_1773647851 · ID 159208352373547008" [ref=e496]:
+                      - generic [ref=e498]:
+                        - generic [ref=e499]: C
+                        - generic [ref=e500]:
+                          - generic [ref=e501]: comment_chain_1773647851
+                          - generic [ref=e502]: "@comment_chain_1773647851 · ID 159208352373547008"
+                    - cell "comment_chain_1773647851@example.com" [ref=e503]:
+                      - generic [ref=e504]: comment_chain_1773647851@example.com
+                    - cell "普通用户" [ref=e505]:
+                      - generic [ref=e509]: 普通用户
+                    - cell "已禁用" [ref=e510]:
+                      - generic [ref=e513]: 已禁用
+                    - cell "2026/3/16 07:57:31" [ref=e514]:
+                      - generic [ref=e515]: 2026/3/16 07:57:31
+                    - cell "启用" [ref=e516]:
+                      - button "启用" [ref=e518] [cursor=pointer]:
+                        - generic [ref=e519]: 启用
+                  - row "C comment_chain_1773647576 @comment_chain_1773647576 · ID 159206805078016001 comment_chain_1773647576@example.com 普通用户 已禁用 2026/3/16 07:52:56 启用" [ref=e520]:
+                    - cell "C comment_chain_1773647576 @comment_chain_1773647576 · ID 159206805078016001" [ref=e521]:
+                      - generic [ref=e523]:
+                        - generic [ref=e524]: C
+                        - generic [ref=e525]:
+                          - generic [ref=e526]: comment_chain_1773647576
+                          - generic [ref=e527]: "@comment_chain_1773647576 · ID 159206805078016001"
+                    - cell "comment_chain_1773647576@example.com" [ref=e528]:
+                      - generic [ref=e529]: comment_chain_1773647576@example.com
+                    - cell "普通用户" [ref=e530]:
+                      - generic [ref=e534]: 普通用户
+                    - cell "已禁用" [ref=e535]:
+                      - generic [ref=e538]: 已禁用
+                    - cell "2026/3/16 07:52:56" [ref=e539]:
+                      - generic [ref=e540]: 2026/3/16 07:52:56
+                    - cell "启用" [ref=e541]:
+                      - button "启用" [ref=e543] [cursor=pointer]:
+                        - generic [ref=e544]: 启用
+                  - row "O outbox_replay_1773647480 @outbox_replay_1773647480 · ID 159206805078016000 outbox_replay_1773647480@example.com 普通用户 已禁用 2026/3/16 07:51:20 启用" [ref=e545]:
+                    - cell "O outbox_replay_1773647480 @outbox_replay_1773647480 · ID 159206805078016000" [ref=e546]:
+                      - generic [ref=e548]:
+                        - generic [ref=e549]: O
+                        - generic [ref=e550]:
+                          - generic [ref=e551]: outbox_replay_1773647480
+                          - generic [ref=e552]: "@outbox_replay_1773647480 · ID 159206805078016000"
+                    - cell "outbox_replay_1773647480@example.com" [ref=e553]:
+                      - generic [ref=e554]: outbox_replay_1773647480@example.com
+                    - cell "普通用户" [ref=e555]:
+                      - generic [ref=e559]: 普通用户
+                    - cell "已禁用" [ref=e560]:
+                      - generic [ref=e563]: 已禁用
+                    - cell "2026/3/16 07:51:20" [ref=e564]:
+                      - generic [ref=e565]: 2026/3/16 07:51:20
+                    - cell "启用" [ref=e566]:
+                      - button "启用" [ref=e568] [cursor=pointer]:
+                        - generic [ref=e569]: 启用
+                  - row "O outbox_replay_1773647358 @outbox_replay_1773647358 · ID 159206295117766656 outbox_replay_1773647358@example.com 普通用户 已禁用 2026/3/16 07:49:18 启用" [ref=e570]:
+                    - cell "O outbox_replay_1773647358 @outbox_replay_1773647358 · ID 159206295117766656" [ref=e571]:
+                      - generic [ref=e573]:
+                        - generic [ref=e574]: O
+                        - generic [ref=e575]:
+                          - generic [ref=e576]: outbox_replay_1773647358
+                          - generic [ref=e577]: "@outbox_replay_1773647358 · ID 159206295117766656"
+                    - cell "outbox_replay_1773647358@example.com" [ref=e578]:
+                      - generic [ref=e579]: outbox_replay_1773647358@example.com
+                    - cell "普通用户" [ref=e580]:
+                      - generic [ref=e584]: 普通用户
+                    - cell "已禁用" [ref=e585]:
+                      - generic [ref=e588]: 已禁用
+                    - cell "2026/3/16 07:49:18" [ref=e589]:
+                      - generic [ref=e590]: 2026/3/16 07:49:18
+                    - cell "启用" [ref=e591]:
+                      - button "启用" [ref=e593] [cursor=pointer]:
+                        - generic [ref=e594]: 启用
+                  - row "L load_1773645624_10_b92fd9 @load_1773645624_10_b92fd9 · ID 159197379600318494 load_1773645624_10_b92fd9@example.com 普通用户 已禁用 2026/3/16 07:20:24 启用" [ref=e595]:
+                    - cell "L load_1773645624_10_b92fd9 @load_1773645624_10_b92fd9 · ID 159197379600318494" [ref=e596]:
+                      - generic [ref=e598]:
+                        - generic [ref=e599]: L
+                        - generic [ref=e600]:
+                          - generic [ref=e601]: load_1773645624_10_b92fd9
+                          - generic [ref=e602]: "@load_1773645624_10_b92fd9 · ID 159197379600318494"
+                    - cell "load_1773645624_10_b92fd9@example.com" [ref=e603]:
+                      - generic [ref=e604]: load_1773645624_10_b92fd9@example.com
+                    - cell "普通用户" [ref=e605]:
+                      - generic [ref=e609]: 普通用户
+                    - cell "已禁用" [ref=e610]:
+                      - generic [ref=e613]: 已禁用
+                    - cell "2026/3/16 07:20:24" [ref=e614]:
+                      - generic [ref=e615]: 2026/3/16 07:20:24
+                    - cell "启用" [ref=e616]:
+                      - button "启用" [ref=e618] [cursor=pointer]:
+                        - generic [ref=e619]: 启用
+                  - row "L load_1773645624_9_a7d4ec @load_1773645624_9_a7d4ec · ID 159197379600318493 load_1773645624_9_a7d4ec@example.com 普通用户 已禁用 2026/3/16 07:20:24 启用" [ref=e620]:
+                    - cell "L load_1773645624_9_a7d4ec @load_1773645624_9_a7d4ec · ID 159197379600318493" [ref=e621]:
+                      - generic [ref=e623]:
+                        - generic [ref=e624]: L
+                        - generic [ref=e625]:
+                          - generic [ref=e626]: load_1773645624_9_a7d4ec
+                          - generic [ref=e627]: "@load_1773645624_9_a7d4ec · ID 159197379600318493"
+                    - cell "load_1773645624_9_a7d4ec@example.com" [ref=e628]:
+                      - generic [ref=e629]: load_1773645624_9_a7d4ec@example.com
+                    - cell "普通用户" [ref=e630]:
+                      - generic [ref=e634]: 普通用户
+                    - cell "已禁用" [ref=e635]:
+                      - generic [ref=e638]: 已禁用
+                    - cell "2026/3/16 07:20:24" [ref=e639]:
+                      - generic [ref=e640]: 2026/3/16 07:20:24
+                    - cell "启用" [ref=e641]:
+                      - button "启用" [ref=e643] [cursor=pointer]:
+                        - generic [ref=e644]: 启用
+            - generic [ref=e646]:
+              - generic [ref=e647]: Total 44
+              - generic [ref=e650] [cursor=pointer]:
+                - generic:
+                  - combobox [ref=e652]
+                  - generic [ref=e653]: 20/page
+                - img [ref=e656]
+              - button "Go to previous page" [disabled] [ref=e658]:
+                - generic:
+                  - img
+              - list [ref=e659]:
+                - listitem "page 1" [ref=e660]: "1"
+                - listitem "page 2" [ref=e661] [cursor=pointer]: "2"
+                - listitem "page 3" [ref=e662] [cursor=pointer]: "3"
+              - button "Go to next page" [ref=e663] [cursor=pointer]:
+                - generic:
+                  - img
+              - generic [ref=e664]:
+                - generic [ref=e665]: Go to
+                - spinbutton "Page" [ref=e668]: "1"

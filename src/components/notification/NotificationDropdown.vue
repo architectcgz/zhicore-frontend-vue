@@ -121,15 +121,6 @@ const loadRecentNotifications = async () => {
  * @param notification 通知对象
  */
 const handleNotificationClick = async (notification: Notification) => {
-  // 标记为已读
-  if (!notification.isRead) {
-    try {
-      await notificationStore.markAsRead(notification.id);
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
-  }
-  
   // 关闭下拉菜单
   emit('update:visible', false);
   emit('close');
