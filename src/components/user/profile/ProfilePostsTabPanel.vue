@@ -47,20 +47,25 @@ const emit = defineEmits<{
     @load-more="emit('load-more')"
   >
     <template #empty-actions>
-      <el-button
+      <button
         v-if="props.showCreateAction"
-        type="primary"
+        class="posts-empty-action"
+        type="button"
         @click="emit('create-post')"
       >
         写文章
-      </el-button>
+      </button>
     </template>
 
-    <div class="posts-grid">
+    <div class="posts-stack">
       <PostCard
         v-for="post in props.state.list"
         :key="post.id"
         :post="post"
+        :max-display-tags="2"
+        size="small"
+        variant="profile"
+        :show-cover="false"
         @like-change="emit('like-change', $event)"
         @favorite-change="emit('favorite-change', $event)"
       />
@@ -69,17 +74,25 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
+.posts-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.posts-empty-action {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-cta);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {
-  .posts-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
+  .posts-stack {
+    gap: 12px;
   }
 }
 </style>

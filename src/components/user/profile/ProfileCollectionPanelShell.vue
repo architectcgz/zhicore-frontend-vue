@@ -66,19 +66,21 @@ const emit = defineEmits<{
       v-if="props.hasMore"
       class="load-more"
     >
-      <el-button
-        :loading="props.loadingMore"
+      <button
+        class="load-more__button"
+        type="button"
+        :disabled="props.loadingMore"
         @click="emit('load-more')"
       >
-        加载更多
-      </el-button>
+        {{ props.loadingMore ? '加载中...' : '加载更多' }}
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .tab-content {
-  padding: var(--space-lg) 0;
+  padding: var(--space-sm) 0 0;
 }
 
 .loading-content,
@@ -103,6 +105,25 @@ const emit = defineEmits<{
 .load-more {
   display: flex;
   justify-content: center;
-  padding: var(--space-lg);
+  padding: var(--space-lg) 0 0;
+}
+
+.load-more__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 116px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 49, 80, 0.12);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.load-more__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 </style>

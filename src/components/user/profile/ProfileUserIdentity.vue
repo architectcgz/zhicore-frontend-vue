@@ -1,45 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { User } from '@/types';
 
 /**
  * ProfileUserIdentity
- * 展示用户头像、昵称、用户名、简介及统计数据（文章/粉丝/关注）。
- * 桌面端：头像上移覆盖 banner 底部，昵称与 username 左对齐，bio 和统计并排。
- * 移动端：所有内容居中排列。
+ * 仅负责展示用户头像、昵称、用户名与简介。
+ * 统计与操作按钮由外层 HeaderSection 负责编排。
  */
 
 interface Props {
-  /** 用户数据对象 */
   user: User;
-  /** 是否为当前登录用户，控制头像编辑按钮的可见性 */
   isCurrentUser: boolean;
 }
 
 const props = defineProps<Props>();
 
-/**
- * 触发头像上传，由父组件处理实际上传逻辑
- * 使用隐藏 <input type="file"> + label 触发，避免直接操作 DOM
- */
 const emit = defineEmits<{
-  /** 用户点击头像编辑按钮后触发，父组件负责打开文件选择器并处理上传 */
   'upload-avatar': [];
 }>();
 
-/** 统计项：文章数、粉丝数、关注数 */
-const statItems = computed(() => [
-  { label: '文章', value: props.user.postsCount },
-  { label: '粉丝', value: props.user.followersCount },
-  { label: '关注', value: props.user.followingCount },
-]);
-
-/** 处理文件输入变更，选择文件后向父组件发出 upload-avatar 事件 */
 function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
     emit('upload-avatar');
-    // 重置 input，确保同一文件可再次触发
     input.value = '';
   }
 }
@@ -47,7 +29,6 @@ function handleFileChange(event: Event) {
 
 <template>
   <div class="user-identity">
-    <!-- 头像区域：桌面端通过 margin-top: -52px 上移覆盖 banner 底部 -->
     <div class="avatar-wrapper">
       <img
         :src="props.user.avatar || '/images/default-avatar.svg'"
@@ -56,9 +37,7 @@ function handleFileChange(event: Event) {
         loading="lazy"
       >
 
-      <!-- 头像编辑按钮：仅当前用户可见 -->
       <template v-if="props.isCurrentUser">
-        <!-- 隐藏的文件输入，接受图片格式 -->
         <input
           id="avatar-upload-input"
           type="file"
@@ -67,7 +46,6 @@ function handleFileChange(event: Event) {
           aria-label="更换头像"
           @change="handleFileChange"
         >
-        <!-- label 触发文件选择器，样式为圆形相机图标按钮 -->
         <label
           for="avatar-upload-input"
           class="avatar-edit-btn"
@@ -76,7 +54,6 @@ function handleFileChange(event: Event) {
           tabindex="0"
           @keydown.enter.prevent="($el as HTMLElement).click()"
         >
-          <!-- 相机图标 SVG -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"
@@ -100,77 +77,47 @@ function handleFileChange(event: Event) {
       </template>
     </div>
 
-    <!-- 信息区域 -->
     <div class="info-section">
-      <!-- 昵称行：桌面端昵称与操作按钮同行，space-between 布局 -->
-      <div class="name-actions-row">
-        <h1 class="user-name">
-          {{ props.user.nickname }}
-        </h1>
-        <!-- 操作按钮插槽（编辑资料 / 关注 / 发私信），由父组件传入 -->
-        <slot name="actions" />
-      </div>
-
-      <!-- @用户名 -->
+      <h1 class="user-name">
+        {{ props.user.nickname }}
+      </h1>
       <p class="user-username">
         @{{ props.user.username }}
       </p>
-
-      <!-- 简介 + 统计数据并排（仅桌面端） -->
-      <div class="bio-stats-row">
-        <!-- 简介（有内容才渲染） -->
-        <p
-          v-if="props.user.bio"
-          class="user-bio"
-        >
-          {{ props.user.bio }}
-        </p>
-
-        <!-- 统计数据 -->
-        <div class="user-stats">
-          <div
-            v-for="item in statItems"
-            :key="item.label"
-            class="stat-item"
-          >
-            <span class="stat-number">{{ item.value }}</span>
-            <span class="stat-label">{{ item.label }}</span>
-          </div>
-        </div>
-      </div>
+      <p class="user-bio">
+        {{ props.user.bio || '这个人还没有留下简介。' }}
+      </p>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* ========== 整体容器 ========== */
 .user-identity {
   display: flex;
   flex: 1;
-  gap: var(--space-lg);
-  /* 桌面端：头像顶部对齐，允许 avatar 通过负 margin 上移覆盖 banner */
-  align-items: flex-start;
+  min-width: 0;
+  gap: 20px;
+  align-items: flex-end;
 }
 
-/* ========== 头像区域 ========== */
 .avatar-wrapper {
   position: relative;
   flex-shrink: 0;
-  /* 桌面端上移 52px，使头像一半覆盖 banner 底部 */
-  margin-top: -52px;
+  z-index: 2;
+  margin-top: -46px;
 }
 
 .user-avatar {
   display: block;
-  width: 104px;
-  height: 104px;
-  border: 4px solid white;
+  width: 102px;
+  height: 102px;
+  border: 4px solid rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: var(--shadow-lg);
+  background: #d7e0ea;
+  box-shadow: 0 14px 28px rgba(15, 49, 80, 0.14);
 }
 
-/* 隐藏文件输入，保留在 DOM 中供 label 触发 */
 .avatar-file-input {
   position: absolute;
   width: 1px;
@@ -181,26 +128,20 @@ function handleFileChange(event: Event) {
   border: 0;
 }
 
-/* 头像编辑按钮：32px 圆形，定位在头像右下角 */
 .avatar-edit-btn {
   position: absolute;
-  right: 2px;
-  bottom: 2px;
+  right: 4px;
+  bottom: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   color: white;
   background-color: var(--color-cta);
   border: 2px solid white;
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.avatar-edit-btn:hover {
-  background-color: var(--color-cta-hover);
 }
 
 .avatar-edit-btn:focus-visible {
@@ -208,136 +149,65 @@ function handleFileChange(event: Event) {
   box-shadow: var(--shadow-focus);
 }
 
-/* ========== 信息区域 ========== */
 .info-section {
   flex: 1;
-  /* 顶部留一点空间，视觉上与 avatar 对齐 */
-  padding-top: var(--space-sm);
-}
-
-/* 昵称与操作按钮同行：左侧昵称，右侧 actions slot，space-between */
-.name-actions-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-bottom: var(--space-xs);
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  padding-top: 14px;
+  padding-bottom: 4px;
 }
 
 .user-name {
-  margin: 0;
+  margin: 0 0 4px;
   color: var(--color-text);
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: var(--line-height-tight, 1.25);
+  font-size: clamp(1.7rem, 2.2vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.12;
 }
 
 .user-username {
-  margin: 0 0 var(--space-sm);
+  margin: 0 0 14px;
   color: var(--color-text-secondary);
-  font-size: 1rem;
-}
-
-/* ========== bio + 统计并排行 ========== */
-.bio-stats-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-lg);
+  font-size: 0.98rem;
+  font-weight: 600;
 }
 
 .user-bio {
-  flex: 1;
   margin: 0;
   color: var(--color-text);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 0.96rem;
+  line-height: 1.75;
+  max-width: 48rem;
 }
 
-/* 统计数据：flex row，右对齐 */
-.user-stats {
-  display: flex;
-  flex-shrink: 0;
-  gap: var(--space-lg);
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.stat-number {
-  color: var(--color-text);
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.stat-label {
-  margin-top: var(--space-xs);
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-}
-
-/* ========== 移动端适配（≤768px）========== */
 @media (max-width: 768px) {
   .user-identity {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    gap: 14px;
   }
 
-  /* 移动端头像居中，取消桌面端的上移效果 */
   .avatar-wrapper {
-    margin-top: 0;
+    margin-top: -42px;
   }
 
   .user-avatar {
-    width: 80px;
-    height: 80px;
+    width: 92px;
+    height: 92px;
   }
 
   .info-section {
-    padding-top: 0;
     width: 100%;
-  }
-
-  /* 移动端：昵称与 actions 改为纵向堆叠，居中对齐 */
-  .name-actions-row {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-sm);
+    padding-top: 0;
   }
 
   .user-name {
-    font-size: 1.5rem;
-  }
-
-  /* 移动端 bio + 统计改为纵向堆叠，全部居中 */
-  .bio-stats-row {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-md);
+    font-size: 1.6rem;
   }
 
   .user-bio {
-    text-align: center;
-  }
-
-  .user-stats {
-    justify-content: center;
-  }
-}
-
-/* ========== 小屏额外适配（≤480px）========== */
-@media (max-width: 480px) {
-  .user-stats {
-    gap: var(--space-md);
-  }
-
-  .stat-number {
-    font-size: 1.125rem;
+    max-width: none;
   }
 }
 </style>

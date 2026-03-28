@@ -11,6 +11,49 @@ import type {
   UploadResponse 
 } from '@/types';
 
+type BackendUser = Partial<User> & {
+  id?: string | number | null;
+  userName?: string | null;
+  nickName?: string | null;
+  avatarUrl?: string | null;
+  roles?: string[] | null;
+  followersCount?: number | string | null;
+  followingCount?: number | string | null;
+  postsCount?: number | string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+function toCount(value: number | string | null | undefined): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeUser(user: BackendUser): User {
+  const username = user.username ?? user.userName ?? '';
+  const roles = Array.isArray(user.roles) ? user.roles : [];
+  const hasAdminRole = roles.some(role => {
+    const normalizedRole = String(role).replace(/^ROLE_/, '').toUpperCase();
+    return normalizedRole === 'ADMIN';
+  });
+  const createdAt = user.createdAt ?? '';
+
+  return {
+    id: user.id != null ? String(user.id) : '',
+    username,
+    email: user.email ?? '',
+    nickname: user.nickname ?? user.nickName ?? username,
+    avatar: user.avatar ?? user.avatarUrl ?? null,
+    bio: user.bio ?? null,
+    role: user.role ?? (hasAdminRole ? 'ADMIN' : 'USER'),
+    followersCount: toCount(user.followersCount),
+    followingCount: toCount(user.followingCount),
+    postsCount: toCount(user.postsCount),
+    createdAt,
+    updatedAt: user.updatedAt ?? createdAt,
+  };
+}
+
 /**
  * 用户信息更新请求接口
  */
@@ -85,7 +128,8 @@ export class UserApi {
    * @returns 用户信息
    */
   async getUserById(userId: string): Promise<User> {
-    return httpClient.get<User>(`/users/${userId}`);
+    const user = await httpClient.get<BackendUser>(`/users/${userId}`);
+    return normalizeUser(user);
   }
 
   /**
@@ -95,7 +139,8 @@ export class UserApi {
    * @returns 更新后的用户信息
    */
   async updateUser(userId: string, userData: UserUpdateRequest): Promise<User> {
-    return httpClient.put<User>(`/users/${userId}`, userData);
+    const user = await httpClient.put<BackendUser>(`/users/${userId}`, userData);
+    return normalizeUser(user);
   }
 
   /**

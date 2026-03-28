@@ -7,6 +7,13 @@ import { useUser } from '@/composables/useUser';
 import { useCreateConversationMutation } from '@/queries/messages';
 import type { ProfileTabKey } from '@/types/user/profile';
 
+const createLoadedTabsState = (): Record<ProfileTabKey, boolean> => ({
+  posts: false,
+  favorites: false,
+  following: false,
+  followers: false,
+});
+
 export function useProfilePageContent() {
   const router = useRouter();
   const route = useRoute();
@@ -32,16 +39,17 @@ export function useProfilePageContent() {
 
   const userId = computed(() => String(route.params.id ?? '').trim());
   const activeTab = ref<ProfileTabKey>('posts');
+  const loadedTabs = ref<Record<ProfileTabKey, boolean>>(createLoadedTabsState());
   const {
     posts,
     favorites,
     following,
     followers,
     resetCollectionStates,
-    loadPostsPage,
-    loadFavoritesPage,
-    loadFollowingPage,
-    loadFollowersPage,
+    loadPostsPage: loadPostsPageRaw,
+    loadFavoritesPage: loadFavoritesPageRaw,
+    loadFollowingPage: loadFollowingPageRaw,
+    loadFollowersPage: loadFollowersPageRaw,
     handleLikeChange,
     handleFavoriteChange,
   } = useProfileCollections({
@@ -51,6 +59,34 @@ export function useProfilePageContent() {
     getUserFollowing,
     getUserFollowers,
   });
+
+  const loadPostsPage = async (append = false) => {
+    await loadPostsPageRaw(append);
+    if (!append && !posts.value.error) {
+      loadedTabs.value.posts = true;
+    }
+  };
+
+  const loadFavoritesPage = async (append = false) => {
+    await loadFavoritesPageRaw(append);
+    if (!append && !favorites.value.error) {
+      loadedTabs.value.favorites = true;
+    }
+  };
+
+  const loadFollowingPage = async (append = false) => {
+    await loadFollowingPageRaw(append);
+    if (!append && !following.value.error) {
+      loadedTabs.value.following = true;
+    }
+  };
+
+  const loadFollowersPage = async (append = false) => {
+    await loadFollowersPageRaw(append);
+    if (!append && !followers.value.error) {
+      loadedTabs.value.followers = true;
+    }
+  };
 
   const isCurrentUser = computed(() => authStore.user?.id === userId.value);
   const isUnauthorizedError = computed(() => errorStatus.value === 401);
@@ -62,29 +98,35 @@ export function useProfilePageContent() {
     return error.value || '加载用户信息失败，请稍后重试';
   });
 
+  const isAuthenticated = computed(() => authStore.isAuthenticated);
+
   const loadActiveTabContent = async (tab: ProfileTabKey = activeTab.value) => {
     if (!userProfile.value || error.value) {
       return;
     }
 
+    if (!isAuthenticated.value) {
+      return;
+    }
+
     switch (tab) {
       case 'posts':
-        if (posts.value.list.length === 0) {
+        if (!loadedTabs.value.posts) {
           await loadPostsPage();
         }
         break;
       case 'favorites':
-        if (favorites.value.list.length === 0) {
+        if (!loadedTabs.value.favorites) {
           await loadFavoritesPage();
         }
         break;
       case 'following':
-        if (following.value.list.length === 0) {
+        if (!loadedTabs.value.following) {
           await loadFollowingPage();
         }
         break;
       case 'followers':
-        if (followers.value.list.length === 0) {
+        if (!loadedTabs.value.followers) {
           await loadFollowersPage();
         }
         break;
@@ -93,6 +135,7 @@ export function useProfilePageContent() {
 
   const loadProfilePage = async () => {
     resetCollectionStates();
+    loadedTabs.value = createLoadedTabsState();
     await fetchUserProfile(userId.value);
 
     if (!userProfile.value || error.value) {
@@ -206,6 +249,7 @@ export function useProfilePageContent() {
     error,
     isUnauthorizedError,
     displayErrorMessage,
+    isAuthenticated,
     isCurrentUser,
     isFollowing,
     followLoading,

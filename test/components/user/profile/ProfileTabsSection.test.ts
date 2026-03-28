@@ -56,34 +56,6 @@ vi.mock('@/components/user/profile/ProfileUsersTabPanel.vue', () => ({
   }),
 }));
 
-const ElTabsStub = defineComponent({
-  name: 'ElTabsStub',
-  props: {
-    modelValue: {
-      type: String,
-      default: '',
-    },
-  },
-  emits: ['update:modelValue'],
-  template: '<div class="el-tabs-stub"><slot /></div>',
-});
-
-const ElTabPaneStub = defineComponent({
-  name: 'ElTabPaneStub',
-  props: {
-    label: {
-      type: String,
-      default: '',
-    },
-    name: {
-      type: String,
-      default: '',
-    },
-  },
-  template:
-    '<section class="el-tab-pane-stub" :data-name="name" :data-label="label"><slot /></section>',
-});
-
 const createCollectionState = <T>(list: T[] = []): ProfileCollectionState<T> => ({
   list,
   loading: false,
@@ -94,83 +66,76 @@ const createCollectionState = <T>(list: T[] = []): ProfileCollectionState<T> => 
 });
 
 describe('ProfileTabsSection', () => {
-  it('应按配置渲染四个 tab，并给文章 tab 传递当前用户文案', () => {
+  it('renders four custom tab buttons and only shows the active panel', async () => {
     const wrapper = mount(ProfileTabsSection, {
       props: {
         activeTab: 'posts',
+        isAuthenticated: true,
         isCurrentUser: true,
         postsState: createCollectionState<Post>(),
         favoritesState: createCollectionState<Post>(),
         followingState: createCollectionState<User>(),
         followersState: createCollectionState<User>(),
       },
-      global: {
-        stubs: {
-          'el-tabs': ElTabsStub,
-          'el-tab-pane': ElTabPaneStub,
-        },
-      },
     });
 
-    const panes = wrapper.findAll('.el-tab-pane-stub');
-    expect(panes).toHaveLength(4);
-    expect(panes.map((pane) => pane.attributes('data-name'))).toEqual([
-      'posts',
-      'favorites',
-      'following',
-      'followers',
-    ]);
+    const tabs = wrapper.findAll('.profile-tabs__tab');
+    expect(tabs).toHaveLength(4);
+    expect(tabs.map((tab) => tab.text())).toEqual(['文章', '收藏', '关注', '粉丝']);
+    expect(wrapper.findAll('.profile-posts-tab-panel-stub')).toHaveLength(1);
+    expect(wrapper.find('.profile-users-tab-panel-stub').exists()).toBe(false);
+    expect(wrapper.find('.empty-title').text()).toBe('还没有发布文章');
+    expect(wrapper.find('.show-create').text()).toBe('true');
 
-    const postPanels = wrapper.findAll('.profile-posts-tab-panel-stub');
-    expect(postPanels[0].find('.empty-title').text()).toBe('还没有发布文章');
-    expect(postPanels[0].find('.show-create').text()).toBe('true');
-    expect(postPanels[1].find('.empty-title').text()).toBe('还没有收藏文章');
-    expect(postPanels[1].find('.show-create').text()).toBe('false');
+    await tabs[2].trigger('click');
+    expect(wrapper.emitted('update:active-tab')).toEqual([['following']]);
   });
 
-  it('应转发 post 和 user 面板事件', async () => {
+  it('forwards active panel events only', async () => {
     const wrapper = mount(ProfileTabsSection, {
       props: {
-        activeTab: 'posts',
+        activeTab: 'following',
+        isAuthenticated: true,
         isCurrentUser: false,
         postsState: createCollectionState<Post>(),
         favoritesState: createCollectionState<Post>(),
         followingState: createCollectionState<User>(),
         followersState: createCollectionState<User>(),
       },
-      global: {
-        stubs: {
-          'el-tabs': ElTabsStub,
-          'el-tab-pane': ElTabPaneStub,
-        },
-      },
     });
 
-    const postPanels = wrapper.findAll('.profile-posts-tab-panel-stub');
-    const userPanels = wrapper.findAll('.profile-users-tab-panel-stub');
+    const userPanel = wrapper.find('.profile-users-tab-panel-stub');
+    expect(userPanel.exists()).toBe(true);
+    expect(wrapper.find('.profile-posts-tab-panel-stub').exists()).toBe(false);
 
-    await postPanels[0].find('.retry-btn').trigger('click');
-    await postPanels[0].find('.load-more-btn').trigger('click');
-    await postPanels[0].find('.create-post-btn').trigger('click');
-    await postPanels[0].find('.like-change-btn').trigger('click');
-    await postPanels[0].find('.favorite-change-btn').trigger('click');
-    await userPanels[0].find('.retry-btn').trigger('click');
-    await userPanels[0].find('.load-more-btn').trigger('click');
-    await userPanels[0].find('.user-click-btn').trigger('click');
+    await userPanel.find('.retry-btn').trigger('click');
+    await userPanel.find('.load-more-btn').trigger('click');
+    await userPanel.find('.user-click-btn').trigger('click');
 
     expect(wrapper.emitted('load-tab')).toEqual([
-      [{ tab: 'posts' }],
-      [{ tab: 'posts', append: true }],
       [{ tab: 'following' }],
       [{ tab: 'following', append: true }],
     ]);
-    expect(wrapper.emitted('create-post')).toHaveLength(1);
-    expect(wrapper.emitted('post-like-change')).toEqual([
-      [{ postId: 'post-1', isLiked: true, likeCount: 9 }],
-    ]);
-    expect(wrapper.emitted('post-favorite-change')).toEqual([
-      [{ postId: 'post-1', isFavorited: true, favoriteCount: 7 }],
-    ]);
     expect(wrapper.emitted('user-click')).toEqual([['user-2']]);
+  });
+
+  it('shows a login prompt when the viewer is not authenticated', async () => {
+    const wrapper = mount(ProfileTabsSection, {
+      props: {
+        activeTab: 'posts',
+        isAuthenticated: false,
+        isCurrentUser: false,
+        postsState: createCollectionState<Post>(),
+        favoritesState: createCollectionState<Post>(),
+        followingState: createCollectionState<User>(),
+        followersState: createCollectionState<User>(),
+      },
+    });
+
+    expect(wrapper.find('.profile-tabs__locked').exists()).toBe(true);
+    expect(wrapper.text()).toContain('登录后可查看文章、收藏、关注和粉丝列表');
+
+    await wrapper.find('.profile-tabs__login-btn').trigger('click');
+    expect(wrapper.emitted('go-login')).toHaveLength(1);
   });
 });

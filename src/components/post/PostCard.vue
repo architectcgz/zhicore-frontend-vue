@@ -18,7 +18,7 @@ interface Props {
   showStats?: boolean;
   showActions?: boolean;
   size?: 'small' | 'medium' | 'large';
-  variant?: 'card' | 'plain';
+  variant?: 'card' | 'plain' | 'profile';
 }
 
 interface Emits {
@@ -835,6 +835,80 @@ const handleAvatarError = (event: Event) => {
 .post-card--plain .post-card__action-button:hover {
   transform: none;
   border-color: transparent;
+}
+
+.post-card--profile {
+  overflow: hidden;
+  border: 1px solid rgba(15, 49, 80, 0.06);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 22px rgba(16, 39, 56, 0.06);
+}
+
+.post-card--profile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(16, 39, 56, 0.1);
+  border-color: rgba(15, 118, 98, 0.12);
+}
+
+.post-card--profile .post-card__body {
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.post-card--profile .post-card__title {
+  font-size: 1.24rem;
+  line-height: 1.45;
+}
+
+.post-card--profile .post-card__excerpt {
+  -webkit-line-clamp: 2;
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+.post-card--profile .post-card__tag,
+.post-card--profile .post-card__category {
+  border: none;
+  background: rgba(15, 49, 80, 0.06);
+}
+
+.post-card--profile .post-card__footer {
+  align-items: flex-end;
+}
+
+.post-card--profile .post-card__author-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.post-card--profile .post-card__author-name {
+  font-size: 0.88rem;
+}
+
+.post-card--profile .post-card__author-meta,
+.post-card--profile .post-card__stat {
+  font-size: 0.78rem;
+}
+
+.post-card--profile .post-card__actions {
+  padding-top: 12px;
+}
+
+.post-card--profile .post-card__action-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.post-card--profile .post-card__action-button:hover {
+  transform: none;
+  border-color: transparent;
+}
+
+.post-card--profile .post-card__read-more {
+  font-size: 0.88rem;
 }
 
 @keyframes post-card-spin {

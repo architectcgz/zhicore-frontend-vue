@@ -17,6 +17,7 @@ const {
   error,
   isUnauthorizedError,
   displayErrorMessage,
+  isAuthenticated,
   isCurrentUser,
   isFollowing,
   followLoading,
@@ -108,6 +109,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
       <div class="content-container">
         <ProfileTabsSection
           :active-tab="activeTab"
+          :is-authenticated="isAuthenticated"
           :is-current-user="isCurrentUser"
           :posts-state="posts"
           :favorites-state="favorites"
@@ -119,6 +121,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
           @post-like-change="handleLikeChange"
           @post-favorite-change="handleFavoriteChange"
           @user-click="handleUserClick"
+          @go-login="handleGoLogin"
         />
       </div>
     </template>
@@ -129,6 +132,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
 .user-profile-page {
   min-height: 100vh;
   background-color: var(--color-bg-primary);
+  margin-top: calc(var(--space-lg) * -1);
 }
 
 .loading-container {
@@ -146,7 +150,18 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
 }
 
 .content-container {
-  max-width: 1200px;
+  max-width: 1160px;
   margin: 0 auto;
+  padding: 0 var(--space-lg) var(--space-2xl);
+}
+
+@media (max-width: 768px) {
+  .user-profile-page {
+    margin-top: calc(var(--space-md) * -1);
+  }
+
+  .content-container {
+    padding: 0 var(--space-md) var(--space-xl);
+  }
 }
 </style>

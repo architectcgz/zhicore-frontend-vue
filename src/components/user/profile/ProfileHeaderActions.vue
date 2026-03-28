@@ -17,53 +17,101 @@ const emit = defineEmits<{
 
 <template>
   <div class="action-section">
-    <el-button
+    <button
       v-if="props.isCurrentUser"
-      type="primary"
+      class="action-button action-button--primary"
+      type="button"
       @click="emit('edit-profile')"
     >
       编辑资料
-    </el-button>
-    <el-button
+    </button>
+    <button
       v-else
-      :type="props.isFollowing ? 'default' : 'primary'"
-      :loading="props.followLoading"
+      class="action-button"
+      :class="props.isFollowing ? 'action-button--secondary' : 'action-button--primary'"
+      type="button"
+      :disabled="props.followLoading"
       @click="emit('follow-toggle')"
     >
-      {{ props.isFollowing ? '取消关注' : '关注' }}
-    </el-button>
-    <el-button
+      {{ props.followLoading ? '处理中...' : (props.isFollowing ? '取消关注' : '关注') }}
+    </button>
+    <button
       v-if="!props.isCurrentUser"
-      :loading="props.isCreatingConversation"
+      class="action-button action-button--secondary"
+      type="button"
+      :disabled="props.isCreatingConversation"
       @click="emit('send-message')"
     >
-      发私信
-    </el-button>
+      {{ props.isCreatingConversation ? '发送中...' : '发私信' }}
+    </button>
   </div>
 </template>
 
 <style scoped>
 .action-section {
   display: flex;
-  gap: var(--space-sm);
-  padding-top: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 10px 17px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.action-button--primary {
+  background: var(--color-cta);
+  color: var(--color-text-inverse);
+  box-shadow: 0 10px 18px rgba(15, 118, 98, 0.14);
+}
+
+.action-button--secondary {
+  border-color: rgba(15, 49, 80, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--color-text);
 }
 
 @media (max-width: 768px) {
   .action-section {
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
-  /* 移动端按钮撑满容器宽度，覆盖 Element Plus 默认内联宽度 */
-  :deep(.el-button) {
-    width: 100%;
+  .action-button {
+    flex: 1 1 0;
   }
 }
 
 @media (max-width: 480px) {
   .action-section {
     flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
   }
 }
 </style>

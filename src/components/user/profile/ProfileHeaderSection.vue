@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import CheckInWidget from '@/components/user/CheckInWidget.vue';
 import ProfileHeaderActions from '@/components/user/profile/ProfileHeaderActions.vue';
@@ -7,11 +7,6 @@ import ProfileUserIdentity from '@/components/user/profile/ProfileUserIdentity.v
 import { uploadApi } from '@/api/upload';
 import { userApi } from '@/api/user';
 import type { User } from '@/types';
-
-/**
- * ProfileHeaderSection —— 用户主页顶部区域
- * 包含：封面横幅（支持上传）、用户身份信息、操作按钮、签到组件
- */
 
 interface Props {
   user: User;
@@ -28,38 +23,24 @@ const emit = defineEmits<{
   'edit-profile': [];
   'follow-toggle': [];
   'send-message': [];
-  /** 转发 ProfileUserIdentity 的头像上传事件，由 Profile 页面处理实际上传 */
   'upload-avatar': [];
-  /** 封面图更新后向父组件传出新 URL，用于乐观更新本地状态 */
   'cover-updated': [url: string];
 }>();
 
-// ─── 封面上传相关状态 ─────────────────────────────────────────────
-
-/** 本地乐观更新后的封面 URL（上传成功前暂存，失败时回滚） */
 const localCoverUrl = ref<string | null>(null);
+const coverUploading = ref(false);
+const coverInputRef = ref<HTMLInputElement | null>(null);
 
-/**
- * 实际展示的封面 URL，优先使用本地乐观值，
- * 其次使用服务端返回的 coverImage，无则为 null 显示渐变背景
- */
 const effectiveCoverUrl = computed(
   () => localCoverUrl.value ?? props.user.coverImage ?? null
 );
 
-/** 封面上传进行中标志，控制按钮禁用与文字 */
-const coverUploading = ref(false);
+const statItems = computed(() => [
+  { label: '文章', value: props.user.postsCount || 0 },
+  { label: '粉丝', value: props.user.followersCount || 0 },
+  { label: '关注', value: props.user.followingCount || 0 },
+]);
 
-/** 隐藏的文件选择 input 的 ref */
-const coverInputRef = ref<HTMLInputElement | null>(null);
-
-// ─── 封面上传处理 ─────────────────────────────────────────────────
-
-/**
- * 处理封面文件选择
- * 流程：校验文件类型 → 乐观更新本地预览 → 上传图片 → 更新用户信息 → emit 事件
- * 失败时回滚 localCoverUrl，并通过 ElMessage 提示用户
- */
 async function handleCoverChange(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
@@ -70,24 +51,18 @@ async function handleCoverChange(event: Event) {
   }
 
   coverUploading.value = true;
-  // 记录回滚点
   const previousCover = localCoverUrl.value;
 
   try {
     const result = await uploadApi.uploadImage(file);
-    // 乐观更新本地预览
     localCoverUrl.value = result.url;
-    // 持久化到服务端用户信息
     await userApi.updateUser(props.userId, { coverImageId: result.fileId });
-    // 通知父组件更新，无需全量重新请求
     emit('cover-updated', result.url);
   } catch {
-    // 上传或保存失败时回滚本地预览
     localCoverUrl.value = previousCover;
     ElMessage.error('封面上传失败，请重试');
   } finally {
     coverUploading.value = false;
-    // 重置 input，允许重复选择同一文件
     if (coverInputRef.value) {
       coverInputRef.value.value = '';
     }
@@ -98,10 +73,9 @@ async function handleCoverChange(event: Event) {
 <template>
   <div class="profile-header-section">
     <div class="profile-header">
-      <!-- 封面横幅：有封面图时显示图片，否则显示渐变背景 -->
       <div
         class="header-background"
-        :class="{ 'banner-gradient': !effectiveCoverUrl }"
+        :class="{ 'header-background--gradient': !effectiveCoverUrl }"
         :style="
           effectiveCoverUrl
             ? {
@@ -112,9 +86,7 @@ async function handleCoverChange(event: Event) {
             : undefined
         "
       >
-        <!-- 更换封面按钮：仅当前用户可见，绝对定位在右下角 -->
         <template v-if="props.isCurrentUser">
-          <!-- 隐藏的文件选择器 -->
           <input
             ref="coverInputRef"
             type="file"
@@ -124,44 +96,24 @@ async function handleCoverChange(event: Event) {
           >
           <button
             class="cover-upload-btn"
+            type="button"
             :disabled="coverUploading"
             @click="coverInputRef?.click()"
           >
-            <template v-if="coverUploading">
-              上传中...
-            </template>
-            <template v-else>
-              <!-- 相机图标 -->
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle
-                  cx="12"
-                  cy="13"
-                  r="4"
-                />
-              </svg>
-              更换封面
-            </template>
+            {{ coverUploading ? '上传中...' : '更换封面' }}
           </button>
         </template>
       </div>
 
-      <div class="header-content">
-        <!-- action buttons 通过 #actions slot 注入到昵称同行，实现 space-between 布局 -->
-        <ProfileUserIdentity
-          :user="props.user"
-          :is-current-user="props.isCurrentUser"
-          @upload-avatar="emit('upload-avatar')"
-        >
-          <template #actions>
+      <div class="header-surface">
+        <div class="header-main">
+          <ProfileUserIdentity
+            :user="props.user"
+            :is-current-user="props.isCurrentUser"
+            @upload-avatar="emit('upload-avatar')"
+          />
+
+          <div class="header-aside">
             <ProfileHeaderActions
               :is-current-user="props.isCurrentUser"
               :is-following="props.isFollowing"
@@ -171,8 +123,19 @@ async function handleCoverChange(event: Event) {
               @follow-toggle="emit('follow-toggle')"
               @send-message="emit('send-message')"
             />
-          </template>
-        </ProfileUserIdentity>
+
+            <div class="header-stats">
+              <div
+                v-for="item in statItems"
+                :key="item.label"
+                class="header-stat"
+              >
+                <span class="header-stat__value">{{ item.value }}</span>
+                <span class="header-stat__label">{{ item.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -192,96 +155,173 @@ async function handleCoverChange(event: Event) {
 
 .profile-header {
   position: relative;
-  margin-bottom: var(--space-xl);
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 49, 80, 0.08);
+  background: rgba(255, 252, 247, 0.98);
+  box-shadow: 0 18px 42px rgba(16, 39, 56, 0.08);
 }
 
-/* 封面横幅容器：必须 position: relative 以支持按钮绝对定位 */
 .header-background {
   position: relative;
-  height: 220px;
-  border-radius: 0 0 16px 16px;
-  overflow: hidden;
+  height: 168px;
 }
 
-/* 无封面图时的默认渐变背景 */
-.banner-gradient {
-  background: var(
-    --gradient-hero,
-    linear-gradient(
-      135deg,
-      rgba(18, 49, 76, 0.98) 0%,
-      rgba(15, 118, 98, 0.92) 54%,
-      rgba(183, 121, 31, 0.92) 100%
-    )
+.header-background::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 54px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(8, 19, 31, 0.14));
+}
+
+.header-background--gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(18, 49, 76, 0.98) 0%,
+    rgba(15, 118, 98, 0.92) 56%,
+    rgba(176, 129, 34, 0.92) 100%
   );
 }
 
-/* 隐藏的文件选择 input */
 .cover-input-hidden {
   display: none;
 }
 
-/* 更换封面按钮：绝对定位在横幅右下角 */
 .cover-upload-btn {
   position: absolute;
-  bottom: 12px;
-  right: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 500;
+  right: 18px;
+  bottom: 16px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(8, 19, 31, 0.36);
   color: #fff;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: background 0.2s ease;
-  line-height: 1;
-}
-
-.cover-upload-btn:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(6px);
 }
 
 .cover-upload-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.68;
 }
 
-.header-content {
+.header-surface {
   position: relative;
+  z-index: 1;
+  padding: 0 clamp(20px, 4vw, 32px) 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 245, 239, 0.94));
+}
+
+.header-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 28px;
+  margin-top: -34px;
+}
+
+.header-aside {
   display: flex;
+  min-width: 290px;
+  flex-direction: column;
   align-items: flex-end;
-  /* justify-content 移除：actions 已内嵌到 ProfileUserIdentity 的 name-actions-row 中 */
-  gap: var(--space-lg);
-  margin-top: -110px;
-  padding: 0 var(--space-lg);
+  gap: 16px;
+  padding-top: 46px;
+}
+
+.header-stats {
+  display: flex;
+  gap: 24px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(15, 49, 80, 0.08);
+}
+
+.header-stat {
+  display: flex;
+  min-width: 64px;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.header-stat__value {
+  color: var(--color-text);
+  font-size: clamp(1.5rem, 2vw, 1.95rem);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.header-stat__label {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
 }
 
 .check-in-section {
-  padding: 0 var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 1080px) {
+  .header-main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .header-aside {
+    width: 100%;
+    min-width: auto;
+    align-items: flex-start;
+    gap: 14px;
+    padding-top: 0;
+  }
+
+  .header-stats {
+    justify-content: flex-start;
+    padding-top: 0;
+    border-top: none;
+  }
 }
 
 @media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: center;
-    margin-top: -60px;
-    padding: 0 var(--space-md);
-    text-align: center;
+  .header-background {
+    height: 154px;
   }
 
-  .check-in-section {
-    padding: 0 var(--space-md);
+  .header-surface {
+    padding: 0 var(--space-lg) var(--space-lg);
+  }
+
+  .header-main {
+    margin-top: -26px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
+  .profile-header {
+    border-radius: 18px;
+  }
+
   .header-background {
-    height: 150px;
+    height: 144px;
+  }
+
+  .header-surface {
+    padding: 0 var(--space-md) var(--space-md);
+  }
+
+  .header-stats {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .header-stat {
+    min-width: 0;
+    flex: 1 1 0;
+    align-items: flex-start;
+    text-align: left;
   }
 }
 </style>
