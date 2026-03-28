@@ -43,6 +43,16 @@ const {
   handleFavoriteChange,
 } = useProfilePageContent();
 
+/**
+ * 处理封面更新：ProfileHeaderSection 上传成功后触发
+ * 乐观更新本地 userProfile.coverImage，无需重新请求全量数据
+ */
+const handleCoverUpdated = (url: string) => {
+  if (userProfile.value) {
+    userProfile.value = { ...userProfile.value, coverImage: url };
+  }
+};
+
 const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
   switch (tab) {
     case 'posts':
@@ -95,6 +105,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
         @follow-toggle="handleFollowToggle"
         @send-message="handleSendMessage"
         @upload-avatar="handleUploadAvatar"
+        @cover-updated="handleCoverUpdated"
       />
 
       <ProfileTabsSection
