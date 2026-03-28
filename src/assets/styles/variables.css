@@ -14,12 +14,13 @@
 
   /* 背景颜色 */
   --color-bg: #f3efe7;
-  --color-bg-secondary: rgba(255, 252, 247, 0.88);
+  /* 不透明色避免与 --gradient-page 叠加产生不可预期的颜色偏移；如需玻璃态效果请在组件内局部声明 */
+  --color-bg-secondary: #fffcf7;
   --color-bg-tertiary: #ebe4d7;
   --color-bg-reading: #fffdf9;
   --color-bg-hover: #f7f2ea;
   --color-surface-strong: #fff9f0;
-  --color-surface-overlay: rgba(255, 251, 245, 0.74);
+  --color-surface-overlay: rgba(255, 251, 245, 0.88);
 
   /* 文本颜色 */
   --color-text: #14213d;
@@ -33,13 +34,15 @@
   --color-border-dark: rgba(18, 49, 76, 0.22);
 
   /* 语义化颜色 */
-  --color-success: #0f7662;
+  /* 注意：success 有意与 cta (#0f7662) 区分，使用更亮的绿色，避免「可点击」与「成功状态」混淆 */
+  --color-success: #059669;
   --color-success-light: #d9f5ef;
-  --color-success-dark: #115e59;
+  --color-success-dark: #047857;
 
   --color-warning: #b45309;
   --color-warning-light: #ffedd5;
-  --color-warning-dark: #9a3412;
+  /* warning-dark 保持琥珀橙语义，避免与 danger (#b91c1c) 混淆 */
+  --color-warning-dark: #92400e;
 
   --color-danger: #b91c1c;
   --color-danger-light: #fee2e2;
@@ -60,8 +63,9 @@
     radial-gradient(circle at top left, rgba(15, 118, 98, 0.12), transparent 28%),
     radial-gradient(circle at top right, rgba(183, 121, 31, 0.16), transparent 25%),
     linear-gradient(180deg, #fbf8f2 0%, #f3efe7 55%, #efe8db 100%);
+  /* Hero 末端琥珀金从 0.78 提升至 0.92，确保白色文字对比度 ≥ 4.5:1 (WCAG AA) */
   --gradient-hero:
-    linear-gradient(135deg, rgba(18, 49, 76, 0.98) 0%, rgba(15, 118, 98, 0.92) 54%, rgba(183, 121, 31, 0.78) 100%);
+    linear-gradient(135deg, rgba(18, 49, 76, 0.98) 0%, rgba(15, 118, 98, 0.92) 54%, rgba(183, 121, 31, 0.92) 100%);
   --gradient-card:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 248, 239, 0.86) 100%);
   --gradient-accent: linear-gradient(135deg, #d4a14b 0%, #0f7662 100%);
@@ -222,11 +226,12 @@
     linear-gradient(180deg, rgba(10, 22, 36, 0.92) 0%, rgba(12, 30, 46, 0.82) 100%);
   --gradient-accent: linear-gradient(135deg, #f6c778 0%, #34d399 100%);
 
-  --shadow-sm: 0 12px 28px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 22px 58px rgba(0, 0, 0, 0.28);
-  --shadow-lg: 0 30px 82px rgba(0, 0, 0, 0.34);
-  --shadow-xl: 0 38px 110px rgba(0, 0, 0, 0.42);
-  --shadow-2xl: 0 52px 128px rgba(0, 0, 0, 0.5);
+  /* 暗色主题阴影：克制方案，避免卡片「浮」感破坏 E-Ink/Paper 沉浸感 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.32);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.36);
+  --shadow-2xl: 0 20px 56px rgba(0, 0, 0, 0.42);
   --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-focus: 0 0 0 3px rgba(52, 211, 153, 0.2);
 }

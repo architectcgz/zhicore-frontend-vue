@@ -28,7 +28,10 @@ const emit = defineEmits<{
       <PostDetailBreadcrumb />
 
       <div class="post-content-header__eyebrow">
-        <span v-if="props.sectionCount > 0" class="post-content-header__eyebrow-text">
+        <span
+          v-if="props.sectionCount > 0"
+          class="post-content-header__eyebrow-text"
+        >
           {{ props.sectionCount }} 个章节
         </span>
       </div>
@@ -37,7 +40,10 @@ const emit = defineEmits<{
         {{ props.post.title }}
       </h1>
 
-      <p v-if="props.articleSummary" class="post-summary">
+      <p
+        v-if="props.articleSummary"
+        class="post-summary"
+      >
         {{ props.articleSummary }}
       </p>
 

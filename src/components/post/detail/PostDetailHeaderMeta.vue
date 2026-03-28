@@ -37,7 +37,7 @@ const statItems = computed(() => [
         :alt="props.post.author.nickname"
         class="post-author__avatar"
         @error="emit('avatar-error', $event)"
-      />
+      >
       <div class="post-author__info">
         <span class="post-author__name">{{ props.post.author.nickname }}</span>
         <span class="post-author__date">
@@ -48,7 +48,11 @@ const statItems = computed(() => [
 
     <div class="post-meta-side">
       <div class="post-meta-pills">
-        <span v-for="item in statItems" :key="item" class="post-meta-pill soft-pill">
+        <span
+          v-for="item in statItems"
+          :key="item"
+          class="post-meta-pill soft-pill"
+        >
           {{ item }}
         </span>
       </div>

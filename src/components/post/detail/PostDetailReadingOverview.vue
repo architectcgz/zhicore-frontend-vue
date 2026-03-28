@@ -1,42 +1,72 @@
 <script setup lang="ts">
-import type { CSSProperties } from 'vue';
-
 interface Props {
-  readingBatteryStyle: CSSProperties;
   readingProgressPercent: number;
   readingTime: number;
   sectionCount: number;
 }
 
 const props = defineProps<Props>();
+
+const RADIUS = 30;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 </script>
 
 <template>
-  <section class="post-rail-section post-rail-section--reading">
-    <p class="post-rail-section__kicker">阅读线索</p>
+  <section
+    class="post-rail-section post-rail-section--reading"
+    role="progressbar"
+    aria-label="阅读进度"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    :aria-valuenow="props.readingProgressPercent"
+  >
+    <p class="post-rail-section__kicker">
+      阅读线索
+    </p>
+
     <div class="post-reading-overview">
-      <div
-        class="post-reading-overview__hero"
-        :style="props.readingBatteryStyle"
-        role="progressbar"
-        aria-label="阅读进度"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-valuenow="props.readingProgressPercent"
-      >
-        <span class="post-reading-overview__charge" aria-hidden="true" />
-        <span class="post-reading-overview__progress"> {{ props.readingProgressPercent }}% </span>
-        <span class="post-reading-overview__caption">阅读进度</span>
+      <!-- 圆弧进度环 -->
+      <div class="post-reading-ring-wrap">
+        <svg
+          class="post-reading-ring"
+          viewBox="0 0 80 80"
+          aria-hidden="true"
+        >
+          <circle
+            class="post-reading-ring__track"
+            cx="40"
+            cy="40"
+            :r="RADIUS"
+            fill="none"
+            stroke-width="5"
+          />
+          <circle
+            class="post-reading-ring__fill"
+            cx="40"
+            cy="40"
+            :r="RADIUS"
+            fill="none"
+            stroke-width="5"
+            stroke-linecap="round"
+            :stroke-dasharray="CIRCUMFERENCE"
+            :stroke-dashoffset="CIRCUMFERENCE * (1 - props.readingProgressPercent / 100)"
+          />
+        </svg>
+        <div class="post-reading-ring__center">
+          <span class="post-reading-ring__value">{{ props.readingProgressPercent }}</span>
+          <span class="post-reading-ring__unit">%</span>
+        </div>
       </div>
 
+      <!-- 元数据 -->
       <div class="post-reading-facts">
         <div class="post-reading-facts__item">
           <span class="post-reading-facts__label">时长</span>
-          <strong class="post-reading-facts__value">{{ props.readingTime }} 分钟</strong>
+          <strong class="post-reading-facts__value">{{ props.readingTime }} 分</strong>
         </div>
         <div class="post-reading-facts__item">
           <span class="post-reading-facts__label">章节</span>
-          <strong class="post-reading-facts__value">{{ props.sectionCount || '无' }}</strong>
+          <strong class="post-reading-facts__value">{{ props.sectionCount || '—' }}</strong>
         </div>
       </div>
     </div>
@@ -56,16 +86,16 @@ const props = defineProps<Props>();
   box-shadow: var(--shadow-sm);
 }
 
+.post-rail-section--reading {
+  padding: 18px;
+}
+
 .post-rail-section__kicker {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   color: var(--color-text-tertiary);
   font-size: 0.76rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.post-rail-section--reading {
-  padding: 18px;
 }
 
 .post-reading-overview {
@@ -73,128 +103,81 @@ const props = defineProps<Props>();
   gap: 14px;
 }
 
-.post-reading-overview__hero {
-  --reading-progress-angle: 0deg;
-  --reading-progress-percent: 0%;
-  --reading-shell-border: rgba(173, 216, 230, 0.26);
-  --reading-shell-bg-top: color-mix(in srgb, var(--color-surface-overlay) 84%, transparent);
-  --reading-shell-bg-bottom: color-mix(in srgb, var(--color-surface-overlay) 92%, transparent);
-  --reading-grid-line: rgba(173, 216, 230, 0.12);
-  --reading-shell-inner: rgba(173, 216, 230, 0.16);
-  --reading-cap-bg: rgba(16, 33, 49, 0.92);
-  --reading-text-main: var(--color-text);
-  --reading-text-sub: var(--color-text-secondary);
-  --reading-charge-start: #f6c778;
-  --reading-charge-end: #34d399;
+/* ── 圆弧进度环 ── */
+.post-reading-ring-wrap {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: 5px;
-  position: relative;
-  isolation: isolate;
-  min-height: 76px;
-  padding: 16px 22px 16px 18px;
-  border: 1px solid var(--reading-shell-border);
-  border-radius: calc(var(--radius-lg) + 2px);
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, var(--reading-shell-bg-top), var(--reading-shell-bg-bottom)),
-    repeating-linear-gradient(90deg, transparent 0 18px, var(--reading-grid-line) 18px 20px);
-  box-shadow: inset 0 0 0 1px var(--reading-shell-inner);
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
 }
 
-[data-theme='dark'] .post-reading-overview__hero {
-  --reading-shell-bg-top: rgba(16, 33, 49, 0.9);
-  --reading-shell-bg-bottom: rgba(8, 19, 31, 0.94);
-  --reading-text-main: #edf3f8;
-  --reading-text-sub: rgba(237, 243, 248, 0.76);
-}
-
-.post-reading-overview__hero::after {
-  content: '';
+.post-reading-ring {
   position: absolute;
-  top: 50%;
-  right: -7px;
-  width: 7px;
-  height: 24px;
-  border: 1px solid var(--reading-shell-border);
-  border-left: none;
-  border-radius: 0 6px 6px 0;
-  background: var(--reading-cap-bg);
-  transform: translateY(-50%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
 }
 
-.post-reading-overview__charge {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--reading-progress-percent);
-  min-width: 0;
-  border-radius: calc(var(--radius-lg) + 1px) 0 0 calc(var(--radius-lg) + 1px);
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.24), transparent 38%),
-    linear-gradient(
-      var(--reading-progress-angle),
-      var(--reading-charge-start),
-      var(--reading-charge-end)
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.22) 0 16px,
-      rgba(255, 255, 255, 0) 16px 20px
-    );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(8, 30, 24, 0.14),
-    0 0 22px rgba(15, 118, 98, 0.2);
-  transition:
-    width 180ms ease-out,
-    background 180ms ease-out;
-  z-index: 0;
+.post-reading-ring__track {
+  stroke: color-mix(in srgb, var(--color-border) 80%, transparent);
 }
 
-.post-reading-overview__progress {
+.post-reading-ring__fill {
+  stroke: url(#reading-ring-gradient);
+  stroke: var(--color-accent, #34d399);
+  transition: stroke-dashoffset 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-reading-ring__center {
   position: relative;
-  z-index: 1;
-  color: var(--reading-text-main);
-  font-size: clamp(1.8rem, 2vw, 2.3rem);
-  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
   line-height: 1;
-  text-shadow: 0 1px 14px rgba(255, 255, 255, 0.12);
 }
 
-.post-reading-overview__caption {
-  position: relative;
-  z-index: 1;
-  color: var(--reading-text-sub);
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.post-reading-ring__value {
+  font-size: 1.4rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
 }
 
+.post-reading-ring__unit {
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+/* ── 元数据行 ── */
 .post-reading-facts {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .post-reading-facts__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 8px 12px;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface-overlay) 84%, transparent);
+  background: color-mix(in srgb, var(--color-surface-overlay) 60%, transparent);
 }
 
 .post-reading-facts__label {
   color: var(--color-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .post-reading-facts__value {
   color: var(--color-text);
-  font-size: 0.94rem;
+  font-size: 0.88rem;
+  font-weight: var(--font-weight-semibold);
 }
 </style>

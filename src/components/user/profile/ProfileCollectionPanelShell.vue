@@ -26,12 +26,18 @@ const emit = defineEmits<{
 
 <template>
   <div class="tab-content">
-    <div v-if="props.loading" class="loading-content">
+    <div
+      v-if="props.loading"
+      class="loading-content"
+    >
       <LoadingSpinner />
       <p>{{ props.loadingText }}</p>
     </div>
 
-    <div v-else-if="props.error" class="error-content">
+    <div
+      v-else-if="props.error"
+      class="error-content"
+    >
       <SiteErrorState
         :title="props.errorTitle"
         :message="props.error"
@@ -41,7 +47,10 @@ const emit = defineEmits<{
       />
     </div>
 
-    <div v-else-if="props.listLength === 0" class="empty-content">
+    <div
+      v-else-if="props.listLength === 0"
+      class="empty-content"
+    >
       <EmptyState
         :icon="props.emptyIcon"
         :title="props.emptyTitle"
@@ -53,8 +62,16 @@ const emit = defineEmits<{
 
     <slot v-else />
 
-    <div v-if="props.hasMore" class="load-more">
-      <el-button :loading="props.loadingMore" @click="emit('load-more')"> 加载更多 </el-button>
+    <div
+      v-if="props.hasMore"
+      class="load-more"
+    >
+      <el-button
+        :loading="props.loadingMore"
+        @click="emit('load-more')"
+      >
+        加载更多
+      </el-button>
     </div>
   </div>
 </template>

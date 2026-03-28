@@ -37,7 +37,6 @@ const props = defineProps<Props>();
   handleImageError,
   postTags,
   setArticleBodyRef,
-  readingBatteryStyle,
   readingProgressPercent,
   tocItems,
   activeHeading,
@@ -108,7 +107,6 @@ const props = defineProps<Props>();
           class="post-shell__frame"
         >
           <PostDetailReadingRail
-            :reading-battery-style="readingBatteryStyle"
             :reading-progress-percent="readingProgressPercent"
             :reading-time="readingTime"
             :section-count="sectionCount"

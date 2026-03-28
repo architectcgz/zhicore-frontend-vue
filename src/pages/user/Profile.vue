@@ -62,7 +62,10 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
 
 <template>
   <div class="user-profile-page">
-    <div v-if="loading" class="loading-container">
+    <div
+      v-if="loading"
+      class="loading-container"
+    >
       <LoadingSpinner size="large" />
       <p>正在加载用户信息...</p>
     </div>
@@ -76,7 +79,10 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
       @go-home="handleGoHome"
     />
 
-    <div v-else-if="userProfile" class="profile-container">
+    <div
+      v-else-if="userProfile"
+      class="profile-container"
+    >
       <ProfileHeaderSection
         :user="userProfile"
         :user-id="userId"

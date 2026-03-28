@@ -12,12 +12,21 @@ const props = defineProps<Props>();
 <template>
   <section class="post-conclusion">
     <div class="post-conclusion__content">
-      <p class="post-conclusion__kicker">阅读结束</p>
-      <h2 class="post-conclusion__title">继续沿着这个主题展开讨论</h2>
-      <p class="post-conclusion__text">收藏这篇文章，或直接进入评论区补充你的观察和问题。</p>
+      <p class="post-conclusion__kicker">
+        阅读结束
+      </p>
+      <h2 class="post-conclusion__title">
+        继续沿着这个主题展开讨论
+      </h2>
+      <p class="post-conclusion__text">
+        收藏这篇文章，或直接进入评论区补充你的观察和问题。
+      </p>
     </div>
 
-    <PostDetailTagLinks :tags="props.postTags" variant="conclusion" />
+    <PostDetailTagLinks
+      :tags="props.postTags"
+      variant="conclusion"
+    />
   </section>
 </template>
 

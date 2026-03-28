@@ -96,7 +96,12 @@ const userTabConfigs = computed(() => [
 <template>
   <div class="profile-tabs">
     <el-tabs v-model="activeTabModel">
-      <el-tab-pane v-for="tab in postTabConfigs" :key="tab.key" :label="tab.label" :name="tab.key">
+      <el-tab-pane
+        v-for="tab in postTabConfigs"
+        :key="tab.key"
+        :label="tab.label"
+        :name="tab.key"
+      >
         <ProfilePostsTabPanel
           :state="tab.state"
           :loading-text="tab.loadingText"
@@ -113,7 +118,12 @@ const userTabConfigs = computed(() => [
         />
       </el-tab-pane>
 
-      <el-tab-pane v-for="tab in userTabConfigs" :key="tab.key" :label="tab.label" :name="tab.key">
+      <el-tab-pane
+        v-for="tab in userTabConfigs"
+        :key="tab.key"
+        :label="tab.label"
+        :name="tab.key"
+      >
         <ProfileUsersTabPanel
           :state="tab.state"
           :loading-text="tab.loadingText"

@@ -105,7 +105,9 @@ const mobileActions = computed(() => [
   <Teleport to="#post-detail-action-slot">
     <aside class="post-action-rail">
       <section class="post-rail-section post-rail-section--actions">
-        <p class="post-rail-section__kicker">工具轨</p>
+        <p class="post-rail-section__kicker">
+          工具轨
+        </p>
 
         <div class="post-side-actions">
           <PostDetailActionButton
@@ -142,21 +144,23 @@ const mobileActions = computed(() => [
 .post-action-rail {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  width: 96px;
+  gap: 4px;
+  width: 88px;
   box-sizing: border-box;
   align-self: start;
   margin-left: auto;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid var(--color-border);
   border-radius: calc(var(--radius-xl) + 4px);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-surface-overlay) 88%, rgba(255, 255, 255, 0.24) 12%),
+    color-mix(in srgb, var(--color-surface-overlay) 90%, rgba(255, 255, 255, 0.2) 10%),
     color-mix(in srgb, var(--color-surface-overlay) 96%, transparent)
   );
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(12px);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
 }
 
 .post-rail-section--actions {
@@ -164,7 +168,7 @@ const mobileActions = computed(() => [
   align-self: stretch;
   width: 100%;
   margin-left: 0;
-  padding: 10px 0;
+  padding: 6px 0;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -173,17 +177,18 @@ const mobileActions = computed(() => [
 }
 
 .post-rail-section__kicker {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: var(--color-text-tertiary);
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-align: center;
 }
 
 .post-side-actions {
-  display: grid;
-  gap: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .post-side-actions :deep(.action-btn + .action-btn) {
@@ -198,13 +203,13 @@ const mobileActions = computed(() => [
   z-index: 65;
   display: none;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px 10px;
   border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius-xl) - 4px);
+  border-radius: var(--radius-xl);
   background: var(--gradient-card);
   box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(20px);
 }
 
 @media (max-width: 900px) {

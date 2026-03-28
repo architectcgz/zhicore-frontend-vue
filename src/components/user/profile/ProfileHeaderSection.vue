@@ -41,7 +41,10 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <div v-if="props.isCurrentUser" class="check-in-section">
+    <div
+      v-if="props.isCurrentUser"
+      class="check-in-section"
+    >
       <CheckInWidget :user-id="props.userId" />
     </div>
   </div>

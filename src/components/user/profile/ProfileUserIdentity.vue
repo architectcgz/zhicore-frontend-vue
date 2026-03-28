@@ -22,20 +22,29 @@ const statItems = computed(() => [
         :src="props.user.avatar || '/images/default-avatar.svg'"
         :alt="props.user.nickname"
         class="user-avatar"
-      />
+      >
     </div>
 
     <div class="info-section">
       <h1 class="user-name">
         {{ props.user.nickname }}
       </h1>
-      <p class="user-username">@{{ props.user.username }}</p>
-      <p v-if="props.user.bio" class="user-bio">
+      <p class="user-username">
+        @{{ props.user.username }}
+      </p>
+      <p
+        v-if="props.user.bio"
+        class="user-bio"
+      >
         {{ props.user.bio }}
       </p>
 
       <div class="user-stats">
-        <div v-for="item in statItems" :key="item.label" class="stat-item">
+        <div
+          v-for="item in statItems"
+          :key="item.label"
+          class="stat-item"
+        >
           <span class="stat-number">{{ item.value }}</span>
           <span class="stat-label">{{ item.label }}</span>
         </div>

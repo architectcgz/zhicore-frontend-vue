@@ -17,7 +17,11 @@ const emit = defineEmits<{
 
 <template>
   <div class="action-section">
-    <el-button v-if="props.isCurrentUser" type="primary" @click="emit('edit-profile')">
+    <el-button
+      v-if="props.isCurrentUser"
+      type="primary"
+      @click="emit('edit-profile')"
+    >
       编辑资料
     </el-button>
     <el-button

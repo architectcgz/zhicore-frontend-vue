@@ -1,8 +1,18 @@
 <template>
   <div class="breadcrumb">
-    <router-link to="/" class="breadcrumb-link"> 首页 </router-link>
+    <router-link
+      to="/"
+      class="breadcrumb-link"
+    >
+      首页
+    </router-link>
     <span class="breadcrumb-separator">/</span>
-    <router-link to="/posts" class="breadcrumb-link"> 内容 </router-link>
+    <router-link
+      to="/posts"
+      class="breadcrumb-link"
+    >
+      内容
+    </router-link>
     <span class="breadcrumb-separator">/</span>
     <span class="breadcrumb-current">文章详情</span>
   </div>

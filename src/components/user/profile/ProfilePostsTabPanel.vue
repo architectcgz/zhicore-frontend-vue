@@ -47,7 +47,11 @@ const emit = defineEmits<{
     @load-more="emit('load-more')"
   >
     <template #empty-actions>
-      <el-button v-if="props.showCreateAction" type="primary" @click="emit('create-post')">
+      <el-button
+        v-if="props.showCreateAction"
+        type="primary"
+        @click="emit('create-post')"
+      >
         写文章
       </el-button>
     </template>

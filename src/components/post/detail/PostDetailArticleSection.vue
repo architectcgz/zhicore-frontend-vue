@@ -24,17 +24,24 @@ const articleBodyRef: VNodeRef = (element) => {
 <template>
   <main class="post-layout">
     <article class="post-article">
-      <div v-if="props.post.coverImage" class="cover-image-wrapper">
+      <div
+        v-if="props.post.coverImage"
+        class="cover-image-wrapper"
+      >
         <img
           :src="props.post.coverImage"
           :alt="props.post.title"
           class="cover-image"
           @error="emit('image-error', $event)"
-        />
+        >
       </div>
 
       <!-- eslint-disable vue/no-v-html -->
-      <div :ref="articleBodyRef" class="article-body" v-html="props.articleHtml" />
+      <div
+        :ref="articleBodyRef"
+        class="article-body"
+        v-html="props.articleHtml"
+      />
       <!-- eslint-enable vue/no-v-html -->
     </article>
 

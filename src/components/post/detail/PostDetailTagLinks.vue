@@ -21,7 +21,10 @@ const itemClass = computed(() =>
 </script>
 
 <template>
-  <div v-if="props.tags.length > 0" :class="rootClass">
+  <div
+    v-if="props.tags.length > 0"
+    :class="rootClass"
+  >
     <router-link
       v-for="tag in props.tags"
       :key="tag.id"

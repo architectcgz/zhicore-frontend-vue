@@ -45,7 +45,7 @@ const handleAvatarError = (event: Event) => {
           :alt="`${reader.nickname}头像`"
           class="reading-presence__avatar"
           @error="handleAvatarError"
-        />
+        >
       </span>
     </div>
   </div>

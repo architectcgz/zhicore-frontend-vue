@@ -96,6 +96,17 @@ onUnmounted(() => {
     />
 
     <div
+      v-if="isPostDetailRoute"
+      id="post-detail-progress-bar"
+      class="default-layout__reading-progress"
+    >
+      <div
+        id="post-detail-progress-fill"
+        class="default-layout__reading-progress-fill"
+      />
+    </div>
+
+    <div
       class="default-layout__main"
       :class="{
         'default-layout__main--with-aside': showAside,
@@ -172,6 +183,28 @@ onUnmounted(() => {
   right: 0;
   z-index: 120;
   background: transparent;
+}
+
+.default-layout__reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 130;
+  height: 3px;
+  pointer-events: none;
+}
+
+.default-layout__reading-progress-fill {
+  height: 100%;
+  width: var(--post-reading-progress, 0%);
+  background: linear-gradient(
+    90deg,
+    var(--color-accent, #34d399) 0%,
+    color-mix(in srgb, var(--color-accent, #34d399) 70%, #f6c778) 100%
+  );
+  transition: width 120ms linear;
+  transform-origin: left center;
 }
 
 .default-layout__main {

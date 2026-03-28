@@ -14,8 +14,14 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <nav v-if="props.tocItems.length > 0" class="post-rail-section post-toc" aria-label="文章目录">
-    <p class="post-rail-section__kicker">目录导航</p>
+  <nav
+    v-if="props.tocItems.length > 0"
+    class="post-rail-section post-toc"
+    aria-label="文章目录"
+  >
+    <p class="post-rail-section__kicker">
+      目录导航
+    </p>
     <button
       v-for="(item, index) in props.tocItems"
       :key="item.anchor"
@@ -33,6 +39,11 @@ const emit = defineEmits<{
       <span class="post-toc__title">
         {{ item.title }}
       </span>
+      <span
+        v-if="props.activeHeading === item.anchor"
+        class="post-toc__active-dot"
+        aria-hidden="true"
+      />
     </button>
   </nav>
 </template>
@@ -59,51 +70,76 @@ const emit = defineEmits<{
 }
 
 .post-toc {
-  max-height: calc(100vh - 132px);
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 .post-toc__item {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
+  grid-template-columns: 28px minmax(0, 1fr) 8px;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: 0.92rem;
-  line-height: 1.5;
+  font-size: 0.88rem;
+  line-height: 1.45;
   text-align: left;
+  cursor: pointer;
   transition:
-    background-color var(--transition-base),
-    color var(--transition-base),
-    transform var(--transition-base);
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
 }
 
 .post-toc__item + .post-toc__item {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .post-toc__index {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  padding: 0 8px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 80%, white 20%);
+  height: 22px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-surface-overlay) 86%, transparent);
+  background: color-mix(in srgb, var(--color-surface-overlay) 70%, transparent);
   color: var(--color-text-tertiary);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 }
 
 .post-toc__title {
   display: block;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-toc__active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent, #34d399);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-accent, #34d399) 60%, transparent);
+  flex-shrink: 0;
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.75); }
 }
 
 .post-toc__item:hover {
@@ -113,23 +149,31 @@ const emit = defineEmits<{
 }
 
 .post-toc__item--nested {
-  padding-left: 22px;
-  font-size: 0.88rem;
+  padding-left: 18px;
+  font-size: 0.84rem;
 }
 
 .post-toc__item--active {
-  background: var(--color-hover);
-  color: var(--color-cta);
+  background: color-mix(in srgb, var(--color-accent, #34d399) 10%, transparent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  transform: translateX(2px);
 }
 
 .post-toc__item--active .post-toc__index {
-  border-color: color-mix(in srgb, var(--color-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--color-accent) 14%, white 86%);
-  color: var(--color-cta);
+  border-color: color-mix(in srgb, var(--color-accent, #34d399) 40%, transparent);
+  background: color-mix(in srgb, var(--color-accent, #34d399) 15%, transparent);
+  color: var(--color-accent, #34d399);
 }
 
 .post-toc__item:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-toc__active-dot {
+    animation: none;
+  }
 }
 </style>
