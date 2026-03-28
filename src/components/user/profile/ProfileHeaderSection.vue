@@ -19,6 +19,8 @@ const emit = defineEmits<{
   'edit-profile': [];
   'follow-toggle': [];
   'send-message': [];
+  /** 转发 ProfileUserIdentity 的头像上传事件，由 Profile 页面处理实际上传 */
+  'upload-avatar': [];
 }>();
 </script>
 
@@ -27,7 +29,11 @@ const emit = defineEmits<{
     <div class="profile-header">
       <div class="header-background" />
       <div class="header-content">
-        <ProfileUserIdentity :user="props.user" />
+        <ProfileUserIdentity
+          :user="props.user"
+          :is-current-user="props.isCurrentUser"
+          @upload-avatar="emit('upload-avatar')"
+        />
 
         <ProfileHeaderActions
           :is-current-user="props.isCurrentUser"

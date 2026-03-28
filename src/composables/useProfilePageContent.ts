@@ -25,6 +25,7 @@ export function useProfilePageContent() {
     getUserFavorites,
     getUserFollowing,
     getUserFollowers,
+    uploadAvatar,
   } = useUser();
   const { mutate: createConversation, isPending: isCreatingConversation } =
     useCreateConversationMutation();
@@ -174,6 +175,30 @@ export function useProfilePageContent() {
     void router.push(`/users/${targetUserId}`);
   };
 
+  /**
+   * 处理头像上传：从 ProfileUserIdentity 冒泡上来的事件
+   * 打开文件选择器，由用户选择图片后调用 uploadAvatar，成功后刷新用户信息
+   */
+  const handleUploadAvatar = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (event: Event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file || !userProfile.value) {
+        return;
+      }
+      try {
+        const result = await uploadAvatar(file);
+        // 上传成功后用新 URL 更新本地 userProfile，避免重新请求全量数据
+        userProfile.value = { ...userProfile.value, avatar: result.url };
+      } catch {
+        // uploadAvatar 内部已通过 ElMessage.error 展示错误，此处静默处理
+      }
+    };
+    input.click();
+  };
+
   return {
     userId,
     userProfile,
@@ -198,6 +223,7 @@ export function useProfilePageContent() {
     handleSendMessage,
     handleCreatePost,
     handleUserClick,
+    handleUploadAvatar,
     loadPostsPage,
     loadFavoritesPage,
     loadFollowingPage,
