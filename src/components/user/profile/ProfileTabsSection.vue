@@ -145,6 +145,28 @@ const userTabConfigs = computed(() => [
   padding: 0 var(--space-lg);
 }
 
+/* 下划线 Tab 样式：去除 el-tabs 默认边框，激活色使用 --color-cta */
+:deep(.el-tabs__nav-wrap::after) {
+  background-color: var(--color-border-light);
+}
+
+:deep(.el-tabs__active-bar) {
+  background-color: var(--color-cta);
+}
+
+:deep(.el-tabs__item) {
+  color: var(--color-text-secondary);
+}
+
+:deep(.el-tabs__item:hover) {
+  color: var(--color-cta);
+}
+
+:deep(.el-tabs__item.is-active) {
+  color: var(--color-cta);
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .profile-tabs {
     padding: 0 var(--space-md);
