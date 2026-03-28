@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Post } from '@/types';
+import type { Post, PostReadingPresence } from '@/types';
+import PostDetailReadingPresence from '@/components/post/detail/PostDetailReadingPresence.vue';
 import { formatDate, formatNumber } from '@/utils/post-detail-formatters';
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   defaultAvatar: string;
   readingTime: number;
   commentCount: number;
+  readingPresence: PostReadingPresence;
 }
 
 const props = defineProps<Props>();
@@ -44,10 +46,17 @@ const statItems = computed(() => [
       </div>
     </router-link>
 
-    <div class="post-meta-pills">
-      <span v-for="item in statItems" :key="item" class="post-meta-pill soft-pill">
-        {{ item }}
-      </span>
+    <div class="post-meta-side">
+      <div class="post-meta-pills">
+        <span v-for="item in statItems" :key="item" class="post-meta-pill soft-pill">
+          {{ item }}
+        </span>
+      </div>
+
+      <PostDetailReadingPresence
+        :presence="props.readingPresence"
+        :default-avatar="props.defaultAvatar"
+      />
     </div>
   </div>
 </template>
@@ -114,6 +123,14 @@ const statItems = computed(() => [
   gap: 10px;
 }
 
+.post-meta-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .post-meta-pill {
   min-height: 40px;
   padding: 0 14px;
@@ -130,6 +147,10 @@ const statItems = computed(() => [
 
   .post-meta-pills {
     justify-content: flex-start;
+  }
+
+  .post-meta-side {
+    width: 100%;
   }
 }
 

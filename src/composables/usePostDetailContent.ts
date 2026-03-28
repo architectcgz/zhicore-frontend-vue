@@ -2,6 +2,7 @@ import { computed, ref, type CSSProperties } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMarkdown } from '@/composables/useMarkdown';
 import { usePostDetailInteractions } from '@/composables/usePostDetailInteractions';
+import { usePostReadingPresence } from '@/composables/usePostReadingPresence';
 import { usePostReadingState } from '@/composables/usePostReadingState';
 import { usePostQuery } from '@/queries/posts/usePostQuery';
 import { useRecommendedPostsQuery } from '@/queries/posts/useRecommendedPostsQuery';
@@ -51,6 +52,11 @@ export function usePostDetailContent(options: UsePostDetailContentOptions) {
       ...postData.value,
       ...postOverrides.value,
     };
+  });
+
+  const { readingPresence } = usePostReadingPresence({
+    postId: computed(() => post.value?.id),
+    enabled: computed(() => Boolean(post.value?.id) && !error.value),
   });
 
   const articleSource = computed(() => {
@@ -230,6 +236,7 @@ export function usePostDetailContent(options: UsePostDetailContentOptions) {
     headerTags,
     readingTime,
     commentCount,
+    readingPresence,
     handleAvatarError,
     articleHtml,
     handleImageError,

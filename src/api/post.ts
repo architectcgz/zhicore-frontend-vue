@@ -8,6 +8,7 @@ import { normalizePageResponse, type BackendHybridPageResult } from '@/api/contr
 import type { 
   User,
   Post, 
+  PostReadingPresence,
   PaginatedResponse, 
   UploadResponse 
 } from '@/types';
@@ -32,6 +33,15 @@ interface BackendPostSummary {
   viewCount?: number;
   liked?: boolean;
   favorited?: boolean;
+}
+
+interface BackendPostReadingPresence {
+  readingCount?: number;
+  avatars?: Array<{
+    userId?: string;
+    nickname?: string;
+    avatarUrl?: string | null;
+  }>;
 }
 
 export function normalizeUserSummary(source: {
@@ -93,6 +103,19 @@ export function normalizePost(source: BackendPostSummary): Post {
     publishedAt: source.publishedAt,
     createdAt: source.createdAt || source.publishedAt || '',
     updatedAt: source.updatedAt || source.createdAt || source.publishedAt || '',
+  };
+}
+
+export function normalizePostReadingPresence(
+  source?: BackendPostReadingPresence | null
+): PostReadingPresence {
+  return {
+    readingCount: source?.readingCount ?? 0,
+    avatars: (source?.avatars ?? []).map((item) => ({
+      userId: String(item.userId ?? ''),
+      nickname: item.nickname || '已登录用户',
+      avatarUrl: item.avatarUrl || null,
+    })),
   };
 }
 
@@ -174,6 +197,24 @@ export class PostApi {
   async getPostById(postId: string): Promise<Post> {
     const post = await httpClient.get<BackendPostSummary>(`/posts/${postId}`);
     return normalizePost(post);
+  }
+
+  async registerPostReadingSession(postId: string, sessionId: string): Promise<PostReadingPresence> {
+    const presence = await httpClient.post<BackendPostReadingPresence>(`/posts/${postId}/readers/session`, {
+      sessionId,
+    });
+    return normalizePostReadingPresence(presence);
+  }
+
+  async leavePostReadingSession(postId: string, sessionId: string): Promise<void> {
+    await httpClient.post<void>(`/posts/${postId}/readers/session/leave`, {
+      sessionId,
+    });
+  }
+
+  async getPostReadingPresence(postId: string): Promise<PostReadingPresence> {
+    const presence = await httpClient.get<BackendPostReadingPresence>(`/posts/${postId}/readers/presence`);
+    return normalizePostReadingPresence(presence);
   }
 
   /**
