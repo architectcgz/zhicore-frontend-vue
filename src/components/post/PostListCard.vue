@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faHeart, faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import type { Post } from '@/types';
 
 interface Props {
@@ -8,10 +10,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<{
-  like: [postId: string];
-  favorite: [postId: string];
-}>();
 
 const router = useRouter();
 const defaultAvatar = '/images/default-avatar.svg';
@@ -72,8 +70,14 @@ const openPost = () => {
       </p>
 
       <div class="post-list-card__stats">
-        <span>👍 {{ props.post.likeCount }}</span>
-        <span>💬 {{ props.post.commentCount }}</span>
+        <span><FontAwesomeIcon
+          :icon="faHeart"
+          class="post-list-card__stat-icon"
+        /> {{ props.post.likeCount }}</span>
+        <span><FontAwesomeIcon
+          :icon="faCommentDots"
+          class="post-list-card__stat-icon"
+        /> {{ props.post.commentCount }}</span>
       </div>
     </div>
 
@@ -83,28 +87,6 @@ const openPost = () => {
       :src="props.post.coverImage || ''"
       :alt="props.post.title"
     >
-
-    <div
-      class="post-list-card__actions"
-      @click.stop
-    >
-      <button
-        data-test="like-button"
-        class="post-list-card__action"
-        type="button"
-        @click="emit('like', props.post.id)"
-      >
-        {{ props.post.isLiked ? '取消点赞' : '点赞' }}
-      </button>
-      <button
-        data-test="favorite-button"
-        class="post-list-card__action"
-        type="button"
-        @click="emit('favorite', props.post.id)"
-      >
-        {{ props.post.isFavorited ? '取消收藏' : '收藏' }}
-      </button>
-    </div>
   </article>
 </template>
 
@@ -194,18 +176,9 @@ const openPost = () => {
   object-fit: cover;
 }
 
-.post-list-card__actions {
-  display: flex;
-  gap: 10px;
-}
-
-.post-list-card__action {
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
+.post-list-card__stat-icon {
+  width: 0.9em;
+  height: 0.9em;
 }
 
 @media (max-width: 767px) {

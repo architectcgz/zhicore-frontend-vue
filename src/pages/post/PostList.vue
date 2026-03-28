@@ -22,8 +22,6 @@ const {
   isFetchingNextPage,
   updateFilters,
   updatePage,
-  handleLike,
-  handleFavorite,
   loadMore,
 } = usePostsListPage();
 
@@ -129,8 +127,6 @@ onUnmounted(() => {
             v-for="post in posts"
             :key="post.id"
             :post="post"
-            @like="handleLike"
-            @favorite="handleFavorite"
           />
         </div>
 
