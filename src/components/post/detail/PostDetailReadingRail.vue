@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { watchEffect } from 'vue';
+import PostDetailBreadcrumb from '@/components/post/detail/PostDetailBreadcrumb.vue';
 import PostDetailReadingOverview from '@/components/post/detail/PostDetailReadingOverview.vue';
 import PostDetailTocNav from '@/components/post/detail/PostDetailTocNav.vue';
 import type { TocItem } from '@/types/post/detail';
@@ -29,6 +30,8 @@ watchEffect(() => {
 <template>
   <Teleport to="#post-detail-reading-slot">
     <aside class="post-reading-rail">
+      <PostDetailBreadcrumb />
+
       <PostDetailReadingOverview
         :reading-progress-percent="props.readingProgressPercent"
         :reading-time="props.readingTime"

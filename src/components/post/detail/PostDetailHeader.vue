@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Post, PostReadingPresence, Tag } from '@/types';
-import PostDetailBreadcrumb from '@/components/post/detail/PostDetailBreadcrumb.vue';
 import PostDetailHeaderMeta from '@/components/post/detail/PostDetailHeaderMeta.vue';
 import PostDetailTagLinks from '@/components/post/detail/PostDetailTagLinks.vue';
 
@@ -25,8 +24,6 @@ const emit = defineEmits<{
 <template>
   <section class="post-content-header">
     <div class="post-content-header__inner">
-      <PostDetailBreadcrumb />
-
       <div class="post-content-header__eyebrow">
         <span
           v-if="props.sectionCount > 0"

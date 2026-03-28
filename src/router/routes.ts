@@ -100,6 +100,17 @@ export const routes: AppRouteRecordRaw[] = [
         props: true,
       },
       {
+        path: 'view-3/:id',
+        name: 'PostDetailView3',
+        component: () => import('@/pages/post/PostDetailView3.vue'),
+        meta: {
+          title: '文章详情 (方案3)',
+          layout: 'default',
+          keepAlive: false,
+        },
+        props: true,
+      },
+      {
         path: 'create',
         name: 'PostCreate',
         component: () => import('@/pages/post/PostCreate.vue'),

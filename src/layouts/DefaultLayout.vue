@@ -13,6 +13,39 @@ import AppSidebar from '@/components/common/AppSidebar.vue';
 const isSidebarOpen = ref(false);
 const route = useRoute();
 const isMobile = ref(false);
+const isHeaderHidden = ref(false);
+
+let lastScrollY = 0;
+let scrollTicking = false;
+
+const handleScroll = () => {
+  if (scrollTicking) {
+    return;
+  }
+
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    if (!isPostDetailRoute.value) {
+      isHeaderHidden.value = false;
+      scrollTicking = false;
+      return;
+    }
+
+    const currentY = window.scrollY;
+    const delta = currentY - lastScrollY;
+
+    if (currentY < 80) {
+      isHeaderHidden.value = false;
+    } else if (delta > 6) {
+      isHeaderHidden.value = true;
+    } else if (delta < -4) {
+      isHeaderHidden.value = false;
+    }
+
+    lastScrollY = currentY;
+    scrollTicking = false;
+  });
+};
 
 const updateIsMobile = () => {
   if (typeof window === 'undefined') {
@@ -23,7 +56,11 @@ const updateIsMobile = () => {
 };
 
 const isHomeRoute = computed(() => route.name === 'Home');
-const isPostDetailRoute = computed(() => route.name === 'PostDetail');
+const isPostDetailRoute = computed(() =>
+  ['PostDetail', 'PostDetailView3'].includes(
+    String(route.name ?? ''),
+  ),
+);
 const cardlessRouteNames = new Set([
   'UserProfile',
   'Settings',
@@ -79,11 +116,13 @@ onMounted(() => {
   updateIsMobile();
   window.addEventListener('resize', updateIsMobile);
   document.addEventListener('keydown', handleEscapeKey);
+  window.addEventListener('scroll', handleScroll, { passive: true });
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateIsMobile);
   document.removeEventListener('keydown', handleEscapeKey);
+  window.removeEventListener('scroll', handleScroll);
 });
 </script>
 
@@ -91,6 +130,7 @@ onUnmounted(() => {
   <div class="default-layout">
     <AppHeader
       class="default-layout__header"
+      :class="{ 'default-layout__header--hidden': isHeaderHidden }"
       :is-sidebar-open="isSidebarOpen"
       @toggle-sidebar="toggleSidebar"
     />
@@ -183,6 +223,11 @@ onUnmounted(() => {
   right: 0;
   z-index: 120;
   background: transparent;
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.default-layout__header--hidden {
+  transform: translateY(-110%);
 }
 
 .default-layout__reading-progress {
