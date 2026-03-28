@@ -29,21 +29,24 @@ const emit = defineEmits<{
     <div class="profile-header">
       <div class="header-background" />
       <div class="header-content">
+        <!-- action buttons 通过 #actions slot 注入到昵称同行，实现 space-between 布局 -->
         <ProfileUserIdentity
           :user="props.user"
           :is-current-user="props.isCurrentUser"
           @upload-avatar="emit('upload-avatar')"
-        />
-
-        <ProfileHeaderActions
-          :is-current-user="props.isCurrentUser"
-          :is-following="props.isFollowing"
-          :follow-loading="props.followLoading"
-          :is-creating-conversation="props.isCreatingConversation"
-          @edit-profile="emit('edit-profile')"
-          @follow-toggle="emit('follow-toggle')"
-          @send-message="emit('send-message')"
-        />
+        >
+          <template #actions>
+            <ProfileHeaderActions
+              :is-current-user="props.isCurrentUser"
+              :is-following="props.isFollowing"
+              :follow-loading="props.followLoading"
+              :is-creating-conversation="props.isCreatingConversation"
+              @edit-profile="emit('edit-profile')"
+              @follow-toggle="emit('follow-toggle')"
+              @send-message="emit('send-message')"
+            />
+          </template>
+        </ProfileUserIdentity>
       </div>
     </div>
 
@@ -76,7 +79,7 @@ const emit = defineEmits<{
   position: relative;
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  /* justify-content 移除：actions 已内嵌到 ProfileUserIdentity 的 name-actions-row 中 */
   gap: var(--space-lg);
   margin-top: -100px;
   padding: 0 var(--space-lg);

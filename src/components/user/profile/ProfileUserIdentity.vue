@@ -98,10 +98,14 @@ function handleFileChange(event: Event) {
 
     <!-- 信息区域 -->
     <div class="info-section">
-      <!-- 昵称行 -->
-      <h1 class="user-name">
-        {{ props.user.nickname }}
-      </h1>
+      <!-- 昵称行：桌面端昵称与操作按钮同行，space-between 布局 -->
+      <div class="name-actions-row">
+        <h1 class="user-name">
+          {{ props.user.nickname }}
+        </h1>
+        <!-- 操作按钮插槽（编辑资料 / 关注 / 发私信），由父组件传入 -->
+        <slot name="actions" />
+      </div>
 
       <!-- @用户名 -->
       <p class="user-username">
@@ -207,8 +211,17 @@ function handleFileChange(event: Event) {
   padding-top: var(--space-sm);
 }
 
+/* 昵称与操作按钮同行：左侧昵称，右侧 actions slot，space-between */
+.name-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
 .user-name {
-  margin: 0 0 var(--space-xs);
+  margin: 0;
   color: var(--color-text);
   font-size: 2rem;
   font-weight: 700;
@@ -284,6 +297,13 @@ function handleFileChange(event: Event) {
   .info-section {
     padding-top: 0;
     width: 100%;
+  }
+
+  /* 移动端：昵称与 actions 改为纵向堆叠，居中对齐 */
+  .name-actions-row {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
   }
 
   .user-name {

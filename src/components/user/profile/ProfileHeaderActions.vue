@@ -54,6 +54,11 @@ const emit = defineEmits<{
     width: 100%;
     justify-content: center;
   }
+
+  /* 移动端按钮撑满容器宽度，覆盖 Element Plus 默认内联宽度 */
+  :deep(.el-button) {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
