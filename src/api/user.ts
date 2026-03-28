@@ -18,6 +18,7 @@ export interface UserUpdateRequest {
   nickname?: string;
   bio?: string;
   avatarId?: string; // 头像文件ID
+  coverImageId?: string; // 封面图片文件ID
   email?: string;
 }
 

@@ -165,6 +165,7 @@ export interface User {
   followingCount: number;
   postsCount: number;
   isFollowing?: boolean;
+  coverImage?: string | null; // 封面图片URL，可选字段
   createdAt: string;
   updatedAt: string;
 }
