@@ -90,10 +90,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
       @go-home="handleGoHome"
     />
 
-    <div
-      v-else-if="userProfile"
-      class="profile-container"
-    >
+    <template v-else-if="userProfile">
       <ProfileHeaderSection
         :user="userProfile"
         :user-id="userId"
@@ -108,7 +105,8 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
         @cover-updated="handleCoverUpdated"
       />
 
-      <ProfileTabsSection
+      <div class="content-container">
+        <ProfileTabsSection
         :active-tab="activeTab"
         :is-current-user="isCurrentUser"
         :posts-state="posts"
@@ -122,7 +120,8 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
         @post-favorite-change="handleFavoriteChange"
         @user-click="handleUserClick"
       />
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -146,7 +145,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
   font-size: 1rem;
 }
 
-.profile-container {
+.content-container {
   max-width: 1200px;
   margin: 0 auto;
 }
