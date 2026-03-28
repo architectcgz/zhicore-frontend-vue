@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Post, Tag } from '@/types';
+import type { Post, PostReadingPresence, Tag } from '@/types';
 import PostDetailBreadcrumb from '@/components/post/detail/PostDetailBreadcrumb.vue';
 import PostDetailHeaderMeta from '@/components/post/detail/PostDetailHeaderMeta.vue';
 import PostDetailTagLinks from '@/components/post/detail/PostDetailTagLinks.vue';
@@ -11,6 +11,7 @@ interface Props {
   defaultAvatar: string;
   readingTime: number;
   commentCount: number;
+  readingPresence: PostReadingPresence;
   headerTags: Tag[];
 }
 
@@ -45,6 +46,7 @@ const emit = defineEmits<{
         :default-avatar="props.defaultAvatar"
         :reading-time="props.readingTime"
         :comment-count="props.commentCount"
+        :reading-presence="props.readingPresence"
         @avatar-error="emit('avatar-error', $event)"
       />
 

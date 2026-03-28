@@ -19,19 +19,20 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const {
-  defaultAvatar,
-  error,
-  errorPresentation,
+  const {
+    defaultAvatar,
+    error,
+    errorPresentation,
   post,
   isLoading,
   handleRetry,
   sectionCount,
   articleSummary,
   headerTags,
-  readingTime,
-  commentCount,
-  handleAvatarError,
+    readingTime,
+    commentCount,
+    readingPresence,
+    handleAvatarError,
   articleHtml,
   handleImageError,
   postTags,
@@ -69,6 +70,7 @@ const {
       :default-avatar="defaultAvatar"
       :reading-time="readingTime"
       :comment-count="commentCount"
+      :reading-presence="readingPresence"
       :header-tags="headerTags"
       @avatar-error="handleAvatarError"
     />

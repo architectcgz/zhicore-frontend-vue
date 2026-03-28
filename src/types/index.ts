@@ -217,6 +217,8 @@ export interface Comment {
   updatedAt: string;
 }
 
+export type { PostReaderAvatar, PostReadingPresence } from './post/presence';
+
 // 标签类型
 export interface Tag {
   id: string;
