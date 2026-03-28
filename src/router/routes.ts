@@ -89,6 +89,19 @@ export const routes: AppRouteRecordRaw[] = [
     name: 'Posts',
     children: [
       {
+        path: '',
+        name: 'PostList',
+        component: () => import('@/pages/post/PostList.vue'),
+        meta: {
+          title: '文章广场',
+          layout: 'default',
+          showInMenu: true,
+          showSidebar: false,
+          icon: 'list',
+          order: 2,
+        },
+      },
+      {
         path: ':id',
         name: 'PostDetail',
         component: () => import('@/pages/post/PostDetail.vue'),

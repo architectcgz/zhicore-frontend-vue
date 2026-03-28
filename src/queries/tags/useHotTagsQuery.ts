@@ -21,7 +21,7 @@ import { queryKeys } from '../query-keys';
  */
 export function useHotTagsQuery(params?: Ref<{ limit?: number; period?: 'day' | 'week' | 'month' }>) {
   return useQuery({
-    queryKey: computed(() => queryKeys.tags.hot()),
+    queryKey: computed(() => queryKeys.tags.hot(params?.value)),
     queryFn: () => tagApi.getHotTags(params?.value),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

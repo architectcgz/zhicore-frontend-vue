@@ -130,6 +130,42 @@ describe('DefaultLayout 侧边栏显示逻辑', () => {
     expect(wrapper.find('.default-layout__aside').exists()).toBe(true);
   });
 
+  it('PC 端 PostList 路由应使用无卡片内容区且不显示首页右侧插槽', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/posts',
+          name: 'PostList',
+          component: { template: '<div>Posts</div>' },
+          meta: { showSidebar: false },
+        },
+      ],
+    });
+
+    await router.push('/posts');
+    await router.isReady();
+
+    const wrapper = mount(DefaultLayout, {
+      global: {
+        plugins: [router],
+        stubs: {
+          AppHeader: true,
+          AppFooter: true,
+          AppSidebar: true,
+        },
+      },
+      slots: {
+        default: '<div>Content</div>',
+      },
+    });
+
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('.default-layout__content-inner--plain').exists()).toBe(true);
+    expect(wrapper.find('.default-layout__aside').exists()).toBe(false);
+  });
+
   it('移动端当路由 meta.showSidebar 未设置时，应默认显示侧边栏', async () => {
     mockMatchMedia(true);
     const router = createRouter({

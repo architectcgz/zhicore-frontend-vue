@@ -59,11 +59,38 @@ const SHIKI_LANGUAGE_ALIASES: Record<string, string> = {
   bash: 'shellscript',
 };
 
+const SUPPORTED_SHIKI_LANGUAGES = new Set([
+  'javascript',
+  'jsx',
+  'typescript',
+  'tsx',
+  'html',
+  'css',
+  'scss',
+  'less',
+  'vue',
+  'json',
+  'markdown',
+  'shellscript',
+  'python',
+  'java',
+  'go',
+  'rust',
+  'csharp',
+  'php',
+  'ruby',
+  'sql',
+  'yaml',
+  'xml',
+  'dockerfile',
+]);
+
 let highlighter: MarkdownHighlighter | null = null;
 
 const normalizeCodeLanguage = (language: string): string => {
   const normalized = language.toLowerCase();
-  return SHIKI_LANGUAGE_ALIASES[normalized] ?? normalized;
+  const resolved = SHIKI_LANGUAGE_ALIASES[normalized] ?? normalized;
+  return SUPPORTED_SHIKI_LANGUAGES.has(resolved) ? resolved : '';
 };
 
 const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
@@ -74,8 +101,7 @@ const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
   // Avoid `import('shiki')`, which pulls Shiki's full language/theme bundle into the build.
   const [
     { createHighlighterCore },
-    { createOnigurumaEngine },
-    { default: getWasmInstance },
+    { createJavaScriptRegexEngine },
     { default: githubLight },
     { default: githubDark },
     { default: javascript },
@@ -94,8 +120,6 @@ const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
     { default: java },
     { default: go },
     { default: rust },
-    { default: cpp },
-    { default: c },
     { default: csharp },
     { default: php },
     { default: ruby },
@@ -105,8 +129,7 @@ const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
     { default: dockerfile },
   ] = await Promise.all([
     import('shiki/core'),
-    import('shiki/engine/oniguruma'),
-    import('shiki/wasm'),
+    import('shiki/engine/javascript'),
     import('@shikijs/themes/github-light'),
     import('@shikijs/themes/github-dark'),
     import('@shikijs/langs/javascript'),
@@ -125,8 +148,6 @@ const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
     import('@shikijs/langs/java'),
     import('@shikijs/langs/go'),
     import('@shikijs/langs/rust'),
-    import('@shikijs/langs/cpp'),
-    import('@shikijs/langs/c'),
     import('@shikijs/langs/csharp'),
     import('@shikijs/langs/php'),
     import('@shikijs/langs/ruby'),
@@ -155,8 +176,6 @@ const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
       ...java,
       ...go,
       ...rust,
-      ...cpp,
-      ...c,
       ...csharp,
       ...php,
       ...ruby,
@@ -165,7 +184,7 @@ const loadHighlighter = async (): Promise<MarkdownHighlighter> => {
       ...xml,
       ...dockerfile,
     ],
-    engine: await createOnigurumaEngine(getWasmInstance),
+    engine: createJavaScriptRegexEngine(),
   });
   isHighlightLoaded.value = true;
 
@@ -251,6 +270,11 @@ export function useMarkdown() {
       // 获取语言和代码内容
       const language = normalizeCodeLanguage(getLanguageFromClassName(codeBlock.className) || 'text');
       const code = codeBlock.textContent || '';
+
+      if (!language) {
+        codeBlock.classList.add('highlighted');
+        return;
+      }
 
       // 获取当前主题
       const isDark = document.documentElement.classList.contains('dark') ||

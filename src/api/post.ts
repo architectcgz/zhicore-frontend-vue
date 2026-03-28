@@ -33,6 +33,17 @@ interface BackendPostSummary {
   viewCount?: number;
   liked?: boolean;
   favorited?: boolean;
+  tags?: Array<{
+    id?: string | number;
+    name?: string;
+    slug?: string;
+    description?: string;
+    postCount?: number;
+  }>;
+  categoryId?: string | number;
+  categoryName?: string;
+  categorySlug?: string;
+  categoryDescription?: string;
 }
 
 interface BackendPostReadingPresence {
@@ -80,6 +91,36 @@ function normalizeAuthor(source: BackendPostSummary): User {
   });
 }
 
+function normalizeTagSummary(source: NonNullable<BackendPostSummary['tags']>[number]) {
+  const tagId = String(source.id ?? '');
+  const tagName = source.name?.trim() || '未命名标签';
+
+  return {
+    id: tagId,
+    name: tagName,
+    slug: source.slug?.trim() || tagId,
+    description: source.description?.trim() || '',
+    postCount: source.postCount ?? 0,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeCategorySummary(source: BackendPostSummary) {
+  const categoryId = String(source.categoryId ?? '');
+  const categoryName = source.categoryName?.trim() || '未命名分类';
+
+  return {
+    id: categoryId,
+    name: categoryName,
+    slug: source.categorySlug?.trim() || categoryId,
+    description: source.categoryDescription?.trim() || '',
+    postCount: 0,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
 export function normalizePost(source: BackendPostSummary): Post {
   return {
     id: String(source.id),
@@ -92,7 +133,9 @@ export function normalizePost(source: BackendPostSummary): Post {
     coverImage: source.coverImageUrl,
     authorId: String(source.ownerId ?? ''),
     author: normalizeAuthor(source),
-    tags: [],
+    tags: (source.tags ?? []).map(normalizeTagSummary),
+    categoryId: source.categoryId ? String(source.categoryId) : undefined,
+    category: source.categoryId ? normalizeCategorySummary(source) : undefined,
     status: (source.status as Post['status']) || 'PUBLISHED',
     viewCount: source.viewCount ?? 0,
     likeCount: source.likeCount ?? 0,
@@ -150,6 +193,9 @@ export interface PostQueryParams {
   authorId?: string;
   categoryId?: string;
   tagId?: string;
+  tagIds?: string[];
+  dateFrom?: string;
+  dateTo?: string;
   keyword?: string;
 }
 

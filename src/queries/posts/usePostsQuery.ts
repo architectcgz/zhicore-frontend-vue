@@ -16,6 +16,10 @@ import { queryKeys } from '../query-keys';
 import { CACHE_TIMES } from '../query-config';
 import type { PaginatedResponse, Post } from '@/types';
 
+interface UsePostsQueryOptions {
+  enabled?: Ref<boolean> | boolean;
+}
+
 /**
  * 获取分页文章列表
  *
@@ -34,10 +38,18 @@ import type { PaginatedResponse, Post } from '@/types';
  *
  * **Validates: Requirements 3.2, 3.8**
  */
-export function usePostsQuery(params: Ref<PostQueryParams> | PostQueryParams = {}) {
+export function usePostsQuery(
+  params: Ref<PostQueryParams> | PostQueryParams = {},
+  options: UsePostsQueryOptions = {},
+) {
   // 将 params 转换为 computed，统一处理 Ref 和普通对象
   const queryParams = computed(() =>
     typeof params === 'object' && 'value' in params ? params.value : params
+  );
+  const isEnabled = computed(() =>
+    typeof options.enabled === 'object' && options.enabled && 'value' in options.enabled
+      ? options.enabled.value
+      : options.enabled ?? true
   );
 
   return useQuery<PaginatedResponse<Post>>({
@@ -45,6 +57,7 @@ export function usePostsQuery(params: Ref<PostQueryParams> | PostQueryParams = {
     queryKey: computed(() => queryKeys.posts.list(queryParams.value)),
     // 查询函数
     queryFn: () => postApi.getPosts(queryParams.value),
+    enabled: isEnabled,
     // 使用统一的文章列表缓存配置
     ...CACHE_TIMES.POST_LIST,
   });

@@ -163,6 +163,13 @@ export const queryKeys = {
     list: (filters: PostQueryParams) => [...queryKeys.posts.lists(), filters] as const,
 
     /**
+     * 无限滚动文章列表查询 key
+     * @param filters - 查询过滤条件
+     */
+    infiniteList: (filters: Omit<PostQueryParams, 'page'>) =>
+      [...queryKeys.posts.lists(), 'infinite', filters] as const,
+
+    /**
      * 所有文章详情查询的基础 key
      */
     details: () => [...queryKeys.posts.all, 'detail'] as const,
@@ -398,7 +405,8 @@ export const queryKeys = {
     /**
      * 热门标签查询 key
      */
-    hot: () => [...queryKeys.tags.all, 'hot'] as const,
+    hot: (filters?: { limit?: number; period?: 'day' | 'week' | 'month' }) =>
+      [...queryKeys.tags.all, 'hot', filters] as const,
 
     /**
      * 推荐标签查询 key

@@ -64,7 +64,7 @@ const isPostDetailRoute = computed(() =>
 const cardlessRouteNames = new Set([
   'UserProfile',
   'Settings',
-  'Posts',
+  'PostList',
   'CategoryList',
   'CategoryDetail',
   'TagList',
@@ -73,16 +73,7 @@ const cardlessRouteNames = new Set([
 ]);
 const isCardlessContentRoute = computed(() => {
   const routeName = String(route.name ?? '');
-  if (cardlessRouteNames.has(routeName)) {
-    return true;
-  }
-
-  // /posts 当前只有父路由，不挂载具体页面组件；保留无卡片主区域以避免落回默认卡片壳。
-  if (route.path === '/posts') {
-    return true;
-  }
-
-  return false;
+  return cardlessRouteNames.has(routeName);
 });
 const showSidebar = computed(() => {
   if (!isMobile.value) {

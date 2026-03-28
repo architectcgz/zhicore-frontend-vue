@@ -1,7 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { VueQueryPlugin } from '@tanstack/vue-query';
-import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import './assets/styles/main.css';
 import './assets/styles/accessibility.css';
@@ -14,6 +13,7 @@ import { vFocusIndicator, vFocusVisible } from './directives/focusIndicator';
 import { setupErrorHandler } from './utils/errorHandler';
 import { createQueryClient, setupQueryErrorHandler } from './plugins/vue-query';
 import { migrateStorage } from './utils/storageMigration';
+import { ElementPlusPlugin } from './plugins/element-plus';
 import { IconsPlugin } from './plugins/icons';
 
 // 执行存储迁移（从 blog- 前缀迁移到 zhicore- 前缀）
@@ -38,7 +38,7 @@ async function bootstrap() {
   await authStore.initAuth();
 
   app.use(router);
-  app.use(ElementPlus);
+  app.use(ElementPlusPlugin);
   app.use(VueQueryPlugin, { queryClient });
   app.use(IconsPlugin);
 

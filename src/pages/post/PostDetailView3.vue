@@ -168,7 +168,7 @@ const {
     <PostDetailRelatedSection
       v-if="post && !isLoading && !error"
       :kicker="relatedSectionKicker"
-      :section-title="relatedSectionTitle"
+      :title="relatedSectionTitle"
       :is-loading="isRelatedLoading"
       :cards="relatedCards"
     />
