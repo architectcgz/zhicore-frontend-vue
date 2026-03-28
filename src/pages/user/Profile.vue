@@ -107,19 +107,19 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
 
       <div class="content-container">
         <ProfileTabsSection
-        :active-tab="activeTab"
-        :is-current-user="isCurrentUser"
-        :posts-state="posts"
-        :favorites-state="favorites"
-        :following-state="following"
-        :followers-state="followers"
-        @update:active-tab="activeTab = $event"
-        @load-tab="handleLoadTab"
-        @create-post="handleCreatePost"
-        @post-like-change="handleLikeChange"
-        @post-favorite-change="handleFavoriteChange"
-        @user-click="handleUserClick"
-      />
+          :active-tab="activeTab"
+          :is-current-user="isCurrentUser"
+          :posts-state="posts"
+          :favorites-state="favorites"
+          :following-state="following"
+          :followers-state="followers"
+          @update:active-tab="activeTab = $event"
+          @load-tab="handleLoadTab"
+          @create-post="handleCreatePost"
+          @post-like-change="handleLikeChange"
+          @post-favorite-change="handleFavoriteChange"
+          @user-click="handleUserClick"
+        />
       </div>
     </template>
   </div>
