@@ -34,6 +34,7 @@ const {
   handleSendMessage,
   handleCreatePost,
   handleUserClick,
+  handleUploadAvatar,
   loadPostsPage,
   loadFavoritesPage,
   loadFollowingPage,
@@ -93,6 +94,7 @@ const handleLoadTab = ({ tab, append = false }: ProfileTabLoadRequest) => {
         @edit-profile="handleEditProfile"
         @follow-toggle="handleFollowToggle"
         @send-message="handleSendMessage"
+        @upload-avatar="handleUploadAvatar"
       />
 
       <ProfileTabsSection
