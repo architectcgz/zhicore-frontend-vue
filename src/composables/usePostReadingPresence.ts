@@ -10,6 +10,7 @@ interface UsePostReadingPresenceOptions {
 }
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
+const PRESENCE_REFRESH_INTERVAL_MS = 3_000;
 
 function createEmptyPresence(): PostReadingPresence {
   return {
@@ -49,11 +50,20 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
   const activePostId = ref<string | null>(null);
 
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  let presenceRefreshTimer: ReturnType<typeof setInterval> | null = null;
+  let lifecycleToken = 0;
 
   const clearHeartbeat = () => {
     if (heartbeatTimer !== null) {
       clearInterval(heartbeatTimer);
       heartbeatTimer = null;
+    }
+  };
+
+  const clearPresenceRefresh = () => {
+    if (presenceRefreshTimer !== null) {
+      clearInterval(presenceRefreshTimer);
+      presenceRefreshTimer = null;
     }
   };
 
@@ -77,6 +87,32 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
       const status = getErrorStatus(error);
       if (status === 403 || status === 404) {
         clearHeartbeat();
+      }
+
+      return false;
+    }
+  };
+
+  const refreshPresence = async (postId: string) => {
+    try {
+      const nextPresence = await postApi.getPostReadingPresence(postId);
+      if (activePostId.value !== postId) {
+        return false;
+      }
+      presence.value = nextPresence;
+      return true;
+    } catch (error) {
+      if (activePostId.value !== postId) {
+        return false;
+      }
+
+      const status = getErrorStatus(error);
+      if (status === 403 || status === 404) {
+        clearHeartbeat();
+        clearPresenceRefresh();
+        activePostId.value = null;
+        currentSessionId.value = null;
+        resetPresence();
       }
 
       return false;
@@ -114,6 +150,7 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
     const sessionId = currentSessionId.value;
 
     clearHeartbeat();
+    clearPresenceRefresh();
 
     if (!postId || !sessionId) {
       activePostId.value = null;
@@ -139,6 +176,7 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
   };
 
   const startSession = async () => {
+    const currentToken = ++lifecycleToken;
     const postId = resolvedPostId.value;
     if (!isEnabled.value || !postId || !isVisible()) {
       await leaveCurrentSession();
@@ -146,13 +184,16 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
     }
 
     await leaveCurrentSession();
+    if (currentToken !== lifecycleToken) {
+      return;
+    }
 
     const sessionId = createSessionId();
     activePostId.value = postId;
     currentSessionId.value = sessionId;
 
     const synced = await syncSession(postId, sessionId);
-    if (!synced || activePostId.value !== postId || currentSessionId.value !== sessionId) {
+    if (!synced || currentToken !== lifecycleToken || activePostId.value !== postId || currentSessionId.value !== sessionId) {
       return;
     }
 
@@ -164,10 +205,20 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
 
       void syncSession(activePostId.value, currentSessionId.value);
     }, HEARTBEAT_INTERVAL_MS);
+
+    presenceRefreshTimer = setInterval(() => {
+      if (!activePostId.value) {
+        clearPresenceRefresh();
+        return;
+      }
+
+      void refreshPresence(activePostId.value);
+    }, PRESENCE_REFRESH_INTERVAL_MS);
   };
 
   const handleVisibilityChange = () => {
     if (!isVisible()) {
+      lifecycleToken += 1;
       void leaveCurrentSession();
       return;
     }
@@ -176,6 +227,7 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
   };
 
   const handlePageHide = () => {
+    lifecycleToken += 1;
     void leaveCurrentSession('keepalive');
   };
 
@@ -187,6 +239,7 @@ export function usePostReadingPresence(options: UsePostReadingPresenceOptions) {
   onBeforeUnmount(() => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('pagehide', handlePageHide);
+    lifecycleToken += 1;
     void leaveCurrentSession('keepalive');
   });
 

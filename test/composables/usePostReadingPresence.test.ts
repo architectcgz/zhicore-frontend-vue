@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, reactive, ref } from 'vue';
 import { usePostReadingPresence } from '@/composables/usePostReadingPresence';
 
-const { registerPostReadingSession, leavePostReadingSession } = vi.hoisted(() => ({
+const { registerPostReadingSession, leavePostReadingSession, getPostReadingPresence } = vi.hoisted(() => ({
   registerPostReadingSession: vi.fn(),
   leavePostReadingSession: vi.fn(),
+  getPostReadingPresence: vi.fn(),
 }));
 const authStore = reactive({
   user: null as { id: string } | null,
@@ -18,6 +19,7 @@ vi.mock('@/api/post', () => ({
   postApi: {
     registerPostReadingSession,
     leavePostReadingSession,
+    getPostReadingPresence,
   },
 }));
 
@@ -37,6 +39,10 @@ describe('usePostReadingPresence', () => {
       avatars: [],
     });
     leavePostReadingSession.mockResolvedValue(undefined);
+    getPostReadingPresence.mockResolvedValue({
+      readingCount: 2,
+      avatars: [],
+    });
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true })));
     Object.defineProperty(document, 'hidden', {
       configurable: true,
@@ -88,6 +94,34 @@ describe('usePostReadingPresence', () => {
     await flushPromises();
 
     expect(registerPostReadingSession).toHaveBeenCalledTimes(2);
+
+    wrapper.unmount();
+  });
+
+  it('refreshes displayed presence before the next heartbeat', async () => {
+    registerPostReadingSession.mockResolvedValueOnce({
+      readingCount: 1,
+      avatars: [],
+    });
+    getPostReadingPresence.mockResolvedValueOnce({
+      readingCount: 2,
+      avatars: [],
+    });
+
+    const { wrapper } = createHarness();
+
+    await flushPromises();
+
+    expect(wrapper.vm.readingPresence.readingCount).toBe(1);
+    expect(getPostReadingPresence).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(3_000);
+    await flushPromises();
+
+    expect(getPostReadingPresence).toHaveBeenCalledTimes(1);
+    expect(getPostReadingPresence).toHaveBeenCalledWith('1001');
+    expect(wrapper.vm.readingPresence.readingCount).toBe(2);
+    expect(registerPostReadingSession).toHaveBeenCalledTimes(1);
 
     wrapper.unmount();
   });
