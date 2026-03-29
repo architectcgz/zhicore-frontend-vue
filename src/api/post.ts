@@ -18,10 +18,21 @@ interface BackendPostSummary {
   ownerId?: string;
   ownerName?: string;
   ownerAvatar?: string;
+  author?: {
+    id?: string | number;
+    userName?: string;
+    username?: string;
+    nickname?: string;
+    avatarId?: string | null;
+    avatarUrl?: string | null;
+    role?: string;
+    roles?: string[];
+  };
   title: string;
   raw?: string;
   html?: string;
   excerpt?: string;
+  coverImage?: string;
   coverImageUrl?: string;
   status?: string;
   publishedAt?: string;
@@ -59,18 +70,24 @@ export function normalizeUserSummary(source: {
   ownerId?: string;
   ownerName?: string;
   ownerAvatar?: string;
+  id?: string | number;
+  userName?: string;
+  username?: string;
+  nickname?: string;
+  avatarId?: string | null;
+  avatarUrl?: string | null;
   role?: string;
   roles?: string[];
 }): User {
-  const nickname = source.ownerName || '匿名用户';
+  const nickname = source.nickname || source.ownerName || source.userName || source.username || '匿名用户';
   const isAdmin = source.role === 'ADMIN' || source.roles?.includes('ADMIN');
 
   return {
-    id: String(source.ownerId ?? ''),
-    username: nickname,
+    id: String(source.ownerId ?? source.id ?? ''),
+    username: source.username || source.userName || nickname,
     email: '',
     nickname,
-    avatar: source.ownerAvatar || '',
+    avatar: source.ownerAvatar || source.avatarUrl || source.avatarId || '',
     bio: '',
     role: isAdmin ? 'ADMIN' : 'USER',
     followersCount: 0,
@@ -82,6 +99,19 @@ export function normalizeUserSummary(source: {
 }
 
 function normalizeAuthor(source: BackendPostSummary): User {
+  if (source.author) {
+    return normalizeUserSummary({
+      id: source.author.id,
+      userName: source.author.userName,
+      username: source.author.username,
+      nickname: source.author.nickname,
+      avatarId: source.author.avatarId,
+      avatarUrl: source.author.avatarUrl,
+      role: source.author.role,
+      roles: source.author.roles,
+    });
+  }
+
   const nickname = source.ownerName || '匿名用户';
 
   return normalizeUserSummary({
@@ -130,7 +160,7 @@ export function normalizePost(source: BackendPostSummary): Post {
     htmlContent: source.html,
     excerpt: source.excerpt || '',
     summary: source.excerpt || '',
-    coverImage: source.coverImageUrl,
+    coverImage: source.coverImageUrl || source.coverImage,
     authorId: String(source.ownerId ?? ''),
     author: normalizeAuthor(source),
     tags: (source.tags ?? []).map(normalizeTagSummary),

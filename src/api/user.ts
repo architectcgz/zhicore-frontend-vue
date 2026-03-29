@@ -4,6 +4,8 @@
  */
 
 import { httpClient } from '@/utils/request';
+import { normalizePageResponse, type BackendHybridPageResult } from '@/api/contracts';
+import { normalizePost } from '@/api/post';
 import type { 
   User, 
   Post,
@@ -209,7 +211,8 @@ export class UserApi {
     userId: string,
     params?: { page?: number; size?: number; status?: 'PUBLISHED' | 'DRAFT' }
   ): Promise<PaginatedResponse<Post>> {
-    return httpClient.get<PaginatedResponse<Post>>(`/users/${userId}/posts`, params);
+    const pageResult = await httpClient.get<BackendHybridPageResult<Post>>(`/users/${userId}/posts`, params);
+    return normalizePageResponse(pageResult, normalizePost);
   }
 
   /**

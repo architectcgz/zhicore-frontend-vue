@@ -63,7 +63,7 @@ const emit = defineEmits<{
     <slot v-else />
 
     <div
-      v-if="props.hasMore"
+      v-if="props.hasMore && props.listLength > 0 && !props.loading && !props.error"
       class="load-more"
     >
       <button

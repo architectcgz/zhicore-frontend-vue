@@ -198,4 +198,21 @@ describe('useProfilePageContent', () => {
 
     expect(loadFollowingPage).toHaveBeenCalledTimes(1);
   });
+
+  it('still loads published posts for unauthenticated viewers on first entry', async () => {
+    authStore.isAuthenticated = false;
+    authStore.user = null;
+
+    const scope = effectScope();
+    scope.run(() => useProfilePageContent());
+    cleanup.push(() => scope.stop());
+
+    await flushProfileEffects();
+
+    expect(fetchUserProfile).toHaveBeenCalledWith('user-1');
+    expect(loadPostsPage).toHaveBeenCalledTimes(1);
+    expect(loadFavoritesPage).not.toHaveBeenCalled();
+    expect(loadFollowingPage).not.toHaveBeenCalled();
+    expect(loadFollowersPage).not.toHaveBeenCalled();
+  });
 });

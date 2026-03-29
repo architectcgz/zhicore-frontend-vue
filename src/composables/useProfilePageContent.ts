@@ -105,7 +105,7 @@ export function useProfilePageContent() {
       return;
     }
 
-    if (!isAuthenticated.value) {
+    if (!isAuthenticated.value && tab !== 'posts') {
       return;
     }
 
