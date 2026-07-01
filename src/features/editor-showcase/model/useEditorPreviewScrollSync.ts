@@ -9,6 +9,7 @@ import {
 } from "./editorScrollSync";
 
 const scrollLogger = createEditorLogger("scroll");
+const editorBottomStickinessMinTolerancePx = 2;
 
 export interface UseEditorPreviewScrollSyncOptions {
   bodyInputRef: Readonly<Ref<HTMLTextAreaElement | null>>;
@@ -20,13 +21,53 @@ export interface UseEditorPreviewScrollSyncOptions {
 
 function getBodyInputLineHeight(bodyInput: HTMLTextAreaElement): number {
   const style = window.getComputedStyle(bodyInput);
-  const parsedLineHeight = Number.parseFloat(style.lineHeight);
+  const parsedLineHeight =
+    Number.parseFloat(style.lineHeight) ||
+    Number.parseFloat(bodyInput.style.lineHeight);
 
   if (Number.isFinite(parsedLineHeight)) {
     return parsedLineHeight;
   }
 
-  return Number.parseFloat(style.fontSize) * 1.84;
+  const parsedFontSize =
+    Number.parseFloat(style.fontSize) ||
+    Number.parseFloat(bodyInput.style.fontSize);
+
+  return (Number.isFinite(parsedFontSize) ? parsedFontSize : 18) * 1.84;
+}
+
+function getEditorMaxScrollTop(writingEditor: HTMLElement): number {
+  return Math.max(0, writingEditor.scrollHeight - writingEditor.clientHeight);
+}
+
+function hasBodyCaretAtDocumentEnd(bodyInput: HTMLTextAreaElement): boolean {
+  return (
+    bodyInput.selectionStart === bodyInput.value.length &&
+    bodyInput.selectionEnd === bodyInput.value.length
+  );
+}
+
+function shouldKeepEditorPinnedToBottom(
+  writingEditor: HTMLElement,
+  bodyInput: HTMLTextAreaElement,
+): boolean {
+  if (
+    document.activeElement !== bodyInput ||
+    !hasBodyCaretAtDocumentEnd(bodyInput)
+  ) {
+    return false;
+  }
+
+  const maxScrollTop = getEditorMaxScrollTop(writingEditor);
+  const bottomTolerance = Math.max(
+    editorBottomStickinessMinTolerancePx,
+    getBodyInputLineHeight(bodyInput),
+  );
+
+  return (
+    maxScrollTop <= bottomTolerance ||
+    writingEditor.scrollTop >= maxScrollTop - bottomTolerance
+  );
 }
 
 function getSourceLineNumberAtEditorTop(
@@ -72,12 +113,33 @@ export function useEditorPreviewScrollSync(
     }
 
     const previousEditorScrollTop = writingEditor?.scrollTop ?? 0;
+    const previousBodyInputScrollTop = bodyInput.scrollTop;
+    const shouldStickToEditorBottom =
+      writingEditor !== null
+        ? shouldKeepEditorPinnedToBottom(writingEditor, bodyInput)
+        : false;
 
     bodyInput.style.height = "auto";
     bodyInput.style.height = `${bodyInput.scrollHeight}px`;
+    bodyInput.scrollTop = 0;
 
     if (writingEditor) {
-      writingEditor.scrollTop = previousEditorScrollTop;
+      if (
+        document.activeElement === bodyInput &&
+        previousBodyInputScrollTop > 0
+      ) {
+        // 浏览器先把 textarea 内容向下滚动以追随光标；auto-height 后把这段位移转移给外层编辑器。
+        writingEditor.scrollTop = Math.min(
+          previousEditorScrollTop + previousBodyInputScrollTop,
+          getEditorMaxScrollTop(writingEditor),
+        );
+        return;
+      }
+
+      // 尾部继续输入但没有内部滚动位移时兜底贴底；普通编辑仍保留用户当前阅读位置。
+      writingEditor.scrollTop = shouldStickToEditorBottom
+        ? getEditorMaxScrollTop(writingEditor)
+        : previousEditorScrollTop;
     }
   }
 
