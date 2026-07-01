@@ -2,6 +2,8 @@
 
 本文定义 ZhiCore 前端 CSS 的长期写法。目标不是限制视觉表达，而是避免样式 owner 漂移、页面级补丁堆叠、主题变量失控和响应式反复回归。
 
+前端 route page、feature model、Pinia、API、组件和 runtime 的工程边界见 `docs/architecture/frontend-engineering-guidelines.md`。
+
 ## 适用范围
 
 - 适用于 `src/**/*.vue`、`src/style.css` 和后续新增的全局样式文件。
