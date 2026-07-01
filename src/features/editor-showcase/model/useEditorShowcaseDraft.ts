@@ -6,6 +6,7 @@ import {
   type EditorCompiledDocument,
   type EditorCompiledInlineNode,
 } from "./editorContentCompiler";
+import { createEditorLogger } from "./editorDebug";
 import {
   defaultEditorShowcaseBody,
   defaultEditorShowcaseTitle,
@@ -30,6 +31,8 @@ export interface UseEditorShowcaseDraftOptions {
 }
 
 const defaultPreviewCompileDebounceMs = 160;
+const compilerLogger = createEditorLogger("compiler");
+const toolbarLogger = createEditorLogger("toolbar");
 
 function createContentHash(content: string): string {
   let hash = 2166136261;
@@ -100,6 +103,13 @@ export function useEditorShowcaseDraft(
     }
 
     compiledDocument.value = compileContent(body.value);
+    compilerLogger.debug(() => [
+      "compiled preview",
+      {
+        bodyHash: nextBodyHash,
+        blockCount: compiledDocument.value.blocks.length,
+      },
+    ]);
     lastCompiledBody = body.value;
     lastCompiledBodyHash = nextBodyHash;
   }
@@ -133,6 +143,14 @@ export function useEditorShowcaseDraft(
     const result = applyToolbarActionToBody(body.value, action, selection);
 
     body.value = result.nextBody;
+    toolbarLogger.debug(() => [
+      "applied toolbar action",
+      {
+        action,
+        selection,
+        nextSelection: result.nextSelection,
+      },
+    ]);
     return result.nextSelection;
   }
 

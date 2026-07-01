@@ -1,18 +1,18 @@
+import { createAppLogger, type AppLogger } from "@/runtime/logger";
+
 export const isEditorDebugMode =
   import.meta.env.VITE_ZHICORE_EDITOR_DEBUG === "true";
 
-function createEditorDebugLogger() {
-  function log(...args: unknown[]): void {
-    if (!isEditorDebugMode) {
-      return;
-    }
+export type EditorLoggerNamespace =
+  "compiler" | "scroll" | "toolbar" | "workspace";
 
-    console.debug("[zhicore-editor]", ...args);
-  }
+export type EditorDebugNamespace = EditorLoggerNamespace;
+export type EditorDebugLogger = AppLogger;
 
-  return {
-    log,
-  };
+export function createEditorLogger(
+  namespace: EditorLoggerNamespace,
+): EditorDebugLogger {
+  return createAppLogger(["editor", namespace]);
 }
 
-export const editorDebugLogger = createEditorDebugLogger();
+export const createEditorDebugLogger = createEditorLogger;

@@ -1,11 +1,14 @@
 import { computed, nextTick, type Ref } from "vue";
 
 import type { EditorCompiledBlock } from "./editorContentCompiler";
+import { createEditorLogger } from "./editorDebug";
 import {
   buildBlockLineAnchors,
   getActiveBlockIndexFromLine,
   getSyncedScrollTop,
 } from "./editorScrollSync";
+
+const scrollLogger = createEditorLogger("scroll");
 
 export interface UseEditorPreviewScrollSyncOptions {
   bodyInputRef: Readonly<Ref<HTMLTextAreaElement | null>>;
@@ -111,6 +114,14 @@ export function useEditorPreviewScrollSync(
           readerPreview,
           blockElement,
         );
+        scrollLogger.debug(() => [
+          "synced preview by block anchor",
+          {
+            sourceLineNumber,
+            activeBlockIndex,
+            targetScrollTop: readerPreview.scrollTop,
+          },
+        ]);
         return;
       }
     }
@@ -122,6 +133,13 @@ export function useEditorPreviewScrollSync(
       targetScrollHeight: readerPreview.scrollHeight,
       targetClientHeight: readerPreview.clientHeight,
     });
+    scrollLogger.debug(() => [
+      "synced preview by scroll progress",
+      {
+        sourceScrollTop: writingEditor.scrollTop,
+        targetScrollTop: readerPreview.scrollTop,
+      },
+    ]);
   }
 
   async function syncEditorLayoutOnNextFrame(): Promise<void> {
