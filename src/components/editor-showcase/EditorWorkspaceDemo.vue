@@ -123,6 +123,8 @@
                 class="body-input"
                 rows="14"
                 aria-label="文章正文"
+                @input="syncPreviewScrollOnNextFrame"
+                @scroll="syncPreviewScroll"
               />
 
               <footer class="document-structure">
@@ -134,7 +136,11 @@
           </section>
         </main>
 
-        <aside class="reader-preview" aria-label="读者预览">
+        <aside
+          ref="readerPreviewRef"
+          class="reader-preview"
+          aria-label="读者预览"
+        >
           <div class="reader-preview__header">
             <span>读者视图</span>
             <strong>{{ wordCount }} 字</strong>
@@ -165,6 +171,7 @@
 import { nextTick, ref } from "vue";
 import { RouterLink } from "vue-router";
 
+import { getSyncedScrollTop } from "@/features/editor-showcase/model/editorScrollSync";
 import { useEditorShowcaseDisplay } from "@/features/editor-showcase/model/useEditorShowcaseDisplay";
 import {
   useEditorShowcaseDraft,
@@ -193,6 +200,29 @@ const {
 } = useEditorShowcaseDraft();
 
 const bodyInputRef = ref<HTMLTextAreaElement | null>(null);
+const readerPreviewRef = ref<HTMLElement | null>(null);
+
+function syncPreviewScroll(): void {
+  const bodyInput = bodyInputRef.value;
+  const readerPreview = readerPreviewRef.value;
+
+  if (!bodyInput || !readerPreview || !isPreviewMode.value) {
+    return;
+  }
+
+  readerPreview.scrollTop = getSyncedScrollTop({
+    sourceScrollTop: bodyInput.scrollTop,
+    sourceScrollHeight: bodyInput.scrollHeight,
+    sourceClientHeight: bodyInput.clientHeight,
+    targetScrollHeight: readerPreview.scrollHeight,
+    targetClientHeight: readerPreview.clientHeight,
+  });
+}
+
+async function syncPreviewScrollOnNextFrame(): Promise<void> {
+  await nextTick();
+  window.requestAnimationFrame(syncPreviewScroll);
+}
 
 async function handleToolbarAction(
   action: EditorShowcaseToolbarAction,
@@ -211,6 +241,7 @@ async function handleToolbarAction(
   await nextTick();
   bodyInputRef.value?.focus();
   bodyInputRef.value?.setSelectionRange(nextSelection.start, nextSelection.end);
+  syncPreviewScroll();
 }
 </script>
 
@@ -608,6 +639,9 @@ async function handleToolbarAction(
   --reader-task-accent: #1f6f77;
 
   min-width: 0;
+  max-height: min(760px, calc(100vh - 170px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 18px;
   opacity: 1;
   pointer-events: auto;
