@@ -12,7 +12,7 @@
         aria-label="草稿结构状态"
       >
         <span>schema v1</span>
-        <span>{{ previewBlocks.length }} blocks</span>
+        <span>{{ readerBlocks.length }} blocks</span>
         <span>postVersion 12</span>
       </div>
     </header>
@@ -37,7 +37,7 @@
           ref="writingPaneRef"
           v-model:title="title"
           v-model:body="body"
-          :block-count="previewBlocks.length"
+          :block-count="readerBlocks.length"
           :debug="isEditorDebugMode"
           @body-input="handleBodyInput"
           @toolbar-action="handleToolbarAction"
@@ -47,7 +47,7 @@
         <EditorPreviewPane
           ref="previewPaneRef"
           :preview-title="previewTitle"
-          :preview-blocks="previewBlocks"
+          :preview-blocks="readerBlocks"
           :word-count="wordCount"
         />
       </div>
@@ -85,6 +85,7 @@ const {
   title,
   body,
   previewTitle,
+  readerBlocks,
   previewBlocks,
   wordCount,
   applyToolbarAction,

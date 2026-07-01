@@ -71,6 +71,25 @@ describe("editorContentCompiler", () => {
     expect(compiledDocument.html).toBe("<p>```go<br>123213</p>");
   });
 
+  it("keeps an unclosed math fence as plain text without duplicating content", () => {
+    const compiledDocument = compileEditorContent("$$E = mc^2\nnext line");
+
+    expect(compiledDocument.blocks).toMatchObject([
+      {
+        type: "text",
+        label: "Text",
+        content: "$$E = mc^2\nnext line",
+        inlineNodes: [
+          {
+            type: "text",
+            text: "$$E = mc^2\nnext line",
+          },
+        ],
+      },
+    ]);
+    expect(compiledDocument.html).toBe("<p>$$E = mc^2<br>next line</p>");
+  });
+
   it("compiles bold inline markdown into strong nodes and html", () => {
     const compiledDocument = compileEditorContent("这是 **123123** 文本。");
 
@@ -179,7 +198,7 @@ describe("editorContentCompiler", () => {
         "- [x] 完成项",
         "- [ ] 待办项",
         "",
-        "![架构图](/assets/diagram.png)",
+        "![架构图](https://example.com/assets/diagram.png)",
       ].join("\n"),
     );
 
@@ -305,13 +324,13 @@ describe("editorContentCompiler", () => {
       {
         type: "media",
         label: "Image",
-        content: "![架构图](/assets/diagram.png)",
+        content: "![架构图](https://example.com/assets/diagram.png)",
         alt: "架构图",
-        src: "/assets/diagram.png",
+        src: "https://example.com/assets/diagram.png",
       },
     ]);
     expect(compiledDocument.html).toBe(
-      '<h2>标题 <strong>加粗</strong></h2><blockquote>引用 <code>code</code></blockquote><ul><li>无序项</li><li>第二项 <strong>粗</strong></li></ul><ol><li>第一步</li><li>第二步</li></ol><ul class="task-list"><li><input type="checkbox" checked disabled> 完成项</li><li><input type="checkbox" disabled> 待办项</li></ul><figure><img src="/assets/diagram.png" alt="架构图"><figcaption>架构图</figcaption></figure>',
+      '<h2>标题 <strong>加粗</strong></h2><blockquote>引用 <code>code</code></blockquote><ul><li>无序项</li><li>第二项 <strong>粗</strong></li></ul><ol><li>第一步</li><li>第二步</li></ol><ul class="task-list"><li><input type="checkbox" checked disabled> 完成项</li><li><input type="checkbox" disabled> 待办项</li></ul><figure><img src="https://example.com/assets/diagram.png" alt="架构图"><figcaption>架构图</figcaption></figure>',
     );
   });
 

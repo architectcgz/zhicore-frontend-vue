@@ -7,11 +7,11 @@
     <h2>{{ previewTitle }}</h2>
     <div
       v-for="(block, blockIndex) in previewBlocks"
-      :key="`${blockIndex}-${block.type}-${block.content}`"
+      :key="`${blockIndex}-${block.type}`"
       class="reader-preview__block-anchor"
       :data-preview-block-index="blockIndex"
     >
-      <EditorReaderPreviewBlock :block="block" />
+      <PostBodyReaderBlock :block="block" />
     </div>
   </aside>
 </template>
@@ -19,13 +19,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model";
+import type { PostBodyBlock } from "@/entities/post-body";
 
-import EditorReaderPreviewBlock from "./preview/EditorReaderPreviewBlock.vue";
+import { PostBodyReaderBlock } from "@/components/post-body-reader";
 
 defineProps<{
   previewTitle: string;
-  previewBlocks: EditorShowcaseDraftBlock[];
+  previewBlocks: PostBodyBlock[];
   wordCount: number;
 }>();
 

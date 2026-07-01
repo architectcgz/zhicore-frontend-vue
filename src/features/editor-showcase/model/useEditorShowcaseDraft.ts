@@ -1,7 +1,10 @@
 import { computed, getCurrentScope, onScopeDispose, ref, watch } from "vue";
 
+import type { PostBodyBlock } from "@/entities/post-body";
+
 import {
   compileEditorContent,
+  mapEditorCompiledDocumentToPostBodyWriteInput,
   type EditorCompiledBlock,
   type EditorCompiledDocument,
   type EditorCompiledInlineNode,
@@ -11,6 +14,7 @@ import {
   defaultEditorShowcaseBody,
   defaultEditorShowcaseTitle,
   fallbackPreviewBlock,
+  fallbackReaderBlock,
 } from "./editorShowcaseFixtures";
 import {
   applyToolbarActionToBody,
@@ -66,6 +70,16 @@ export function useEditorShowcaseDraft(
   });
 
   const draftBlocks = computed(() => compiledDocument.value.blocks);
+
+  const postBodyWriteInput = computed(() =>
+    mapEditorCompiledDocumentToPostBodyWriteInput(compiledDocument.value),
+  );
+
+  const readerBlocks = computed<PostBodyBlock[]>(() => {
+    return postBodyWriteInput.value.blocks.length
+      ? postBodyWriteInput.value.blocks
+      : [fallbackReaderBlock];
+  });
 
   const previewBlocks = computed(() => {
     return draftBlocks.value.length
@@ -177,6 +191,8 @@ export function useEditorShowcaseDraft(
     compiledDocument,
     compiledHtml,
     draftBlocks,
+    postBodyWriteInput,
+    readerBlocks,
     previewBlocks,
     previewParagraphs,
     wordCount,

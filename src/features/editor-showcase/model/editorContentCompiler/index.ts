@@ -3,6 +3,10 @@ export {
   compileEditorBlocksToHtml,
   compileEditorContent,
 } from "./compileEditorContent";
+export {
+  compileEditorContentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPostBodyWriteInput,
+} from "./postBodyWriteInputCompiler";
 export type {
   EditorCompiledBlock,
   EditorCompiledBlockType,

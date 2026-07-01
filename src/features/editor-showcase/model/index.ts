@@ -2,6 +2,8 @@ export {
   compileEditorBlocks,
   compileEditorBlocksToHtml,
   compileEditorContent,
+  compileEditorContentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPostBodyWriteInput,
 } from "./editorContentCompiler";
 export {
   createEditorDebugLogger,

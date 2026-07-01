@@ -14,6 +14,21 @@ describe("useEditorShowcaseDraft", () => {
     expect(draft.body.value).toContain("一篇文章的价值");
   });
 
+  it("does not render a math block until the draft source contains math syntax", () => {
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
+
+    expect(draft.readerBlocks.value).not.toContainEqual(
+      expect.objectContaining({ type: "math" }),
+    );
+
+    draft.updateBody("$$E = mc^2$$");
+
+    expect(draft.readerBlocks.value).toContainEqual({
+      type: "math",
+      latex: "E = mc^2",
+    });
+  });
+
   it("updates the reader preview from draft input", () => {
     const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 

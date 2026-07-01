@@ -1,4 +1,5 @@
 import type { EditorCompiledBlock } from "./editorContentCompiler";
+import type { PostBodyBlock } from "@/entities/post-body";
 
 export const defaultEditorShowcaseTitle = "把复杂系统讲成可以协作的结构";
 
@@ -48,10 +49,6 @@ export const defaultEditorShowcaseBody = [
   "| --- | --- | --- |",
   "| 数据1 | 数据2 | 数据3 |",
   "| 数据4 | 数据5 | 数据6 |",
-  "",
-  "## Math",
-  "",
-  "$$E = mc^2$$",
 ].join("\n");
 
 export const fallbackPreviewBlock: EditorCompiledBlock = {
@@ -59,6 +56,16 @@ export const fallbackPreviewBlock: EditorCompiledBlock = {
   label: "Text",
   content: "正文预览会随输入同步更新。",
   inlineNodes: [
+    {
+      type: "text",
+      text: "正文预览会随输入同步更新。",
+    },
+  ],
+};
+
+export const fallbackReaderBlock: PostBodyBlock = {
+  type: "paragraph",
+  children: [
     {
       type: "text",
       text: "正文预览会随输入同步更新。",

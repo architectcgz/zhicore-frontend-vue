@@ -1,4 +1,5 @@
 import type { EditorCompiledInlineNode } from "./types";
+import { sanitizePostBodyExternalUrl } from "@/entities/post-body";
 
 interface InlineRule {
   trigger: string;
@@ -13,11 +14,7 @@ interface InlineToken {
 }
 
 export function sanitizeLinkHref(href: string): string | null {
-  if (/^(https?:\/\/|\/|#)/.test(href)) {
-    return href;
-  }
-
-  return null;
+  return sanitizePostBodyExternalUrl(href);
 }
 
 function createInlineCodeNode(
