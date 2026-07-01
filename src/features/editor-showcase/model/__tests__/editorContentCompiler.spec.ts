@@ -8,7 +8,7 @@ describe("editorContentCompiler", () => {
       '阅读 [ZhiCore](https://example.com/docs)。\n\n```ts\nconsole.log("<ok>")\n```后续正文',
     );
 
-    expect(compiledDocument.blocks).toEqual([
+    expect(compiledDocument.blocks).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -55,7 +55,7 @@ describe("editorContentCompiler", () => {
   it("keeps an unclosed code fence as plain text", () => {
     const compiledDocument = compileEditorContent("```go\n123213");
 
-    expect(compiledDocument.blocks).toEqual([
+    expect(compiledDocument.blocks).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -74,7 +74,7 @@ describe("editorContentCompiler", () => {
   it("compiles bold inline markdown into strong nodes and html", () => {
     const compiledDocument = compileEditorContent("这是 **123123** 文本。");
 
-    expect(compiledDocument.blocks).toEqual([
+    expect(compiledDocument.blocks).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -105,7 +105,7 @@ describe("editorContentCompiler", () => {
       "这是 `code <x>`、*斜体*、_强调_、~~删除~~ 和 **加粗**。",
     );
 
-    expect(compiledDocument.blocks).toEqual([
+    expect(compiledDocument.blocks).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -183,7 +183,7 @@ describe("editorContentCompiler", () => {
       ].join("\n"),
     );
 
-    expect(compiledDocument.blocks).toEqual([
+    expect(compiledDocument.blocks).toMatchObject([
       {
         type: "heading",
         label: "Heading",
@@ -325,7 +325,7 @@ describe("editorContentCompiler", () => {
       ].join("\n"),
     );
 
-    expect(compiledDocument.blocks).toEqual([
+    expect(compiledDocument.blocks).toMatchObject([
       {
         type: "table",
         label: "Table",
@@ -447,5 +447,61 @@ describe("editorContentCompiler", () => {
 
     expect(compiledDocument.blocks[0]?.type).toBe("text");
     expect(compiledDocument.html).toBe("<p>测试|1|2</p>");
+  });
+
+  it("attaches source line ranges to compiled blocks", () => {
+    const compiledDocument = compileEditorContent(
+      [
+        "# 标题",
+        "",
+        "第一段",
+        "",
+        "第二段",
+        "",
+        "```go",
+        "fmt.Println(1)",
+        "```",
+        "",
+        "| A | B |",
+        "| --- | --- |",
+        "| 1 | 2 |",
+      ].join("\n"),
+    );
+
+    expect(
+      compiledDocument.blocks.map((block) => ({
+        type: block.type,
+        sourceRange: block.sourceRange,
+      })),
+    ).toEqual([
+      {
+        type: "heading",
+        sourceRange: {
+          startLine: 0,
+          endLine: 0,
+        },
+      },
+      {
+        type: "text",
+        sourceRange: {
+          startLine: 2,
+          endLine: 5,
+        },
+      },
+      {
+        type: "code",
+        sourceRange: {
+          startLine: 6,
+          endLine: 8,
+        },
+      },
+      {
+        type: "table",
+        sourceRange: {
+          startLine: 10,
+          endLine: 12,
+        },
+      },
+    ]);
   });
 });
