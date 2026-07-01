@@ -1,5 +1,10 @@
 <template>
-  <aside ref="readerPreviewRef" class="reader-preview" aria-label="读者预览">
+  <aside
+    ref="readerPreviewRef"
+    class="reader-preview"
+    aria-label="读者预览"
+    @scroll="emit('scroll')"
+  >
     <div class="reader-preview__header">
       <span>读者视图</span>
       <strong>{{ wordCount }} 字</strong>
@@ -27,6 +32,10 @@ defineProps<{
   previewTitle: string;
   previewBlocks: EditorShowcaseReaderPreviewBlock[];
   wordCount: number;
+}>();
+
+const emit = defineEmits<{
+  scroll: [];
 }>();
 
 const readerPreviewRef = ref<HTMLElement | null>(null);
@@ -62,7 +71,6 @@ defineExpose({
   max-height: min(760px, calc(100vh - 170px));
   overflow: hidden;
   overflow-y: auto;
-  overscroll-behavior: contain;
   padding: 18px;
   border: 1px solid rgba(49, 74, 91, 0.14);
   border-radius: 8px;

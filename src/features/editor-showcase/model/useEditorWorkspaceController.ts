@@ -48,14 +48,18 @@ export function useEditorWorkspaceController() {
     () => previewPaneRef.value?.readerPreviewElement ?? null,
   );
 
-  const { resizeBodyInput, syncPreviewScroll, syncEditorLayoutOnNextFrame } =
-    useEditorPreviewScrollSync({
-      bodyInputRef,
-      writingEditorRef,
-      readerPreviewRef,
-      previewBlockAnchors: draft.previewBlockAnchors,
-      isPreviewMode,
-    });
+  const {
+    resizeBodyInput,
+    syncEditorScroll,
+    syncPreviewScroll,
+    syncEditorLayoutOnNextFrame,
+  } = useEditorPreviewScrollSync({
+    bodyInputRef,
+    writingEditorRef,
+    readerPreviewRef,
+    previewBlockAnchors: draft.previewBlockAnchors,
+    isPreviewMode,
+  });
 
   function handleBodyInput(): void {
     void syncEditorLayoutOnNextFrame();
@@ -115,6 +119,7 @@ export function useEditorWorkspaceController() {
     handleModeSelect,
     handleToolbarAction,
     selectBackground,
+    syncEditorScroll,
     syncPreviewScroll,
   };
 }

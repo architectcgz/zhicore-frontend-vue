@@ -10,6 +10,7 @@ import {
 
 const scrollLogger = createEditorLogger("scroll");
 const editorBottomStickinessMinTolerancePx = 2;
+const syncedScrollTolerancePx = 1;
 
 export interface UseEditorPreviewScrollSyncOptions {
   bodyInputRef: Readonly<Ref<HTMLTextAreaElement | null>>;
@@ -97,9 +98,75 @@ function getPreviewBlockScrollTop(
   return Math.min(Math.max(0, Math.round(nextScrollTop)), maxScrollTop);
 }
 
+function getBodyLineScrollTop(
+  writingEditor: HTMLElement,
+  bodyInput: HTMLTextAreaElement,
+  lineNumber: number,
+): number {
+  const bodyTopInEditor =
+    bodyInput.getBoundingClientRect().top -
+    writingEditor.getBoundingClientRect().top +
+    writingEditor.scrollTop;
+  const maxScrollTop = getEditorMaxScrollTop(writingEditor);
+  const nextScrollTop =
+    bodyTopInEditor + lineNumber * getBodyInputLineHeight(bodyInput);
+
+  return Math.min(Math.max(0, Math.round(nextScrollTop)), maxScrollTop);
+}
+
+function getActivePreviewReaderBlockIndex(
+  readerPreview: HTMLElement,
+): number | null {
+  const blockElements = Array.from(
+    readerPreview.querySelectorAll<HTMLElement>(
+      "[data-preview-reader-block-index]",
+    ),
+  );
+  let activeReaderBlockIndex: number | null = null;
+  const previewRect = readerPreview.getBoundingClientRect();
+
+  for (const blockElement of blockElements) {
+    const readerBlockIndex = Number.parseInt(
+      blockElement.dataset.previewReaderBlockIndex ?? "",
+      10,
+    );
+
+    if (!Number.isFinite(readerBlockIndex)) {
+      continue;
+    }
+
+    const blockScrollTop =
+      blockElement.getBoundingClientRect().top -
+      previewRect.top +
+      readerPreview.scrollTop;
+
+    if (blockScrollTop > readerPreview.scrollTop + syncedScrollTolerancePx) {
+      break;
+    }
+
+    activeReaderBlockIndex = readerBlockIndex;
+  }
+
+  return activeReaderBlockIndex;
+}
+
+function hasSyncedScrollTop(
+  currentScrollTop: number,
+  expectedScrollTop: number | null,
+): boolean {
+  return (
+    expectedScrollTop !== null &&
+    Math.abs(currentScrollTop - expectedScrollTop) <= syncedScrollTolerancePx
+  );
+}
+
 export function useEditorPreviewScrollSync(
   options: UseEditorPreviewScrollSyncOptions,
 ) {
+  // 左右面板会互相设置 scrollTop；记录预期值用来吞掉对应的程序化滚动事件。
+  let pendingEditorScrollTop: number | null = null;
+  let pendingPreviewScrollTop: number | null = null;
+
   const blockLineAnchors = computed<BlockLineAnchor[]>(() =>
     options.previewBlockAnchors.value.map((anchor) => ({
       blockIndex: anchor.readerBlockIndex,
@@ -161,6 +228,13 @@ export function useEditorPreviewScrollSync(
       return;
     }
 
+    if (hasSyncedScrollTop(writingEditor.scrollTop, pendingEditorScrollTop)) {
+      pendingEditorScrollTop = null;
+      return;
+    }
+
+    pendingEditorScrollTop = null;
+
     const sourceLineNumber = getSourceLineNumberAtEditorTop(
       writingEditor,
       bodyInput,
@@ -176,10 +250,12 @@ export function useEditorPreviewScrollSync(
       );
 
       if (blockElement) {
-        readerPreview.scrollTop = getPreviewBlockScrollTop(
+        const nextPreviewScrollTop = getPreviewBlockScrollTop(
           readerPreview,
           blockElement,
         );
+        pendingPreviewScrollTop = nextPreviewScrollTop;
+        readerPreview.scrollTop = nextPreviewScrollTop;
         scrollLogger.debug(() => [
           "synced preview by block anchor",
           {
@@ -192,18 +268,87 @@ export function useEditorPreviewScrollSync(
       }
     }
 
-    readerPreview.scrollTop = getSyncedScrollTop({
+    const nextPreviewScrollTop = getSyncedScrollTop({
       sourceScrollTop: writingEditor.scrollTop,
       sourceScrollHeight: writingEditor.scrollHeight,
       sourceClientHeight: writingEditor.clientHeight,
       targetScrollHeight: readerPreview.scrollHeight,
       targetClientHeight: readerPreview.clientHeight,
     });
+    pendingPreviewScrollTop = nextPreviewScrollTop;
+    readerPreview.scrollTop = nextPreviewScrollTop;
     scrollLogger.debug(() => [
       "synced preview by scroll progress",
       {
         sourceScrollTop: writingEditor.scrollTop,
         targetScrollTop: readerPreview.scrollTop,
+      },
+    ]);
+  }
+
+  function syncEditorScroll(): void {
+    const writingEditor = options.writingEditorRef.value;
+    const bodyInput = options.bodyInputRef.value;
+    const readerPreview = options.readerPreviewRef.value;
+
+    if (
+      !writingEditor ||
+      !bodyInput ||
+      !readerPreview ||
+      !options.isPreviewMode.value
+    ) {
+      return;
+    }
+
+    if (hasSyncedScrollTop(readerPreview.scrollTop, pendingPreviewScrollTop)) {
+      pendingPreviewScrollTop = null;
+      return;
+    }
+
+    pendingPreviewScrollTop = null;
+
+    const activeReaderBlockIndex =
+      getActivePreviewReaderBlockIndex(readerPreview);
+    const activeAnchor =
+      activeReaderBlockIndex === null
+        ? undefined
+        : options.previewBlockAnchors.value.find(
+            (anchor) => anchor.readerBlockIndex === activeReaderBlockIndex,
+          );
+
+    if (activeAnchor) {
+      const nextEditorScrollTop = getBodyLineScrollTop(
+        writingEditor,
+        bodyInput,
+        activeAnchor.sourceRange.startLine,
+      );
+      pendingEditorScrollTop = nextEditorScrollTop;
+      writingEditor.scrollTop = nextEditorScrollTop;
+      scrollLogger.debug(() => [
+        "synced editor by preview block anchor",
+        {
+          activeReaderBlockIndex,
+          sourceLineNumber: activeAnchor.sourceRange.startLine,
+          targetScrollTop: writingEditor.scrollTop,
+        },
+      ]);
+      return;
+    }
+
+    const nextEditorScrollTop = getSyncedScrollTop({
+      sourceScrollTop: readerPreview.scrollTop,
+      sourceScrollHeight: readerPreview.scrollHeight,
+      sourceClientHeight: readerPreview.clientHeight,
+      targetScrollHeight: writingEditor.scrollHeight,
+      targetClientHeight: writingEditor.clientHeight,
+    });
+    pendingEditorScrollTop = nextEditorScrollTop;
+    writingEditor.scrollTop = nextEditorScrollTop;
+    scrollLogger.debug(() => [
+      "synced editor by preview scroll progress",
+      {
+        sourceScrollTop: readerPreview.scrollTop,
+        targetScrollTop: writingEditor.scrollTop,
       },
     ]);
   }
@@ -219,6 +364,7 @@ export function useEditorPreviewScrollSync(
   return {
     blockLineAnchors,
     resizeBodyInput,
+    syncEditorScroll,
     syncPreviewScroll,
     syncEditorLayoutOnNextFrame,
   };

@@ -49,6 +49,7 @@
           :preview-title="previewTitle"
           :preview-blocks="readerPreviewBlocks"
           :word-count="wordCount"
+          @scroll="syncEditorScroll"
         />
       </div>
     </section>
@@ -78,6 +79,7 @@ const {
   readerPreviewBlocks,
   previewPaneRef,
   selectBackground,
+  syncEditorScroll,
   syncPreviewScroll,
   title,
   wordCount,

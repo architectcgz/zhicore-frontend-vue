@@ -158,7 +158,6 @@ defineExpose({
   max-height: min(760px, calc(100vh - 170px));
   overflow: hidden;
   overflow-y: auto;
-  overscroll-behavior: contain;
   border: 1px solid rgba(49, 74, 91, 0.14);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.66);

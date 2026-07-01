@@ -36,4 +36,9 @@ describe("editor showcase architecture boundaries", () => {
     expect(compilerIndexSource).not.toContain("compileEditorBlocksToHtml");
     expect(draftSource).not.toContain("compiledHtml");
   });
+
+  it("allows editor pane edge scrolling to continue on the page", () => {
+    expect(writingPaneSource).not.toContain("overscroll-behavior: contain");
+    expect(previewPaneSource).not.toContain("overscroll-behavior: contain");
+  });
 });

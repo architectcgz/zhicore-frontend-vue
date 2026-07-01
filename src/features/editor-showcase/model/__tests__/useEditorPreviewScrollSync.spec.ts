@@ -228,4 +228,53 @@ describe("useEditorPreviewScrollSync", () => {
 
     expect(readerPreview.scrollTop).toBe(255);
   });
+
+  it("syncs the editor to the active preview source block", () => {
+    const bodyInput = document.createElement("textarea");
+    const writingEditor = document.createElement("main");
+    const readerPreview = document.createElement("aside");
+    const firstBlock = document.createElement("div");
+    const secondBlock = document.createElement("div");
+    const previewBlockAnchors = [
+      {
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 0,
+          endLine: 0,
+        },
+      },
+      {
+        readerBlockIndex: 1,
+        sourceRange: {
+          startLine: 6,
+          endLine: 9,
+        },
+      },
+    ];
+
+    bodyInput.style.lineHeight = "20px";
+    firstBlock.dataset.previewReaderBlockIndex = "0";
+    secondBlock.dataset.previewReaderBlockIndex = "1";
+    readerPreview.append(firstBlock, secondBlock);
+    readerPreview.scrollTop = 180;
+    defineRectTop(bodyInput, 40);
+    defineRectTop(writingEditor, 0);
+    defineRectTop(readerPreview, 100);
+    defineRectTop(firstBlock, -80);
+    defineRectTop(secondBlock, 80);
+    defineReadonlyNumberProperty(writingEditor, "scrollHeight", 1000);
+    defineReadonlyNumberProperty(writingEditor, "clientHeight", 400);
+
+    const { syncEditorScroll } = useEditorPreviewScrollSync({
+      bodyInputRef: ref(bodyInput),
+      writingEditorRef: ref(writingEditor),
+      readerPreviewRef: ref(readerPreview),
+      previewBlockAnchors: ref(previewBlockAnchors),
+      isPreviewMode: ref(true),
+    });
+
+    syncEditorScroll();
+
+    expect(writingEditor.scrollTop).toBe(160);
+  });
 });
