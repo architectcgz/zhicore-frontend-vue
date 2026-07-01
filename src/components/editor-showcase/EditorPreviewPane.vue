@@ -13,16 +13,6 @@
     >
       <EditorReaderPreviewBlock :block="block" />
     </div>
-    <dl class="reader-preview__facts">
-      <div>
-        <dt>正文</dt>
-        <dd>blocks</dd>
-      </div>
-      <div>
-        <dt>媒体</dt>
-        <dd>fileId</dd>
-      </div>
-    </dl>
   </aside>
 </template>
 
@@ -121,33 +111,6 @@ defineExpose({
   color: var(--reader-heading);
   font-size: clamp(24px, 3vw, 34px);
   line-height: 1.12;
-}
-
-.reader-preview__facts {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin: 22px 0 0;
-}
-
-.reader-preview__facts div {
-  padding: 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.reader-preview__facts dt {
-  color: var(--reader-muted);
-  font-size: 12px;
-}
-
-.reader-preview__facts dd {
-  margin: 4px 0 0;
-  font-weight: 760;
-}
-
-:global(.editor-showcase--ink) .reader-preview__facts div {
-  background: rgba(255, 255, 255, 0.08);
 }
 
 @media (prefers-reduced-motion: reduce) {
