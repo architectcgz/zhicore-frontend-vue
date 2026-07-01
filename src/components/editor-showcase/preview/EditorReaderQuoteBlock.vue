@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model/useEditorShowcaseDraft";
+import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model";
 
 import EditorInlineNodes from "./EditorInlineNodes.vue";
 

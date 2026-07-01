@@ -10,5 +10,6 @@ export type {
   EditorCompiledHeadingLevel,
   EditorCompiledInlineNode,
   EditorCompiledListItem,
+  EditorCompiledSourceRange,
   EditorCompiledTableCell,
 } from "./types";

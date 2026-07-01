@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import type { Component } from "vue";
 
-import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model/useEditorShowcaseDraft";
+import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model";
 
 import EditorReaderCodeBlock from "./EditorReaderCodeBlock.vue";
 import EditorReaderHeadingBlock from "./EditorReaderHeadingBlock.vue";

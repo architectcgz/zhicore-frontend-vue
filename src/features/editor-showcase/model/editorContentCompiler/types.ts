@@ -1,5 +1,10 @@
 export type EditorCompiledHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
+export interface EditorCompiledSourceRange {
+  startLine: number;
+  endLine: number;
+}
+
 export type EditorCompiledInlineNode =
   | {
       type: "text";
@@ -41,6 +46,7 @@ export interface EditorCompiledTableCell {
 interface EditorCompiledBlockBase {
   label: string;
   content: string;
+  sourceRange?: EditorCompiledSourceRange;
 }
 
 export type EditorCompiledBlock =

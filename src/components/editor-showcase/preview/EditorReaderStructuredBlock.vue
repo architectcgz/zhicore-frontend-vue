@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model/useEditorShowcaseDraft";
+import type { EditorShowcaseDraftBlock } from "@/features/editor-showcase/model";
 
 type StructuredBlock = Extract<EditorShowcaseDraftBlock, { type: "math" }>;
 

@@ -41,34 +41,28 @@ describe("editorScrollSync", () => {
     ).toBe(0);
   });
 
-  it("builds source line anchors for compiled blocks", () => {
-    const source = [
-      "# 标题",
-      "",
-      "普通正文",
-      "",
-      "```go",
-      "fmt.Println(1)",
-      "```",
-      "",
-      "| A | B |",
-      "| --- | --- |",
-      "| 1 | 2 |",
-    ].join("\n");
-
+  it("builds source line anchors from compiled block metadata", () => {
     expect(
-      buildBlockLineAnchors(source, [
+      buildBlockLineAnchors([
         {
           type: "heading",
           label: "Heading",
           level: 1,
           content: "标题",
+          sourceRange: {
+            startLine: 0,
+            endLine: 0,
+          },
           inlineNodes: [],
         },
         {
           type: "text",
           label: "Text",
           content: "普通正文",
+          sourceRange: {
+            startLine: 2,
+            endLine: 2,
+          },
           inlineNodes: [],
         },
         {
@@ -76,11 +70,19 @@ describe("editorScrollSync", () => {
           label: "Code",
           language: "go",
           content: "fmt.Println(1)",
+          sourceRange: {
+            startLine: 4,
+            endLine: 6,
+          },
         },
         {
           type: "table",
           label: "Table",
           content: "| A | B |\n| --- | --- |\n| 1 | 2 |",
+          sourceRange: {
+            startLine: 8,
+            endLine: 10,
+          },
           headers: [],
           rows: [],
         },
