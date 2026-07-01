@@ -5,7 +5,7 @@
     aria-label="可输入编辑区"
     @scroll="emit('scroll')"
   >
-    <div class="writing-editor__meta">
+    <div v-if="debug" class="writing-editor__meta">
       <span>草稿已保存 10:42</span>
       <span>baseDraftBodyHash sha256:9af...</span>
     </div>
@@ -72,7 +72,7 @@
           @input="handleBodyInput"
         />
 
-        <footer class="document-structure">
+        <footer v-if="debug" class="document-structure">
           <span>Content blocks</span>
           <strong>{{ blockCount }}</strong>
           <span>basePostVersion 12</span>
@@ -94,6 +94,7 @@ defineProps<{
   title: string;
   body: string;
   blockCount: number;
+  debug: boolean;
 }>();
 
 const emit = defineEmits<{

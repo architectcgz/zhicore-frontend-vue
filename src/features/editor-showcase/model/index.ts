@@ -3,6 +3,7 @@ export {
   compileEditorBlocksToHtml,
   compileEditorContent,
 } from "./editorContentCompiler";
+export { editorDebugLogger, isEditorDebugMode } from "./editorDebug";
 export type {
   EditorCompiledBlock,
   EditorCompiledBlockType,

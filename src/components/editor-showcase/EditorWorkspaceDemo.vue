@@ -6,7 +6,11 @@
         <h1>连续文档编辑器</h1>
       </div>
 
-      <div class="editor-workspace-demo__status" aria-label="草稿结构状态">
+      <div
+        v-if="isEditorDebugMode"
+        class="editor-workspace-demo__status"
+        aria-label="草稿结构状态"
+      >
         <span>schema v1</span>
         <span>{{ previewBlocks.length }} blocks</span>
         <span>postVersion 12</span>
@@ -34,6 +38,7 @@
           v-model:title="title"
           v-model:body="body"
           :block-count="previewBlocks.length"
+          :debug="isEditorDebugMode"
           @body-input="handleBodyInput"
           @toolbar-action="handleToolbarAction"
           @scroll="syncPreviewScroll"
@@ -54,6 +59,7 @@
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 import {
+  isEditorDebugMode,
   useEditorPreviewScrollSync,
   useEditorShowcaseDisplay,
   useEditorShowcaseDraft,
