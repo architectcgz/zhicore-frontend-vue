@@ -8,7 +8,7 @@
 
       <div class="editor-workspace-demo__status" aria-label="草稿结构状态">
         <span>schema v1</span>
-        <span>{{ structureMarkers.length }} blocks</span>
+        <span>{{ previewBlocks.length }} blocks</span>
         <span>postVersion 12</span>
       </div>
     </header>
@@ -54,7 +54,10 @@
 
       <div
         class="editor-stage"
-        :class="{ 'editor-stage--preview': isPreviewMode }"
+        :class="{
+          'editor-stage--focus': !isPreviewMode,
+          'editor-stage--preview': isPreviewMode,
+        }"
       >
         <main class="writing-editor" aria-label="可输入编辑区">
           <div class="writing-editor__meta">
@@ -63,30 +66,6 @@
           </div>
 
           <section class="writing-editor__canvas">
-            <aside class="document-gutter" aria-label="文档结构操作">
-              <button
-                class="gutter-insert"
-                type="button"
-                aria-label="插入内容块"
-              >
-                +
-              </button>
-
-              <div class="gutter-track">
-                <button
-                  v-for="marker in structureMarkers"
-                  :key="marker.path"
-                  class="gutter-marker"
-                  type="button"
-                  :aria-label="`${marker.path} ${marker.label}`"
-                  :title="`${marker.path} ${marker.label}`"
-                >
-                  <span class="gutter-drag" aria-hidden="true"></span>
-                  <span>{{ marker.label }}</span>
-                </button>
-              </div>
-            </aside>
-
             <article class="document-sheet">
               <nav class="selection-toolbar" aria-label="格式工具">
                 <button
@@ -148,7 +127,7 @@
 
               <footer class="document-structure">
                 <span>Content blocks</span>
-                <strong>{{ structureMarkers.length }}</strong>
+                <strong>{{ previewBlocks.length }}</strong>
                 <span>basePostVersion 12</span>
               </footer>
             </article>
@@ -160,7 +139,6 @@
             <span>读者视图</span>
             <strong>{{ wordCount }} 字</strong>
           </div>
-          <div class="reader-preview__cover"></div>
           <h2>{{ previewTitle }}</h2>
           <EditorReaderPreviewBlock
             v-for="(block, blockIndex) in previewBlocks"
@@ -184,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
 import { RouterLink } from "vue-router";
 
 import { useEditorShowcaseDisplay } from "@/features/editor-showcase/model/useEditorShowcaseDisplay";
@@ -215,22 +193,6 @@ const {
 } = useEditorShowcaseDraft();
 
 const bodyInputRef = ref<HTMLTextAreaElement | null>(null);
-
-const structureMarkers = computed(() => {
-  const blockMarkers = previewBlocks.value.slice(0, 5).map((block, index) => ({
-    label: block.type === "text" ? "T" : block.label.toUpperCase(),
-    path: `blocks[${index + 1}]`,
-  }));
-
-  // 标题和正文块仍映射到后端 blocks，界面只在 gutter 暴露轻量结构锚点。
-  return [
-    {
-      label: "H1",
-      path: "blocks[0]",
-    },
-    ...blockMarkers,
-  ];
-});
 
 async function handleToolbarAction(
   action: EditorShowcaseToolbarAction,
@@ -427,15 +389,19 @@ async function handleToolbarAction(
 
 .editor-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
   gap: 12px;
   align-items: stretch;
   min-height: 660px;
   transition: grid-template-columns 0.32s ease;
 }
 
-.editor-stage--preview {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+.editor-stage--focus {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.editor-stage--focus .reader-preview {
+  display: none;
 }
 
 .writing-editor,
@@ -476,94 +442,10 @@ async function handleToolbarAction(
 
 .writing-editor__canvas {
   display: grid;
-  grid-template-columns: 42px minmax(0, 940px);
+  grid-template-columns: minmax(0, 940px);
   align-items: start;
   min-height: 590px;
-  padding: 10px 16px 22px 4px;
-}
-
-.document-gutter {
-  position: sticky;
-  top: 10px;
-  display: grid;
-  gap: 22px;
-  justify-items: center;
-  padding-top: 72px;
-  color: #657785;
-}
-
-.gutter-insert,
-.gutter-marker {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.gutter-insert {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 999px;
-  font-size: 20px;
-  line-height: 1;
-  opacity: 0.72;
-}
-
-.gutter-track {
-  display: grid;
-  gap: 16px;
-}
-
-.gutter-marker {
-  display: grid;
-  grid-template-columns: 10px 1fr;
-  gap: 4px;
-  align-items: center;
-  width: 36px;
-  min-height: 28px;
-  padding: 4px 3px;
-  border-radius: 6px;
-  font-size: 11px;
-  opacity: 0.42;
-  transition:
-    opacity 0.18s ease,
-    background 0.18s ease;
-}
-
-.gutter-drag {
-  width: 8px;
-  height: 15px;
-  border-radius: 2px;
-  background:
-    radial-gradient(circle at 2px 2px, currentColor 1.2px, transparent 1.4px),
-    radial-gradient(circle at 6px 2px, currentColor 1.2px, transparent 1.4px),
-    radial-gradient(circle at 2px 7px, currentColor 1.2px, transparent 1.4px),
-    radial-gradient(circle at 6px 7px, currentColor 1.2px, transparent 1.4px),
-    radial-gradient(circle at 2px 12px, currentColor 1.2px, transparent 1.4px),
-    radial-gradient(circle at 6px 12px, currentColor 1.2px, transparent 1.4px);
-}
-
-.writing-editor:hover .gutter-marker,
-.writing-editor:focus-within .gutter-marker,
-.gutter-marker:focus-visible,
-.gutter-insert:hover,
-.gutter-insert:focus-visible {
-  opacity: 1;
-  background: rgba(31, 127, 116, 0.1);
-}
-
-.editor-showcase--ink .document-gutter {
-  color: #9db8ca;
-}
-
-.editor-showcase--ink .writing-editor:hover .gutter-marker,
-.editor-showcase--ink .writing-editor:focus-within .gutter-marker,
-.editor-showcase--ink .gutter-marker:focus-visible,
-.editor-showcase--ink .gutter-insert:hover,
-.editor-showcase--ink .gutter-insert:focus-visible {
-  background: rgba(125, 211, 252, 0.12);
+  padding: 10px 16px 22px;
 }
 
 .document-sheet {
@@ -727,9 +609,9 @@ async function handleToolbarAction(
 
   min-width: 0;
   padding: 18px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(18px);
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
   transition:
     opacity 0.26s ease,
     transform 0.26s ease;
@@ -755,26 +637,11 @@ async function handleToolbarAction(
   --reader-task-accent: #7dd3fc;
 }
 
-.editor-stage--preview .reader-preview {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-}
-
 .reader-preview__header {
   display: flex;
   justify-content: space-between;
   color: var(--reader-muted);
   font-size: 13px;
-}
-
-.reader-preview__cover {
-  aspect-ratio: 4 / 3;
-  margin: 18px 0;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(34, 99, 122, 0.78), rgba(240, 180, 111, 0.76)),
-    linear-gradient(25deg, rgba(255, 255, 255, 0.34), transparent 46%);
 }
 
 .reader-preview h2 {
@@ -827,6 +694,7 @@ async function handleToolbarAction(
 
   .editor-action-bar,
   .editor-stage,
+  .editor-stage--focus,
   .editor-stage--preview {
     grid-template-columns: 1fr;
   }
@@ -835,7 +703,7 @@ async function handleToolbarAction(
     min-height: auto;
   }
 
-  .reader-preview {
+  .editor-stage--focus .reader-preview {
     display: none;
   }
 
@@ -844,8 +712,8 @@ async function handleToolbarAction(
   }
 
   .writing-editor__canvas {
-    grid-template-columns: 36px minmax(0, 1fr);
-    padding-right: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 12px;
   }
 }
 
@@ -864,20 +732,8 @@ async function handleToolbarAction(
   }
 
   .writing-editor__canvas {
-    grid-template-columns: 28px minmax(0, 1fr);
-    padding: 8px 10px 18px 0;
-  }
-
-  .document-gutter {
-    padding-top: 90px;
-  }
-
-  .gutter-marker {
-    width: 28px;
-  }
-
-  .gutter-marker span:last-child {
-    display: none;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 10px 18px;
   }
 
   .selection-toolbar {
@@ -901,8 +757,7 @@ async function handleToolbarAction(
   .reader-preview,
   .mode-switch button,
   .background-swatch,
-  .document-link,
-  .gutter-marker {
+  .document-link {
     transition: none;
   }
 }

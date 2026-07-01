@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { useEditorShowcaseDisplay } from "../useEditorShowcaseDisplay";
 
 describe("useEditorShowcaseDisplay", () => {
-  it("starts in focus mode with the paper background selected", () => {
+  it("starts in preview mode with the paper background selected", () => {
     const display = useEditorShowcaseDisplay();
 
-    expect(display.activeMode.value).toBe("focus");
-    expect(display.isPreviewMode.value).toBe(false);
+    expect(display.activeMode.value).toBe("preview");
+    expect(display.isPreviewMode.value).toBe(true);
     expect(display.activeBackground.value.id).toBe("paper");
   });
 
