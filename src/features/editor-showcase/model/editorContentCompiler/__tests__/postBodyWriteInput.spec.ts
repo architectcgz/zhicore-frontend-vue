@@ -33,6 +33,10 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
         },
         {
           type: "paragraph",
+          children: [{ type: "text", text: "\n" }],
+        },
+        {
+          type: "paragraph",
           children: [
             { type: "text", text: "阅读 " },
             {
@@ -47,6 +51,10 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
           type: "code_block",
           language: "ts",
           code: 'console.log("<ok>")',
+        },
+        {
+          type: "paragraph",
+          children: [{ type: "text", text: "\n" }],
         },
         {
           type: "table",
@@ -107,5 +115,45 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
         },
       ],
     });
+  });
+
+  it("preserves extra blank lines between block-level content as a visible spacer paragraph", () => {
+    const writeInput = compileEditorContentToPostBodyWriteInput(
+      [
+        "```go",
+        "package main",
+        "",
+        'import "fmt"',
+        "",
+        "func main() {",
+        '  fmt.Println("hello zhicore")',
+        "}",
+        "```",
+        "",
+        "",
+        "| 名称 | 说明 |",
+        "| --- | --- |",
+        "| ZhiCore | 内容社区 |",
+      ].join("\n"),
+    );
+
+    expect(writeInput.blocks).toMatchObject([
+      {
+        type: "code_block",
+        language: "go",
+      },
+      {
+        type: "paragraph",
+        children: [
+          {
+            type: "text",
+            text: "\n\n",
+          },
+        ],
+      },
+      {
+        type: "table",
+      },
+    ]);
   });
 });

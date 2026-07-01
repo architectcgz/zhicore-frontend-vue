@@ -158,12 +158,58 @@ function mapCompiledBlock(block: EditorCompiledBlock): PostBodyBlock {
   };
 }
 
+function createBlankLineSpacerBlock(blankLineCount: number): PostBodyBlock {
+  return {
+    type: "paragraph",
+    children: [
+      {
+        type: "text",
+        text: "\n".repeat(blankLineCount),
+      },
+    ],
+  };
+}
+
+function getVisibleBlankLineCountBetweenBlocks(
+  previousBlock: EditorCompiledBlock,
+  nextBlock: EditorCompiledBlock,
+): number {
+  if (!previousBlock.sourceRange || !nextBlock.sourceRange) {
+    return 0;
+  }
+
+  const blankLineCount =
+    nextBlock.sourceRange.startLine - previousBlock.sourceRange.endLine - 1;
+
+  // 编辑器中的块本身已经由结构表达，源文本里的每个块间空白行都代表作者希望保留的留白。
+  return Math.max(0, blankLineCount);
+}
+
 export function mapEditorCompiledDocumentToPostBodyWriteInput(
   document: EditorCompiledDocument,
 ): PostBodyWriteInput {
+  const blocks: PostBodyBlock[] = [];
+
+  document.blocks.forEach((block, blockIndex) => {
+    const previousBlock = document.blocks[blockIndex - 1];
+
+    if (previousBlock) {
+      const visibleBlankLineCount = getVisibleBlankLineCountBetweenBlocks(
+        previousBlock,
+        block,
+      );
+
+      if (visibleBlankLineCount > 0) {
+        blocks.push(createBlankLineSpacerBlock(visibleBlankLineCount));
+      }
+    }
+
+    blocks.push(mapCompiledBlock(block));
+  });
+
   return {
     schemaVersion: 1,
-    blocks: document.blocks.map(mapCompiledBlock),
+    blocks,
   };
 }
 

@@ -3,19 +3,25 @@
     v-for="(segment, segmentIndex) in segments"
     :key="`${segmentIndex}-${segment.text}-${segment.tags.join('-')}`"
   >
-    <a
-      v-if="segment.href"
-      class="reader-preview__link"
-      :class="segment.classes"
-      :href="segment.href"
-      target="_blank"
-      rel="noopener noreferrer"
+    <template
+      v-for="(textFragment, fragmentIndex) in segment.textFragments"
+      :key="`${segmentIndex}-${fragmentIndex}-${segment.tags.join('-')}`"
     >
-      {{ segment.text }}
-    </a>
-    <component v-else :is="segment.tag" :class="segment.classes">
-      {{ segment.text }}
-    </component>
+      <br v-if="fragmentIndex > 0" />
+      <a
+        v-if="segment.href"
+        class="reader-preview__link"
+        :class="segment.classes"
+        :href="segment.href"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ textFragment }}
+      </a>
+      <component v-else :is="segment.tag" :class="segment.classes">
+        {{ textFragment }}
+      </component>
+    </template>
   </template>
 </template>
 
@@ -32,6 +38,7 @@ type InlineTag = "span" | "strong" | "em" | "del" | "code";
 
 interface RenderedInlineSegment {
   text: string;
+  textFragments: string[];
   tag: InlineTag;
   href?: string;
   classes: string[];
@@ -66,6 +73,8 @@ const segments = computed<RenderedInlineSegment[]>(() =>
 
     return {
       text: node.text,
+      // 正文文本允许包含用户输入的空行，显式 br 比依赖 white-space CSS 更稳定。
+      textFragments: node.text.split("\n"),
       tag: getInlineTag(marks),
       href: href ?? undefined,
       classes: getInlineClasses(marks),

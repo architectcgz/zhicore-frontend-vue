@@ -170,6 +170,39 @@ describe("PostBodyReader", () => {
     );
   });
 
+  it("renders blank lines inside paragraph text as visible line breaks", () => {
+    const postBody: PostBody = {
+      bodyId: "body-blank-lines",
+      schemaVersion: 1,
+      format: "blocks",
+      contentHash: "sha256:blank",
+      plainText: "第一行\n\n第三行",
+      sizeBytes: 128,
+      createdAt: "2026-07-01T00:00:00Z",
+      blocks: [
+        {
+          type: "paragraph",
+          children: [
+            {
+              type: "text",
+              text: "第一行\n\n第三行",
+            },
+          ],
+        },
+      ],
+    };
+
+    const wrapper = mount(PostBodyReader, {
+      props: {
+        body: postBody,
+      },
+    });
+
+    expect(wrapper.findAll("br")).toHaveLength(2);
+    expect(wrapper.text()).toContain("第一行");
+    expect(wrapper.text()).toContain("第三行");
+  });
+
   it("renders math blocks as typeset KaTeX output", () => {
     const postBody: PostBody = {
       bodyId: "body-math",
