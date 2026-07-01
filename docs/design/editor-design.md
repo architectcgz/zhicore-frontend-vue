@@ -83,6 +83,7 @@ blocks 的切分按内容类型边界进行，不按视觉空行机械切分：
 
 编辑器视觉可以保持写作体验，但数据提交必须对齐 Content 后端契约：
 
+- 详细 API / DTO / 错误处理规则见 `docs/contracts/editor-content-contract.md`。
 - 草稿正文保存为 `schemaVersion + blocks`。
 - 系统内媒体使用 Upload 返回的 `fileId`，展示 URL 只是派生值。
 - 保存草稿时携带 `basePostVersion`、`baseDraftBodyId` 和 `baseDraftBodyHash`。

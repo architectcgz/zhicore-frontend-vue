@@ -159,6 +159,40 @@ store 约束：
 
 页面不直接 import `@/api/*`。业务请求从 feature model 进入 API 层。
 
+## 请求并发与 Stale Response
+
+带搜索、筛选、分页、自动补全、轮询或实时刷新能力的 feature，必须显式处理旧请求晚到的问题。
+
+规则：
+
+- 用户连续输入触发请求时，应 debounce，并取消上一轮请求或用 request sequence 忽略旧响应。
+- route params 改变时，先清理旧详情数据或标记为 refreshing，不能继续显示旧对象内容。
+- 列表筛选变化时，页码归一回第一页，避免请求到不存在的页。
+- 组件卸载时取消仍在进行的请求，或确保响应回来后不会写入已卸载状态。
+- 自动轮询应有停止条件，例如页面离开、状态完成、用户手动停止、连接错误。
+- 对同一个动作的重复提交，用 `submitting` guard，而不是依赖按钮禁用这一层 UI。
+
+推荐在 feature model 内封装：
+
+```ts
+let requestVersion = 0;
+
+async function loadDetail(id: string): Promise<void> {
+  const currentVersion = (requestVersion += 1);
+  loading.value = true;
+
+  try {
+    const nextDetail = await getDetail(id);
+    if (currentVersion !== requestVersion) return;
+    detail.value = nextDetail;
+  } finally {
+    if (currentVersion === requestVersion) {
+      loading.value = false;
+    }
+  }
+}
+```
+
 ## 路由与权限
 
 路由文件负责 URL、页面入口和 `meta`。
@@ -187,6 +221,24 @@ store 约束：
 - `/500` 代表 Vue 或 Router 运行时崩溃，不代表所有 HTTP 5xx。
 - HTTP 429、普通 5xx、业务错误、网络错误默认由 feature 或页面处理，提供 inline error、toast、retry 或草稿保留。
 - WebSocket 鉴权关闭、全局未捕获 promise、客户端错误上报等能力后续应进入 `runtime/`，不要散落在页面里。
+
+## 安全渲染规范
+
+用户生成内容和后端富文本默认不可信。
+
+规则：
+
+- 默认不用 `v-html`。
+- 必须渲染 Markdown / HTML 时，先经过统一 sanitize helper，再进入 `v-html`。
+- `v-html` 使用点旁边必须能看出内容已经净化，例如变量名包含 `sanitized*`。
+- sanitize 使用白名单策略，禁止事件属性、`javascript:` URL、危险 iframe 和未知协议。
+- 外链必须使用 `target="_blank"` 时，同时设置 `rel="noopener noreferrer"`。
+- `window.open()` 必须传入 `noopener,noreferrer` 或等价保护。
+- 登录 redirect、返回地址、下载地址、外部 URL 都必须经过 allowlist / sanitize，不直接信任 query 或后端 URL。
+- CSP、图片源、WebSocket 源等 allowlist 应按真实依赖收紧，不写宽泛的 `https:`、`ws:`、`wss:`。
+- 敏感 token 不进入 `localStorage`；认证继续依赖服务端 session 或后端明确设计的短期凭证。
+
+如果某个 feature 需要富文本渲染，先建立 `utils` 或未来 `shared/lib` 下的统一 sanitize owner，并为典型 XSS payload 补测试。
 
 ## 页面状态规范
 
@@ -247,6 +299,72 @@ fail UI 至少包含：
 - 普通断线展示“同步异常 / 手动刷新”，鉴权失败走 runtime 会话失效 owner。
 - 页面不能假装仍在实时同步；需要给用户明确状态。
 
+## 表单规范
+
+表单的事实 owner 是 feature model，不是模板。
+
+feature model 负责：
+
+- 表单初始值。
+- 字段级校验。
+- dirty / pristine 状态。
+- submitting 防重。
+- 服务端字段错误映射。
+- 成功后的刷新、关闭、跳转或草稿清理。
+
+UI 负责：
+
+- 显示 label、helper、error。
+- 关联 `label for` 与输入框 `id`。
+- 在 `aria-invalid`、`aria-describedby` 中暴露错误和说明。
+- 保持提交按钮宽度稳定。
+- 禁用态说明原因。
+
+规则：
+
+- 必填、长度、格式、枚举范围等基础校验在提交前执行。
+- 服务端返回字段级错误时，优先落到字段；无法归属字段时才展示全局 fail。
+- 有草稿风险的表单，离开页面、关闭弹窗或切换对象前必须处理 dirty 状态。
+- 上传表单必须限制文件类型、大小和数量，并把失败原因展示给用户。
+- 表单成功后是否清空草稿必须由 feature model 决定，组件不自行重置。
+
+## 可访问性与键盘规范
+
+新交互组件默认支持键盘和语义属性。
+
+必须覆盖：
+
+- 可点击非链接元素优先用 `<button>`；确实使用 `role="button"` 时，必须处理 Enter 和 Space。
+- tab 组件使用 `role="tablist"`、`role="tab"`、`role="tabpanel"`、`aria-selected`、`aria-controls`。
+- dialog / drawer 使用 `role="dialog"`、`aria-modal="true"`、`aria-labelledby`，并支持 Escape 关闭。
+- menu 使用 `aria-haspopup="menu"`、`aria-expanded`、`role="menuitem"`。
+- alert / fail 使用 `role="alert"` 或 `aria-live="polite"`，避免只靠颜色表达状态。
+- icon-only button 必须有 `aria-label` 或可见文本。
+- 焦点样式必须可见，不能用 `outline: none` 后不补替代 focus ring。
+- 打开 dialog / drawer 时焦点进入弹层；关闭后焦点回到触发元素。
+
+## 性能与构建规范
+
+性能优化优先从“少做事、少阻塞、少重复请求”开始，不提前引入复杂缓存系统。
+
+规则：
+
+- 路由页面默认懒加载，除首页和核心 shell 外不进入首屏同步 chunk。
+- ECharts、Markdown、高亮、富文本编辑器、PDF、图像处理等重依赖必须按需加载。
+- `main.ts` 只做应用启动、全局插件和 runtime 安装，不做页面级数据预取。
+- API 列表请求必须分页或限制数量；不要一次性拉全量再在前端过滤。
+- 输入联想、搜索、实时预览等高频能力必须 debounce 或 throttle。
+- 大型计算优先放纯函数并可测试；确实阻塞输入时再考虑 Web Worker。
+- 环境变量只有 `VITE_*` 会暴露到客户端，不能放密钥、私有 token 或内部管理凭证。
+- `dist/` 是构建产物，不提交到仓库。
+
+需要新增重依赖时，先说明：
+
+- 为什么不能用现有能力。
+- 是否会进入首屏 bundle。
+- 是否需要动态 import。
+- 是否有对应测试或手动验证路径。
+
 ## 组件与 UI Owner
 
 当前不设 `shared/ui`，使用 `components/` 承接 UI owner。
@@ -305,6 +423,9 @@ fail UI 至少包含：
 - loading / fail / empty / retry 状态流。
 - route query 规范化。
 - 安全相关 sanitize。
+- stale response、取消请求和重复提交防线。
+- 可访问性关键属性和键盘交互。
+- 重依赖是否懒加载，高频输入是否 debounce / throttle。
 - runtime 401 / Vue error / router error 边界。
 
 避免测试：
@@ -350,9 +471,14 @@ fail UI 至少包含：
 - [ ] 页面流程 owner 在 `features/**/model`。
 - [ ] 只有跨页面共享状态进入 Pinia。
 - [ ] API 层完成 DTO 归一化，不弹 toast、不跳页。
+- [ ] 搜索、筛选、轮询、自动补全处理 stale response 和取消请求。
 - [ ] 权限由 router meta / guard 承接。
+- [ ] 用户内容渲染经过 sanitize，外链和 redirect 有安全清洗。
 - [ ] 可恢复错误由 feature 处理，全局崩溃由 runtime 处理。
 - [ ] loading、empty、fail、submitting、disabled、conflict 等状态有明确 UI。
+- [ ] 表单有字段校验、服务端错误映射、dirty 状态和提交防重。
+- [ ] tab、dialog、menu、icon button 有 ARIA 与键盘行为。
+- [ ] 重依赖按需加载，高频输入有 debounce / throttle。
 - [ ] UI 组件按 owner 放置，并通过 props/emits 或 feature model 通信。
 - [ ] CSS 遵循 `docs/design/css-style-guide.md`。
 - [ ] 测试贴近 owner，覆盖关键状态和错误路径。
