@@ -1,6 +1,7 @@
 import type { EditorCompiledInlineNode } from "./types";
 
 interface InlineRule {
+  trigger: string;
   pattern: RegExp;
   createNode: (match: RegExpExecArray) => EditorCompiledInlineNode;
 }
@@ -73,41 +74,65 @@ function createStrikethroughNode(
 // 规则顺序表达语法优先级：更长或更强的标记先匹配，避免 **bold** 被当成 *italic*。
 const inlineRules: InlineRule[] = [
   {
+    trigger: "`",
     pattern: /`(?<inlineCodeText>[^`\n]+)`/y,
     createNode: createInlineCodeNode,
   },
   {
+    trigger: "[",
     pattern: /\[(?<linkText>[^\]\n]+)]\((?<linkHref>[^)\s]+)\)/y,
     createNode: createLinkNode,
   },
   {
+    trigger: "~",
     pattern: /~~(?<strikethroughText>[^~\n]+)~~/y,
     createNode: createStrikethroughNode,
   },
   {
+    trigger: "*",
     pattern: /\*\*(?<strongText>[^*\n]+)\*\*/y,
     createNode: createStrongNode,
   },
   {
+    trigger: "_",
     pattern: /__(?<strongText>[^_\n]+)__/y,
     createNode: createStrongNode,
   },
   {
+    trigger: "*",
     pattern: /\*(?<emphasisText>[^*\n]+)\*/y,
     createNode: createEmphasisNode,
   },
   {
+    trigger: "_",
     pattern: /_(?<emphasisText>[^_\n]+)_/y,
     createNode: createEmphasisNode,
   },
 ];
+
+const inlineRulesByTrigger = inlineRules.reduce<
+  Partial<Record<string, InlineRule[]>>
+>((rulesByTrigger, rule) => {
+  rulesByTrigger[rule.trigger] = [
+    ...(rulesByTrigger[rule.trigger] ?? []),
+    rule,
+  ];
+
+  return rulesByTrigger;
+}, {});
 
 function findNextInlineToken(
   content: string,
   start: number,
 ): InlineToken | null {
   for (let index = start; index < content.length; index += 1) {
-    for (const rule of inlineRules) {
+    const rules = inlineRulesByTrigger[content[index]];
+
+    if (!rules) {
+      continue;
+    }
+
+    for (const rule of rules) {
       rule.pattern.lastIndex = index;
 
       const match = rule.pattern.exec(content);

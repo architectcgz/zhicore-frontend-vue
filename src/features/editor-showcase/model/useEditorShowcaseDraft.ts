@@ -1,8 +1,9 @@
-import { computed, ref } from "vue";
+import { computed, getCurrentScope, onScopeDispose, ref } from "vue";
 
 import {
   compileEditorContent,
   type EditorCompiledBlock,
+  type EditorCompiledDocument,
   type EditorCompiledInlineNode,
 } from "./editorContentCompiler";
 
@@ -16,6 +17,13 @@ export type EditorShowcaseToolbarAction =
 export interface EditorShowcaseTextSelection {
   start: number;
   end: number;
+}
+
+type EditorContentCompiler = (input: string) => EditorCompiledDocument;
+
+export interface UseEditorShowcaseDraftOptions {
+  compileContent?: EditorContentCompiler;
+  previewCompileDebounceMs?: number;
 }
 
 const defaultTitle = "把复杂系统讲成可以协作的结构";
@@ -36,6 +44,19 @@ const fallbackPreviewBlock: EditorShowcaseDraftBlock = {
     },
   ],
 };
+
+const defaultPreviewCompileDebounceMs = 160;
+
+function createContentHash(content: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < content.length; index += 1) {
+    hash ^= content.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash.toString(36);
+}
 
 function normalizeSelection(
   selection: EditorShowcaseTextSelection | undefined,
@@ -169,16 +190,25 @@ function applyToolbarActionToBody(
   }
 }
 
-export function useEditorShowcaseDraft() {
+export function useEditorShowcaseDraft(
+  options: UseEditorShowcaseDraftOptions = {},
+) {
+  const compileContent = options.compileContent ?? compileEditorContent;
+  const previewCompileDebounceMs =
+    options.previewCompileDebounceMs ?? defaultPreviewCompileDebounceMs;
   const title = ref(defaultTitle);
   const body = ref(defaultBody);
+  const compiledDocument = ref<EditorCompiledDocument>(
+    compileContent(defaultBody),
+  );
+  let lastCompiledBody = defaultBody;
+  let lastCompiledBodyHash = createContentHash(defaultBody);
+  let previewCompileTimer: number | undefined;
 
   const previewTitle = computed(() => {
     const trimmedTitle = title.value.trim();
     return trimmedTitle || "未命名草稿";
   });
-
-  const compiledDocument = computed(() => compileEditorContent(body.value));
 
   const draftBlocks = computed(() => compiledDocument.value.blocks);
 
@@ -207,8 +237,42 @@ export function useEditorShowcaseDraft() {
     title.value = nextTitle;
   }
 
+  function compilePreviewNow(): void {
+    const nextBodyHash = createContentHash(body.value);
+
+    if (
+      nextBodyHash === lastCompiledBodyHash &&
+      body.value === lastCompiledBody
+    ) {
+      return;
+    }
+
+    compiledDocument.value = compileContent(body.value);
+    lastCompiledBody = body.value;
+    lastCompiledBodyHash = nextBodyHash;
+  }
+
+  function schedulePreviewCompilation(): void {
+    window.clearTimeout(previewCompileTimer);
+
+    if (previewCompileDebounceMs <= 0) {
+      compilePreviewNow();
+      return;
+    }
+
+    // 正文输入可能连续触发，预览编译延迟到用户短暂停顿后执行，减少同步解析压力。
+    previewCompileTimer = window.setTimeout(() => {
+      compilePreviewNow();
+    }, previewCompileDebounceMs);
+  }
+
   function updateBody(nextBody: string): void {
+    if (nextBody === body.value) {
+      return;
+    }
+
     body.value = nextBody;
+    schedulePreviewCompilation();
   }
 
   function applyToolbarAction(
@@ -218,7 +282,14 @@ export function useEditorShowcaseDraft() {
     const result = applyToolbarActionToBody(body.value, action, selection);
 
     body.value = result.nextBody;
+    schedulePreviewCompilation();
     return result.nextSelection;
+  }
+
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      window.clearTimeout(previewCompileTimer);
+    });
   }
 
   return {

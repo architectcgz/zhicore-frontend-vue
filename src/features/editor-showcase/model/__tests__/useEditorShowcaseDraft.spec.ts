@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useEditorShowcaseDraft } from "../useEditorShowcaseDraft";
 
 describe("useEditorShowcaseDraft", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("starts with an editable title and body", () => {
     const draft = useEditorShowcaseDraft();
 
@@ -11,7 +15,7 @@ describe("useEditorShowcaseDraft", () => {
   });
 
   it("updates the reader preview from draft input", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateTitle("新的文章标题");
     draft.updateBody("第一段正文。\n\n第二段正文，用于预览。");
@@ -23,8 +27,75 @@ describe("useEditorShowcaseDraft", () => {
     expect(draft.wordCount.value).toBe(14);
   });
 
+  it("debounces body compilation until typing stops", async () => {
+    vi.useFakeTimers();
+    const compileContent = vi.fn((input: string) => ({
+      blocks: [
+        {
+          type: "text" as const,
+          label: "Text",
+          content: input,
+          inlineNodes: [
+            {
+              type: "text" as const,
+              text: input,
+            },
+          ],
+        },
+      ],
+      html: `<p>${input}</p>`,
+    }));
+    const draft = useEditorShowcaseDraft({
+      compileContent,
+      previewCompileDebounceMs: 160,
+    });
+
+    draft.updateBody("第一次输入");
+    draft.updateBody("第二次输入");
+
+    expect(compileContent).toHaveBeenCalledTimes(1);
+    expect(draft.previewBlocks.value[0]?.content).not.toBe("第二次输入");
+
+    await vi.advanceTimersByTimeAsync(159);
+    expect(compileContent).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(compileContent).toHaveBeenCalledTimes(2);
+    expect(compileContent).toHaveBeenLastCalledWith("第二次输入");
+    expect(draft.previewBlocks.value[0]?.content).toBe("第二次输入");
+  });
+
+  it("does not compile again when the body content is unchanged", async () => {
+    vi.useFakeTimers();
+    const compileContent = vi.fn((input: string) => ({
+      blocks: [
+        {
+          type: "text" as const,
+          label: "Text",
+          content: input,
+          inlineNodes: [
+            {
+              type: "text" as const,
+              text: input,
+            },
+          ],
+        },
+      ],
+      html: `<p>${input}</p>`,
+    }));
+    const draft = useEditorShowcaseDraft({
+      compileContent,
+      previewCompileDebounceMs: 160,
+    });
+
+    draft.updateBody(draft.body.value);
+    await vi.advanceTimersByTimeAsync(160);
+
+    expect(compileContent).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps blank-line-separated plain text in one text block", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBody("段落一。\n\n\n段落二仍然是纯文本。");
 
@@ -44,7 +115,7 @@ describe("useEditorShowcaseDraft", () => {
   });
 
   it("splits plain text from non-text blocks after blank lines", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBody(
       '段落一。\n\n段落二仍然是纯文本。\n\n```go\nfmt.Println("hi")\n```\n\n段落三。',
@@ -83,7 +154,7 @@ describe("useEditorShowcaseDraft", () => {
   });
 
   it("parses markdown links into safe preview inline nodes", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBody("阅读 [ZhiCore](https://example.com/docs) 文档。");
 
@@ -112,7 +183,7 @@ describe("useEditorShowcaseDraft", () => {
   });
 
   it("ends a code block before text typed after the closing fence", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBody('```ts\nconsole.log("ok")\n```后续正文');
 
@@ -138,7 +209,7 @@ describe("useEditorShowcaseDraft", () => {
   });
 
   it("inserts a code block from the toolbar action", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBody("段落一。");
     draft.applyToolbarAction("code", { start: 4, end: 4 });
@@ -176,7 +247,7 @@ describe("useEditorShowcaseDraft", () => {
   });
 
   it("uses fallback preview text when input is empty", () => {
-    const draft = useEditorShowcaseDraft();
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateTitle("   ");
     draft.updateBody("");
