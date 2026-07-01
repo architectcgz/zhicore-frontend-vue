@@ -19,14 +19,14 @@
           <button
             type="button"
             :aria-pressed="activeMode === 'focus'"
-            @click="selectMode('focus')"
+            @click="handleModeSelect('focus')"
           >
             专注写作
           </button>
           <button
             type="button"
             :aria-pressed="activeMode === 'preview'"
-            @click="selectMode('preview')"
+            @click="handleModeSelect('preview')"
           >
             写作 + 预览
           </button>
@@ -59,7 +59,12 @@
           'editor-stage--preview': isPreviewMode,
         }"
       >
-        <main class="writing-editor" aria-label="可输入编辑区">
+        <main
+          ref="writingEditorRef"
+          class="writing-editor"
+          aria-label="可输入编辑区"
+          @scroll="syncPreviewScroll"
+        >
           <div class="writing-editor__meta">
             <span>草稿已保存 10:42</span>
             <span>baseDraftBodyHash sha256:9af...</span>
@@ -123,8 +128,7 @@
                 class="body-input"
                 rows="14"
                 aria-label="文章正文"
-                @input="syncPreviewScrollOnNextFrame"
-                @scroll="syncPreviewScroll"
+                @input="handleBodyInput"
               />
 
               <footer class="document-structure">
@@ -146,11 +150,14 @@
             <strong>{{ wordCount }} 字</strong>
           </div>
           <h2>{{ previewTitle }}</h2>
-          <EditorReaderPreviewBlock
+          <div
             v-for="(block, blockIndex) in previewBlocks"
             :key="`${blockIndex}-${block.type}-${block.content}`"
-            :block="block"
-          />
+            class="reader-preview__block-anchor"
+            :data-preview-block-index="blockIndex"
+          >
+            <EditorReaderPreviewBlock :block="block" />
+          </div>
           <dl class="reader-preview__facts">
             <div>
               <dt>正文</dt>
@@ -168,10 +175,14 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 
-import { getSyncedScrollTop } from "@/features/editor-showcase/model/editorScrollSync";
+import {
+  buildBlockLineAnchors,
+  getActiveBlockIndexFromLine,
+  getSyncedScrollTop,
+} from "@/features/editor-showcase/model/editorScrollSync";
 import { useEditorShowcaseDisplay } from "@/features/editor-showcase/model/useEditorShowcaseDisplay";
 import {
   useEditorShowcaseDraft,
@@ -200,28 +211,120 @@ const {
 } = useEditorShowcaseDraft();
 
 const bodyInputRef = ref<HTMLTextAreaElement | null>(null);
+const writingEditorRef = ref<HTMLElement | null>(null);
 const readerPreviewRef = ref<HTMLElement | null>(null);
 
-function syncPreviewScroll(): void {
-  const bodyInput = bodyInputRef.value;
-  const readerPreview = readerPreviewRef.value;
+type EditorShowcaseMode = "focus" | "preview";
 
-  if (!bodyInput || !readerPreview || !isPreviewMode.value) {
+const blockLineAnchors = computed(() =>
+  buildBlockLineAnchors(body.value, previewBlocks.value),
+);
+
+function resizeBodyInput(): void {
+  const bodyInput = bodyInputRef.value;
+
+  if (!bodyInput) {
     return;
   }
 
+  bodyInput.style.height = "auto";
+  bodyInput.style.height = `${bodyInput.scrollHeight}px`;
+}
+
+function syncPreviewScroll(): void {
+  const writingEditor = writingEditorRef.value;
+  const bodyInput = bodyInputRef.value;
+  const readerPreview = readerPreviewRef.value;
+
+  if (!writingEditor || !bodyInput || !readerPreview || !isPreviewMode.value) {
+    return;
+  }
+
+  const sourceLineNumber = getSourceLineNumberAtEditorTop(
+    writingEditor,
+    bodyInput,
+  );
+  const activeBlockIndex = getActiveBlockIndexFromLine(
+    blockLineAnchors.value,
+    sourceLineNumber,
+  );
+
+  if (activeBlockIndex !== null) {
+    const blockElement = readerPreview.querySelector<HTMLElement>(
+      `[data-preview-block-index="${activeBlockIndex}"]`,
+    );
+
+    if (blockElement) {
+      readerPreview.scrollTop = getPreviewBlockScrollTop(
+        readerPreview,
+        blockElement,
+      );
+      return;
+    }
+  }
+
   readerPreview.scrollTop = getSyncedScrollTop({
-    sourceScrollTop: bodyInput.scrollTop,
-    sourceScrollHeight: bodyInput.scrollHeight,
-    sourceClientHeight: bodyInput.clientHeight,
+    sourceScrollTop: writingEditor.scrollTop,
+    sourceScrollHeight: writingEditor.scrollHeight,
+    sourceClientHeight: writingEditor.clientHeight,
     targetScrollHeight: readerPreview.scrollHeight,
     targetClientHeight: readerPreview.clientHeight,
   });
 }
 
-async function syncPreviewScrollOnNextFrame(): Promise<void> {
+function getSourceLineNumberAtEditorTop(
+  writingEditor: HTMLElement,
+  bodyInput: HTMLTextAreaElement,
+): number {
+  const lineHeight = getBodyInputLineHeight(bodyInput);
+  const bodyTopInEditor =
+    bodyInput.getBoundingClientRect().top -
+    writingEditor.getBoundingClientRect().top +
+    writingEditor.scrollTop;
+  const bodyScrollTop = Math.max(0, writingEditor.scrollTop - bodyTopInEditor);
+
+  return Math.floor(bodyScrollTop / lineHeight);
+}
+
+function getBodyInputLineHeight(bodyInput: HTMLTextAreaElement): number {
+  const style = window.getComputedStyle(bodyInput);
+  const parsedLineHeight = Number.parseFloat(style.lineHeight);
+
+  if (Number.isFinite(parsedLineHeight)) {
+    return parsedLineHeight;
+  }
+
+  return Number.parseFloat(style.fontSize) * 1.84;
+}
+
+function getPreviewBlockScrollTop(
+  readerPreview: HTMLElement,
+  blockElement: HTMLElement,
+): number {
+  const nextScrollTop =
+    blockElement.getBoundingClientRect().top -
+    readerPreview.getBoundingClientRect().top +
+    readerPreview.scrollTop;
+  const maxScrollTop = readerPreview.scrollHeight - readerPreview.clientHeight;
+
+  return Math.min(Math.max(0, Math.round(nextScrollTop)), maxScrollTop);
+}
+
+async function syncEditorLayoutOnNextFrame(): Promise<void> {
   await nextTick();
-  window.requestAnimationFrame(syncPreviewScroll);
+  window.requestAnimationFrame(() => {
+    resizeBodyInput();
+    syncPreviewScroll();
+  });
+}
+
+function handleBodyInput(): void {
+  void syncEditorLayoutOnNextFrame();
+}
+
+function handleModeSelect(mode: EditorShowcaseMode): void {
+  selectMode(mode);
+  void syncEditorLayoutOnNextFrame();
 }
 
 async function handleToolbarAction(
@@ -239,10 +342,15 @@ async function handleToolbarAction(
   );
 
   await nextTick();
+  resizeBodyInput();
   bodyInputRef.value?.focus();
   bodyInputRef.value?.setSelectionRange(nextSelection.start, nextSelection.end);
   syncPreviewScroll();
 }
+
+onMounted(() => {
+  resizeBodyInput();
+});
 </script>
 
 <style scoped>
@@ -453,6 +561,9 @@ async function handleToolbarAction(
 .writing-editor {
   display: grid;
   grid-template-rows: auto 1fr;
+  max-height: min(760px, calc(100vh - 170px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .writing-editor__meta {
@@ -573,6 +684,7 @@ async function handleToolbarAction(
   color: #3f4f5d;
   font-size: 18px;
   line-height: 1.84;
+  overflow: hidden;
 }
 
 .title-input:focus,
