@@ -50,6 +50,7 @@ pnpm format           # Prettier 格式化
 - Props / Emits 使用 `defineProps<Props>()` / `defineEmits<Emits>()` 类型声明
 - 服务端数据通过 API 模块获取，客户端状态放 Pinia store
 - 路由按命名空间拆分（`src/router/routes/*Routes.ts`），新增路由模块后在 `src/router/index.ts` 注册
+- CSS owner、命名、token、响应式与组件样式 contract 遵循 `docs/design/css-style-guide.md`
 - 依赖变更后不要格式化 `pnpm-lock.yaml`；如果 lockfile 出现大范围格式化噪音，先恢复 lockfile 原格式，再运行 `pnpm install --lockfile-only` 生成最小 lockfile 变更。
 
 ## 路由结构
