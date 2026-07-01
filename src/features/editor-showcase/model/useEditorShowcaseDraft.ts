@@ -1,4 +1,4 @@
-import { computed, getCurrentScope, onScopeDispose, ref } from "vue";
+import { computed, getCurrentScope, onScopeDispose, ref, watch } from "vue";
 
 import {
   compileEditorContent,
@@ -318,7 +318,6 @@ export function useEditorShowcaseDraft(
     }
 
     body.value = nextBody;
-    schedulePreviewCompilation();
   }
 
   function applyToolbarAction(
@@ -328,9 +327,18 @@ export function useEditorShowcaseDraft(
     const result = applyToolbarActionToBody(body.value, action, selection);
 
     body.value = result.nextBody;
-    schedulePreviewCompilation();
     return result.nextSelection;
   }
+
+  watch(
+    body,
+    () => {
+      schedulePreviewCompilation();
+    },
+    {
+      flush: "sync",
+    },
+  );
 
   if (getCurrentScope()) {
     onScopeDispose(() => {

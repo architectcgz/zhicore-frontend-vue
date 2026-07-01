@@ -65,6 +65,63 @@ describe("useEditorShowcaseDraft", () => {
     expect(draft.previewBlocks.value[0]?.content).toBe("第二次输入");
   });
 
+  it("updates preview when v-model mutates body directly", async () => {
+    vi.useFakeTimers();
+    const draft = useEditorShowcaseDraft({
+      previewCompileDebounceMs: 160,
+    });
+
+    draft.body.value = "- [ ] 未完成任务";
+    await vi.advanceTimersByTimeAsync(160);
+
+    expect(draft.previewBlocks.value).toEqual([
+      {
+        type: "list",
+        label: "Task List",
+        ordered: false,
+        task: true,
+        content: "- [ ] 未完成任务",
+        items: [
+          {
+            checked: false,
+            content: "未完成任务",
+            inlineNodes: [
+              {
+                type: "text",
+                text: "未完成任务",
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    draft.body.value = "- [x] 未完成任务";
+    await vi.advanceTimersByTimeAsync(160);
+
+    expect(draft.previewBlocks.value).toEqual([
+      {
+        type: "list",
+        label: "Task List",
+        ordered: false,
+        task: true,
+        content: "- [x] 未完成任务",
+        items: [
+          {
+            checked: true,
+            content: "未完成任务",
+            inlineNodes: [
+              {
+                type: "text",
+                text: "未完成任务",
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
   it("does not compile again when the body content is unchanged", async () => {
     vi.useFakeTimers();
     const compileContent = vi.fn((input: string) => ({
