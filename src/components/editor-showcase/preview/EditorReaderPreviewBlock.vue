@@ -13,6 +13,7 @@ import EditorReaderImageBlock from "./EditorReaderImageBlock.vue";
 import EditorReaderListBlock from "./EditorReaderListBlock.vue";
 import EditorReaderQuoteBlock from "./EditorReaderQuoteBlock.vue";
 import EditorReaderStructuredBlock from "./EditorReaderStructuredBlock.vue";
+import EditorReaderTableBlock from "./EditorReaderTableBlock.vue";
 import EditorReaderTextBlock from "./EditorReaderTextBlock.vue";
 
 defineProps<{
@@ -28,6 +29,7 @@ const previewComponentByType: Record<
   quote: EditorReaderQuoteBlock,
   code: EditorReaderCodeBlock,
   list: EditorReaderListBlock,
+  table: EditorReaderTableBlock,
   media: EditorReaderImageBlock,
   math: EditorReaderStructuredBlock,
 };

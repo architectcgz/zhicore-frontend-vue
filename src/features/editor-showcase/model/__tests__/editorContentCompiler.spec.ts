@@ -314,4 +314,138 @@ describe("editorContentCompiler", () => {
       '<h2>标题 <strong>加粗</strong></h2><blockquote>引用 <code>code</code></blockquote><ul><li>无序项</li><li>第二项 <strong>粗</strong></li></ul><ol><li>第一步</li><li>第二步</li></ol><ul class="task-list"><li><input type="checkbox" checked disabled> 完成项</li><li><input type="checkbox" disabled> 待办项</li></ul><figure><img src="/assets/diagram.png" alt="架构图"><figcaption>架构图</figcaption></figure>',
     );
   });
+
+  it("compiles pipe table markdown into table blocks and semantic html", () => {
+    const compiledDocument = compileEditorContent(
+      [
+        "| 表头1 | 表头2 | 表头3 |",
+        "| ------ | ------ | ------ |",
+        "| 数据1 | 数据2 | 数据3 |",
+        "| 数据4 | 数据5 | 数据6 |",
+      ].join("\n"),
+    );
+
+    expect(compiledDocument.blocks).toEqual([
+      {
+        type: "table",
+        label: "Table",
+        content:
+          "| 表头1 | 表头2 | 表头3 |\n| ------ | ------ | ------ |\n| 数据1 | 数据2 | 数据3 |\n| 数据4 | 数据5 | 数据6 |",
+        headers: [
+          {
+            content: "表头1",
+            inlineNodes: [
+              {
+                type: "text",
+                text: "表头1",
+              },
+            ],
+          },
+          {
+            content: "表头2",
+            inlineNodes: [
+              {
+                type: "text",
+                text: "表头2",
+              },
+            ],
+          },
+          {
+            content: "表头3",
+            inlineNodes: [
+              {
+                type: "text",
+                text: "表头3",
+              },
+            ],
+          },
+        ],
+        rows: [
+          [
+            {
+              content: "数据1",
+              inlineNodes: [
+                {
+                  type: "text",
+                  text: "数据1",
+                },
+              ],
+            },
+            {
+              content: "数据2",
+              inlineNodes: [
+                {
+                  type: "text",
+                  text: "数据2",
+                },
+              ],
+            },
+            {
+              content: "数据3",
+              inlineNodes: [
+                {
+                  type: "text",
+                  text: "数据3",
+                },
+              ],
+            },
+          ],
+          [
+            {
+              content: "数据4",
+              inlineNodes: [
+                {
+                  type: "text",
+                  text: "数据4",
+                },
+              ],
+            },
+            {
+              content: "数据5",
+              inlineNodes: [
+                {
+                  type: "text",
+                  text: "数据5",
+                },
+              ],
+            },
+            {
+              content: "数据6",
+              inlineNodes: [
+                {
+                  type: "text",
+                  text: "数据6",
+                },
+              ],
+            },
+          ],
+        ],
+      },
+    ]);
+    expect(compiledDocument.html).toBe(
+      "<table><thead><tr><th>表头1</th><th>表头2</th><th>表头3</th></tr></thead><tbody><tr><td>数据1</td><td>数据2</td><td>数据3</td></tr><tr><td>数据4</td><td>数据5</td><td>数据6</td></tr></tbody></table>",
+    );
+  });
+
+  it("accepts the common short table separator marker", () => {
+    const compiledDocument = compileEditorContent(
+      [
+        "| 表头1 | 表头2 | 表头3 |",
+        "| --- | --- | --- |",
+        "| 数据1 | 数据2 | 数据3 |",
+      ].join("\n"),
+    );
+
+    expect(compiledDocument.blocks[0]?.type).toBe("table");
+    expect(compiledDocument.html).toBe(
+      "<table><thead><tr><th>表头1</th><th>表头2</th><th>表头3</th></tr></thead><tbody><tr><td>数据1</td><td>数据2</td><td>数据3</td></tr></tbody></table>",
+    );
+  });
+
+  it("keeps pipe text without a separator row as plain text", () => {
+    const compiledDocument = compileEditorContent("测试|1|2");
+
+    expect(compiledDocument.blocks[0]?.type).toBe("text");
+    expect(compiledDocument.html).toBe("<p>测试|1|2</p>");
+  });
 });
