@@ -2,7 +2,6 @@ import { ref } from "vue";
 import { describe, expect, it } from "vitest";
 
 import { useEditorPreviewScrollSync } from "../useEditorPreviewScrollSync";
-import type { EditorCompiledBlock } from "../editorContentCompiler";
 
 function defineReadonlyNumberProperty(
   element: Element,
@@ -55,7 +54,7 @@ describe("useEditorPreviewScrollSync", () => {
       bodyInputRef: ref(bodyInput),
       writingEditorRef: ref(writingEditor),
       readerPreviewRef: ref(null),
-      previewBlocks: ref([]),
+      previewBlockAnchors: ref([]),
       isPreviewMode: ref(false),
     });
 
@@ -86,7 +85,7 @@ describe("useEditorPreviewScrollSync", () => {
       bodyInputRef: ref(bodyInput),
       writingEditorRef: ref(writingEditor),
       readerPreviewRef: ref(null),
-      previewBlocks: ref([]),
+      previewBlockAnchors: ref([]),
       isPreviewMode: ref(false),
     });
 
@@ -119,7 +118,7 @@ describe("useEditorPreviewScrollSync", () => {
       bodyInputRef: ref(bodyInput),
       writingEditorRef: ref(writingEditor),
       readerPreviewRef: ref(null),
-      previewBlocks: ref([]),
+      previewBlockAnchors: ref([]),
       isPreviewMode: ref(false),
     });
 
@@ -136,34 +135,27 @@ describe("useEditorPreviewScrollSync", () => {
     const readerPreview = document.createElement("aside");
     const firstBlock = document.createElement("div");
     const secondBlock = document.createElement("div");
-    const previewBlocks: EditorCompiledBlock[] = [
+    const previewBlockAnchors = [
       {
-        type: "heading",
-        label: "Heading",
-        content: "标题",
-        level: 1,
+        readerBlockIndex: 0,
         sourceRange: {
           startLine: 0,
           endLine: 0,
         },
-        inlineNodes: [],
       },
       {
-        type: "text",
-        label: "Text",
-        content: "正文",
+        readerBlockIndex: 1,
         sourceRange: {
           startLine: 2,
           endLine: 4,
         },
-        inlineNodes: [],
       },
     ];
 
     bodyInput.style.lineHeight = "20px";
     writingEditor.scrollTop = 40;
-    firstBlock.dataset.previewBlockIndex = "0";
-    secondBlock.dataset.previewBlockIndex = "1";
+    firstBlock.dataset.previewReaderBlockIndex = "0";
+    secondBlock.dataset.previewReaderBlockIndex = "1";
     readerPreview.append(firstBlock, secondBlock);
     readerPreview.scrollTop = 20;
     defineRectTop(bodyInput, -40);
@@ -177,12 +169,63 @@ describe("useEditorPreviewScrollSync", () => {
       bodyInputRef: ref(bodyInput),
       writingEditorRef: ref(writingEditor),
       readerPreviewRef: ref(readerPreview),
-      previewBlocks: ref(previewBlocks),
+      previewBlockAnchors: ref(previewBlockAnchors),
       isPreviewMode: ref(true),
     });
 
     syncPreviewScroll();
 
     expect(readerPreview.scrollTop).toBe(180);
+  });
+
+  it("uses reader block indexes when spacer blocks make compiled and reader indexes diverge", () => {
+    const bodyInput = document.createElement("textarea");
+    const writingEditor = document.createElement("main");
+    const readerPreview = document.createElement("aside");
+    const codeBlock = document.createElement("div");
+    const spacerBlock = document.createElement("div");
+    const tableBlock = document.createElement("div");
+    const previewBlockAnchors = [
+      {
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 0,
+          endLine: 2,
+        },
+      },
+      {
+        readerBlockIndex: 2,
+        sourceRange: {
+          startLine: 5,
+          endLine: 7,
+        },
+      },
+    ];
+
+    bodyInput.style.lineHeight = "20px";
+    writingEditor.scrollTop = 100;
+    codeBlock.dataset.previewReaderBlockIndex = "0";
+    spacerBlock.dataset.previewReaderBlockIndex = "1";
+    tableBlock.dataset.previewReaderBlockIndex = "2";
+    readerPreview.append(codeBlock, spacerBlock, tableBlock);
+    readerPreview.scrollTop = 15;
+    defineRectTop(bodyInput, -100);
+    defineRectTop(writingEditor, 0);
+    defineRectTop(readerPreview, 100);
+    defineRectTop(tableBlock, 340);
+    defineReadonlyNumberProperty(readerPreview, "scrollHeight", 1000);
+    defineReadonlyNumberProperty(readerPreview, "clientHeight", 400);
+
+    const { syncPreviewScroll } = useEditorPreviewScrollSync({
+      bodyInputRef: ref(bodyInput),
+      writingEditorRef: ref(writingEditor),
+      readerPreviewRef: ref(readerPreview),
+      previewBlockAnchors: ref(previewBlockAnchors),
+      isPreviewMode: ref(true),
+    });
+
+    syncPreviewScroll();
+
+    expect(readerPreview.scrollTop).toBe(255);
   });
 });

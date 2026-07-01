@@ -58,7 +58,6 @@ describe("useEditorShowcaseDraft", () => {
           ],
         },
       ],
-      html: `<p>${input}</p>`,
     }));
     const draft = useEditorShowcaseDraft({
       compileContent,
@@ -153,7 +152,6 @@ describe("useEditorShowcaseDraft", () => {
           ],
         },
       ],
-      html: `<p>${input}</p>`,
     }));
     const draft = useEditorShowcaseDraft({
       compileContent,
@@ -241,9 +239,9 @@ describe("useEditorShowcaseDraft", () => {
             text: "阅读 ",
           },
           {
-            type: "link",
+            type: "text",
             text: "ZhiCore",
-            href: "https://example.com/docs",
+            marks: [{ type: "link", href: "https://example.com/docs" }],
           },
           {
             type: "text",
@@ -329,5 +327,68 @@ describe("useEditorShowcaseDraft", () => {
       "正文预览会随输入同步更新。",
     ]);
     expect(draft.wordCount.value).toBe(0);
+  });
+
+  it("builds reader preview blocks with source anchors after blank-line spacer blocks", () => {
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
+
+    draft.updateBody(
+      [
+        "```go",
+        "fmt.Println(1)",
+        "```",
+        "",
+        "",
+        "| A | B |",
+        "| --- | --- |",
+        "| 1 | 2 |",
+      ].join("\n"),
+    );
+
+    expect(
+      draft.readerPreviewBlocks.value.map((previewBlock) => ({
+        type: previewBlock.block.type,
+        readerBlockIndex: previewBlock.readerBlockIndex,
+        sourceRange: previewBlock.sourceRange,
+      })),
+    ).toEqual([
+      {
+        type: "code_block",
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 0,
+          endLine: 2,
+        },
+      },
+      {
+        type: "paragraph",
+        readerBlockIndex: 1,
+        sourceRange: undefined,
+      },
+      {
+        type: "table",
+        readerBlockIndex: 2,
+        sourceRange: {
+          startLine: 5,
+          endLine: 7,
+        },
+      },
+    ]);
+    expect(draft.previewBlockAnchors.value).toEqual([
+      {
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 0,
+          endLine: 2,
+        },
+      },
+      {
+        readerBlockIndex: 2,
+        sourceRange: {
+          startLine: 5,
+          endLine: 7,
+        },
+      },
+    ]);
   });
 });

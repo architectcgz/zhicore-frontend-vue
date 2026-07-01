@@ -5,32 +5,18 @@ export interface EditorCompiledSourceRange {
   endLine: number;
 }
 
-export type EditorCompiledInlineNode =
-  | {
-      type: "text";
-      text: string;
-    }
-  | {
-      type: "strong";
-      text: string;
-    }
-  | {
-      type: "emphasis";
-      text: string;
-    }
-  | {
-      type: "strikethrough";
-      text: string;
-    }
-  | {
-      type: "inlineCode";
-      text: string;
-    }
-  | {
-      type: "link";
-      text: string;
-      href: string;
-    };
+export type EditorCompiledInlineMark =
+  | { type: "bold" }
+  | { type: "italic" }
+  | { type: "strike" }
+  | { type: "inline_code" }
+  | { type: "link"; href: string };
+
+export interface EditorCompiledInlineNode {
+  type: "text";
+  text: string;
+  marks?: EditorCompiledInlineMark[];
+}
 
 export interface EditorCompiledListItem {
   content: string;
@@ -91,7 +77,6 @@ export type EditorCompiledBlockType = EditorCompiledBlock["type"];
 
 export interface EditorCompiledDocument {
   blocks: EditorCompiledBlock[];
-  html: string;
 }
 
 export interface BlockParserContext {

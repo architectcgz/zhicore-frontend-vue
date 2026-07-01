@@ -11,57 +11,52 @@ import { compileEditorContent } from "./compileEditorContent";
 import type {
   EditorCompiledBlock,
   EditorCompiledDocument,
+  EditorCompiledInlineMark,
   EditorCompiledInlineNode,
+  EditorCompiledSourceRange,
   EditorCompiledTableCell,
 } from "./types";
 
-function mapInlineNode(node: EditorCompiledInlineNode): PostBodyInlineNode {
-  if (node.type === "text") {
-    return {
-      type: "text",
-      text: node.text,
-    };
-  }
+export interface EditorPreviewReaderBlock {
+  block: PostBodyBlock;
+  readerBlockIndex: number;
+  sourceRange?: EditorCompiledSourceRange;
+  compiledBlockIndex?: number;
+}
 
-  const markByInlineType = {
-    strong: "bold",
-    emphasis: "italic",
-    strikethrough: "strike",
-    inlineCode: "inline_code",
-  } satisfies Partial<
-    Record<EditorCompiledInlineNode["type"], PostBodyInlineMark["type"]>
-  >;
+export interface EditorPreviewBlockAnchor {
+  readerBlockIndex: number;
+  sourceRange: EditorCompiledSourceRange;
+}
 
-  if (node.type === "link") {
-    const href = sanitizePostBodyExternalUrl(node.href);
+function mapInlineMark(
+  mark: EditorCompiledInlineMark,
+): PostBodyInlineMark | null {
+  if (mark.type === "link") {
+    const href = sanitizePostBodyExternalUrl(mark.href);
 
     if (!href) {
-      return {
-        type: "text",
-        text: node.text,
-      };
+      return null;
     }
 
     return {
-      type: "text",
-      text: node.text,
-      marks: [
-        {
-          type: "link",
-          href,
-        },
-      ],
+      type: "link",
+      href,
     };
   }
+
+  return mark;
+}
+
+function mapInlineNode(node: EditorCompiledInlineNode): PostBodyInlineNode {
+  const marks = (node.marks ?? [])
+    .map(mapInlineMark)
+    .filter((mark): mark is PostBodyInlineMark => mark !== null);
 
   return {
     type: "text",
     text: node.text,
-    marks: [
-      {
-        type: markByInlineType[node.type],
-      },
-    ],
+    ...(marks.length ? { marks } : {}),
   };
 }
 
@@ -188,7 +183,20 @@ function getVisibleBlankLineCountBetweenBlocks(
 export function mapEditorCompiledDocumentToPostBodyWriteInput(
   document: EditorCompiledDocument,
 ): PostBodyWriteInput {
-  const blocks: PostBodyBlock[] = [];
+  const blocks = mapEditorCompiledDocumentToPreviewReaderBlocks(document).map(
+    (previewBlock) => previewBlock.block,
+  );
+
+  return {
+    schemaVersion: 1,
+    blocks,
+  };
+}
+
+export function mapEditorCompiledDocumentToPreviewReaderBlocks(
+  document: EditorCompiledDocument,
+): EditorPreviewReaderBlock[] {
+  const previewBlocks: EditorPreviewReaderBlock[] = [];
 
   document.blocks.forEach((block, blockIndex) => {
     const previousBlock = document.blocks[blockIndex - 1];
@@ -200,17 +208,39 @@ export function mapEditorCompiledDocumentToPostBodyWriteInput(
       );
 
       if (visibleBlankLineCount > 0) {
-        blocks.push(createBlankLineSpacerBlock(visibleBlankLineCount));
+        previewBlocks.push({
+          block: createBlankLineSpacerBlock(visibleBlankLineCount),
+          readerBlockIndex: previewBlocks.length,
+        });
       }
     }
 
-    blocks.push(mapCompiledBlock(block));
+    previewBlocks.push({
+      block: mapCompiledBlock(block),
+      readerBlockIndex: previewBlocks.length,
+      sourceRange: block.sourceRange,
+      compiledBlockIndex: blockIndex,
+    });
   });
 
-  return {
-    schemaVersion: 1,
-    blocks,
-  };
+  return previewBlocks;
+}
+
+export function mapPreviewReaderBlocksToAnchors(
+  previewBlocks: EditorPreviewReaderBlock[],
+): EditorPreviewBlockAnchor[] {
+  return previewBlocks.flatMap((previewBlock) => {
+    if (!previewBlock.sourceRange) {
+      return [];
+    }
+
+    return [
+      {
+        readerBlockIndex: previewBlock.readerBlockIndex,
+        sourceRange: previewBlock.sourceRange,
+      },
+    ];
+  });
 }
 
 export function compileEditorContentToPostBodyWriteInput(

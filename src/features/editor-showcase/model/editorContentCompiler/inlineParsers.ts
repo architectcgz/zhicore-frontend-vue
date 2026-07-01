@@ -1,177 +1,305 @@
-import type { EditorCompiledInlineNode } from "./types";
 import { sanitizePostBodyExternalUrl } from "@/entities/post-body";
 
-interface InlineRule {
-  trigger: string;
-  pattern: RegExp;
-  createNode: (match: RegExpExecArray) => EditorCompiledInlineNode;
+import type {
+  EditorCompiledInlineMark,
+  EditorCompiledInlineNode,
+} from "./types";
+
+interface MarkdownInlineToken {
+  index: number;
+  rawLength: number;
+  nodes: EditorCompiledInlineNode[];
 }
 
-interface InlineToken {
-  index: number;
-  raw: string;
-  node: EditorCompiledInlineNode;
+interface DelimitedMarkSpec {
+  opener: string;
+  closer: string;
+  marks: EditorCompiledInlineMark[];
 }
+
+const delimitedMarkSpecs: DelimitedMarkSpec[] = [
+  {
+    opener: "~~",
+    closer: "~~",
+    marks: [{ type: "strike" }],
+  },
+  {
+    opener: "***",
+    closer: "***",
+    marks: [{ type: "bold" }, { type: "italic" }],
+  },
+  {
+    opener: "___",
+    closer: "___",
+    marks: [{ type: "bold" }, { type: "italic" }],
+  },
+  {
+    opener: "**",
+    closer: "**",
+    marks: [{ type: "bold" }],
+  },
+  {
+    opener: "__",
+    closer: "__",
+    marks: [{ type: "bold" }],
+  },
+  {
+    opener: "*",
+    closer: "*",
+    marks: [{ type: "italic" }],
+  },
+  {
+    opener: "_",
+    closer: "_",
+    marks: [{ type: "italic" }],
+  },
+];
 
 export function sanitizeLinkHref(href: string): string | null {
   return sanitizePostBodyExternalUrl(href);
 }
 
-function createInlineCodeNode(
-  match: RegExpExecArray,
-): EditorCompiledInlineNode {
-  return {
-    type: "inlineCode",
-    text: match.groups?.inlineCodeText ?? "",
-  };
+function areMarksEqual(
+  previousMarks: EditorCompiledInlineMark[] = [],
+  nextMarks: EditorCompiledInlineMark[] = [],
+): boolean {
+  if (previousMarks.length !== nextMarks.length) {
+    return false;
+  }
+
+  return previousMarks.every((previousMark, index) => {
+    const nextMark = nextMarks[index];
+
+    if (!nextMark || previousMark.type !== nextMark.type) {
+      return false;
+    }
+
+    if (previousMark.type === "link" && nextMark.type === "link") {
+      return previousMark.href === nextMark.href;
+    }
+
+    return true;
+  });
 }
 
-function createLinkNode(match: RegExpExecArray): EditorCompiledInlineNode {
-  const linkText = match.groups?.linkText ?? "";
-  const linkHref = match.groups?.linkHref ?? "";
-  const href = sanitizeLinkHref(linkHref);
+function createTextNode(
+  text: string,
+  marks: EditorCompiledInlineMark[],
+): EditorCompiledInlineNode | null {
+  if (!text) {
+    return null;
+  }
+
+  return marks.length
+    ? {
+        type: "text",
+        text,
+        marks: [...marks],
+      }
+    : {
+        type: "text",
+        text,
+      };
+}
+
+function appendTextNode(
+  nodes: EditorCompiledInlineNode[],
+  text: string,
+  marks: EditorCompiledInlineMark[],
+): void {
+  const nextNode = createTextNode(text, marks);
+
+  if (!nextNode) {
+    return;
+  }
+
+  const previousNode = nodes[nodes.length - 1];
+  const nextMarks = nextNode.marks ?? [];
+
+  if (previousNode && areMarksEqual(previousNode.marks ?? [], nextMarks)) {
+    previousNode.text += nextNode.text;
+    return;
+  }
+
+  nodes.push(nextNode);
+}
+
+function hasLineBreak(value: string): boolean {
+  return value.includes("\n");
+}
+
+function parseInlineCodeToken(
+  content: string,
+  index: number,
+  activeMarks: EditorCompiledInlineMark[],
+): MarkdownInlineToken | null {
+  if (content[index] !== "`") {
+    return null;
+  }
+
+  const closingIndex = content.indexOf("`", index + 1);
+
+  if (closingIndex === -1) {
+    return null;
+  }
+
+  const codeText = content.slice(index + 1, closingIndex);
+
+  if (!codeText || hasLineBreak(codeText)) {
+    return null;
+  }
+
+  const node = createTextNode(codeText, [
+    ...activeMarks,
+    { type: "inline_code" },
+  ]);
+
+  return node
+    ? {
+        index,
+        rawLength: closingIndex - index + 1,
+        nodes: [node],
+      }
+    : null;
+}
+
+function parseLinkToken(
+  content: string,
+  index: number,
+  activeMarks: EditorCompiledInlineMark[],
+): MarkdownInlineToken | null {
+  if (content[index] !== "[") {
+    return null;
+  }
+
+  const closeBracketIndex = content.indexOf("]", index + 1);
+
+  if (
+    closeBracketIndex === -1 ||
+    content[closeBracketIndex + 1] !== "(" ||
+    hasLineBreak(content.slice(index + 1, closeBracketIndex))
+  ) {
+    return null;
+  }
+
+  const closeParenIndex = content.indexOf(")", closeBracketIndex + 2);
+
+  if (closeParenIndex === -1) {
+    return null;
+  }
+
+  const linkText = content.slice(index + 1, closeBracketIndex);
+  const rawHref = content.slice(closeBracketIndex + 2, closeParenIndex);
+
+  if (!linkText || /\s/.test(rawHref)) {
+    return null;
+  }
+
+  const href = sanitizeLinkHref(rawHref);
+  const rawLink = content.slice(index, closeParenIndex + 1);
 
   if (!href) {
-    return {
-      type: "text",
-      text: match[0],
-    };
+    const node = createTextNode(rawLink, activeMarks);
+
+    return node
+      ? {
+          index,
+          rawLength: rawLink.length,
+          nodes: [node],
+        }
+      : null;
   }
 
   return {
-    type: "link",
-    text: linkText,
-    href,
+    index,
+    rawLength: rawLink.length,
+    nodes: parseInlineSegment(linkText, [
+      ...activeMarks,
+      { type: "link", href },
+    ]),
   };
 }
 
-function createStrongNode(match: RegExpExecArray): EditorCompiledInlineNode {
+function parseDelimitedMarkToken(
+  content: string,
+  index: number,
+  activeMarks: EditorCompiledInlineMark[],
+): MarkdownInlineToken | null {
+  const spec = delimitedMarkSpecs.find((item) =>
+    content.startsWith(item.opener, index),
+  );
+
+  if (!spec) {
+    return null;
+  }
+
+  const innerStartIndex = index + spec.opener.length;
+  const closingIndex = content.indexOf(spec.closer, innerStartIndex);
+
+  if (closingIndex === -1) {
+    return null;
+  }
+
+  const innerText = content.slice(innerStartIndex, closingIndex);
+
+  if (!innerText || hasLineBreak(innerText)) {
+    return null;
+  }
+
   return {
-    type: "strong",
-    text: match.groups?.strongText ?? "",
+    index,
+    rawLength: closingIndex + spec.closer.length - index,
+    nodes: parseInlineSegment(innerText, [...activeMarks, ...spec.marks]),
   };
 }
-
-function createEmphasisNode(match: RegExpExecArray): EditorCompiledInlineNode {
-  return {
-    type: "emphasis",
-    text: match.groups?.emphasisText ?? "",
-  };
-}
-
-function createStrikethroughNode(
-  match: RegExpExecArray,
-): EditorCompiledInlineNode {
-  return {
-    type: "strikethrough",
-    text: match.groups?.strikethroughText ?? "",
-  };
-}
-
-// 规则顺序表达语法优先级：更长或更强的标记先匹配，避免 **bold** 被当成 *italic*。
-const inlineRules: InlineRule[] = [
-  {
-    trigger: "`",
-    pattern: /`(?<inlineCodeText>[^`\n]+)`/y,
-    createNode: createInlineCodeNode,
-  },
-  {
-    trigger: "[",
-    pattern: /\[(?<linkText>[^\]\n]+)]\((?<linkHref>[^)\s]+)\)/y,
-    createNode: createLinkNode,
-  },
-  {
-    trigger: "~",
-    pattern: /~~(?<strikethroughText>[^~\n]+)~~/y,
-    createNode: createStrikethroughNode,
-  },
-  {
-    trigger: "*",
-    pattern: /\*\*(?<strongText>[^*\n]+)\*\*/y,
-    createNode: createStrongNode,
-  },
-  {
-    trigger: "_",
-    pattern: /__(?<strongText>[^_\n]+)__/y,
-    createNode: createStrongNode,
-  },
-  {
-    trigger: "*",
-    pattern: /\*(?<emphasisText>[^*\n]+)\*/y,
-    createNode: createEmphasisNode,
-  },
-  {
-    trigger: "_",
-    pattern: /_(?<emphasisText>[^_\n]+)_/y,
-    createNode: createEmphasisNode,
-  },
-];
-
-const inlineRulesByTrigger = inlineRules.reduce<
-  Partial<Record<string, InlineRule[]>>
->((rulesByTrigger, rule) => {
-  rulesByTrigger[rule.trigger] = [
-    ...(rulesByTrigger[rule.trigger] ?? []),
-    rule,
-  ];
-
-  return rulesByTrigger;
-}, {});
 
 function findNextInlineToken(
   content: string,
   start: number,
-): InlineToken | null {
+  activeMarks: EditorCompiledInlineMark[],
+): MarkdownInlineToken | null {
   for (let index = start; index < content.length; index += 1) {
-    const rules = inlineRulesByTrigger[content[index]];
+    const token =
+      parseInlineCodeToken(content, index, activeMarks) ??
+      parseLinkToken(content, index, activeMarks) ??
+      parseDelimitedMarkToken(content, index, activeMarks);
 
-    if (!rules) {
-      continue;
-    }
-
-    for (const rule of rules) {
-      rule.pattern.lastIndex = index;
-
-      const match = rule.pattern.exec(content);
-
-      if (match?.index === index) {
-        return {
-          index,
-          raw: match[0],
-          node: rule.createNode(match),
-        };
-      }
+    if (token) {
+      return token;
     }
   }
 
   return null;
 }
 
-export function parseInlineNodes(content: string): EditorCompiledInlineNode[] {
+function parseInlineSegment(
+  content: string,
+  activeMarks: EditorCompiledInlineMark[],
+): EditorCompiledInlineNode[] {
   const nodes: EditorCompiledInlineNode[] = [];
   let cursor = 0;
 
   while (cursor < content.length) {
-    const token = findNextInlineToken(content, cursor);
+    const token = findNextInlineToken(content, cursor, activeMarks);
 
     if (!token) {
-      nodes.push({
-        type: "text",
-        text: content.slice(cursor),
-      });
+      appendTextNode(nodes, content.slice(cursor), activeMarks);
       break;
     }
 
     if (token.index > cursor) {
-      nodes.push({
-        type: "text",
-        text: content.slice(cursor, token.index),
-      });
+      appendTextNode(nodes, content.slice(cursor, token.index), activeMarks);
     }
 
-    nodes.push(token.node);
-    cursor = token.index + token.raw.length;
+    nodes.push(...token.nodes);
+    cursor = token.index + token.rawLength;
   }
+
+  return nodes;
+}
+
+export function parseInlineNodes(content: string): EditorCompiledInlineNode[] {
+  const nodes = parseInlineSegment(content, []);
 
   return nodes.length
     ? nodes

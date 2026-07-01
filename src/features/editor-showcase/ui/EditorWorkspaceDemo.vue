@@ -47,7 +47,7 @@
         <EditorPreviewPane
           ref="previewPaneRef"
           :preview-title="previewTitle"
-          :preview-blocks="readerBlocks"
+          :preview-blocks="readerPreviewBlocks"
           :word-count="wordCount"
         />
       </div>
@@ -56,100 +56,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { useEditorWorkspaceController } from "@/features/editor-showcase/model";
 
-import {
-  isEditorDebugMode,
-  useEditorPreviewScrollSync,
-  useEditorShowcaseDisplay,
-  useEditorShowcaseDraft,
-  type EditorShowcaseMode,
-  type EditorShowcaseToolbarAction,
-} from "@/features/editor-showcase/model";
-
-import EditorActionBar from "./EditorActionBar.vue";
-import EditorPreviewPane from "./EditorPreviewPane.vue";
-import EditorWritingPane from "./EditorWritingPane.vue";
+import EditorActionBar from "@/components/editor-showcase/EditorActionBar.vue";
+import EditorPreviewPane from "@/components/editor-showcase/EditorPreviewPane.vue";
+import EditorWritingPane from "@/components/editor-showcase/EditorWritingPane.vue";
 
 const {
   activeMode,
   activeBackground,
   activeBackgroundClass,
   backgroundCandidates,
-  isPreviewMode,
-  selectMode,
-  selectBackground,
-} = useEditorShowcaseDisplay();
-
-const {
-  title,
   body,
+  handleBodyInput,
+  handleModeSelect,
+  handleToolbarAction,
+  isEditorDebugMode,
+  isPreviewMode,
   previewTitle,
   readerBlocks,
-  previewBlocks,
+  readerPreviewBlocks,
+  previewPaneRef,
+  selectBackground,
+  syncPreviewScroll,
+  title,
   wordCount,
-  applyToolbarAction,
-} = useEditorShowcaseDraft();
-
-const writingPaneRef = ref<InstanceType<typeof EditorWritingPane> | null>(null);
-const previewPaneRef = ref<InstanceType<typeof EditorPreviewPane> | null>(null);
-
-const bodyInputRef = computed(
-  () => writingPaneRef.value?.bodyInputElement ?? null,
-);
-const writingEditorRef = computed(
-  () => writingPaneRef.value?.writingEditorElement ?? null,
-);
-const readerPreviewRef = computed(
-  () => previewPaneRef.value?.readerPreviewElement ?? null,
-);
-
-const { resizeBodyInput, syncPreviewScroll, syncEditorLayoutOnNextFrame } =
-  useEditorPreviewScrollSync({
-    bodyInputRef,
-    writingEditorRef,
-    readerPreviewRef,
-    previewBlocks,
-    isPreviewMode,
-  });
-
-function handleBodyInput(): void {
-  void syncEditorLayoutOnNextFrame();
-}
-
-function handleModeSelect(mode: EditorShowcaseMode): void {
-  selectMode(mode);
-  void syncEditorLayoutOnNextFrame();
-}
-
-async function handleToolbarAction(
-  action: EditorShowcaseToolbarAction,
-): Promise<void> {
-  const nextSelection = applyToolbarAction(
-    action,
-    writingPaneRef.value?.getBodySelection(),
-  );
-
-  await nextTick();
-  resizeBodyInput();
-  writingPaneRef.value?.focusBody();
-  writingPaneRef.value?.setBodySelection(nextSelection);
-  syncPreviewScroll();
-}
-
-onMounted(() => {
-  resizeBodyInput();
-});
-
-watch(
-  previewBlocks,
-  () => {
-    void syncEditorLayoutOnNextFrame();
-  },
-  {
-    flush: "post",
-  },
-);
+  writingPaneRef,
+} = useEditorWorkspaceController();
 </script>
 
 <style scoped>

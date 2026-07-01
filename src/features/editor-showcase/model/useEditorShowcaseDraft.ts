@@ -5,9 +5,12 @@ import type { PostBodyBlock } from "@/entities/post-body";
 import {
   compileEditorContent,
   mapEditorCompiledDocumentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPreviewReaderBlocks,
+  mapPreviewReaderBlocksToAnchors,
   type EditorCompiledBlock,
   type EditorCompiledDocument,
   type EditorCompiledInlineNode,
+  type EditorPreviewReaderBlock,
 } from "./editorContentCompiler";
 import { createEditorLogger } from "./editorDebug";
 import {
@@ -25,6 +28,7 @@ import {
 export type EditorShowcaseDraftBlockType = EditorCompiledBlock["type"];
 export type EditorShowcaseDraftBlock = EditorCompiledBlock;
 export type EditorShowcaseInlineNode = EditorCompiledInlineNode;
+export type EditorShowcaseReaderPreviewBlock = EditorPreviewReaderBlock;
 export type { EditorShowcaseTextSelection, EditorShowcaseToolbarAction };
 
 type EditorContentCompiler = (input: string) => EditorCompiledDocument;
@@ -75,19 +79,34 @@ export function useEditorShowcaseDraft(
     mapEditorCompiledDocumentToPostBodyWriteInput(compiledDocument.value),
   );
 
-  const readerBlocks = computed<PostBodyBlock[]>(() => {
-    return postBodyWriteInput.value.blocks.length
-      ? postBodyWriteInput.value.blocks
-      : [fallbackReaderBlock];
+  const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
+    const previewBlocks = mapEditorCompiledDocumentToPreviewReaderBlocks(
+      compiledDocument.value,
+    );
+
+    return previewBlocks.length
+      ? previewBlocks
+      : [
+          {
+            block: fallbackReaderBlock,
+            readerBlockIndex: 0,
+          },
+        ];
   });
+
+  const readerBlocks = computed<PostBodyBlock[]>(() => {
+    return readerPreviewBlocks.value.map((previewBlock) => previewBlock.block);
+  });
+
+  const previewBlockAnchors = computed(() =>
+    mapPreviewReaderBlocksToAnchors(readerPreviewBlocks.value),
+  );
 
   const previewBlocks = computed(() => {
     return draftBlocks.value.length
       ? draftBlocks.value
       : [fallbackPreviewBlock];
   });
-
-  const compiledHtml = computed(() => compiledDocument.value.html);
 
   const previewParagraphs = computed(() => {
     const paragraphs = previewBlocks.value
@@ -189,10 +208,11 @@ export function useEditorShowcaseDraft(
     body,
     previewTitle,
     compiledDocument,
-    compiledHtml,
     draftBlocks,
     postBodyWriteInput,
     readerBlocks,
+    readerPreviewBlocks,
+    previewBlockAnchors,
     previewBlocks,
     previewParagraphs,
     wordCount,

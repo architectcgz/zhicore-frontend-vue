@@ -1,9 +1,10 @@
 export {
   compileEditorBlocks,
-  compileEditorBlocksToHtml,
   compileEditorContent,
   compileEditorContentToPostBodyWriteInput,
   mapEditorCompiledDocumentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPreviewReaderBlocks,
+  mapPreviewReaderBlocksToAnchors,
 } from "./editorContentCompiler";
 export {
   createEditorDebugLogger,
@@ -20,10 +21,13 @@ export type {
   EditorCompiledBlockType,
   EditorCompiledDocument,
   EditorCompiledHeadingLevel,
+  EditorCompiledInlineMark,
   EditorCompiledInlineNode,
   EditorCompiledListItem,
   EditorCompiledSourceRange,
   EditorCompiledTableCell,
+  EditorPreviewBlockAnchor,
+  EditorPreviewReaderBlock,
 } from "./editorContentCompiler";
 export {
   buildBlockLineAnchors,
@@ -44,7 +48,13 @@ export type {
   EditorShowcaseDraftBlock,
   EditorShowcaseDraftBlockType,
   EditorShowcaseInlineNode,
+  EditorShowcaseReaderPreviewBlock,
   EditorShowcaseTextSelection,
   EditorShowcaseToolbarAction,
   UseEditorShowcaseDraftOptions,
 } from "./useEditorShowcaseDraft";
+export { useEditorWorkspaceController } from "./useEditorWorkspaceController";
+export type {
+  EditorWorkspacePreviewPaneRef,
+  EditorWorkspaceWritingPaneRef,
+} from "./useEditorWorkspaceController";

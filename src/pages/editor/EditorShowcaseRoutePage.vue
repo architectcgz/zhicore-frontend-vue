@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-import EditorWorkspaceDemo from "@/components/editor-showcase/EditorWorkspaceDemo.vue";
+import { EditorWorkspaceDemo } from "@/features/editor-showcase";
 </script>

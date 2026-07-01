@@ -1,11 +1,11 @@
 import { computed, nextTick, type Ref } from "vue";
 
-import type { EditorCompiledBlock } from "./editorContentCompiler";
+import type { EditorPreviewBlockAnchor } from "./editorContentCompiler";
 import { createEditorLogger } from "./editorDebug";
 import {
-  buildBlockLineAnchors,
   getActiveBlockIndexFromLine,
   getSyncedScrollTop,
+  type BlockLineAnchor,
 } from "./editorScrollSync";
 
 const scrollLogger = createEditorLogger("scroll");
@@ -15,7 +15,7 @@ export interface UseEditorPreviewScrollSyncOptions {
   bodyInputRef: Readonly<Ref<HTMLTextAreaElement | null>>;
   writingEditorRef: Readonly<Ref<HTMLElement | null>>;
   readerPreviewRef: Readonly<Ref<HTMLElement | null>>;
-  previewBlocks: Readonly<Ref<EditorCompiledBlock[]>>;
+  previewBlockAnchors: Readonly<Ref<EditorPreviewBlockAnchor[]>>;
   isPreviewMode: Readonly<Ref<boolean>>;
 }
 
@@ -100,8 +100,12 @@ function getPreviewBlockScrollTop(
 export function useEditorPreviewScrollSync(
   options: UseEditorPreviewScrollSyncOptions,
 ) {
-  const blockLineAnchors = computed(() =>
-    buildBlockLineAnchors(options.previewBlocks.value),
+  const blockLineAnchors = computed<BlockLineAnchor[]>(() =>
+    options.previewBlockAnchors.value.map((anchor) => ({
+      blockIndex: anchor.readerBlockIndex,
+      startLine: anchor.sourceRange.startLine,
+      endLine: anchor.sourceRange.endLine,
+    })),
   );
 
   function resizeBodyInput(): void {
@@ -161,14 +165,14 @@ export function useEditorPreviewScrollSync(
       writingEditor,
       bodyInput,
     );
-    const activeBlockIndex = getActiveBlockIndexFromLine(
+    const activeReaderBlockIndex = getActiveBlockIndexFromLine(
       blockLineAnchors.value,
       sourceLineNumber,
     );
 
-    if (activeBlockIndex !== null) {
+    if (activeReaderBlockIndex !== null) {
       const blockElement = readerPreview.querySelector<HTMLElement>(
-        `[data-preview-block-index="${activeBlockIndex}"]`,
+        `[data-preview-reader-block-index="${activeReaderBlockIndex}"]`,
       );
 
       if (blockElement) {
@@ -180,7 +184,7 @@ export function useEditorPreviewScrollSync(
           "synced preview by block anchor",
           {
             sourceLineNumber,
-            activeBlockIndex,
+            activeReaderBlockIndex,
             targetScrollTop: readerPreview.scrollTop,
           },
         ]);

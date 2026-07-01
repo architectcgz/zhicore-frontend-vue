@@ -83,22 +83,68 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
     );
 
     expect(writeInput.blocks).toHaveLength(1);
-    expect(writeInput.blocks[0]).toMatchObject({
-      type: "paragraph",
-      children: expect.arrayContaining([
-        { type: "text", text: "[relative](/docs)" },
-        { type: "text", text: "[hash](#title)" },
-        { type: "text", text: "[relative image](/image.png)" },
+    expect(writeInput.blocks[0]?.type).toBe("paragraph");
+
+    const paragraph = writeInput.blocks[0];
+
+    if (paragraph?.type !== "paragraph") {
+      throw new Error("expected paragraph block");
+    }
+
+    const plainText = paragraph.children.map((node) => node.text).join("");
+
+    expect(plainText).toContain("[relative](/docs)");
+    expect(plainText).toContain("[hash](#title)");
+    expect(plainText).toContain("[relative image](/image.png)");
+    expect(paragraph.children).toEqual(
+      expect.arrayContaining([
         {
           type: "text",
           text: "ok",
           marks: [{ type: "link", href: "https://example.com/" }],
         },
       ]),
-    });
+    );
+    expect(
+      paragraph.children.flatMap((node) =>
+        (node.marks ?? []).filter((mark) => mark.type === "link"),
+      ),
+    ).not.toContainEqual(
+      expect.objectContaining({ href: expect.stringMatching(/^javascript:/i) }),
+    );
     expect(writeInput.blocks).not.toContainEqual(
       expect.objectContaining({ type: "external_embed" }),
     );
+  });
+
+  it("writes stacked inline marks into the formal post body contract", () => {
+    const writeInput = compileEditorContentToPostBodyWriteInput(
+      "阅读 **[ZhiCore](https://example.com/docs)** 和 **_重点_**。",
+    );
+
+    expect(writeInput.blocks).toEqual([
+      {
+        type: "paragraph",
+        children: [
+          { type: "text", text: "阅读 " },
+          {
+            type: "text",
+            text: "ZhiCore",
+            marks: [
+              { type: "bold" },
+              { type: "link", href: "https://example.com/docs" },
+            ],
+          },
+          { type: "text", text: " 和 " },
+          {
+            type: "text",
+            text: "重点",
+            marks: [{ type: "bold" }, { type: "italic" }],
+          },
+          { type: "text", text: "。" },
+        ],
+      },
+    ]);
   });
 
   it("writes fenced math as pure latex without markdown delimiters", () => {
