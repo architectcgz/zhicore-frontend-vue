@@ -2,6 +2,7 @@ export {
   compileEditorBlocks,
   compileEditorContent,
   compileEditorContentToPostBodyWriteInput,
+  createEditorPreviewBlockKeyResolver,
   mapEditorCompiledDocumentToPostBodyWriteInput,
   mapEditorCompiledDocumentToPreviewReaderBlocks,
   mapPreviewReaderBlocksToAnchors,
@@ -26,8 +27,10 @@ export type {
   EditorCompiledListItem,
   EditorCompiledSourceRange,
   EditorCompiledTableCell,
+  EditorPreviewBlockKeyResolver,
   EditorPreviewBlockAnchor,
   EditorPreviewReaderBlock,
+  MapEditorCompiledDocumentToPreviewReaderBlocksOptions,
 } from "./editorContentCompiler";
 export {
   buildBlockLineAnchors,

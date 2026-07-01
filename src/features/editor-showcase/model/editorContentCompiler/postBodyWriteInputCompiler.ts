@@ -18,6 +18,7 @@ import type {
 } from "./types";
 
 export interface EditorPreviewReaderBlock {
+  stableKey: string;
   block: PostBodyBlock;
   readerBlockIndex: number;
   sourceRange?: EditorCompiledSourceRange;
@@ -27,6 +28,85 @@ export interface EditorPreviewReaderBlock {
 export interface EditorPreviewBlockAnchor {
   readerBlockIndex: number;
   sourceRange: EditorCompiledSourceRange;
+}
+
+interface EditorPreviewBlockKeyInput {
+  block: PostBodyBlock;
+  fingerprint: string;
+  readerBlockIndex: number;
+  sourceRange?: EditorCompiledSourceRange;
+  compiledBlockIndex?: number;
+}
+
+export interface EditorPreviewBlockKeyResolver {
+  beginPass: () => void;
+  resolve: (input: EditorPreviewBlockKeyInput) => string;
+  finishPass: () => void;
+}
+
+export interface MapEditorCompiledDocumentToPreviewReaderBlocksOptions {
+  keyResolver?: EditorPreviewBlockKeyResolver;
+}
+
+function createContentHash(content: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < content.length; index += 1) {
+    hash ^= content.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(36);
+}
+
+function createPreviewBlockFingerprint(block: PostBodyBlock): string {
+  return `${block.type}:${createContentHash(JSON.stringify(block))}`;
+}
+
+function pushKey(
+  registry: Map<string, string[]>,
+  fingerprint: string,
+  stableKey: string,
+): void {
+  const keys = registry.get(fingerprint);
+
+  if (keys) {
+    keys.push(stableKey);
+    return;
+  }
+
+  registry.set(fingerprint, [stableKey]);
+}
+
+export function createEditorPreviewBlockKeyResolver(): EditorPreviewBlockKeyResolver {
+  let nextKeyId = 0;
+  let previousKeysByFingerprint = new Map<string, string[]>();
+  let reusableKeysByFingerprint = new Map<string, string[]>();
+  let currentKeysByFingerprint = new Map<string, string[]>();
+
+  return {
+    beginPass() {
+      reusableKeysByFingerprint = new Map(
+        [...previousKeysByFingerprint.entries()].map(([fingerprint, keys]) => [
+          fingerprint,
+          [...keys],
+        ]),
+      );
+      currentKeysByFingerprint = new Map();
+    },
+    resolve(input) {
+      const reusableKeys = reusableKeysByFingerprint.get(input.fingerprint);
+      const stableKey =
+        reusableKeys?.shift() ?? `editor-preview-block-${nextKeyId++}`;
+
+      pushKey(currentKeysByFingerprint, input.fingerprint, stableKey);
+
+      return stableKey;
+    },
+    finishPass() {
+      previousKeysByFingerprint = currentKeysByFingerprint;
+    },
+  };
 }
 
 function mapInlineMark(
@@ -195,8 +275,32 @@ export function mapEditorCompiledDocumentToPostBodyWriteInput(
 
 export function mapEditorCompiledDocumentToPreviewReaderBlocks(
   document: EditorCompiledDocument,
+  options: MapEditorCompiledDocumentToPreviewReaderBlocksOptions = {},
 ): EditorPreviewReaderBlock[] {
   const previewBlocks: EditorPreviewReaderBlock[] = [];
+  const fingerprintOccurrences = new Map<string, number>();
+
+  function resolveStableKey(
+    block: PostBodyBlock,
+    input: Omit<EditorPreviewBlockKeyInput, "block" | "fingerprint">,
+  ): string {
+    const fingerprint = createPreviewBlockFingerprint(block);
+
+    if (options.keyResolver) {
+      return options.keyResolver.resolve({
+        ...input,
+        block,
+        fingerprint,
+      });
+    }
+
+    const occurrence = fingerprintOccurrences.get(fingerprint) ?? 0;
+    fingerprintOccurrences.set(fingerprint, occurrence + 1);
+
+    return `${fingerprint}:${occurrence}`;
+  }
+
+  options.keyResolver?.beginPass();
 
   document.blocks.forEach((block, blockIndex) => {
     const previousBlock = document.blocks[blockIndex - 1];
@@ -208,20 +312,34 @@ export function mapEditorCompiledDocumentToPreviewReaderBlocks(
       );
 
       if (visibleBlankLineCount > 0) {
+        const spacerBlock = createBlankLineSpacerBlock(visibleBlankLineCount);
+
         previewBlocks.push({
-          block: createBlankLineSpacerBlock(visibleBlankLineCount),
+          stableKey: resolveStableKey(spacerBlock, {
+            readerBlockIndex: previewBlocks.length,
+          }),
+          block: spacerBlock,
           readerBlockIndex: previewBlocks.length,
         });
       }
     }
 
+    const readerBlock = mapCompiledBlock(block);
+
     previewBlocks.push({
-      block: mapCompiledBlock(block),
+      stableKey: resolveStableKey(readerBlock, {
+        readerBlockIndex: previewBlocks.length,
+        sourceRange: block.sourceRange,
+        compiledBlockIndex: blockIndex,
+      }),
+      block: readerBlock,
       readerBlockIndex: previewBlocks.length,
       sourceRange: block.sourceRange,
       compiledBlockIndex: blockIndex,
     });
   });
+
+  options.keyResolver?.finishPass();
 
   return previewBlocks;
 }

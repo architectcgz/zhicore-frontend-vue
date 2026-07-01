@@ -12,7 +12,7 @@
     <h2>{{ previewTitle }}</h2>
     <div
       v-for="previewBlock in previewBlocks"
-      :key="`${previewBlock.readerBlockIndex}-${previewBlock.block.type}`"
+      :key="previewBlock.stableKey"
       class="reader-preview__block-anchor"
       :data-preview-reader-block-index="previewBlock.readerBlockIndex"
     >
@@ -70,7 +70,10 @@ defineExpose({
     rgba(31, 111, 119, 0.32)
   );
   --reader-block-bg: var(--editor-reader-block-bg, rgba(23, 32, 42, 0.07));
-  --reader-image-border: var(--editor-reader-image-border, rgba(23, 32, 42, 0.1));
+  --reader-image-border: var(
+    --editor-reader-image-border,
+    rgba(23, 32, 42, 0.1)
+  );
   --reader-task-accent: var(--editor-reader-task-accent, #1f6f77);
 
   min-width: 0;

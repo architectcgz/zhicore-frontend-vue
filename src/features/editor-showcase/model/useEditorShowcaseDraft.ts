@@ -4,6 +4,7 @@ import type { PostBodyBlock, PostBodyWriteInput } from "@/entities/post-body";
 
 import {
   compileEditorContent,
+  createEditorPreviewBlockKeyResolver,
   mapEditorCompiledDocumentToPostBodyWriteInput,
   mapEditorCompiledDocumentToPreviewReaderBlocks,
   mapPreviewReaderBlocksToAnchors,
@@ -77,6 +78,7 @@ export function useEditorShowcaseDraft(
   const compiledDocument = ref<EditorCompiledDocument>(
     compileContent(defaultEditorShowcaseBody),
   );
+  const previewBlockKeyResolver = createEditorPreviewBlockKeyResolver();
   let lastCompiledBody = defaultEditorShowcaseBody;
   let lastCompiledBodyHash = createContentHash(defaultEditorShowcaseBody);
   let previewCompileTimer: number | undefined;
@@ -131,12 +133,16 @@ export function useEditorShowcaseDraft(
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
     const previewBlocks = mapEditorCompiledDocumentToPreviewReaderBlocks(
       compiledDocument.value,
+      {
+        keyResolver: previewBlockKeyResolver,
+      },
     );
 
     return previewBlocks.length
       ? previewBlocks
       : [
           {
+            stableKey: "editor-preview-fallback",
             block: fallbackReaderBlock,
             readerBlockIndex: 0,
           },

@@ -392,6 +392,56 @@ describe("useEditorShowcaseDraft", () => {
     ]);
   });
 
+  it("reuses reader preview block keys when unchanged blocks move after an insertion", () => {
+    const draft = useEditorShowcaseDraft({ previewCompileDebounceMs: 0 });
+
+    draft.updateBody(
+      [
+        "```ts",
+        "console.log('first')",
+        "```",
+        "",
+        "```go",
+        'fmt.Println("second")',
+        "```",
+      ].join("\n"),
+    );
+    const initialKeys = draft.readerPreviewBlocks.value
+      .filter((previewBlock) => previewBlock.block.type === "code_block")
+      .map(
+        (previewBlock) => (previewBlock as { stableKey?: string }).stableKey,
+      );
+
+    draft.updateBody(
+      [
+        "```md",
+        "inserted",
+        "```",
+        "",
+        "```ts",
+        "console.log('first')",
+        "```",
+        "",
+        "```go",
+        'fmt.Println("second")',
+        "```",
+      ].join("\n"),
+    );
+    const movedKeys = draft.readerPreviewBlocks.value
+      .filter((previewBlock) => previewBlock.block.type === "code_block")
+      .map(
+        (previewBlock) => (previewBlock as { stableKey?: string }).stableKey,
+      );
+
+    expect(initialKeys).toHaveLength(2);
+    expect(movedKeys).toHaveLength(3);
+    expect(initialKeys.every((key) => typeof key === "string" && key)).toBe(
+      true,
+    );
+    expect(movedKeys.every((key) => typeof key === "string" && key)).toBe(true);
+    expect(movedKeys.slice(1)).toEqual(initialKeys);
+  });
+
   it("tracks dirty state and saves a local PostBody snapshot", async () => {
     const savedAt = new Date("2026-07-02T00:00:00.000Z");
     const draft = useEditorShowcaseDraft({

@@ -3,14 +3,17 @@ export {
   compileEditorContent,
 } from "./compileEditorContent";
 export {
+  createEditorPreviewBlockKeyResolver,
   compileEditorContentToPostBodyWriteInput,
   mapEditorCompiledDocumentToPostBodyWriteInput,
   mapEditorCompiledDocumentToPreviewReaderBlocks,
   mapPreviewReaderBlocksToAnchors,
 } from "./postBodyWriteInputCompiler";
 export type {
+  EditorPreviewBlockKeyResolver,
   EditorPreviewBlockAnchor,
   EditorPreviewReaderBlock,
+  MapEditorCompiledDocumentToPreviewReaderBlocksOptions,
 } from "./postBodyWriteInputCompiler";
 export type {
   EditorCompiledBlock,
