@@ -53,11 +53,13 @@ pnpm format           # Prettier 格式化
 
 ## 路由结构
 
-| 路径 | 名称 | 认证 | 说明 |
-|---|---|---|---|
-| `/` | Home | 需要 | 首页 |
-| `/auth/login` | Login | 游客 | 登录页 |
-| `/error/:status` | ErrorStatus | 无 | 错误状态页 |
+| 路径                        | 名称                   | 认证 | 说明                   |
+| --------------------------- | ---------------------- | ---- | ---------------------- |
+| `/`                         | Home                   | 需要 | 首页                   |
+| `/editor-showcase`          | EditorShowcase         | 无   | 编辑器视觉与交互展示页 |
+| `/editor-document-showcase` | EditorDocumentShowcase | 无   | 工程文档展示器页面     |
+| `/auth/login`               | Login                  | 游客 | 登录页                 |
+| `/error/:status`            | ErrorStatus            | 无   | 错误状态页             |
 
 ## 测试
 
@@ -68,6 +70,7 @@ pnpm format           # Prettier 格式化
 
 ## 文档
 
+- `docs/design/` — 前端视觉、交互和产品体验设计决策
 - `docs/reviews/` — 代码评审证据
 - `docs/todos/debt/` — 技术债追踪
 
