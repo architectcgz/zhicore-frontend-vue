@@ -235,6 +235,20 @@ export function useEditorPreviewScrollSync(
 
     pendingEditorScrollTop = null;
 
+    if (writingEditor.scrollTop <= syncedScrollTolerancePx) {
+      // 顶部包含标题和工具栏等预览外壳，不能用首个正文 block 锚点替代文档顶部。
+      pendingPreviewScrollTop = 0;
+      readerPreview.scrollTop = 0;
+      scrollLogger.debug(() => [
+        "synced preview to document top",
+        {
+          sourceScrollTop: writingEditor.scrollTop,
+          targetScrollTop: readerPreview.scrollTop,
+        },
+      ]);
+      return;
+    }
+
     const sourceLineNumber = getSourceLineNumberAtEditorTop(
       writingEditor,
       bodyInput,

@@ -178,6 +178,46 @@ describe("useEditorPreviewScrollSync", () => {
     expect(readerPreview.scrollTop).toBe(180);
   });
 
+  it("syncs the reader preview to the very top when the editor is at the top", () => {
+    const bodyInput = document.createElement("textarea");
+    const writingEditor = document.createElement("main");
+    const readerPreview = document.createElement("aside");
+    const firstBlock = document.createElement("div");
+    const previewBlockAnchors = [
+      {
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 0,
+          endLine: 0,
+        },
+      },
+    ];
+
+    bodyInput.style.lineHeight = "20px";
+    writingEditor.scrollTop = 0;
+    firstBlock.dataset.previewReaderBlockIndex = "0";
+    readerPreview.append(firstBlock);
+    readerPreview.scrollTop = 180;
+    defineRectTop(bodyInput, 0);
+    defineRectTop(writingEditor, 0);
+    defineRectTop(readerPreview, 100);
+    defineRectTop(firstBlock, 240);
+    defineReadonlyNumberProperty(readerPreview, "scrollHeight", 1000);
+    defineReadonlyNumberProperty(readerPreview, "clientHeight", 400);
+
+    const { syncPreviewScroll } = useEditorPreviewScrollSync({
+      bodyInputRef: ref(bodyInput),
+      writingEditorRef: ref(writingEditor),
+      readerPreviewRef: ref(readerPreview),
+      previewBlockAnchors: ref(previewBlockAnchors),
+      isPreviewMode: ref(true),
+    });
+
+    syncPreviewScroll();
+
+    expect(readerPreview.scrollTop).toBe(0);
+  });
+
   it("uses reader block indexes when spacer blocks make compiled and reader indexes diverge", () => {
     const bodyInput = document.createElement("textarea");
     const writingEditor = document.createElement("main");
