@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 
 import {
@@ -222,13 +222,20 @@ const blockLineAnchors = computed(() =>
 
 function resizeBodyInput(): void {
   const bodyInput = bodyInputRef.value;
+  const writingEditor = writingEditorRef.value;
 
   if (!bodyInput) {
     return;
   }
 
+  const previousEditorScrollTop = writingEditor?.scrollTop ?? 0;
+
   bodyInput.style.height = "auto";
   bodyInput.style.height = `${bodyInput.scrollHeight}px`;
+
+  if (writingEditor) {
+    writingEditor.scrollTop = previousEditorScrollTop;
+  }
 }
 
 function syncPreviewScroll(): void {
@@ -351,6 +358,16 @@ async function handleToolbarAction(
 onMounted(() => {
   resizeBodyInput();
 });
+
+watch(
+  previewBlocks,
+  () => {
+    void syncEditorLayoutOnNextFrame();
+  },
+  {
+    flush: "post",
+  },
+);
 </script>
 
 <style scoped>
