@@ -5,9 +5,17 @@
     aria-label="可输入编辑区"
     @scroll="emit('scroll')"
   >
-    <div v-if="debug" class="writing-editor__meta">
-      <span>草稿已保存 10:42</span>
-      <span>baseDraftBodyHash sha256:9af...</span>
+    <div class="writing-editor__meta" aria-live="polite">
+      <span
+        :class="[
+          'writing-editor__save-state',
+          `writing-editor__save-state--${saveStatus}`,
+        ]"
+      >
+        {{ saveStatusLabel }}
+      </span>
+      <span>上次保存 {{ lastSavedLabel }}</span>
+      <span>{{ blockCount }} blocks</span>
     </div>
 
     <section class="writing-editor__canvas">
@@ -61,6 +69,7 @@
           class="title-input"
           rows="2"
           aria-label="文章标题"
+          placeholder="输入文章标题"
           @input="handleTitleInput"
         />
         <textarea
@@ -69,13 +78,15 @@
           class="body-input"
           rows="14"
           aria-label="文章正文"
+          placeholder="从这里开始写正文"
           @input="handleBodyInput"
         />
 
-        <footer v-if="debug" class="document-structure">
-          <span>Content blocks</span>
-          <strong>{{ blockCount }}</strong>
-          <span>basePostVersion 12</span>
+        <footer class="document-structure">
+          <span>PostBodyWriteInput</span>
+          <strong>schema v1</strong>
+          <span>{{ blockCount }} blocks</span>
+          <span>{{ savedContentHash }}</span>
         </footer>
       </article>
     </section>
@@ -86,6 +97,7 @@
 import { ref } from "vue";
 
 import type {
+  EditorDraftSaveStatus,
   EditorShowcaseTextSelection,
   EditorShowcaseToolbarAction,
 } from "@/features/editor-showcase/model";
@@ -94,7 +106,10 @@ defineProps<{
   title: string;
   body: string;
   blockCount: number;
-  debug: boolean;
+  saveStatus: EditorDraftSaveStatus;
+  saveStatusLabel: string;
+  lastSavedLabel: string;
+  savedContentHash: string;
 }>();
 
 const emit = defineEmits<{
@@ -158,31 +173,48 @@ defineExpose({
   max-height: min(760px, calc(100vh - 170px));
   overflow: hidden;
   overflow-y: auto;
-  border: 1px solid rgba(49, 74, 91, 0.14);
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.66);
-  backdrop-filter: blur(18px);
-}
-
-:global(.editor-showcase--ink) .writing-editor {
-  border-color: rgba(210, 225, 236, 0.14);
-  background: rgba(19, 27, 38, 0.72);
+  background: var(--editor-control-bg, rgba(255, 255, 255, 0.78));
 }
 
 .writing-editor__meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(49, 74, 91, 0.1);
-  color: #647280;
+  border-bottom: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.1));
+  color: var(--editor-page-muted, #647280);
   font-size: 13px;
 }
 
-:global(.editor-showcase--ink) .writing-editor__meta {
-  border-color: rgba(210, 225, 236, 0.12);
-  color: #9db8ca;
+.writing-editor__save-state {
+  position: relative;
+  padding-left: 14px;
+  color: var(--editor-page-text, #344858);
+  font-weight: 700;
+}
+
+.writing-editor__save-state::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--editor-page-accent, #1f7f74);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.writing-editor__save-state--dirty::before {
+  background: var(--editor-page-warning, #b7791f);
+}
+
+.writing-editor__save-state--saving::before {
+  background: var(--editor-page-saving, #2563eb);
 }
 
 .writing-editor__canvas {
@@ -208,9 +240,9 @@ defineExpose({
   gap: 4px;
   margin: 0 auto 12px;
   padding: 4px;
-  border: 1px solid rgba(49, 74, 91, 0.14);
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--editor-control-bg-active, rgba(255, 255, 255, 0.88));
 }
 
 .selection-toolbar button {
@@ -219,7 +251,7 @@ defineExpose({
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #405466;
+  color: var(--editor-page-muted, #405466);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -227,33 +259,14 @@ defineExpose({
 
 .selection-toolbar button:hover,
 .selection-toolbar button:focus-visible {
-  background: rgba(31, 127, 116, 0.1);
-  color: #17202a;
-}
-
-:global(.editor-showcase--ink) .selection-toolbar {
-  border-color: rgba(210, 225, 236, 0.14);
-  background: rgba(22, 32, 45, 0.92);
-}
-
-:global(.editor-showcase--ink) .selection-toolbar button {
-  color: #d7e4ee;
-}
-
-:global(.editor-showcase--ink) .selection-toolbar button:hover,
-:global(.editor-showcase--ink) .selection-toolbar button:focus-visible {
-  background: rgba(125, 211, 252, 0.12);
-  color: #ffffff;
+  background: var(--editor-control-hover-bg, rgba(31, 127, 116, 0.1));
+  color: var(--editor-page-text, #17202a);
 }
 
 .document-sheet__path {
   margin: 0 0 6px;
-  color: #7d6b5a;
+  color: var(--editor-page-muted, #7d6b5a);
   font-size: 13px;
-}
-
-:global(.editor-showcase--ink) .document-sheet__path {
-  color: #9db8ca;
 }
 
 .title-input,
@@ -269,13 +282,13 @@ defineExpose({
 
 .title-input::placeholder,
 .body-input::placeholder {
-  color: #516373;
+  color: var(--editor-page-muted, #516373);
 }
 
 .title-input {
   min-height: 116px;
   padding: 0;
-  font-size: clamp(36px, 5vw, 56px);
+  font-size: 44px;
   font-weight: 720;
   line-height: 1.08;
   letter-spacing: 0;
@@ -284,7 +297,7 @@ defineExpose({
 .body-input {
   min-height: 374px;
   padding: 0;
-  color: #3f4f5d;
+  color: var(--editor-body-text, #3f4f5d);
   font-size: 18px;
   line-height: 1.84;
   overflow: hidden;
@@ -292,21 +305,7 @@ defineExpose({
 
 .title-input:focus,
 .body-input:focus {
-  caret-color: #1f7f74;
-}
-
-:global(.editor-showcase--ink) .body-input {
-  color: #cbd6df;
-}
-
-:global(.editor-showcase--ink) .title-input::placeholder,
-:global(.editor-showcase--ink) .body-input::placeholder {
-  color: #b7c6d1;
-}
-
-:global(.editor-showcase--ink) .title-input:focus,
-:global(.editor-showcase--ink) .body-input:focus {
-  caret-color: #7dd3fc;
+  caret-color: var(--editor-page-accent, #1f7f74);
 }
 
 .document-structure {
@@ -316,22 +315,13 @@ defineExpose({
   align-items: center;
   margin-top: 22px;
   padding-top: 12px;
-  border-top: 1px solid rgba(49, 74, 91, 0.1);
-  color: #657785;
+  border-top: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.1));
+  color: var(--editor-page-muted, #657785);
   font-size: 13px;
 }
 
 .document-structure strong {
-  color: #17202a;
-}
-
-:global(.editor-showcase--ink) .document-structure {
-  border-color: rgba(210, 225, 236, 0.12);
-  color: #9db8ca;
-}
-
-:global(.editor-showcase--ink) .document-structure strong {
-  color: #ffffff;
+  color: var(--editor-page-text, #17202a);
 }
 
 @media (max-width: 980px) {

@@ -1,19 +1,23 @@
 <template>
-  <section :class="['editor-workspace-demo', activeBackgroundClass]">
-    <header class="editor-workspace-demo__header">
-      <div>
-        <p class="editor-workspace-demo__eyebrow">ZhiCore Editor</p>
-        <h1>连续文档编辑器</h1>
+  <section :class="['editor-workspace', activeBackgroundClass]">
+    <header class="editor-workspace__header">
+      <div class="editor-workspace__heading">
+        <p>作者工作台</p>
+        <h1>草稿编辑</h1>
       </div>
 
-      <div
-        v-if="isEditorDebugMode"
-        class="editor-workspace-demo__status"
-        aria-label="草稿结构状态"
-      >
+      <div class="editor-workspace__summary" aria-label="草稿状态摘要">
+        <span
+          :class="[
+            'editor-workspace__save-state',
+            `editor-workspace__save-state--${draftSaveStatus}`,
+          ]"
+        >
+          {{ saveStatusLabel }}
+        </span>
         <span>schema v1</span>
-        <span>{{ readerBlocks.length }} blocks</span>
-        <span>postVersion 12</span>
+        <span>{{ postBodyBlockCount }} blocks</span>
+        <span>{{ wordCount }} 字</span>
       </div>
     </header>
 
@@ -22,8 +26,16 @@
         :active-mode="activeMode"
         :active-background-id="activeBackground.id"
         :background-candidates="backgroundCandidates"
+        :save-status="draftSaveStatus"
+        :save-status-label="saveStatusLabel"
+        :save-button-label="saveButtonLabel"
+        :can-save-draft="canSaveDraft"
+        :last-saved-label="lastSavedLabel"
+        :block-count="postBodyBlockCount"
+        :word-count="wordCount"
         @select-mode="handleModeSelect"
         @select-background="selectBackground"
+        @save-draft="handleSaveDraft"
       />
 
       <div
@@ -37,8 +49,11 @@
           ref="writingPaneRef"
           v-model:title="title"
           v-model:body="body"
-          :block-count="readerBlocks.length"
-          :debug="isEditorDebugMode"
+          :block-count="postBodyBlockCount"
+          :save-status="draftSaveStatus"
+          :save-status-label="saveStatusLabel"
+          :last-saved-label="lastSavedLabel"
+          :saved-content-hash="savedContentHash"
           @body-input="handleBodyInput"
           @toolbar-action="handleToolbarAction"
           @scroll="syncPreviewScroll"
@@ -49,6 +64,7 @@
           :preview-title="previewTitle"
           :preview-blocks="readerPreviewBlocks"
           :word-count="wordCount"
+          :block-count="postBodyBlockCount"
           @scroll="syncEditorScroll"
         />
       </div>
@@ -71,14 +87,20 @@ const {
   body,
   handleBodyInput,
   handleModeSelect,
+  handleSaveDraft,
   handleToolbarAction,
-  isEditorDebugMode,
   isPreviewMode,
+  canSaveDraft,
+  draftSaveStatus,
+  lastSavedLabel,
+  postBodyBlockCount,
   previewTitle,
-  readerBlocks,
   readerPreviewBlocks,
   previewPaneRef,
+  saveButtonLabel,
+  saveStatusLabel,
   selectBackground,
+  savedContentHash,
   syncEditorScroll,
   syncPreviewScroll,
   title,
@@ -88,85 +110,169 @@ const {
 </script>
 
 <style scoped>
-.editor-workspace-demo {
+.editor-workspace {
+  --editor-page-bg: #f3f6f8;
+  --editor-page-text: #17202a;
+  --editor-page-muted: #5a6875;
+  --editor-page-panel: rgba(255, 255, 255, 0.74);
+  --editor-page-border: rgba(49, 74, 91, 0.14);
+  --editor-page-accent: #1f7f74;
+  --editor-page-warning: #b7791f;
+  --editor-page-saving: #2563eb;
+  --editor-control-bg: rgba(255, 255, 255, 0.78);
+  --editor-control-bg-muted: rgba(255, 255, 255, 0.56);
+  --editor-control-bg-active: #ffffff;
+  --editor-control-hover-bg: rgba(31, 127, 116, 0.1);
+  --editor-control-disabled-bg: rgba(49, 74, 91, 0.12);
+  --editor-control-disabled-text: #6b7b88;
+  --editor-control-primary: #1f7f74;
+  --editor-control-primary-hover: #176b62;
+  --editor-body-text: #3f4f5d;
+  --editor-reader-text: #485765;
+  --editor-reader-muted: #647280;
+  --editor-reader-heading: #17202a;
+  --editor-reader-strong: #17202a;
+  --editor-reader-emphasis: #2f4d58;
+  --editor-reader-strikethrough: #6f7f8b;
+  --editor-reader-link: #1f6f77;
+  --editor-reader-link-hover: #154f59;
+  --editor-reader-code-text: #23424d;
+  --editor-reader-code-bg: rgba(23, 32, 42, 0.08);
+  --editor-reader-code-border: rgba(23, 32, 42, 0.1);
+  --editor-reader-code-caption: #657785;
+  --editor-reader-code-caption-border: rgba(23, 32, 42, 0.08);
+  --editor-reader-quote-border: rgba(31, 111, 119, 0.32);
+  --editor-reader-block-bg: rgba(23, 32, 42, 0.07);
+  --editor-reader-image-border: rgba(23, 32, 42, 0.1);
+  --editor-reader-task-accent: #1f6f77;
+
   min-height: 100vh;
-  padding: clamp(16px, 3vw, 34px);
-  color: #17202a;
+  padding: 24px;
+  background: var(--editor-page-bg);
+  color: var(--editor-page-text);
   transition:
-    background 0.35s ease,
+    background-color 0.2s ease,
     color 0.35s ease;
 }
 
 .editor-showcase--paper {
-  background: linear-gradient(135deg, #f7f4ee 0%, #eef2f5 58%, #e4edf0 100%);
+  --editor-page-bg: #f3f6f8;
+  --editor-page-panel: rgba(255, 255, 255, 0.78);
 }
 
 .editor-showcase--sage {
-  background: linear-gradient(135deg, #eaf3ef 0%, #d9e8e1 56%, #e8ddd3 100%);
+  --editor-page-bg: #edf5f1;
+  --editor-page-panel: rgba(255, 255, 255, 0.7);
 }
 
 .editor-showcase--sand {
-  background: linear-gradient(135deg, #f5f0e8 0%, #ead7bd 58%, #dbe6e5 100%);
+  --editor-page-bg: #f4efe8;
+  --editor-page-panel: rgba(255, 255, 255, 0.72);
 }
 
 .editor-showcase--ink {
-  color: #e6edf3;
-  background: linear-gradient(135deg, #141a24 0%, #263341 58%, #1e2c35 100%);
+  --editor-page-bg: #121923;
+  --editor-page-text: #e6edf3;
+  --editor-page-muted: #aab8c5;
+  --editor-page-panel: rgba(19, 27, 38, 0.78);
+  --editor-page-border: rgba(210, 225, 236, 0.14);
+  --editor-page-accent: #7dd3fc;
+  --editor-control-bg: rgba(19, 27, 38, 0.72);
+  --editor-control-bg-muted: rgba(255, 255, 255, 0.08);
+  --editor-control-bg-active: rgba(255, 255, 255, 0.18);
+  --editor-control-hover-bg: rgba(125, 211, 252, 0.12);
+  --editor-control-disabled-bg: rgba(255, 255, 255, 0.08);
+  --editor-control-disabled-text: #9db8ca;
+  --editor-control-primary: #2b7f9d;
+  --editor-control-primary-hover: #216f8a;
+  --editor-body-text: #cbd6df;
+  --editor-reader-text: #c1ccd6;
+  --editor-reader-muted: #c1ccd6;
+  --editor-reader-heading: #c1ccd6;
+  --editor-reader-strong: #c1ccd6;
+  --editor-reader-emphasis: #c1ccd6;
+  --editor-reader-strikethrough: #c1ccd6;
+  --editor-reader-link: #d7e5ea;
+  --editor-reader-link-hover: #ffffff;
+  --editor-reader-code-text: #d7e5ea;
+  --editor-reader-code-bg: rgba(255, 255, 255, 0.09);
+  --editor-reader-code-border: rgba(255, 255, 255, 0.1);
+  --editor-reader-code-caption: #9db8ca;
+  --editor-reader-code-caption-border: rgba(255, 255, 255, 0.09);
+  --editor-reader-quote-border: rgba(115, 184, 191, 0.38);
+  --editor-reader-block-bg: rgba(255, 255, 255, 0.08);
+  --editor-reader-image-border: rgba(255, 255, 255, 0.1);
+  --editor-reader-task-accent: #7dd3fc;
 }
 
-.editor-workspace-demo__header,
+.editor-workspace__header,
 .editor-frame {
   max-width: 1480px;
   margin-inline: auto;
 }
 
-.editor-workspace-demo__header {
+.editor-workspace__header {
   display: flex;
   gap: 18px;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-.editor-workspace-demo__eyebrow {
-  margin: 0 0 6px;
-  color: #587083;
+.editor-workspace__heading p {
+  margin: 0 0 4px;
+  color: var(--editor-page-muted);
   font-size: 12px;
-  font-weight: 760;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
-.editor-showcase--ink .editor-workspace-demo__eyebrow {
-  color: #9db8ca;
-}
-
-.editor-workspace-demo h1 {
+.editor-workspace h1 {
   margin: 0;
-  font-size: clamp(34px, 5vw, 56px);
-  line-height: 1;
+  font-size: 30px;
+  line-height: 1.16;
   letter-spacing: 0;
 }
 
-.editor-workspace-demo__status {
+.editor-workspace__summary {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
 }
 
-.editor-workspace-demo__status span {
+.editor-workspace__summary span {
   padding: 7px 10px;
-  border: 1px solid rgba(49, 74, 91, 0.14);
+  border: 1px solid var(--editor-page-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.52);
-  color: #405466;
+  background: var(--editor-page-panel);
+  color: var(--editor-page-muted);
   font-size: 12px;
 }
 
-.editor-showcase--ink .editor-workspace-demo__status span {
-  border-color: rgba(210, 225, 236, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-  color: #d7e4ee;
+.editor-workspace__save-state {
+  position: relative;
+  padding-left: 24px;
+}
+
+.editor-workspace__save-state::before {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--editor-page-accent);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.editor-workspace__save-state--dirty::before {
+  background: var(--editor-page-warning);
+}
+
+.editor-workspace__save-state--saving::before {
+  background: var(--editor-page-saving);
 }
 
 .editor-frame {
@@ -192,7 +298,7 @@ const {
 }
 
 @media (max-width: 980px) {
-  .editor-workspace-demo__header {
+  .editor-workspace__header {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -217,17 +323,21 @@ const {
 }
 
 @media (max-width: 640px) {
-  .editor-workspace-demo {
+  .editor-workspace {
     padding: 16px;
   }
 
-  .editor-workspace-demo h1 {
-    font-size: 36px;
+  .editor-workspace h1 {
+    font-size: 26px;
+  }
+
+  .editor-workspace__summary {
+    justify-content: flex-start;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .editor-workspace-demo,
+  .editor-workspace,
   .editor-stage {
     transition: none;
   }

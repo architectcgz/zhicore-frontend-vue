@@ -45,6 +45,8 @@ export type {
 } from "./useEditorShowcaseDisplay";
 export { useEditorShowcaseDraft } from "./useEditorShowcaseDraft";
 export type {
+  EditorDraftSaveStatus,
+  EditorSavedDraftSnapshot,
   EditorShowcaseDraftBlock,
   EditorShowcaseDraftBlockType,
   EditorShowcaseInlineNode,

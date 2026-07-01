@@ -8,6 +8,7 @@
     <div class="reader-preview__header">
       <span>读者视图</span>
       <strong>{{ wordCount }} 字</strong>
+      <small>{{ blockCount }} blocks</small>
     </div>
     <h2>{{ previewTitle }}</h2>
     <div
@@ -32,6 +33,7 @@ defineProps<{
   previewTitle: string;
   previewBlocks: EditorShowcaseReaderPreviewBlock[];
   wordCount: number;
+  blockCount: number;
 }>();
 
 const emit = defineEmits<{
@@ -49,33 +51,38 @@ defineExpose({
 
 <style scoped>
 .reader-preview {
-  --reader-text: #485765;
-  --reader-muted: #647280;
-  --reader-heading: #17202a;
-  --reader-strong: #17202a;
-  --reader-emphasis: #2f4d58;
-  --reader-strikethrough: #6f7f8b;
-  --reader-link: #1f6f77;
-  --reader-link-hover: #154f59;
-  --reader-code-text: #23424d;
-  --reader-code-bg: rgba(23, 32, 42, 0.08);
-  --reader-code-border: rgba(23, 32, 42, 0.1);
-  --reader-code-caption: #657785;
-  --reader-code-caption-border: rgba(23, 32, 42, 0.08);
-  --reader-quote-border: rgba(31, 111, 119, 0.32);
-  --reader-block-bg: rgba(23, 32, 42, 0.07);
-  --reader-image-border: rgba(23, 32, 42, 0.1);
-  --reader-task-accent: #1f6f77;
+  --reader-text: var(--editor-reader-text, #485765);
+  --reader-muted: var(--editor-reader-muted, #647280);
+  --reader-heading: var(--editor-reader-heading, #17202a);
+  --reader-strong: var(--editor-reader-strong, #17202a);
+  --reader-emphasis: var(--editor-reader-emphasis, #2f4d58);
+  --reader-strikethrough: var(--editor-reader-strikethrough, #6f7f8b);
+  --reader-link: var(--editor-reader-link, #1f6f77);
+  --reader-link-hover: var(--editor-reader-link-hover, #154f59);
+  --reader-code-text: var(--editor-reader-code-text, #23424d);
+  --reader-code-bg: var(--editor-reader-code-bg, rgba(23, 32, 42, 0.08));
+  --reader-code-border: var(--editor-reader-code-border, rgba(23, 32, 42, 0.1));
+  --reader-code-caption: var(--editor-reader-code-caption, #657785);
+  --reader-code-caption-border: var(
+    --editor-reader-code-caption-border,
+    rgba(23, 32, 42, 0.08)
+  );
+  --reader-quote-border: var(
+    --editor-reader-quote-border,
+    rgba(31, 111, 119, 0.32)
+  );
+  --reader-block-bg: var(--editor-reader-block-bg, rgba(23, 32, 42, 0.07));
+  --reader-image-border: var(--editor-reader-image-border, rgba(23, 32, 42, 0.1));
+  --reader-task-accent: var(--editor-reader-task-accent, #1f6f77);
 
   min-width: 0;
   max-height: min(760px, calc(100vh - 170px));
   overflow: hidden;
   overflow-y: auto;
   padding: 18px;
-  border: 1px solid rgba(49, 74, 91, 0.14);
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.66);
-  backdrop-filter: blur(18px);
+  background: var(--editor-control-bg, rgba(255, 255, 255, 0.78));
   opacity: 1;
   pointer-events: auto;
   transform: translateX(0);
@@ -84,40 +91,24 @@ defineExpose({
     transform 0.26s ease;
 }
 
-:global(.editor-showcase--ink) .reader-preview {
-  --reader-text: #c1ccd6;
-  --reader-muted: #c1ccd6;
-  --reader-heading: #c1ccd6;
-  --reader-strong: #c1ccd6;
-  --reader-emphasis: #c1ccd6;
-  --reader-strikethrough: #c1ccd6;
-  --reader-link: #d7e5ea;
-  --reader-link-hover: #ffffff;
-  --reader-code-text: #d7e5ea;
-  --reader-code-bg: rgba(255, 255, 255, 0.09);
-  --reader-code-border: rgba(255, 255, 255, 0.1);
-  --reader-code-caption: #9db8ca;
-  --reader-code-caption-border: rgba(255, 255, 255, 0.09);
-  --reader-quote-border: rgba(115, 184, 191, 0.38);
-  --reader-block-bg: rgba(255, 255, 255, 0.08);
-  --reader-image-border: rgba(255, 255, 255, 0.1);
-  --reader-task-accent: #7dd3fc;
-
-  border-color: rgba(210, 225, 236, 0.14);
-  background: rgba(19, 27, 38, 0.72);
-}
-
 .reader-preview__header {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: space-between;
   color: var(--reader-muted);
   font-size: 13px;
 }
 
+.reader-preview__header small {
+  color: var(--reader-muted);
+  font-size: 12px;
+}
+
 .reader-preview h2 {
   margin: 0 0 10px;
   color: var(--reader-heading);
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: 28px;
   line-height: 1.12;
 }
 

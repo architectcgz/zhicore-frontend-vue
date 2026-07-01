@@ -39,7 +39,7 @@ const backgroundCandidates: EditorShowcaseBackground[] = [
 ];
 
 export function useEditorShowcaseDisplay() {
-  const activeMode = ref<EditorShowcaseMode>("preview");
+  const activeMode = ref<EditorShowcaseMode>("focus");
   const activeBackgroundId = ref<EditorShowcaseBackgroundId>("paper");
 
   const activeBackground = computed(() => {

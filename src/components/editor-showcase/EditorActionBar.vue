@@ -17,31 +17,49 @@
       </button>
     </div>
 
-    <div class="background-picker" aria-label="背景候选">
+    <p
+      :class="[
+        'editor-action-bar__status',
+        `editor-action-bar__status--${saveStatus}`,
+      ]"
+      aria-live="polite"
+    >
+      <span>{{ saveStatusLabel }}</span>
+      <small>{{ blockCount }} blocks / {{ wordCount }} 字</small>
+      <small>上次保存 {{ lastSavedLabel }}</small>
+    </p>
+
+    <div class="editor-action-bar__actions">
+      <div class="background-picker" aria-label="背景候选">
+        <button
+          v-for="background in backgroundCandidates"
+          :key="background.id"
+          class="background-swatch"
+          type="button"
+          :aria-label="`切换到${background.name}背景`"
+          :aria-pressed="activeBackgroundId === background.id"
+          @click="emit('selectBackground', background.id)"
+        >
+          <span :style="{ background: background.swatch }"></span>
+          {{ background.name }}
+        </button>
+      </div>
+
       <button
-        v-for="background in backgroundCandidates"
-        :key="background.id"
-        class="background-swatch"
+        class="editor-action-bar__save"
         type="button"
-        :aria-label="`切换到${background.name}背景`"
-        :aria-pressed="activeBackgroundId === background.id"
-        @click="emit('selectBackground', background.id)"
+        :disabled="!canSaveDraft"
+        @click="emit('saveDraft')"
       >
-        <span :style="{ background: background.swatch }"></span>
-        {{ background.name }}
+        {{ saveButtonLabel }}
       </button>
     </div>
-
-    <RouterLink class="document-link" to="/editor-document-showcase">
-      工程文档展示
-    </RouterLink>
   </div>
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from "vue-router";
-
 import type {
+  EditorDraftSaveStatus,
   EditorShowcaseBackground,
   EditorShowcaseBackgroundId,
   EditorShowcaseMode,
@@ -51,47 +69,49 @@ defineProps<{
   activeMode: EditorShowcaseMode;
   activeBackgroundId: EditorShowcaseBackgroundId;
   backgroundCandidates: EditorShowcaseBackground[];
+  saveStatus: EditorDraftSaveStatus;
+  saveStatusLabel: string;
+  saveButtonLabel: string;
+  canSaveDraft: boolean;
+  lastSavedLabel: string;
+  blockCount: number;
+  wordCount: number;
 }>();
 
 const emit = defineEmits<{
   selectMode: [mode: EditorShowcaseMode];
   selectBackground: [backgroundId: EditorShowcaseBackgroundId];
+  saveDraft: [];
 }>();
 </script>
 
 <style scoped>
 .editor-action-bar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(220px, 1fr) auto;
   gap: 12px;
   align-items: center;
   padding: 8px;
-  border: 1px solid rgba(49, 74, 91, 0.14);
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.64);
-  backdrop-filter: blur(18px);
-}
-
-:global(.editor-showcase--ink) .editor-action-bar {
-  border-color: rgba(210, 225, 236, 0.14);
-  background: rgba(19, 27, 38, 0.72);
+  background: var(--editor-control-bg, rgba(255, 255, 255, 0.78));
 }
 
 .mode-switch,
-.background-picker {
+.background-picker,
+.editor-action-bar__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
 .mode-switch button,
-.background-swatch,
-.document-link {
+.background-swatch {
   min-height: 36px;
-  border: 1px solid rgba(49, 74, 91, 0.14);
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.56);
-  color: #405466;
+  background: var(--editor-control-bg-muted, rgba(255, 255, 255, 0.56));
+  color: var(--editor-page-muted, #405466);
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -100,21 +120,19 @@ const emit = defineEmits<{
     border-color 0.18s ease;
 }
 
-.mode-switch button,
-.document-link {
+.mode-switch button {
   padding: 7px 13px;
 }
 
 .mode-switch button[aria-pressed="true"],
 .background-swatch[aria-pressed="true"] {
-  border-color: rgba(31, 127, 116, 0.56);
-  background: #ffffff;
-  color: #17202a;
+  border-color: var(--editor-page-accent, #1f7f74);
+  background: var(--editor-control-bg-active, #ffffff);
+  color: var(--editor-page-text, #17202a);
 }
 
 .mode-switch button:hover,
-.background-swatch:hover,
-.document-link:hover {
+.background-swatch:hover {
   transform: translateY(-1px);
 }
 
@@ -128,22 +146,82 @@ const emit = defineEmits<{
 .background-swatch span {
   width: 24px;
   height: 24px;
-  border: 1px solid rgba(49, 74, 91, 0.16);
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.16));
   border-radius: 50%;
 }
 
-:global(.editor-showcase--ink) .mode-switch button,
-:global(.editor-showcase--ink) .background-swatch,
-:global(.editor-showcase--ink) .document-link {
-  border-color: rgba(210, 225, 236, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-  color: #d7e4ee;
+.editor-action-bar__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--editor-page-muted, #405466);
+  font-size: 13px;
 }
 
-:global(.editor-showcase--ink) .mode-switch button[aria-pressed="true"],
-:global(.editor-showcase--ink) .background-swatch[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.18);
+.editor-action-bar__status span {
+  position: relative;
+  padding-left: 14px;
+  font-weight: 700;
+}
+
+.editor-action-bar__status span::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--editor-page-accent, #1f7f74);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.editor-action-bar__status--dirty span::before {
+  background: var(--editor-page-warning, #b7791f);
+}
+
+.editor-action-bar__status--saving span::before {
+  background: var(--editor-page-saving, #2563eb);
+}
+
+.editor-action-bar__status small {
+  color: var(--editor-page-muted, #637381);
+  font-size: 12px;
+}
+
+.editor-action-bar__actions {
+  justify-content: flex-end;
+}
+
+.editor-action-bar__save {
+  min-width: 96px;
+  min-height: 36px;
+  border: 1px solid var(--editor-control-primary, #1f7f74);
+  border-radius: 999px;
+  background: var(--editor-control-primary, #1f7f74);
   color: #ffffff;
+  font-weight: 760;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.editor-action-bar__save:hover:not(:disabled),
+.editor-action-bar__save:focus-visible:not(:disabled) {
+  background: var(--editor-control-primary-hover, #176b62);
+  transform: translateY(-1px);
+}
+
+.editor-action-bar__save:disabled {
+  border-color: var(--editor-page-border, rgba(49, 74, 91, 0.12));
+  background: var(--editor-control-disabled-bg, rgba(49, 74, 91, 0.12));
+  color: var(--editor-control-disabled-text, #6b7b88);
+  cursor: not-allowed;
 }
 
 @media (max-width: 980px) {
@@ -156,7 +234,7 @@ const emit = defineEmits<{
 @media (prefers-reduced-motion: reduce) {
   .mode-switch button,
   .background-swatch,
-  .document-link {
+  .editor-action-bar__save {
     transition: none;
   }
 }

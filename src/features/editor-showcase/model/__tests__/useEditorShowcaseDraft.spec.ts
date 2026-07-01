@@ -391,4 +391,48 @@ describe("useEditorShowcaseDraft", () => {
       },
     ]);
   });
+
+  it("tracks dirty state and saves a local PostBody snapshot", async () => {
+    const savedAt = new Date("2026-07-02T00:00:00.000Z");
+    const draft = useEditorShowcaseDraft({
+      previewCompileDebounceMs: 0,
+      now: () => savedAt,
+    });
+
+    expect(draft.draftSaveStatus.value).toBe("saved");
+    expect(draft.canSaveDraft.value).toBe(false);
+
+    draft.updateTitle("真实编辑器");
+    draft.updateBody("## 开始\n\n保存正文。");
+
+    expect(draft.draftSaveStatus.value).toBe("dirty");
+    expect(draft.canSaveDraft.value).toBe(true);
+
+    const saving = draft.saveDraft();
+
+    expect(draft.draftSaveStatus.value).toBe("saving");
+
+    await saving;
+
+    expect(draft.draftSaveStatus.value).toBe("saved");
+    expect(draft.canSaveDraft.value).toBe(false);
+    expect(draft.savedDraftSnapshot.value).toMatchObject({
+      title: "真实编辑器",
+      savedAt,
+      schemaVersion: 1,
+      blockCount: 3,
+    });
+    expect(draft.savedDraftSnapshot.value.contentHash).toMatch(/^local:/);
+    expect(
+      draft.savedDraftSnapshot.value.postBodyWriteInput.blocks[0],
+    ).toMatchObject({
+      type: "heading",
+      level: 2,
+    });
+    expect(
+      draft.savedDraftSnapshot.value.postBodyWriteInput.blocks.at(-1),
+    ).toMatchObject({
+      type: "paragraph",
+    });
+  });
 });

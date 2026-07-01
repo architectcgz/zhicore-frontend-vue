@@ -1,6 +1,6 @@
 import { computed, getCurrentScope, onScopeDispose, ref, watch } from "vue";
 
-import type { PostBodyBlock } from "@/entities/post-body";
+import type { PostBodyBlock, PostBodyWriteInput } from "@/entities/post-body";
 
 import {
   compileEditorContent,
@@ -29,6 +29,7 @@ export type EditorShowcaseDraftBlockType = EditorCompiledBlock["type"];
 export type EditorShowcaseDraftBlock = EditorCompiledBlock;
 export type EditorShowcaseInlineNode = EditorCompiledInlineNode;
 export type EditorShowcaseReaderPreviewBlock = EditorPreviewReaderBlock;
+export type EditorDraftSaveStatus = "saved" | "dirty" | "saving";
 export type { EditorShowcaseTextSelection, EditorShowcaseToolbarAction };
 
 type EditorContentCompiler = (input: string) => EditorCompiledDocument;
@@ -36,6 +37,17 @@ type EditorContentCompiler = (input: string) => EditorCompiledDocument;
 export interface UseEditorShowcaseDraftOptions {
   compileContent?: EditorContentCompiler;
   previewCompileDebounceMs?: number;
+  now?: () => Date;
+}
+
+export interface EditorSavedDraftSnapshot {
+  title: string;
+  sourceHash: string;
+  contentHash: `local:${string}`;
+  savedAt: Date;
+  schemaVersion: PostBodyWriteInput["schemaVersion"];
+  blockCount: number;
+  postBodyWriteInput: PostBodyWriteInput;
 }
 
 const defaultPreviewCompileDebounceMs = 160;
@@ -57,6 +69,7 @@ export function useEditorShowcaseDraft(
   options: UseEditorShowcaseDraftOptions = {},
 ) {
   const compileContent = options.compileContent ?? compileEditorContent;
+  const now = options.now ?? (() => new Date());
   const previewCompileDebounceMs =
     options.previewCompileDebounceMs ?? defaultPreviewCompileDebounceMs;
   const title = ref(defaultEditorShowcaseTitle);
@@ -77,6 +90,42 @@ export function useEditorShowcaseDraft(
 
   const postBodyWriteInput = computed(() =>
     mapEditorCompiledDocumentToPostBodyWriteInput(compiledDocument.value),
+  );
+  const currentSourceHash = computed(() =>
+    createContentHash(`${title.value}\u0000${body.value}`),
+  );
+
+  function createSavedDraftSnapshot(savedAt: Date): EditorSavedDraftSnapshot {
+    const writeInput = postBodyWriteInput.value;
+    const contentHash = createContentHash(JSON.stringify(writeInput));
+
+    return {
+      title: previewTitle.value,
+      sourceHash: currentSourceHash.value,
+      contentHash: `local:${contentHash}`,
+      savedAt,
+      schemaVersion: writeInput.schemaVersion,
+      blockCount: writeInput.blocks.length,
+      postBodyWriteInput: writeInput,
+    };
+  }
+
+  const savedDraftSnapshot = ref<EditorSavedDraftSnapshot>(
+    createSavedDraftSnapshot(now()),
+  );
+  const isSavingDraft = ref(false);
+  const hasUnsavedChanges = computed(
+    () => currentSourceHash.value !== savedDraftSnapshot.value.sourceHash,
+  );
+  const draftSaveStatus = computed<EditorDraftSaveStatus>(() => {
+    if (isSavingDraft.value) {
+      return "saving";
+    }
+
+    return hasUnsavedChanges.value ? "dirty" : "saved";
+  });
+  const canSaveDraft = computed(
+    () => !isSavingDraft.value && hasUnsavedChanges.value,
   );
 
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
@@ -187,6 +236,23 @@ export function useEditorShowcaseDraft(
     return result.nextSelection;
   }
 
+  async function saveDraft(): Promise<void> {
+    if (!canSaveDraft.value) {
+      return;
+    }
+
+    isSavingDraft.value = true;
+
+    try {
+      await Promise.resolve();
+      // 保存快照必须基于当前 textarea 源文本重新编译，不能依赖可能仍在 debounce 中的预览结果。
+      compilePreviewNow();
+      savedDraftSnapshot.value = createSavedDraftSnapshot(now());
+    } finally {
+      isSavingDraft.value = false;
+    }
+  }
+
   watch(
     body,
     () => {
@@ -216,8 +282,13 @@ export function useEditorShowcaseDraft(
     previewBlocks,
     previewParagraphs,
     wordCount,
+    savedDraftSnapshot,
+    draftSaveStatus,
+    canSaveDraft,
+    hasUnsavedChanges,
     updateTitle,
     updateBody,
     applyToolbarAction,
+    saveDraft,
   };
 }

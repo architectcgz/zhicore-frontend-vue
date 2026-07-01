@@ -1,6 +1,5 @@
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 
-import { isEditorDebugMode } from "./editorDebug";
 import {
   type EditorShowcaseTextSelection,
   type EditorShowcaseToolbarAction,
@@ -22,6 +21,13 @@ export interface EditorWorkspaceWritingPaneRef {
 
 export interface EditorWorkspacePreviewPaneRef {
   readerPreviewElement: HTMLElement | null;
+}
+
+function formatDraftSavedTime(savedAt: Date): string {
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(savedAt);
 }
 
 export function useEditorWorkspaceController() {
@@ -46,6 +52,29 @@ export function useEditorWorkspaceController() {
   );
   const readerPreviewRef = computed(
     () => previewPaneRef.value?.readerPreviewElement ?? null,
+  );
+  const postBodyBlockCount = computed(
+    () => draft.postBodyWriteInput.value.blocks.length,
+  );
+  const lastSavedLabel = computed(() =>
+    formatDraftSavedTime(draft.savedDraftSnapshot.value.savedAt),
+  );
+  const saveStatusLabel = computed(() => {
+    if (draft.draftSaveStatus.value === "saving") {
+      return "正在保存本地草稿";
+    }
+
+    if (draft.draftSaveStatus.value === "dirty") {
+      return "有未保存更改";
+    }
+
+    return `本地草稿已保存 ${lastSavedLabel.value}`;
+  });
+  const saveButtonLabel = computed(() =>
+    draft.draftSaveStatus.value === "saving" ? "保存中" : "保存草稿",
+  );
+  const savedContentHash = computed(
+    () => draft.savedDraftSnapshot.value.contentHash,
   );
 
   const {
@@ -86,6 +115,10 @@ export function useEditorWorkspaceController() {
     syncPreviewScroll();
   }
 
+  async function handleSaveDraft(): Promise<void> {
+    await draft.saveDraft();
+  }
+
   onMounted(() => {
     resizeBodyInput();
   });
@@ -105,18 +138,25 @@ export function useEditorWorkspaceController() {
     activeBackground,
     activeBackgroundClass,
     backgroundCandidates,
-    isEditorDebugMode,
     isPreviewMode,
     title: draft.title,
     body: draft.body,
     previewTitle: draft.previewTitle,
     readerBlocks: draft.readerBlocks,
     readerPreviewBlocks: draft.readerPreviewBlocks,
+    postBodyBlockCount,
     wordCount: draft.wordCount,
+    draftSaveStatus: draft.draftSaveStatus,
+    canSaveDraft: draft.canSaveDraft,
+    saveStatusLabel,
+    saveButtonLabel,
+    lastSavedLabel,
+    savedContentHash,
     writingPaneRef,
     previewPaneRef,
     handleBodyInput,
     handleModeSelect,
+    handleSaveDraft,
     handleToolbarAction,
     selectBackground,
     syncEditorScroll,

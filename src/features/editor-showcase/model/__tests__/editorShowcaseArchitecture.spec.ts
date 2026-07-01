@@ -41,4 +41,10 @@ describe("editor showcase architecture boundaries", () => {
     expect(writingPaneSource).not.toContain("overscroll-behavior: contain");
     expect(previewPaneSource).not.toContain("overscroll-behavior: contain");
   });
+
+  it("keeps ink theme overrides on workspace variables instead of component globals", () => {
+    [actionBarSource, previewPaneSource, writingPaneSource].forEach((source) => {
+      expect(source).not.toContain(":global(.editor-showcase--ink)");
+    });
+  });
 });
