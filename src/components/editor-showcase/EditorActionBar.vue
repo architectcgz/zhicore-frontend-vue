@@ -25,7 +25,7 @@
       aria-live="polite"
     >
       <span>{{ saveStatusLabel }}</span>
-      <small>{{ blockCount }} blocks / {{ wordCount }} 字</small>
+      <small>{{ wordCount }} 字</small>
       <small>上次保存 {{ lastSavedLabel }}</small>
     </p>
 
@@ -74,7 +74,6 @@ defineProps<{
   saveButtonLabel: string;
   canSaveDraft: boolean;
   lastSavedLabel: string;
-  blockCount: number;
   wordCount: number;
 }>();
 

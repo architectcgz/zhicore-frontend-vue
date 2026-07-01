@@ -15,7 +15,7 @@
         {{ saveStatusLabel }}
       </span>
       <span>上次保存 {{ lastSavedLabel }}</span>
-      <span>{{ blockCount }} blocks</span>
+      <span>{{ wordCount }} 字</span>
     </div>
 
     <section class="writing-editor__canvas">
@@ -85,7 +85,7 @@
         <footer class="document-structure">
           <span>PostBodyWriteInput</span>
           <strong>schema v1</strong>
-          <span>{{ blockCount }} blocks</span>
+          <span>{{ wordCount }} 字</span>
           <span>{{ savedContentHash }}</span>
         </footer>
       </article>
@@ -105,7 +105,7 @@ import type {
 defineProps<{
   title: string;
   body: string;
-  blockCount: number;
+  wordCount: number;
   saveStatus: EditorDraftSaveStatus;
   saveStatusLabel: string;
   lastSavedLabel: string;

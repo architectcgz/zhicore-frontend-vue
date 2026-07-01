@@ -16,7 +16,6 @@
           {{ saveStatusLabel }}
         </span>
         <span>schema v1</span>
-        <span>{{ postBodyBlockCount }} blocks</span>
         <span>{{ wordCount }} 字</span>
       </div>
     </header>
@@ -31,7 +30,6 @@
         :save-button-label="saveButtonLabel"
         :can-save-draft="canSaveDraft"
         :last-saved-label="lastSavedLabel"
-        :block-count="postBodyBlockCount"
         :word-count="wordCount"
         @select-mode="handleModeSelect"
         @select-background="selectBackground"
@@ -49,7 +47,7 @@
           ref="writingPaneRef"
           v-model:title="title"
           v-model:body="body"
-          :block-count="postBodyBlockCount"
+          :word-count="wordCount"
           :save-status="draftSaveStatus"
           :save-status-label="saveStatusLabel"
           :last-saved-label="lastSavedLabel"
@@ -64,7 +62,6 @@
           :preview-title="previewTitle"
           :preview-blocks="readerPreviewBlocks"
           :word-count="wordCount"
-          :block-count="postBodyBlockCount"
           @scroll="syncEditorScroll"
         />
       </div>
@@ -93,7 +90,6 @@ const {
   canSaveDraft,
   draftSaveStatus,
   lastSavedLabel,
-  postBodyBlockCount,
   previewTitle,
   readerPreviewBlocks,
   previewPaneRef,

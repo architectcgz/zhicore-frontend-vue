@@ -8,7 +8,6 @@
     <div class="reader-preview__header">
       <span>读者视图</span>
       <strong>{{ wordCount }} 字</strong>
-      <small>{{ blockCount }} blocks</small>
     </div>
     <h2>{{ previewTitle }}</h2>
     <div
@@ -33,7 +32,6 @@ defineProps<{
   previewTitle: string;
   previewBlocks: EditorShowcaseReaderPreviewBlock[];
   wordCount: number;
-  blockCount: number;
 }>();
 
 const emit = defineEmits<{

@@ -53,9 +53,6 @@ export function useEditorWorkspaceController() {
   const readerPreviewRef = computed(
     () => previewPaneRef.value?.readerPreviewElement ?? null,
   );
-  const postBodyBlockCount = computed(
-    () => draft.postBodyWriteInput.value.blocks.length,
-  );
   const lastSavedLabel = computed(() =>
     formatDraftSavedTime(draft.savedDraftSnapshot.value.savedAt),
   );
@@ -144,7 +141,6 @@ export function useEditorWorkspaceController() {
     previewTitle: draft.previewTitle,
     readerBlocks: draft.readerBlocks,
     readerPreviewBlocks: draft.readerPreviewBlocks,
-    postBodyBlockCount,
     wordCount: draft.wordCount,
     draftSaveStatus: draft.draftSaveStatus,
     canSaveDraft: draft.canSaveDraft,
