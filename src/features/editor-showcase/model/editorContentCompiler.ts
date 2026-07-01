@@ -495,12 +495,11 @@ export function compileEditorBlocks(input: string): EditorCompiledBlock[] {
       const codeLines: string[] = [];
       let closed = false;
 
-      flushTextBlock();
-
       while (index < lines.length) {
         const closingFenceLine = splitClosingFenceLine(lines[index]);
 
         if (closingFenceLine) {
+          flushTextBlock();
           blocks.push({
             type: "code",
             label: "Code",
@@ -518,12 +517,8 @@ export function compileEditorBlocks(input: string): EditorCompiledBlock[] {
       }
 
       if (!closed) {
-        blocks.push({
-          type: "code",
-          label: "Code",
-          language,
-          content: codeLines.join("\n"),
-        });
+        // 未闭合围栏只是用户编辑中的普通文本，不能提前生成会改变阅读语义的 code block。
+        textLines.push(line, ...codeLines);
       }
 
       continue;

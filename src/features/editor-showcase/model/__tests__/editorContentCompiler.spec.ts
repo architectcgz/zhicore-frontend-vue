@@ -52,6 +52,25 @@ describe("editorContentCompiler", () => {
     );
   });
 
+  it("keeps an unclosed code fence as plain text", () => {
+    const compiledDocument = compileEditorContent("```go\n123213");
+
+    expect(compiledDocument.blocks).toEqual([
+      {
+        type: "text",
+        label: "Text",
+        content: "```go\n123213",
+        inlineNodes: [
+          {
+            type: "text",
+            text: "```go\n123213",
+          },
+        ],
+      },
+    ]);
+    expect(compiledDocument.html).toBe("<p>```go<br>123213</p>");
+  });
+
   it("compiles bold inline markdown into strong nodes and html", () => {
     const compiledDocument = compileEditorContent("这是 **123123** 文本。");
 
