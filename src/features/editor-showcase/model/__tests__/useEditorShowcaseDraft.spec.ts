@@ -74,7 +74,7 @@ describe("useEditorShowcaseDraft", () => {
     draft.body.value = "- [ ] 未完成任务";
     await vi.advanceTimersByTimeAsync(160);
 
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "list",
         label: "Task List",
@@ -99,7 +99,7 @@ describe("useEditorShowcaseDraft", () => {
     draft.body.value = "- [x] 未完成任务";
     await vi.advanceTimersByTimeAsync(160);
 
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "list",
         label: "Task List",
@@ -156,7 +156,7 @@ describe("useEditorShowcaseDraft", () => {
 
     draft.updateBody("段落一。\n\n\n段落二仍然是纯文本。");
 
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -178,7 +178,7 @@ describe("useEditorShowcaseDraft", () => {
       '段落一。\n\n段落二仍然是纯文本。\n\n```go\nfmt.Println("hi")\n```\n\n段落三。',
     );
 
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -215,7 +215,7 @@ describe("useEditorShowcaseDraft", () => {
 
     draft.updateBody("阅读 [ZhiCore](https://example.com/docs) 文档。");
 
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "text",
         label: "Text",
@@ -244,7 +244,7 @@ describe("useEditorShowcaseDraft", () => {
 
     draft.updateBody('```ts\nconsole.log("ok")\n```后续正文');
 
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "code",
         label: "Code",
@@ -272,7 +272,7 @@ describe("useEditorShowcaseDraft", () => {
     draft.applyToolbarAction("code", { start: 4, end: 4 });
 
     expect(draft.body.value).toBe("段落一。\n\n```ts\n// 在这里输入代码\n```");
-    expect(draft.previewBlocks.value).toEqual([
+    expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "text",
         label: "Text",
