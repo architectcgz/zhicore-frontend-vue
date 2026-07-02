@@ -42,6 +42,19 @@ function getEditorMaxScrollTop(writingEditor: HTMLElement): number {
   return Math.max(0, writingEditor.scrollHeight - writingEditor.clientHeight);
 }
 
+function getElementMaxScrollTop(element: HTMLElement): number {
+  return Math.max(0, element.scrollHeight - element.clientHeight);
+}
+
+function isElementScrolledToBottom(element: HTMLElement): boolean {
+  const maxScrollTop = getElementMaxScrollTop(element);
+
+  return (
+    maxScrollTop > syncedScrollTolerancePx &&
+    element.scrollTop >= maxScrollTop - syncedScrollTolerancePx
+  );
+}
+
 function hasBodyCaretAtDocumentEnd(bodyInput: HTMLTextAreaElement): boolean {
   return (
     bodyInput.selectionStart === bodyInput.value.length &&
@@ -242,6 +255,21 @@ export function useEditorPreviewScrollSync(
       readerPreview.scrollTop = 0;
       scrollLogger.debug(() => [
         "synced preview to document top",
+        {
+          sourceScrollTop: writingEditor.scrollTop,
+          targetScrollTop: readerPreview.scrollTop,
+        },
+      ]);
+      return;
+    }
+
+    if (isElementScrolledToBottom(writingEditor)) {
+      // 文档底部是强边界：最后一个源码 block 可能渲染成高表格，不能只同步到表格顶部。
+      const nextPreviewScrollTop = getElementMaxScrollTop(readerPreview);
+      pendingPreviewScrollTop = nextPreviewScrollTop;
+      readerPreview.scrollTop = nextPreviewScrollTop;
+      scrollLogger.debug(() => [
+        "synced preview to document bottom",
         {
           sourceScrollTop: writingEditor.scrollTop,
           targetScrollTop: readerPreview.scrollTop,

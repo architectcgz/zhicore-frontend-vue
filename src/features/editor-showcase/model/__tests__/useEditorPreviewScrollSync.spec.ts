@@ -218,6 +218,48 @@ describe("useEditorPreviewScrollSync", () => {
     expect(readerPreview.scrollTop).toBe(0);
   });
 
+  it("syncs the reader preview to the bottom when the editor reaches the bottom", () => {
+    const bodyInput = document.createElement("textarea");
+    const writingEditor = document.createElement("main");
+    const readerPreview = document.createElement("aside");
+    const tableBlock = document.createElement("div");
+    const previewBlockAnchors = [
+      {
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 20,
+          endLine: 40,
+        },
+      },
+    ];
+
+    bodyInput.style.lineHeight = "20px";
+    writingEditor.scrollTop = 600;
+    tableBlock.dataset.previewReaderBlockIndex = "0";
+    readerPreview.append(tableBlock);
+    readerPreview.scrollTop = 0;
+    defineRectTop(bodyInput, -600);
+    defineRectTop(writingEditor, 0);
+    defineRectTop(readerPreview, 100);
+    defineRectTop(tableBlock, 180);
+    defineReadonlyNumberProperty(writingEditor, "scrollHeight", 1000);
+    defineReadonlyNumberProperty(writingEditor, "clientHeight", 400);
+    defineReadonlyNumberProperty(readerPreview, "scrollHeight", 1000);
+    defineReadonlyNumberProperty(readerPreview, "clientHeight", 400);
+
+    const { syncPreviewScroll } = useEditorPreviewScrollSync({
+      bodyInputRef: ref(bodyInput),
+      writingEditorRef: ref(writingEditor),
+      readerPreviewRef: ref(readerPreview),
+      previewBlockAnchors: ref(previewBlockAnchors),
+      isPreviewMode: ref(true),
+    });
+
+    syncPreviewScroll();
+
+    expect(readerPreview.scrollTop).toBe(600);
+  });
+
   it("uses reader block indexes when spacer blocks make compiled and reader indexes diverge", () => {
     const bodyInput = document.createElement("textarea");
     const writingEditor = document.createElement("main");
