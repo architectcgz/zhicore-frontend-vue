@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from "vue-router";
 
 /**
  * 知构首页路由。
@@ -6,8 +6,9 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const homeRoutes: RouteRecordRaw[] = [
   {
-    path: '',
-    name: 'Home',
-    component: () => import('@/pages/home/HomeRoutePage.vue'),
+    path: "",
+    name: "Home",
+    component: () => import("@/pages/home/HomeRoutePage.vue"),
+    meta: { requiresAuth: true },
   },
-]
+];
