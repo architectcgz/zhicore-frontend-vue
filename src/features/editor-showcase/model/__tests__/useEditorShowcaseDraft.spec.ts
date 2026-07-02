@@ -284,7 +284,7 @@ describe("useEditorShowcaseDraft", () => {
     draft.updateBody("段落一。");
     draft.applyToolbarAction("code", { start: 4, end: 4 });
 
-    expect(draft.body.value).toBe("段落一。\n\n```ts\n// 在这里输入代码\n```");
+    expect(draft.body.value).toBe("段落一。\n```ts\n// 在这里输入代码\n```");
     expect(draft.previewBlocks.value).toMatchObject([
       {
         type: "text",
