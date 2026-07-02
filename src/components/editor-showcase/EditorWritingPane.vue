@@ -69,7 +69,8 @@
               aria-label="撤销上一步编辑"
               title="撤销"
               :disabled="!canUndo"
-              @mousedown.prevent
+              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+              @mousedown="preserveBodySelectionBeforeToolbarCommand"
               @click="emit('undo')"
             >
               撤销
@@ -80,7 +81,8 @@
               aria-label="重做上一步编辑"
               title="重做"
               :disabled="!canRedo"
-              @mousedown.prevent
+              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+              @mousedown="preserveBodySelectionBeforeToolbarCommand"
               @click="emit('redo')"
             >
               重做
@@ -90,7 +92,8 @@
               type="button"
               title="保存草稿"
               :disabled="!canSaveDraft"
-              @mousedown.prevent
+              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+              @mousedown="preserveBodySelectionBeforeToolbarCommand"
               @click="emit('saveDraft')"
             >
               {{ saveButtonLabel }}
@@ -108,7 +111,8 @@
               type="button"
               :aria-label="item.title"
               :title="item.title"
-              @mousedown.prevent
+              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+              @mousedown="preserveBodySelectionBeforeToolbarCommand"
               @click="emit('toolbarAction', item.action)"
             >
               {{ item.label }}
@@ -120,7 +124,8 @@
             type="button"
             :aria-expanded="isToolbarExpanded"
             aria-label="展开或收起全部格式工具"
-            @mousedown.prevent
+            @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+            @mousedown="preserveBodySelectionBeforeToolbarCommand"
             @click="isToolbarExpanded = !isToolbarExpanded"
           >
             {{ isToolbarExpanded ? "收起" : "更多" }}
@@ -309,7 +314,18 @@ function rememberBodySelection(): void {
   }
 }
 
+function preserveBodySelectionBeforeToolbarCommand(event: Event): void {
+  // 工具栏命令依赖正文选区定位插入点；先拦截按钮聚焦，避免移动端触摸按下时把 textarea 光标折回末尾。
+  event.preventDefault();
+  rememberBodySelection();
+}
+
 function getBodySelection(): EditorShowcaseTextSelection {
+  // 工具栏点击期间 textarea 可能已经失焦；此时移动端浏览器可能把 DOM selection 折到末尾。
+  if (document.activeElement !== bodyInputRef.value) {
+    return lastBodySelection.value;
+  }
+
   return readBodySelection() ?? lastBodySelection.value;
 }
 

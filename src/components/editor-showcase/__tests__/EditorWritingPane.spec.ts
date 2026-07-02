@@ -2,11 +2,13 @@ import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
 import { editorDraftBodyMaxLength } from "@/features/editor-showcase/model";
+import type { EditorShowcaseTextSelection } from "@/features/editor-showcase/model";
 
 import EditorWritingPane from "../EditorWritingPane.vue";
 
-function mountWritingPane() {
+function mountWritingPane(options: { attachTo?: HTMLElement } = {}) {
   return mount(EditorWritingPane, {
+    attachTo: options.attachTo,
     props: {
       activeMode: "focus",
       activeBackgroundId: "paper",
@@ -122,6 +124,55 @@ describe("EditorWritingPane", () => {
     tableButton.element.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("keeps toolbar pointerdown from stealing the body textarea selection on touch devices", () => {
+    const wrapper = mountWritingPane();
+    const tableButton = wrapper.find(
+      '.selection-toolbar button[aria-label="表格"]',
+    );
+    const event = new PointerEvent("pointerdown", {
+      bubbles: true,
+      cancelable: true,
+      pointerType: "touch",
+    });
+
+    tableButton.element.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("uses the remembered body selection when a toolbar command runs after the textarea lost focus", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const wrapper = mountWritingPane({ attachTo: host });
+    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
+    const tableButton = wrapper.find<HTMLButtonElement>(
+      '.selection-toolbar button[aria-label="表格"]',
+    );
+    const exposed = wrapper.vm as unknown as {
+      getBodySelection: () => EditorShowcaseTextSelection;
+    };
+
+    bodyInput.element.focus();
+    bodyInput.element.setSelectionRange(2, 2);
+    await bodyInput.trigger("select");
+
+    tableButton.element.focus();
+    Object.defineProperty(bodyInput.element, "selectionStart", {
+      configurable: true,
+      value: 4,
+    });
+    Object.defineProperty(bodyInput.element, "selectionEnd", {
+      configurable: true,
+      value: 4,
+    });
+
+    expect(document.activeElement).toBe(tableButton.element);
+    expect(exposed.getBodySelection()).toEqual({ start: 2, end: 2 });
+
+    wrapper.unmount();
+    host.remove();
   });
 
   it("emits history and save commands from the editor toolbar", async () => {
