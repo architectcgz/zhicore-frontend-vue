@@ -5,7 +5,7 @@
         <p class="document-demo__eyebrow">ZhiCore Display</p>
         <h1>工程文档展示器</h1>
       </div>
-      <RouterLink class="document-demo__link" to="/editor-showcase">
+      <RouterLink class="document-demo__link" to="/editor">
         返回编辑器
       </RouterLink>
     </header>

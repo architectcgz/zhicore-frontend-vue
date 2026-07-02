@@ -94,9 +94,9 @@ blocks 的切分按内容类型边界进行，不按视觉空行机械切分：
 
 当前样式比较页位于：
 
-- 路由：`/editor-showcase`
-- 主编辑器页面：`src/pages/editor/EditorShowcaseRoutePage.vue`
-- 主编辑器展示组件：`src/components/editor-showcase/EditorWorkspaceDemo.vue`
+- 路由：`/editor`
+- 主编辑器页面：`src/pages/editor/EditorRoutePage.vue`
+- 主编辑器工作台组件：`src/features/editor-showcase/ui/EditorWorkspace.vue`
 - 工程文档展示路由：`/editor-document-showcase`
 - 工程文档展示组件：`src/components/editor-showcase/EditorDocumentViewerDemo.vue`
 

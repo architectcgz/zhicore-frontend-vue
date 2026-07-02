@@ -13,7 +13,7 @@
         aria-label="主导航"
       >
         <RouterLink to="/">首页</RouterLink>
-        <RouterLink to="/editor-showcase">编辑器样式</RouterLink>
+        <RouterLink to="/editor">编辑器</RouterLink>
       </nav>
 
       <button

@@ -2,9 +2,9 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const editorRoutes: RouteRecordRaw[] = [
   {
-    path: "/editor-showcase",
-    name: "EditorShowcase",
-    component: () => import("@/pages/editor/EditorShowcaseRoutePage.vue"),
+    path: "/editor",
+    name: "Editor",
+    component: () => import("@/pages/editor/EditorRoutePage.vue"),
   },
   {
     path: "/editor-document-showcase",
