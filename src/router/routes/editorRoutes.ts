@@ -8,10 +8,9 @@ export const editorRoutes: RouteRecordRaw[] = [
     meta: { appShellFlush: true },
   },
   {
-    path: "/editor-document-showcase",
-    name: "EditorDocumentShowcase",
-    component: () =>
-      import("@/pages/editor/EditorDocumentShowcaseRoutePage.vue"),
+    path: "/editor-document",
+    name: "EditorDocument",
+    component: () => import("@/pages/editor/EditorDocumentRoutePage.vue"),
     meta: { appShellFlush: true },
   },
 ];

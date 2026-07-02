@@ -19,6 +19,8 @@
     "debug": "^4.4.3",
     "katex": "^0.17.0",
     "pinia": "^3.0.4",
+    "prosemirror-commands": "^1.7.1",
+    "prosemirror-keymap": "^1.2.3",
     "prosemirror-model": "^1.25.9",
     "prosemirror-state": "^1.4.4",
     "prosemirror-view": "^1.42.0",

@@ -9,6 +9,7 @@
 - 默认进入专注写作模式，弱化工具栏和结构边框，让标题、段落和保存状态成为主要视觉。
 - 预览面板作为发布前检查能力出现，支持用户查看读者视图、封面、摘要、字数、保存版本和草稿指纹。
 - 后端正文模型仍然是 `schemaVersion + blocks`，但前端不把 blocks 直接做成重卡片或管理后台式 UI。
+- `/editor` 正文运行时事实是 ProseMirror doc / JSON；保存和读者预览由 ProseMirror mapper 直接映射为 `PostBodyWriteInput` / reader blocks。
 - 编辑器背景保留多候选能力，当前候选为纸面、青绿、暖沙和墨蓝，用于比较写作场景下的阅读舒适度。
 
 ## 方案取舍
@@ -49,39 +50,36 @@
 - 正文区保持标题和段落连续排版，编辑行为优先接近普通文档写作。
 - 左侧 gutter 承担插入、拖拽、定位和 block path 暴露，不在正文里画出段落卡片。
 - 悬浮格式工具只服务当前选区，不能把编辑区拆成工具面板或配置表单。
-- 工具按钮必须有实际编辑行为：行内按钮包装当前选区，`Code` / `H2` 这类结构按钮插入对应 block 标记并回到正文焦点。
+- 工具按钮必须有实际编辑行为：行内按钮给当前选区施加 ProseMirror mark，`Code` / `H2` 这类结构按钮生成对应 ProseMirror node 并回到正文焦点。
 - 校验错误和后端冲突应定位到具体文本位置或 gutter 标记，默认不打断整篇文章的阅读流。
 
-### 纯文本空行规则
+### ProseMirror 正文事实
 
-blocks 的切分按内容类型边界进行，不按视觉空行机械切分：
+`/editor` 不再把 Markdown-like source 当作正文事实：
 
-- 纯文本与纯文本之间的一个或多个空行应保留在同一个 text block 内，作为文本内部留白。
-- 纯文本空行后出现代码、公式、引用、媒体等非纯文本内容时，才切换为新的 block。
-- 读者预览可以按排版需要展示空行，但保存事实应保持为一个 text block，避免把普通写作过程拆成多个难编辑的块。
+- 输入态以 ProseMirror doc / JSON 保存正文和选区事实。
+- `**文本**`、`++文本++`、``` 等字符序列只作为普通文本存在，不触发行内格式或 block 结构。
+- 加粗、链接、标题、引用、列表、代码、公式、表格和外部图片嵌入通过 ProseMirror mark / node 表达。
+- 后端仍只接收 `PostBodyWriteInput`；ProseMirror JSON 只存在于编辑器运行时和前端草稿状态，不直接提交给 Content API。
 
 ### 预览渲染规则
 
 预览器渲染结构化模型，不直接把 markdown 源文本塞进 DOM：
 
-- code block 应去掉 ``` fence，单独记录语言并用 `<pre><code>` 展示纯代码内容。
-- code block 范围只到 closing fence 行为止；如果同一行 fence 标记后继续输入内容，该内容应重新进入普通文本解析。
+- code block 来自 ProseMirror `code_block` node，单独记录语言并用 `<pre><code>` 展示纯代码内容。
 - link 应解析成安全 inline 节点，用 `<a>` 渲染；不要用 `v-html` 渲染用户输入。
-- bold 等行内格式应解析为安全 inline 节点，例如 `**text**` 渲染为 `<strong>`。
+- bold 等行内格式来自 ProseMirror mark，例如 `bold` mark 渲染为 `<strong>`；原始 `**text**` 字符串按普通文本展示。
 - 不支持的结构块可以临时降级为结构化块预览，但不能混进纯文本段落里展示为原始标记。
 
-### 编译器边界
+### Mapper 边界
 
-编辑器到 HTML 的转换可以称为 compiler，但它应独立于编辑器输入状态：
+编辑器输入状态和后端保存模型通过 ProseMirror mapper 分离：
 
-- 编辑器 composable 只负责标题、正文、选区工具动作、字数等编辑态状态。
-- compiler 负责把编辑器源文本编译为结构化 blocks 和 HTML 字符串，不依赖 Vue 响应式或组件。
-- 预览组件消费 compiler 的 blocks 渲染，不自行解析 markdown、code fence 或链接。
-- 后续接后端 Content 契约时，应优先复用 compiler 输出的结构化 blocks，再做 API DTO 映射。
-- 读者预览为了视觉留白和滚动锚点可以生成 spacer block，但 spacer 不进入 `PostBodyWriteInput` 保存事实。
-- `/editor` 正文输入层已切换为 ProseMirror `EditorView`，但当前 ProseMirror doc 仍承载 Markdown-like source；保存、预览和错误定位继续通过 source compiler / adapter 输出，不把 ProseMirror JSON 持久化。
-- 富文本 adapter 落地前，ProseMirror schema 只允许 `doc`、`paragraph`、`text`，粘贴内容显式降级为纯文本 source，避免不支持的 rich document 结构被静默写入或压平。
-- adapter 遇到 Content V1 不支持的多段 quote、嵌套 list 或无 `fileId` 的系统媒体时，应阻止保存并定位提示，不能静默压平为 inline 文本。
+- 编辑器 composable 负责标题、ProseMirror 正文 doc、选区、字数、保存状态和撤销/重做。
+- ProseMirror mapper 负责把 doc 映射为 `PostBodyWriteInput`、reader preview blocks 和纯文本统计。
+- 预览组件消费 reader preview blocks 渲染，不自行解析 markdown、code fence 或链接。
+- 旧 Markdown-like compiler / textarea adapter 已删除；`/editor` runtime 不再存在 source string 编译入口。
+- mapper 遇到 Content V1 暂不支持的多段 quote、嵌套 list、list item 内 block 或缺少 Upload `fileId` 的系统媒体时，应阻止保存并定位提示，不能静默压平为 inline 文本。
 
 ## 与后端契约的关系
 
@@ -100,9 +98,9 @@ blocks 的切分按内容类型边界进行，不按视觉空行机械切分：
 
 - 路由：`/editor`
 - 主编辑器页面：`src/pages/editor/EditorRoutePage.vue`
-- 主编辑器工作台组件：`src/features/editor-showcase/ui/EditorWorkspace.vue`
-- 工程文档展示路由：`/editor-document-showcase`
-- 工程文档展示组件：`src/components/editor-showcase/EditorDocumentViewerDemo.vue`
+- 主编辑器工作台组件：`src/features/editor/ui/EditorWorkspace.vue`
+- 工程文档展示路由：`/editor-document`
+- 工程文档展示组件：`src/components/editor/EditorDocumentViewer.vue`
 
 后续进入真实编辑器实现时，应以“专注写作”为默认形态，并把“写作 + 预览”收敛为可切换视图或侧边面板。
 

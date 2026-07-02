@@ -18,7 +18,7 @@
 ## 核心结论
 
 - 后端返回和接收的是结构化 `schemaVersion + blocks`，不是 raw HTML。
-- 前端可以提供 Markdown-like 输入体验，但提交前必须编译成 blocks。
+- `/editor` 前端输入事实是 ProseMirror doc / JSON；提交前由 ProseMirror mapper 映射成 blocks。
 - HTML 只是前端阅读器或预览器的派生渲染结果，不进入保存、发布和冲突判断。
 - 系统内媒体长期事实是 Upload 返回的 `fileId`；展示 URL 只作为派生字段使用。
 - 草稿保存使用 copy-on-write，前端必须带 `basePostVersion`、`baseDraftBodyId`、`baseDraftBodyHash` 做乐观冲突检测。
@@ -28,24 +28,26 @@
 
 前端需要区分四层数据，不互相混用：
 
-| 层                   | 归属                      | 用途                                                              | 是否提交后端 |
-| -------------------- | ------------------------- | ----------------------------------------------------------------- | ------------ |
-| `EditorSource`       | 编辑器 feature            | 用户正在输入的 Markdown-like 文本、选区、光标、局部草稿。         | 否           |
-| `EditorDocument`     | 编辑器 compiler / adapter | 从输入编译出的前端中间态，用于预览、错误定位和 API 写入模型映射。 | 否，需转换   |
-| `PostBodyWriteInput` | API contract              | `schemaVersion + blocks`，保存正文的请求体事实。                  | 是           |
-| `ReaderBodyDocument` | 阅读器组件                | 从 `PostBody` 映射出的展示模型。                                  | 否           |
+| 层                   | 归属           | 用途                                                          | 是否提交后端 |
+| -------------------- | -------------- | ------------------------------------------------------------- | ------------ |
+| `EditorDocument`     | 编辑器 feature | 用户正在编辑的 ProseMirror doc / JSON、选区、光标、局部草稿。 | 否，需转换   |
+| `EditorPreviewModel` | 编辑器 mapper  | 从 ProseMirror doc 映射出的预览 blocks 和错误定位信息。       | 否           |
+| `PostBodyWriteInput` | API contract   | `schemaVersion + blocks`，保存正文的请求体事实。              | 是           |
+| `ReaderBodyDocument` | 阅读器组件     | 从 `PostBody` 映射出的展示模型。                              | 否           |
 
-当前原型里的 `label`、`content`、`sourceRange`、`html` 是前端预览和错误定位辅助字段，不属于后端 contract。
+当前原型里的 `label`、`content`、`html` 是旧 Markdown-like compiler 的预览辅助字段，不属于后端 contract；`/editor` runtime 不再依赖这些字段作为正文事实。
 
-## 编辑器 Adapter 边界
+## 编辑器 Mapper 边界
 
-编辑器内部文档不是长期保存事实。当前 `/editor` 输入层使用 ProseMirror，但运行时仍把 ProseMirror doc 序列化为 Markdown-like source，再经过 editor content adapter 输出；富文本 adapter 落地前，ProseMirror schema 只允许纯文本 source 结构，粘贴内容降级为纯文本。
+编辑器内部文档不是后端长期保存事实。当前 `/editor` 输入层使用 ProseMirror，运行时正文事实是 ProseMirror doc / JSON；保存、预览和纯文本统计由 ProseMirror mapper 直接输出，不再把 doc 序列化为 Markdown-like source 交给旧 compiler。
 
 - `PostBodyWriteInput`：唯一允许进入 Content 保存 API 的正文写入模型。
 - Reader preview blocks：只服务读者预览、滚动同步和视觉 spacer。
 - 校验错误位置映射：把后端保存模型 path 映射回编辑位置。
 
-ProseMirror JSON 只能作为编辑器内部状态或短期 UI 状态存在，不进入 API 请求、草稿 hash、发布 payload 或长期缓存。后续富文本 ProseMirror adapter 遇到多段 quote、嵌套 list、list item 内 block、缺少 Upload `fileId` 的系统媒体等 Content V1 不支持结构时，必须返回“不支持保存”的校验结果并阻止保存，不得静默 flatten 或丢弃结构。
+ProseMirror JSON 可以作为前端编辑器运行时和本地草稿状态存在，但不进入 API 请求或发布 payload。mapper 遇到多段 quote、嵌套 list、list item 内 block、缺少 Upload `fileId` 的系统媒体等 Content V1 暂不支持结构时，必须返回“不支持保存”的校验结果并阻止保存，不得静默 flatten 或丢弃结构。
+
+Markdown-like 字符串不再具备编辑器语义：`**text**` 只保存为普通文本；加粗必须来自 ProseMirror `bold` mark。
 
 ## HTTP Envelope
 
@@ -142,7 +144,7 @@ interface PostBody {
 
 后端已确认第一阶段支持的可发布 block 类型：`paragraph`、`heading`、`quote`、`list`、`code_block`、`table`、`collapsible`、`math`、`image`、`external_embed`、`attachment_gallery`。
 
-前端提交前必须去掉 UI 临时字段，例如本地 block id、hover 状态、选区、拖拽状态、`sourceRange`、`label`、预览 HTML。
+前端提交前必须去掉 UI 临时字段，例如本地 block id、hover 状态、选区、拖拽状态、`label`、预览 HTML。
 
 建议前后端第一版 JSON 形态按以下 TypeScript contract 固化：
 
@@ -241,7 +243,7 @@ interface AttachmentGalleryBlock {
 约束：
 
 - `table` 第一阶段只支持简单二维表，不支持 `rowspan` / `colspan`。
-- `quote` 和 `list` V1 只支持 inline-only children；多段 quote、嵌套 list 或 list item 内 block 属于“不支持保存”，前端 adapter 不得静默 flatten。
+- `quote` 和 `list` V1 只支持 inline-only children；多段 quote、嵌套 list 或 list item 内 block 属于“不支持保存”，前端 mapper 不得静默 flatten。
 - `collapsible` 最大嵌套深度为 2。
 - `math.latex` 只保存 LaTeX 字符串，前端用 KaTeX / MathJax 渲染，后端不执行公式。
 - `code_block.language` 只是高亮 hint，后端只做格式和长度限制。
@@ -279,33 +281,33 @@ type PostBodyInlineMark =
 - 前端渲染外链时使用 `target="_blank"` 必须同时设置 `rel="noopener noreferrer"`。
 - 行内样式不能提交任意 CSS、class、style 或事件属性。
 
-## 编辑器编译映射
+## 编辑器映射
 
-当前前端原型的 Markdown-like compiler 到后端写入模型的映射规则：
+当前正式 `/editor` 只保留 ProseMirror doc 到后端写入模型的映射规则：
 
-| 原型 block | 后端 block                                                                      |
-| ---------- | ------------------------------------------------------------------------------- |
-| `text`     | `paragraph`                                                                     |
-| `heading`  | `heading`                                                                       |
-| `quote`    | `quote`                                                                         |
-| `code`     | `code_block`                                                                    |
-| `list`     | `list`                                                                          |
-| `table`    | `table`                                                                         |
-| `math`     | `math`                                                                          |
-| `media`    | 当前 Markdown-like `![alt](url)` 只映射为 `external_embed`，provider 为 `image` |
+| ProseMirror node | 后端 block       |
+| ---------------- | ---------------- |
+| `paragraph`      | `paragraph`      |
+| `heading`        | `heading`        |
+| `quote`          | `quote`          |
+| `code_block`     | `code_block`     |
+| `list`           | `list`           |
+| `table`          | `table`          |
+| `math_block`     | `math`           |
+| `external_embed` | `external_embed` |
 
 行内映射：
 
-| 原型 inline     | 后端 mark     |
-| --------------- | ------------- |
-| `strong`        | `bold`        |
-| `emphasis`      | `italic`      |
-| `underline`     | `underline`   |
-| `strikethrough` | `strike`      |
-| `inlineCode`    | `inline_code` |
-| `link`          | `link`        |
+| ProseMirror mark | 后端 mark     |
+| ---------------- | ------------- |
+| `bold`           | `bold`        |
+| `italic`         | `italic`      |
+| `underline`      | `underline`   |
+| `strike`         | `strike`      |
+| `inline_code`    | `inline_code` |
+| `link`           | `link`        |
 
-前端 adapter 的职责是把原型中为预览服务的扁平 inline 节点合并成 `PostBodyInlineNode + marks`，并在提交前剔除 `stableKey`、`sourceRange`、`label`、reader spacer 等 UI 辅助字段。系统内 `image` / `attachment_gallery` 只能来自 Upload `fileId` 流程，不能由 Markdown 图片 URL 伪造。
+前端 mapper 的职责是把 ProseMirror inline text 和 marks 输出为 `PostBodyInlineNode + marks`，并在提交前剔除 `stableKey`、选区、编辑器局部状态等 UI 辅助字段。系统内 `image` / `attachment_gallery` 只能来自 Upload `fileId` 流程，不能由 Markdown 图片 URL 伪造。
 
 ## 草稿工作流
 

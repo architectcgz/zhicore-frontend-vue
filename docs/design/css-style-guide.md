@@ -134,7 +134,7 @@ feature 层以状态、行为和业务流程为主。只有当某个 UI 组件�
   color: var(--reader-text);
 }
 
-.editor-showcase--ink .reader-preview {
+.editor--ink .reader-preview {
   --reader-text: #c1ccd6;
   --reader-heading: #ffffff;
   --reader-link: #d7e5ea;
@@ -239,7 +239,7 @@ feature 层以状态、行为和业务流程为主。只有当某个 UI 组件�
 
 只允许用于：
 
-- 主题根类影响组件公开变量，例如 `.editor-showcase--ink .reader-preview`。
+- 主题根类影响组件公开变量，例如 `.editor--ink .reader-preview`。
 - 应用壳级全局状态，例如 `[data-theme="dark"]`。
 
 ### `:deep`

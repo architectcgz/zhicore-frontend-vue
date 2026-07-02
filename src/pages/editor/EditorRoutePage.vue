@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-import { EditorWorkspace } from "@/features/editor-showcase";
+import { EditorWorkspace } from "@/features/editor";
 </script>
