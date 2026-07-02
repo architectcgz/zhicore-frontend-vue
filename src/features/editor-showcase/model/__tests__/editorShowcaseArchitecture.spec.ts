@@ -4,17 +4,28 @@ import actionBarSource from "@/components/editor-showcase/EditorActionBar.vue?ra
 import documentViewerSource from "@/components/editor-showcase/EditorDocumentViewerDemo.vue?raw";
 import previewPaneSource from "@/components/editor-showcase/EditorPreviewPane.vue?raw";
 import writingPaneSource from "@/components/editor-showcase/EditorWritingPane.vue?raw";
-import routePageSource from "@/pages/editor/EditorShowcaseRoutePage.vue?raw";
+import homeOverviewSource from "@/components/home/HomeOverviewWidget.vue?raw";
+import appLayoutSource from "@/layouts/AppLayout.vue?raw";
+import routePageSource from "@/pages/editor/EditorRoutePage.vue?raw";
+import editorRoutesSource from "@/router/routes/editorRoutes.ts?raw";
 
 import compilerIndexSource from "../editorContentCompiler/index.ts?raw";
 import featureIndexSource from "../index.ts?raw";
 import draftSource from "../useEditorShowcaseDraft.ts?raw";
 
 describe("editor showcase architecture boundaries", () => {
+  it("uses the formal editor route as the public workspace entry", () => {
+    expect(editorRoutesSource).toContain('path: "/editor"');
+    expect(editorRoutesSource).toContain('name: "Editor"');
+    expect(editorRoutesSource).not.toContain('path: "/editor-showcase"');
+    expect(appLayoutSource).toContain('to="/editor"');
+    expect(homeOverviewSource).toContain('to="/editor"');
+  });
+
   it("routes the workspace owner through the feature public API", () => {
     expect(routePageSource).toContain("@/features/editor-showcase");
     expect(routePageSource).not.toContain(
-      "@/components/editor-showcase/EditorWorkspaceDemo.vue",
+      "@/features/editor-showcase/ui/EditorWorkspace.vue",
     );
   });
 

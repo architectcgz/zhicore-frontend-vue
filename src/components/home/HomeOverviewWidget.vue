@@ -6,9 +6,9 @@
     </div>
     <RouterLink
       class="home-overview__link"
-      to="/editor-showcase"
+      to="/editor"
     >
-      查看编辑器样式
+      打开编辑器
     </RouterLink>
   </section>
 </template>
