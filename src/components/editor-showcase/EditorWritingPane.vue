@@ -620,6 +620,10 @@ defineExpose({
 }
 
 @media (max-width: 980px) {
+  .writing-editor {
+    max-height: none;
+  }
+
   .writing-editor__meta {
     grid-template-columns: 1fr;
     align-items: flex-start;
@@ -628,6 +632,10 @@ defineExpose({
   .writing-editor__mode-switch,
   .writing-editor__background-picker {
     justify-content: flex-start;
+  }
+
+  .writing-editor__mode-switch {
+    display: none;
   }
 
   .writing-editor__canvas {
@@ -676,6 +684,10 @@ defineExpose({
     padding-right: 60px;
   }
 
+  .selection-toolbar button {
+    min-height: 36px;
+  }
+
   .selection-toolbar__toggle {
     position: absolute;
     top: 4px;
@@ -683,6 +695,11 @@ defineExpose({
     display: inline-flex;
     align-items: center;
     background: var(--editor-control-bg-active, #ffffff);
+  }
+
+  .writing-editor__mode-switch button,
+  .writing-editor__background-swatch {
+    min-height: 40px;
   }
 }
 

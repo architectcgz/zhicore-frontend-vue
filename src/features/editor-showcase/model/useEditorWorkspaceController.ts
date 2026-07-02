@@ -26,6 +26,9 @@ export interface EditorWorkspacePreviewPaneRef {
   readerPreviewElement: HTMLElement | null;
 }
 
+export interface EditorWorkspaceShellRef
+  extends EditorWorkspaceWritingPaneRef, EditorWorkspacePreviewPaneRef {}
+
 function formatDraftSavedTime(savedAt: Date): string {
   return new Intl.DateTimeFormat("zh-CN", {
     hour: "2-digit",
@@ -44,17 +47,16 @@ export function useEditorWorkspaceController() {
     selectBackground,
   } = useEditorShowcaseDisplay();
   const draft = useEditorShowcaseDraft();
-  const writingPaneRef = ref<EditorWorkspaceWritingPaneRef | null>(null);
-  const previewPaneRef = ref<EditorWorkspacePreviewPaneRef | null>(null);
+  const workspaceShellRef = ref<EditorWorkspaceShellRef | null>(null);
 
   const bodyInputRef = computed(
-    () => writingPaneRef.value?.bodyInputElement ?? null,
+    () => workspaceShellRef.value?.bodyInputElement ?? null,
   );
   const writingEditorRef = computed(
-    () => writingPaneRef.value?.writingEditorElement ?? null,
+    () => workspaceShellRef.value?.writingEditorElement ?? null,
   );
   const readerPreviewRef = computed(
-    () => previewPaneRef.value?.readerPreviewElement ?? null,
+    () => workspaceShellRef.value?.readerPreviewElement ?? null,
   );
   const lastSavedLabel = computed(() =>
     formatDraftSavedTime(draft.savedDraftSnapshot.value.savedAt),
@@ -93,7 +95,7 @@ export function useEditorWorkspaceController() {
   }
 
   function handleBodyInput(nextBody: string): void {
-    draft.updateBody(nextBody, writingPaneRef.value?.getBodySelection());
+    draft.updateBody(nextBody, workspaceShellRef.value?.getBodySelection());
     void syncEditorLayoutOnNextFrame();
   }
 
@@ -107,14 +109,14 @@ export function useEditorWorkspaceController() {
   ): Promise<void> {
     const nextSelection = draft.applyToolbarAction(
       action,
-      writingPaneRef.value?.getBodySelection(),
+      workspaceShellRef.value?.getBodySelection(),
     );
 
     await nextTick();
     resizeBodyInput();
-    writingPaneRef.value?.focusBody();
+    workspaceShellRef.value?.focusBody();
     // 工具栏会重写 markdown 标记，恢复选区让作者可以继续在原位置输入。
-    writingPaneRef.value?.setBodySelection(nextSelection);
+    workspaceShellRef.value?.setBodySelection(nextSelection);
     syncPreviewScroll();
   }
 
@@ -124,10 +126,10 @@ export function useEditorWorkspaceController() {
     await nextTick();
 
     if (result.activeField === "body") {
-      writingPaneRef.value?.focusBody();
+      workspaceShellRef.value?.focusBody();
 
       if (result.selection) {
-        writingPaneRef.value?.setBodySelection(result.selection);
+        workspaceShellRef.value?.setBodySelection(result.selection);
       }
     }
 
@@ -165,6 +167,16 @@ export function useEditorWorkspaceController() {
   });
 
   watch(
+    workspaceShellRef,
+    () => {
+      void syncEditorLayoutOnNextFrame();
+    },
+    {
+      flush: "post",
+    },
+  );
+
+  watch(
     draft.readerPreviewBlocks,
     () => {
       void syncEditorLayoutOnNextFrame();
@@ -195,8 +207,7 @@ export function useEditorWorkspaceController() {
     saveStatusLabel,
     saveButtonLabel,
     lastSavedLabel,
-    writingPaneRef,
-    previewPaneRef,
+    workspaceShellRef,
     handleBodyInput,
     handleTitleInput,
     handleModeSelect,

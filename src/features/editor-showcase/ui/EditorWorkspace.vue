@@ -8,60 +8,79 @@
     </header>
 
     <section class="editor-frame">
-      <div
-        class="editor-stage"
-        :class="{
-          'editor-stage--focus': !isPreviewMode,
-          'editor-stage--preview': isPreviewMode,
-        }"
-      >
-        <EditorWritingPane
-          ref="writingPaneRef"
-          :active-mode="activeMode"
-          :active-background-id="activeBackground.id"
-          :background-candidates="backgroundCandidates"
-          :title="title"
-          :body="body"
-          :word-count="wordCount"
-          :body-character-count="bodyCharacterCount"
-          :body-max-length="bodyMaxLength"
-          :save-status="draftSaveStatus"
-          :save-status-label="saveStatusLabel"
-          :last-saved-label="lastSavedLabel"
-          :save-button-label="saveButtonLabel"
-          :can-save-draft="canSaveDraft"
-          :can-undo="canUndo"
-          :can-redo="canRedo"
-          @title-input="handleTitleInput"
-          @body-input="handleBodyInput"
-          @undo="handleUndoDraft"
-          @redo="handleRedoDraft"
-          @save-draft="handleSaveDraft"
-          @toolbar-action="handleToolbarAction"
-          @select-mode="handleModeSelect"
-          @select-background="selectBackground"
-          @scroll="syncPreviewScroll"
-        />
-
-        <div class="editor-stage__preview-shell">
-          <EditorPreviewPane
-            ref="previewPaneRef"
-            :preview-title="previewTitle"
-            :preview-blocks="readerPreviewBlocks"
-            :word-count="wordCount"
-            @scroll="syncEditorScroll"
-          />
-        </div>
-      </div>
+      <EditorMobileWorkspace
+        v-if="isMobileWorkspace"
+        ref="workspaceShellRef"
+        :active-mode="activeMode"
+        :active-background-id="activeBackground.id"
+        :background-candidates="backgroundCandidates"
+        :title="title"
+        :body="body"
+        :word-count="wordCount"
+        :body-character-count="bodyCharacterCount"
+        :body-max-length="bodyMaxLength"
+        :save-status="draftSaveStatus"
+        :save-status-label="saveStatusLabel"
+        :last-saved-label="lastSavedLabel"
+        :save-button-label="saveButtonLabel"
+        :can-save-draft="canSaveDraft"
+        :can-undo="canUndo"
+        :can-redo="canRedo"
+        :preview-title="previewTitle"
+        :preview-blocks="readerPreviewBlocks"
+        @title-input="handleTitleInput"
+        @body-input="handleBodyInput"
+        @undo="handleUndoDraft"
+        @redo="handleRedoDraft"
+        @save-draft="handleSaveDraft"
+        @toolbar-action="handleToolbarAction"
+        @select-mode="handleModeSelect"
+        @select-background="selectBackground"
+        @editor-scroll="syncPreviewScroll"
+        @preview-scroll="syncEditorScroll"
+      />
+      <EditorDesktopWorkspace
+        v-else
+        ref="workspaceShellRef"
+        :active-mode="activeMode"
+        :active-background-id="activeBackground.id"
+        :background-candidates="backgroundCandidates"
+        :title="title"
+        :body="body"
+        :word-count="wordCount"
+        :body-character-count="bodyCharacterCount"
+        :body-max-length="bodyMaxLength"
+        :save-status="draftSaveStatus"
+        :save-status-label="saveStatusLabel"
+        :last-saved-label="lastSavedLabel"
+        :save-button-label="saveButtonLabel"
+        :can-save-draft="canSaveDraft"
+        :can-undo="canUndo"
+        :can-redo="canRedo"
+        :preview-title="previewTitle"
+        :preview-blocks="readerPreviewBlocks"
+        @title-input="handleTitleInput"
+        @body-input="handleBodyInput"
+        @undo="handleUndoDraft"
+        @redo="handleRedoDraft"
+        @save-draft="handleSaveDraft"
+        @toolbar-action="handleToolbarAction"
+        @select-mode="handleModeSelect"
+        @select-background="selectBackground"
+        @editor-scroll="syncPreviewScroll"
+        @preview-scroll="syncEditorScroll"
+      />
     </section>
   </section>
 </template>
 
 <script setup lang="ts">
+import { useMediaQuery } from "@vueuse/core";
+
 import { useEditorWorkspaceController } from "@/features/editor-showcase/model";
 
-import EditorPreviewPane from "@/components/editor-showcase/EditorPreviewPane.vue";
-import EditorWritingPane from "@/components/editor-showcase/EditorWritingPane.vue";
+import EditorDesktopWorkspace from "./EditorDesktopWorkspace.vue";
+import EditorMobileWorkspace from "./EditorMobileWorkspace.vue";
 
 const {
   activeMode,
@@ -79,14 +98,12 @@ const {
   handleTitleInput,
   handleToolbarAction,
   handleUndoDraft,
-  isPreviewMode,
   canSaveDraft,
   canUndo,
   draftSaveStatus,
   lastSavedLabel,
   previewTitle,
   readerPreviewBlocks,
-  previewPaneRef,
   saveButtonLabel,
   saveStatusLabel,
   selectBackground,
@@ -94,8 +111,10 @@ const {
   syncPreviewScroll,
   title,
   wordCount,
-  writingPaneRef,
+  workspaceShellRef,
 } = useEditorWorkspaceController();
+
+const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 </script>
 
 <style scoped>
@@ -244,70 +263,14 @@ const {
   gap: 12px;
 }
 
-.editor-stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
-  gap: 0;
-  align-items: stretch;
-  min-height: 660px;
-  transition:
-    gap 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.editor-stage--preview {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
-  gap: 12px;
-}
-
-.editor-stage__preview-shell {
-  min-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(18px) scale(0.985);
-  transform-origin: right center;
-  visibility: hidden;
-  transition:
-    opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 0s linear 0.24s;
-}
-
-.editor-stage--preview .editor-stage__preview-shell {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0) scale(1);
-  visibility: visible;
-  transition:
-    opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1) 0.04s,
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1) 0.04s,
-    visibility 0s;
-}
-
 @media (max-width: 980px) {
   .editor-workspace__header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .editor-stage,
-  .editor-stage--focus,
-  .editor-stage--preview {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .editor-stage {
-    min-height: auto;
-  }
-
-  .editor-stage--focus .editor-stage__preview-shell {
-    display: none;
-  }
-
-  .editor-stage--preview .editor-stage__preview-shell {
-    display: block;
+  .editor-workspace__heading p {
+    text-transform: none;
   }
 }
 
@@ -322,14 +285,8 @@ const {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .editor-workspace,
-  .editor-stage,
-  .editor-stage__preview-shell {
+  .editor-workspace {
     transition: none;
-  }
-
-  .editor-stage__preview-shell {
-    transform: none;
   }
 }
 </style>

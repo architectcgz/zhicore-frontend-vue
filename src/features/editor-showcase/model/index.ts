@@ -64,5 +64,6 @@ export type {
 export { useEditorWorkspaceController } from "./useEditorWorkspaceController";
 export type {
   EditorWorkspacePreviewPaneRef,
+  EditorWorkspaceShellRef,
   EditorWorkspaceWritingPaneRef,
 } from "./useEditorWorkspaceController";

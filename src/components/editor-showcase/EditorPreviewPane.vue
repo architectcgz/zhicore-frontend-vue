@@ -113,6 +113,12 @@ defineExpose({
   line-height: 1.12;
 }
 
+@media (max-width: 980px) {
+  .reader-preview {
+    max-height: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reader-preview {
     transition: none;

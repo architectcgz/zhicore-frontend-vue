@@ -11,6 +11,9 @@ import editorRoutesSource from "@/router/routes/editorRoutes.ts?raw";
 import compilerIndexSource from "../editorContentCompiler/index.ts?raw";
 import featureIndexSource from "../index.ts?raw";
 import draftSource from "../useEditorShowcaseDraft.ts?raw";
+import desktopWorkspaceSource from "../../ui/EditorDesktopWorkspace.vue?raw";
+import mobileWorkspaceSource from "../../ui/EditorMobileWorkspace.vue?raw";
+import workspaceSource from "../../ui/EditorWorkspace.vue?raw";
 
 describe("editor showcase architecture boundaries", () => {
   it("uses the formal editor route as the public workspace entry", () => {
@@ -28,14 +31,24 @@ describe("editor showcase architecture boundaries", () => {
     );
   });
 
+  it("keeps desktop and mobile editor shells behind the same route workspace", () => {
+    expect(workspaceSource).toContain("EditorDesktopWorkspace");
+    expect(workspaceSource).toContain("EditorMobileWorkspace");
+    expect(editorRoutesSource).not.toContain('path: "/editor-mobile"');
+  });
+
   it("keeps workflow owner composables out of editor showcase render components", () => {
-    [documentViewerSource, previewPaneSource, writingPaneSource].forEach(
-      (source) => {
-        expect(source).not.toMatch(
-          /useEditor(?:ShowcaseDraft|ShowcaseDisplay|PreviewScrollSync)/,
-        );
-      },
-    );
+    [
+      documentViewerSource,
+      previewPaneSource,
+      writingPaneSource,
+      desktopWorkspaceSource,
+      mobileWorkspaceSource,
+    ].forEach((source) => {
+      expect(source).not.toMatch(
+        /useEditor(?:ShowcaseDraft|ShowcaseDisplay|PreviewScrollSync)/,
+      );
+    });
   });
 
   it("does not expose the unowned HTML compiler path from public editor APIs", () => {
