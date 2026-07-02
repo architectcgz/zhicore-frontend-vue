@@ -604,6 +604,35 @@ describe("EditorWritingPane", () => {
     });
   });
 
+  it("inserts an empty math block instead of a fixed formula when no text is selected", () => {
+    const wrapper = mountWritingPane();
+    const exposed = wrapper.vm as unknown as {
+      bodyEditorView: EditorView | null;
+      setBodySelection: (selection: EditorTextSelection) => void;
+      applyBodyToolbarAction: (action: "math") => void;
+    };
+
+    exposed.setBodySelection({ start: 1, end: 1 });
+    exposed.applyBodyToolbarAction("math");
+
+    expect(
+      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
+        .blocks,
+    ).toEqual([
+      {
+        type: "math",
+        latex: "",
+      },
+      {
+        type: "paragraph",
+        children: [{ type: "text", text: "草稿正文" }],
+      },
+    ]);
+    expect(exposed.bodyEditorView!.state.doc.textContent).not.toContain(
+      "E = mc^2",
+    );
+  });
+
   it("keeps toolbar mousedown from stealing the body editor selection", () => {
     const wrapper = mountWritingPane();
     const tableButton = wrapper.find(

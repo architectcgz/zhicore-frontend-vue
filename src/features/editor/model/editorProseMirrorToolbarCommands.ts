@@ -32,6 +32,12 @@ function getSelectedTextOrPlaceholder(
   return selectedText || placeholder;
 }
 
+function getSelectedText(view: EditorView): string {
+  const { from, to } = view.state.selection;
+
+  return view.state.doc.textBetween(from, to, "\n").trim();
+}
+
 function applyInlineMark(
   view: EditorView,
   markName: string,
@@ -199,11 +205,7 @@ function createBodyToolbarCommands(view: EditorView): BodyToolbarCommandMap {
         { language: "ts" },
       ),
     math: () =>
-      replaceSelectionWithBlock(
-        view,
-        "math_block",
-        getSelectedTextOrPlaceholder(view, "E = mc^2"),
-      ),
+      replaceSelectionWithBlock(view, "math_block", getSelectedText(view)),
   };
 }
 
