@@ -1,3 +1,4 @@
+import { isReadonly } from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useEditorShowcaseDraft } from "../useEditorShowcaseDraft";
@@ -79,13 +80,20 @@ describe("useEditorShowcaseDraft", () => {
     expect(draft.previewBlocks.value[0]?.content).toBe("第二次输入");
   });
 
-  it("updates preview when v-model mutates body directly", async () => {
+  it("exposes title and body as readonly state so writes go through draft actions", () => {
+    const draft = useEditorShowcaseDraft();
+
+    expect(isReadonly(draft.title)).toBe(true);
+    expect(isReadonly(draft.body)).toBe(true);
+  });
+
+  it("updates preview when updateBody mutates body through the draft owner", async () => {
     vi.useFakeTimers();
     const draft = useEditorShowcaseDraft({
       previewCompileDebounceMs: 160,
     });
 
-    draft.body.value = "- [ ] 未完成任务";
+    draft.updateBody("- [ ] 未完成任务");
     await vi.advanceTimersByTimeAsync(160);
 
     expect(draft.previewBlocks.value).toMatchObject([
@@ -110,7 +118,7 @@ describe("useEditorShowcaseDraft", () => {
       },
     ]);
 
-    draft.body.value = "- [x] 未完成任务";
+    draft.updateBody("- [x] 未完成任务");
     await vi.advanceTimersByTimeAsync(160);
 
     expect(draft.previewBlocks.value).toMatchObject([
@@ -314,6 +322,105 @@ describe("useEditorShowcaseDraft", () => {
 
     expect(draft.body.value).toBe("**需要加粗**");
     expect(selection).toEqual({ start: 2, end: 6 });
+  });
+
+  it("undoes a body update and exposes redo for the restored change", () => {
+    const draft = useEditorShowcaseDraft({ historyMergeWindowMs: 0 });
+    const initialBody = draft.body.value;
+
+    draft.updateBody("撤销正文", { start: 4, end: 4 });
+
+    expect(draft.canUndo.value).toBe(true);
+
+    const restoreResult = draft.undoDraft();
+
+    expect(draft.body.value).toBe(initialBody);
+    expect(draft.canRedo.value).toBe(true);
+    expect(restoreResult).toEqual({
+      activeField: "body",
+      selection: expect.any(Object),
+    });
+
+    draft.redoDraft();
+
+    expect(draft.body.value).toBe("撤销正文");
+  });
+
+  it("returns the title as the restore target when undoing a title edit", () => {
+    const draft = useEditorShowcaseDraft({ historyMergeWindowMs: 0 });
+    const initialTitle = draft.title.value;
+
+    draft.updateTitle("撤销标题");
+
+    const restoreResult = draft.undoDraft();
+
+    expect(draft.title.value).toBe(initialTitle);
+    expect(restoreResult).toEqual({
+      activeField: "title",
+    });
+  });
+
+  it("keeps toolbar changes as their own undo step", () => {
+    const draft = useEditorShowcaseDraft({ historyMergeWindowMs: 0 });
+
+    draft.updateBody("需要加粗", { start: 4, end: 4 });
+    draft.applyToolbarAction("bold", { start: 0, end: 4 });
+
+    expect(draft.body.value).toBe("**需要加粗**");
+
+    draft.undoDraft();
+
+    expect(draft.body.value).toBe("需要加粗");
+  });
+
+  it("returns to a saved state when undo restores the saved snapshot", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-02T00:00:00.000Z"));
+    const draft = useEditorShowcaseDraft({ historyMergeWindowMs: 0 });
+
+    draft.updateBody("已保存正文", { start: 5, end: 5 });
+    await draft.saveDraft();
+
+    expect(draft.draftSaveStatus.value).toBe("saved");
+
+    vi.setSystemTime(new Date("2026-07-02T00:00:01.000Z"));
+    draft.updateBody("已保存正文之后的新内容", { start: 11, end: 11 });
+
+    expect(draft.draftSaveStatus.value).toBe("dirty");
+
+    draft.undoDraft();
+
+    expect(draft.body.value).toBe("已保存正文");
+    expect(draft.hasUnsavedChanges.value).toBe(false);
+    expect(draft.draftSaveStatus.value).toBe("saved");
+  });
+
+  it("updates the preview synchronously after undo and redo when debounce is disabled", () => {
+    const draft = useEditorShowcaseDraft({
+      historyMergeWindowMs: 0,
+      previewCompileDebounceMs: 0,
+    });
+
+    draft.updateBody("普通正文。", { start: 5, end: 5 });
+    draft.updateBody("$$E = mc^2$$", { start: 12, end: 12 });
+
+    expect(draft.readerBlocks.value).toContainEqual({
+      type: "math",
+      latex: "E = mc^2",
+    });
+
+    draft.undoDraft();
+
+    expect(draft.readerBlocks.value).not.toContainEqual(
+      expect.objectContaining({ type: "math" }),
+    );
+
+    draft.redoDraft();
+
+    expect(draft.readerBlocks.value).toContainEqual({
+      type: "math",
+      latex: "E = mc^2",
+    });
   });
 
   it("uses fallback preview text when input is empty", () => {

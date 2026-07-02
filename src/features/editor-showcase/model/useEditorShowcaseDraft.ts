@@ -1,4 +1,11 @@
-import { computed, getCurrentScope, onScopeDispose, ref, watch } from "vue";
+import {
+  computed,
+  getCurrentScope,
+  onScopeDispose,
+  readonly,
+  ref,
+  watch,
+} from "vue";
 
 import type { PostBodyBlock, PostBodyWriteInput } from "@/entities/post-body";
 
@@ -13,6 +20,16 @@ import {
   type EditorCompiledInlineNode,
   type EditorPreviewReaderBlock,
 } from "./editorContentCompiler";
+import {
+  canRedoEditorDraftHistory,
+  canUndoEditorDraftHistory,
+  createEditorDraftHistory,
+  recordEditorDraftHistoryChange,
+  redoEditorDraftHistory,
+  undoEditorDraftHistory,
+  type EditorDraftHistoryField,
+  type EditorDraftHistorySnapshot,
+} from "./editorDraftHistory";
 import { createEditorLogger } from "./editorDebug";
 import {
   defaultEditorShowcaseBody,
@@ -38,6 +55,7 @@ type EditorContentCompiler = (input: string) => EditorCompiledDocument;
 export interface UseEditorShowcaseDraftOptions {
   compileContent?: EditorContentCompiler;
   previewCompileDebounceMs?: number;
+  historyMergeWindowMs?: number;
   now?: () => Date;
 }
 
@@ -51,7 +69,13 @@ export interface EditorSavedDraftSnapshot {
   postBodyWriteInput: PostBodyWriteInput;
 }
 
+export interface EditorDraftHistoryRestoreResult {
+  activeField: EditorDraftHistoryField;
+  selection?: EditorShowcaseTextSelection;
+}
+
 const defaultPreviewCompileDebounceMs = 160;
+const defaultHistoryMergeWindowMs = 500;
 const compilerLogger = createEditorLogger("compiler");
 const toolbarLogger = createEditorLogger("toolbar");
 
@@ -73,6 +97,8 @@ export function useEditorShowcaseDraft(
   const now = options.now ?? (() => new Date());
   const previewCompileDebounceMs =
     options.previewCompileDebounceMs ?? defaultPreviewCompileDebounceMs;
+  const historyMergeWindowMs =
+    options.historyMergeWindowMs ?? defaultHistoryMergeWindowMs;
   const title = ref(defaultEditorShowcaseTitle);
   const body = ref(defaultEditorShowcaseBody);
   const compiledDocument = ref<EditorCompiledDocument>(
@@ -82,6 +108,11 @@ export function useEditorShowcaseDraft(
   let lastCompiledBody = defaultEditorShowcaseBody;
   let lastCompiledBodyHash = createContentHash(defaultEditorShowcaseBody);
   let previewCompileTimer: number | undefined;
+  const history = ref(
+    createEditorDraftHistory(
+      createCurrentHistorySnapshot("body", { start: 0, end: 0 }),
+    ),
+  );
 
   const previewTitle = computed(() => {
     const trimmedTitle = title.value.trim();
@@ -129,6 +160,8 @@ export function useEditorShowcaseDraft(
   const canSaveDraft = computed(
     () => !isSavingDraft.value && hasUnsavedChanges.value,
   );
+  const canUndo = computed(() => canUndoEditorDraftHistory(history.value));
+  const canRedo = computed(() => canRedoEditorDraftHistory(history.value));
 
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
     const previewBlocks = mapEditorCompiledDocumentToPreviewReaderBlocks(
@@ -176,7 +209,53 @@ export function useEditorShowcaseDraft(
     return contentChars?.length ?? 0;
   });
 
+  function createCurrentHistorySnapshot(
+    activeField: EditorDraftHistoryField,
+    selection?: EditorShowcaseTextSelection,
+  ): EditorDraftHistorySnapshot {
+    return {
+      title: title.value,
+      body: body.value,
+      activeField,
+      selection,
+      changedAt: now().getTime(),
+    };
+  }
+
+  function applyHistorySnapshot(snapshot: EditorDraftHistorySnapshot): void {
+    title.value = snapshot.title;
+    body.value = snapshot.body;
+  }
+
+  function createHistoryRestoreResult(
+    activeField: EditorDraftHistoryField,
+    restoredSnapshot: EditorDraftHistorySnapshot,
+  ): EditorDraftHistoryRestoreResult {
+    return {
+      activeField,
+      selection:
+        activeField === "body" ? restoredSnapshot.selection : undefined,
+    };
+  }
+
   function updateTitle(nextTitle: string): void {
+    if (nextTitle === title.value) {
+      return;
+    }
+
+    // History snapshots describe user edit boundaries only; saved/dirty status
+    // remains derived from the source hash against the last saved snapshot.
+    history.value = recordEditorDraftHistoryChange(
+      history.value,
+      {
+        ...createCurrentHistorySnapshot("title"),
+        title: nextTitle,
+      },
+      {
+        kind: "typing",
+        mergeWindowMs: historyMergeWindowMs,
+      },
+    );
     title.value = nextTitle;
   }
 
@@ -216,11 +295,25 @@ export function useEditorShowcaseDraft(
     }, previewCompileDebounceMs);
   }
 
-  function updateBody(nextBody: string): void {
+  function updateBody(
+    nextBody: string,
+    selection?: EditorShowcaseTextSelection,
+  ): void {
     if (nextBody === body.value) {
       return;
     }
 
+    history.value = recordEditorDraftHistoryChange(
+      history.value,
+      {
+        ...createCurrentHistorySnapshot("body", selection),
+        body: nextBody,
+      },
+      {
+        kind: "typing",
+        mergeWindowMs: historyMergeWindowMs,
+      },
+    );
     body.value = nextBody;
   }
 
@@ -230,6 +323,18 @@ export function useEditorShowcaseDraft(
   ): EditorShowcaseTextSelection {
     const result = applyToolbarActionToBody(body.value, action, selection);
 
+    history.value = recordEditorDraftHistoryChange(
+      history.value,
+      {
+        ...createCurrentHistorySnapshot("body", result.nextSelection),
+        body: result.nextBody,
+      },
+      {
+        kind: "toolbar",
+        forceBoundary: true,
+        mergeWindowMs: historyMergeWindowMs,
+      },
+    );
     body.value = result.nextBody;
     toolbarLogger.debug(() => [
       "applied toolbar action",
@@ -240,6 +345,35 @@ export function useEditorShowcaseDraft(
       },
     ]);
     return result.nextSelection;
+  }
+
+  function undoDraft(): EditorDraftHistoryRestoreResult | undefined {
+    if (!canUndoEditorDraftHistory(history.value)) {
+      return undefined;
+    }
+
+    const activeField = history.value.present.activeField;
+
+    history.value = undoEditorDraftHistory(history.value);
+    applyHistorySnapshot(history.value.present);
+
+    // Focus restoration follows the edit being traversed, while selection comes
+    // from the restored source snapshot when that field can safely provide one.
+    return createHistoryRestoreResult(activeField, history.value.present);
+  }
+
+  function redoDraft(): EditorDraftHistoryRestoreResult | undefined {
+    if (!canRedoEditorDraftHistory(history.value)) {
+      return undefined;
+    }
+
+    history.value = redoEditorDraftHistory(history.value);
+    applyHistorySnapshot(history.value.present);
+
+    return createHistoryRestoreResult(
+      history.value.present.activeField,
+      history.value.present,
+    );
   }
 
   async function saveDraft(): Promise<void> {
@@ -276,8 +410,8 @@ export function useEditorShowcaseDraft(
   }
 
   return {
-    title,
-    body,
+    title: readonly(title),
+    body: readonly(body),
     previewTitle,
     compiledDocument,
     draftBlocks,
@@ -292,9 +426,13 @@ export function useEditorShowcaseDraft(
     draftSaveStatus,
     canSaveDraft,
     hasUnsavedChanges,
+    canUndo,
+    canRedo,
     updateTitle,
     updateBody,
     applyToolbarAction,
+    undoDraft,
+    redoDraft,
     saveDraft,
   };
 }

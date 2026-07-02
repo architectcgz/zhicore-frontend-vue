@@ -9,7 +9,10 @@ import {
   useEditorShowcaseDisplay,
 } from "./useEditorShowcaseDisplay";
 import { useEditorPreviewScrollSync } from "./useEditorPreviewScrollSync";
-import { useEditorShowcaseDraft } from "./useEditorShowcaseDraft";
+import {
+  type EditorDraftHistoryRestoreResult,
+  useEditorShowcaseDraft,
+} from "./useEditorShowcaseDraft";
 
 export interface EditorWorkspaceWritingPaneRef {
   bodyInputElement: HTMLTextAreaElement | null;
@@ -87,7 +90,13 @@ export function useEditorWorkspaceController() {
     isPreviewMode,
   });
 
-  function handleBodyInput(): void {
+  function handleTitleInput(nextTitle: string): void {
+    draft.updateTitle(nextTitle);
+    void syncEditorLayoutOnNextFrame();
+  }
+
+  function handleBodyInput(nextBody: string): void {
+    draft.updateBody(nextBody, writingPaneRef.value?.getBodySelection());
     void syncEditorLayoutOnNextFrame();
   }
 
@@ -110,6 +119,44 @@ export function useEditorWorkspaceController() {
     // 工具栏会重写 markdown 标记，恢复选区让作者可以继续在原位置输入。
     writingPaneRef.value?.setBodySelection(nextSelection);
     syncPreviewScroll();
+  }
+
+  async function restoreEditorHistoryTarget(
+    result: EditorDraftHistoryRestoreResult,
+  ): Promise<void> {
+    await nextTick();
+
+    if (result.activeField === "body") {
+      writingPaneRef.value?.focusBody();
+
+      if (result.selection) {
+        writingPaneRef.value?.setBodySelection(result.selection);
+      }
+    }
+
+    await nextTick();
+    resizeBodyInput();
+    syncPreviewScroll();
+  }
+
+  async function handleUndoDraft(): Promise<void> {
+    const result = draft.undoDraft();
+
+    if (!result) {
+      return;
+    }
+
+    await restoreEditorHistoryTarget(result);
+  }
+
+  async function handleRedoDraft(): Promise<void> {
+    const result = draft.redoDraft();
+
+    if (!result) {
+      return;
+    }
+
+    await restoreEditorHistoryTarget(result);
   }
 
   async function handleSaveDraft(): Promise<void> {
@@ -144,6 +191,8 @@ export function useEditorWorkspaceController() {
     wordCount: draft.wordCount,
     draftSaveStatus: draft.draftSaveStatus,
     canSaveDraft: draft.canSaveDraft,
+    canUndo: draft.canUndo,
+    canRedo: draft.canRedo,
     saveStatusLabel,
     saveButtonLabel,
     lastSavedLabel,
@@ -151,9 +200,12 @@ export function useEditorWorkspaceController() {
     writingPaneRef,
     previewPaneRef,
     handleBodyInput,
+    handleTitleInput,
     handleModeSelect,
     handleSaveDraft,
     handleToolbarAction,
+    handleUndoDraft,
+    handleRedoDraft,
     selectBackground,
     syncEditorScroll,
     syncPreviewScroll,

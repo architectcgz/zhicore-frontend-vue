@@ -66,4 +66,33 @@ describe("EditorWritingPane", () => {
 
     expect(event.defaultPrevented).toBe(true);
   });
+
+  it("emits undo when Ctrl+Z is pressed in the body textarea", async () => {
+    const wrapper = mountWritingPane();
+    const bodyInput = wrapper.find(".body-input");
+
+    await bodyInput.trigger("keydown", {
+      key: "z",
+      ctrlKey: true,
+    });
+
+    expect(wrapper.emitted("undo")).toEqual([[]]);
+  });
+
+  it("emits redo when Ctrl+Shift+Z or Ctrl+Y is pressed in the body textarea", async () => {
+    const wrapper = mountWritingPane();
+    const bodyInput = wrapper.find(".body-input");
+
+    await bodyInput.trigger("keydown", {
+      key: "z",
+      ctrlKey: true,
+      shiftKey: true,
+    });
+    await bodyInput.trigger("keydown", {
+      key: "y",
+      ctrlKey: true,
+    });
+
+    expect(wrapper.emitted("redo")).toEqual([[], []]);
+  });
 });

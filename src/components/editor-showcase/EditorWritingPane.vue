@@ -48,6 +48,7 @@
           aria-label="文章标题"
           placeholder="输入文章标题"
           @input="handleTitleInput"
+          @keydown="handleEditorKeydown"
         />
         <textarea
           ref="bodyInputRef"
@@ -57,6 +58,7 @@
           aria-label="文章正文"
           placeholder="从这里开始写正文"
           @input="handleBodyInput"
+          @keydown="handleEditorKeydown"
           @focus="rememberBodySelection"
           @keyup="rememberBodySelection"
           @mouseup="rememberBodySelection"
@@ -142,9 +144,10 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  "update:title": [value: string];
-  "update:body": [value: string];
-  bodyInput: [];
+  titleInput: [value: string];
+  bodyInput: [value: string];
+  undo: [];
+  redo: [];
   toolbarAction: [action: EditorShowcaseToolbarAction];
   scroll: [];
 }>();
@@ -157,13 +160,32 @@ const lastBodySelection = ref<EditorShowcaseTextSelection>({
 });
 
 function handleTitleInput(event: Event): void {
-  emit("update:title", (event.target as HTMLTextAreaElement).value);
+  emit("titleInput", (event.target as HTMLTextAreaElement).value);
 }
 
 function handleBodyInput(event: Event): void {
-  emit("update:body", (event.target as HTMLTextAreaElement).value);
   rememberBodySelection();
-  emit("bodyInput");
+  emit("bodyInput", (event.target as HTMLTextAreaElement).value);
+}
+
+function handleEditorKeydown(event: KeyboardEvent): void {
+  const isModifierPressed = event.ctrlKey || event.metaKey;
+  const key = event.key.toLowerCase();
+
+  if (!isModifierPressed) {
+    return;
+  }
+
+  if (key === "z" && !event.shiftKey) {
+    event.preventDefault();
+    emit("undo");
+    return;
+  }
+
+  if ((key === "z" && event.shiftKey) || key === "y") {
+    event.preventDefault();
+    emit("redo");
+  }
 }
 
 function readBodySelection(): EditorShowcaseTextSelection | undefined {

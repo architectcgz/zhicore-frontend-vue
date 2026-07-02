@@ -29,10 +29,14 @@
         :save-status-label="saveStatusLabel"
         :save-button-label="saveButtonLabel"
         :can-save-draft="canSaveDraft"
+        :can-undo="canUndo"
+        :can-redo="canRedo"
         :last-saved-label="lastSavedLabel"
         :word-count="wordCount"
         @select-mode="handleModeSelect"
         @select-background="selectBackground"
+        @undo="handleUndoDraft"
+        @redo="handleRedoDraft"
         @save-draft="handleSaveDraft"
       />
 
@@ -45,14 +49,17 @@
       >
         <EditorWritingPane
           ref="writingPaneRef"
-          v-model:title="title"
-          v-model:body="body"
+          :title="title"
+          :body="body"
           :word-count="wordCount"
           :save-status="draftSaveStatus"
           :save-status-label="saveStatusLabel"
           :last-saved-label="lastSavedLabel"
           :saved-content-hash="savedContentHash"
+          @title-input="handleTitleInput"
           @body-input="handleBodyInput"
+          @undo="handleUndoDraft"
+          @redo="handleRedoDraft"
           @toolbar-action="handleToolbarAction"
           @scroll="syncPreviewScroll"
         />
@@ -82,12 +89,17 @@ const {
   activeBackgroundClass,
   backgroundCandidates,
   body,
+  canRedo,
   handleBodyInput,
   handleModeSelect,
+  handleRedoDraft,
   handleSaveDraft,
+  handleTitleInput,
   handleToolbarAction,
+  handleUndoDraft,
   isPreviewMode,
   canSaveDraft,
+  canUndo,
   draftSaveStatus,
   lastSavedLabel,
   previewTitle,
