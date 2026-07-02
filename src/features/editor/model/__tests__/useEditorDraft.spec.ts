@@ -91,7 +91,7 @@ describe("useEditorDraft", () => {
     expect(JSON.stringify(draft.readerBlocks.value)).not.toContain("```go");
   });
 
-  it("treats markdown markers as literal text unless they are ProseMirror marks", () => {
+  it("maps raw markdown markers into preview and save models", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBodyDocument(bodyDoc("**不是加粗**"));
@@ -99,7 +99,9 @@ describe("useEditorDraft", () => {
     expect(draft.postBodyWriteInput.value.blocks).toEqual([
       {
         type: "paragraph",
-        children: [{ type: "text", text: "**不是加粗**" }],
+        children: [
+          { type: "text", text: "不是加粗", marks: [{ type: "bold" }] },
+        ],
       },
     ]);
   });

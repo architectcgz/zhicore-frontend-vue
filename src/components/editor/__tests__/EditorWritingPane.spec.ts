@@ -22,7 +22,10 @@ const writingPaneStyleSource = readFileSync(
   "src/components/editor/EditorWritingPane.css",
   "utf8",
 );
-
+const writingPaneProseMirrorBaseStyleSource = readFileSync(
+  "src/components/editor/EditorWritingPaneProseMirrorBase.css",
+  "utf8",
+);
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
@@ -238,7 +241,7 @@ describe("EditorWritingPane", () => {
     ]);
   });
 
-  it("exits a table into a new paragraph when pressing Enter inside a table cell", () => {
+  it("inserts raw pipe table markdown from the toolbar", () => {
     const wrapper = mountWritingPane();
     const exposed = wrapper.vm as unknown as {
       bodyEditorView: EditorView | null;
@@ -253,51 +256,9 @@ describe("EditorWritingPane", () => {
     });
     exposed.applyBodyToolbarAction("table");
 
-    let lastCellEndPosition = 0;
-    view.state.doc.descendants((node, position) => {
-      if (node.type.name === "table_cell") {
-        lastCellEndPosition = position + 1 + node.textContent.length;
-      }
-    });
-    exposed.setBodySelection({
-      start: lastCellEndPosition,
-      end: lastCellEndPosition,
-    });
-
-    const handled = view.someProp("handleKeyDown", (handler) =>
-      handler(
-        view,
-        new KeyboardEvent("keydown", {
-          key: "Enter",
-          bubbles: true,
-          cancelable: true,
-        }),
-      ),
+    expect(view.state.doc.textContent).toBe(
+      "| 表头1 | 表头2 |\n| --- | --- |\n| 内容1 | 内容2 |",
     );
-
-    expect(handled).toBe(true);
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(view.state.doc).blocks,
-    ).toEqual([
-      {
-        type: "table",
-        headers: [
-          { children: [{ type: "text", text: "表头1" }] },
-          { children: [{ type: "text", text: "表头2" }] },
-        ],
-        rows: [
-          [
-            { children: [{ type: "text", text: "内容1" }] },
-            { children: [{ type: "text", text: "内容2" }] },
-          ],
-        ],
-      },
-      {
-        type: "paragraph",
-        children: [],
-      },
-    ]);
-    expect(view.state.selection.from).toBe(view.state.doc.content.size - 1);
   });
 
   it("keeps rich pasted content as ProseMirror structure", () => {
@@ -505,7 +466,7 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
   });
 
-  it("applies inline toolbar commands as ProseMirror marks instead of markdown markers", () => {
+  it("applies inline toolbar commands as raw markdown markers", () => {
     const wrapper = mountWritingPane();
     const exposed = wrapper.vm as unknown as {
       bodyEditorView: EditorView | null;
@@ -517,28 +478,12 @@ describe("EditorWritingPane", () => {
     exposed.applyBodyToolbarAction("bold");
     exposed.applyBodyToolbarAction("link");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks,
-    ).toEqual([
-      {
-        type: "paragraph",
-        children: [
-          {
-            type: "text",
-            text: "草稿正文",
-            marks: [
-              { type: "bold" },
-              { type: "link", href: "https://example.com" },
-            ],
-          },
-        ],
-      },
-    ]);
-    expect(exposed.bodyEditorView!.state.doc.textContent).not.toContain("**");
+    expect(exposed.bodyEditorView!.state.doc.textContent).toBe(
+      "**草稿正文**[链接文本](https://example.com)",
+    );
   });
 
-  it("applies block toolbar commands as ProseMirror nodes", () => {
+  it("applies block toolbar commands as raw markdown text", () => {
     const wrapper = mountWritingPane();
     const exposed = wrapper.vm as unknown as {
       bodyEditorView: EditorView | null;
@@ -554,57 +499,47 @@ describe("EditorWritingPane", () => {
     exposed.setBodySelection({ start: 1, end: 5 });
     exposed.applyBodyToolbarAction("heading2");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks[0],
-    ).toMatchObject({ type: "heading", level: 2 });
+    expect(exposed.bodyEditorView!.state.doc.textContent).toBe("## 结构文本");
 
     exposed.setBodySelection({ start: 1, end: 5 });
     exposed.applyBodyToolbarAction("quote");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks[0],
-    ).toMatchObject({ type: "quote" });
+    expect(exposed.bodyEditorView!.state.doc.textContent).toContain(
+      "> ## 结构文本",
+    );
 
     exposed.setBodySelection({ start: 1, end: 5 });
     exposed.applyBodyToolbarAction("code");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks[0],
-    ).toMatchObject({ type: "code_block", language: "ts" });
+    expect(exposed.bodyEditorView!.state.doc.textContent).toContain("``` ts");
 
     exposed.setBodySelection({ start: 1, end: 5 });
     exposed.applyBodyToolbarAction("unorderedList");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks[0],
-    ).toMatchObject({ type: "list", ordered: false, task: false });
+    expect(exposed.bodyEditorView!.state.doc.textContent).toContain("- ```");
 
     exposed.setBodySelection({ start: 1, end: 5 });
     exposed.applyBodyToolbarAction("table");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks[0],
-    ).toEqual({
-      type: "table",
-      headers: [
-        { children: [{ type: "text", text: "表头1" }] },
-        { children: [{ type: "text", text: "表头2" }] },
-      ],
-      rows: [
-        [
-          { children: [{ type: "text", text: "内容1" }] },
-          { children: [{ type: "text", text: "内容2" }] },
-        ],
-      ],
-    });
+    expect(exposed.bodyEditorView!.state.doc.textContent).toContain(
+      "| 表头1 | 表头2 |",
+    );
   });
 
-  it("inserts an empty math block instead of a fixed formula when no text is selected", () => {
+  it("keeps ProseMirror editor styles scoped without deep selectors", () => {
+    expect(writingPaneStyleSource).not.toContain(":deep");
+    expect(writingPaneSource).not.toContain("EditorWritingPaneProseMirror.css");
+    expect(writingPaneSource).toContain(
+      '<style src="./EditorWritingPaneProseMirrorBase.css"></style>',
+    );
+    expect(writingPaneProseMirrorBaseStyleSource).toContain(
+      ".writing-editor .body-input.ProseMirror p",
+    );
+    expect(writingPaneProseMirrorBaseStyleSource).not.toContain("pre");
+    expect(writingPaneProseMirrorBaseStyleSource).not.toContain("table");
+  });
+
+  it("inserts an empty raw math fence instead of a fixed formula when no text is selected", () => {
     const wrapper = mountWritingPane();
     const exposed = wrapper.vm as unknown as {
       bodyEditorView: EditorView | null;
@@ -615,19 +550,9 @@ describe("EditorWritingPane", () => {
     exposed.setBodySelection({ start: 1, end: 1 });
     exposed.applyBodyToolbarAction("math");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks,
-    ).toEqual([
-      {
-        type: "math",
-        latex: "",
-      },
-      {
-        type: "paragraph",
-        children: [{ type: "text", text: "草稿正文" }],
-      },
-    ]);
+    expect(exposed.bodyEditorView!.state.doc.textContent).toBe(
+      "$$\n\n$$草稿正文",
+    );
     expect(exposed.bodyEditorView!.state.doc.textContent).not.toContain(
       "E = mc^2",
     );

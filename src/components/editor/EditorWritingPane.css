@@ -250,10 +250,6 @@
   caret-color: var(--editor-page-accent, #1f7f74);
 }
 
-.body-input :deep(p) {
-  margin: 0;
-}
-
 .document-structure {
   display: flex;
   flex-wrap: wrap;

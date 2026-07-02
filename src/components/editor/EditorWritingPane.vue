@@ -288,4 +288,5 @@ defineExpose({
 });
 </script>
 
+<style src="./EditorWritingPaneProseMirrorBase.css"></style>
 <style scoped src="./EditorWritingPane.css"></style>
