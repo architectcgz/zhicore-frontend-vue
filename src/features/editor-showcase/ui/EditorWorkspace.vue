@@ -5,19 +5,6 @@
         <p>作者工作台</p>
         <h1>草稿编辑</h1>
       </div>
-
-      <div class="editor-workspace__summary" aria-label="草稿状态摘要">
-        <span
-          :class="[
-            'editor-workspace__save-state',
-            `editor-workspace__save-state--${draftSaveStatus}`,
-          ]"
-        >
-          {{ saveStatusLabel }}
-        </span>
-        <span>schema v1</span>
-        <span>{{ wordCount }} 字</span>
-      </div>
     </header>
 
     <section class="editor-frame">
@@ -252,47 +239,6 @@ const {
   letter-spacing: 0;
 }
 
-.editor-workspace__summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.editor-workspace__summary span {
-  padding: 7px 10px;
-  border: 1px solid var(--editor-page-border);
-  border-radius: 999px;
-  background: var(--editor-page-panel);
-  color: var(--editor-page-muted);
-  font-size: 12px;
-}
-
-.editor-workspace__save-state {
-  position: relative;
-  padding-left: 24px;
-}
-
-.editor-workspace__save-state::before {
-  position: absolute;
-  top: 50%;
-  left: 10px;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--editor-page-accent);
-  content: "";
-  transform: translateY(-50%);
-}
-
-.editor-workspace__save-state--dirty::before {
-  background: var(--editor-page-warning);
-}
-
-.editor-workspace__save-state--saving::before {
-  background: var(--editor-page-saving);
-}
-
 .editor-frame {
   display: grid;
   gap: 12px;
@@ -372,10 +318,6 @@ const {
 
   .editor-workspace h1 {
     font-size: 26px;
-  }
-
-  .editor-workspace__summary {
-    justify-content: flex-start;
   }
 }
 
