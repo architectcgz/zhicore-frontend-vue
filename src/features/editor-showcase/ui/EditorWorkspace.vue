@@ -159,21 +159,37 @@ const {
 
 .editor-showcase--paper {
   --editor-page-bg: #f3f6f8;
-  --editor-page-panel: rgba(255, 255, 255, 0.78);
+  --editor-control-bg: #f7f4ee;
+  --editor-control-bg-muted: rgba(247, 244, 238, 0.72);
+  --editor-control-bg-active: #fffdf8;
 }
 
 .editor-showcase--sage {
-  --editor-page-bg: #edf5f1;
-  --editor-page-panel: rgba(255, 255, 255, 0.7);
+  --editor-page-bg: #f3f6f8;
+  --editor-page-panel: rgba(237, 245, 241, 0.74);
+  --editor-control-bg: #edf5f1;
+  --editor-control-bg-muted: rgba(224, 239, 232, 0.74);
+  --editor-control-bg-active: #f7fbf8;
+  --editor-control-hover-bg: rgba(31, 127, 116, 0.12);
+  --editor-body-text: #365348;
+  --editor-reader-text: #42584f;
 }
 
 .editor-showcase--sand {
-  --editor-page-bg: #f4efe8;
-  --editor-page-panel: rgba(255, 255, 255, 0.72);
+  --editor-page-bg: #f3f6f8;
+  --editor-page-panel: rgba(244, 239, 232, 0.74);
+  --editor-control-bg: #f4efe8;
+  --editor-control-bg-muted: rgba(235, 223, 207, 0.72);
+  --editor-control-bg-active: #fffaf2;
+  --editor-control-hover-bg: rgba(183, 121, 31, 0.12);
+  --editor-body-text: #5b4937;
+  --editor-reader-text: #5f4e3e;
+  --editor-reader-muted: #746656;
+  --editor-reader-emphasis: #67513a;
 }
 
 .editor-showcase--ink {
-  --editor-page-bg: #121923;
+  --editor-page-bg: #0f1720;
   --editor-page-text: #e6edf3;
   --editor-page-muted: #aab8c5;
   --editor-page-panel: rgba(19, 27, 38, 0.78);
