@@ -56,13 +56,15 @@
           @scroll="syncPreviewScroll"
         />
 
-        <EditorPreviewPane
-          ref="previewPaneRef"
-          :preview-title="previewTitle"
-          :preview-blocks="readerPreviewBlocks"
-          :word-count="wordCount"
-          @scroll="syncEditorScroll"
-        />
+        <div class="editor-stage__preview-shell">
+          <EditorPreviewPane
+            ref="previewPaneRef"
+            :preview-title="previewTitle"
+            :preview-blocks="readerPreviewBlocks"
+            :word-count="wordCount"
+            @scroll="syncEditorScroll"
+          />
+        </div>
       </div>
     </section>
   </section>
@@ -282,19 +284,43 @@ const {
 
 .editor-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  gap: 0;
   align-items: stretch;
   min-height: 660px;
-  transition: grid-template-columns 0.32s ease;
+  transition:
+    gap 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.editor-stage--focus {
-  grid-template-columns: minmax(0, 1fr);
+.editor-stage--preview {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+  gap: 12px;
 }
 
-.editor-stage--focus .reader-preview {
-  display: none;
+.editor-stage__preview-shell {
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(18px) scale(0.985);
+  transform-origin: right center;
+  visibility: hidden;
+  transition:
+    opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.24s;
+}
+
+.editor-stage--preview .editor-stage__preview-shell {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+  visibility: visible;
+  transition:
+    opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1) 0.04s,
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1) 0.04s,
+    visibility 0s;
 }
 
 @media (max-width: 980px) {
@@ -307,17 +333,18 @@ const {
   .editor-stage--focus,
   .editor-stage--preview {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .editor-stage {
     min-height: auto;
   }
 
-  .editor-stage--focus .reader-preview {
+  .editor-stage--focus .editor-stage__preview-shell {
     display: none;
   }
 
-  .editor-stage--preview .reader-preview {
+  .editor-stage--preview .editor-stage__preview-shell {
     display: block;
   }
 }
@@ -338,8 +365,13 @@ const {
 
 @media (prefers-reduced-motion: reduce) {
   .editor-workspace,
-  .editor-stage {
+  .editor-stage,
+  .editor-stage__preview-shell {
     transition: none;
+  }
+
+  .editor-stage__preview-shell {
+    transform: none;
   }
 }
 </style>
