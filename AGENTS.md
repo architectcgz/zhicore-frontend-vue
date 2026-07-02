@@ -71,6 +71,20 @@ pnpm format           # Prettier 格式化
 - 测试命令：`pnpm test:run`（单次）/ `pnpm test`（watch）
 - TDD 写出的测试作为行为规格和回归护栏保留，不因功能完成就删除
 
+### 验证范围策略
+
+默认先跑与本次改动直接相关的最小充分验证，不把 `pnpm test:run` 全量测试当成每次固定动作。验证范围按风险递进：
+
+| 场景 | 默认验证 |
+| --- | --- |
+| 单个 owner 内的 bugfix / 行为改动 | 先跑对应 owner 的定向测试；必要时补相邻工具函数、组件或架构约束测试 |
+| 类型、导出、Vue props/emits、组合式 API 变化 | 跑定向测试后补 `pnpm typecheck` |
+| 跨模块共享逻辑、公共基础设施、路由、runtime、API adapter、构建配置或依赖变化 | 跑相关测试、`pnpm typecheck`，并评估是否需要 `pnpm test:run` |
+| 提交 / 合并前风险边界不清，或相关测试无法覆盖真实回归面 | 可以跑 `pnpm test:run`，但要说明触发原因 |
+| 用户明确要求全量验证 | 跑 `pnpm test:run` |
+
+提交前必须重新跑本次提交范围的最小充分验证；没有执行全量测试时，不要暗示已经完成全仓回归。
+
 ## 文档
 
 - `docs/architecture/` — 前端代码组织、运行时边界和工程约束
