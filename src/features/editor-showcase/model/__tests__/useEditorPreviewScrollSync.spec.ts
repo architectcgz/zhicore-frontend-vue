@@ -64,6 +64,33 @@ describe("useEditorPreviewScrollSync", () => {
     expect(writingEditor.scrollTop).toBe(80);
   });
 
+  it("resizes a ProseMirror body element without textarea-only caret assumptions", () => {
+    const bodyInput = document.createElement("div");
+    const writingEditor = document.createElement("main");
+
+    bodyInput.contentEditable = "true";
+    defineReadonlyNumberProperty(bodyInput, "scrollHeight", 520);
+    defineReadonlyNumberProperty(writingEditor, "scrollHeight", 1200);
+    defineReadonlyNumberProperty(writingEditor, "clientHeight", 400);
+    writingEditor.scrollTop = 240;
+    document.body.append(bodyInput);
+    bodyInput.focus();
+
+    const { resizeBodyInput } = useEditorPreviewScrollSync({
+      bodyInputRef: ref(bodyInput),
+      writingEditorRef: ref(writingEditor),
+      readerPreviewRef: ref(null),
+      previewBlockAnchors: ref([]),
+      isPreviewMode: ref(false),
+    });
+
+    resizeBodyInput();
+
+    expect(bodyInput.style.height).toBe("520px");
+    expect(writingEditor.scrollTop).toBe(240);
+    bodyInput.remove();
+  });
+
   it("keeps the new trailing line visible when the focused body input grows at the editor bottom", () => {
     const bodyInput = document.createElement("textarea");
     const writingEditor = document.createElement("main");

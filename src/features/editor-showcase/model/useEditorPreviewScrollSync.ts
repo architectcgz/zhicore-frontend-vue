@@ -14,14 +14,14 @@ const editorBottomStickinessMinTolerancePx = 2;
 const syncedScrollTolerancePx = 1;
 
 export interface UseEditorPreviewScrollSyncOptions {
-  bodyInputRef: Readonly<Ref<HTMLTextAreaElement | null>>;
+  bodyInputRef: Readonly<Ref<HTMLElement | null>>;
   writingEditorRef: Readonly<Ref<HTMLElement | null>>;
   readerPreviewRef: Readonly<Ref<HTMLElement | null>>;
   previewBlockAnchors: Readonly<Ref<EditorPreviewBlockAnchor[]>>;
   isPreviewMode: Readonly<Ref<boolean>>;
 }
 
-function getBodyInputLineHeight(bodyInput: HTMLTextAreaElement): number {
+function getBodyInputLineHeight(bodyInput: HTMLElement): number {
   const style = window.getComputedStyle(bodyInput);
   const parsedLineHeight =
     Number.parseFloat(style.lineHeight) ||
@@ -55,7 +55,25 @@ function isElementScrolledToBottom(element: HTMLElement): boolean {
   );
 }
 
-function hasBodyCaretAtDocumentEnd(bodyInput: HTMLTextAreaElement): boolean {
+function isTextareaElement(
+  element: HTMLElement,
+): element is HTMLTextAreaElement {
+  return element instanceof HTMLTextAreaElement;
+}
+
+function isBodyEditorActive(bodyInput: HTMLElement): boolean {
+  return (
+    document.activeElement === bodyInput ||
+    (document.activeElement !== null &&
+      bodyInput.contains(document.activeElement))
+  );
+}
+
+function hasBodyCaretAtDocumentEnd(bodyInput: HTMLElement): boolean {
+  if (!isTextareaElement(bodyInput)) {
+    return false;
+  }
+
   return (
     bodyInput.selectionStart === bodyInput.value.length &&
     bodyInput.selectionEnd === bodyInput.value.length
@@ -64,12 +82,9 @@ function hasBodyCaretAtDocumentEnd(bodyInput: HTMLTextAreaElement): boolean {
 
 function shouldKeepEditorPinnedToBottom(
   writingEditor: HTMLElement,
-  bodyInput: HTMLTextAreaElement,
+  bodyInput: HTMLElement,
 ): boolean {
-  if (
-    document.activeElement !== bodyInput ||
-    !hasBodyCaretAtDocumentEnd(bodyInput)
-  ) {
+  if (!isBodyEditorActive(bodyInput) || !hasBodyCaretAtDocumentEnd(bodyInput)) {
     return false;
   }
 
@@ -87,7 +102,7 @@ function shouldKeepEditorPinnedToBottom(
 
 function getSourceLineNumberAtEditorTop(
   writingEditor: HTMLElement,
-  bodyInput: HTMLTextAreaElement,
+  bodyInput: HTMLElement,
 ): number {
   const lineHeight = getBodyInputLineHeight(bodyInput);
   const bodyTopInEditor =
@@ -114,7 +129,7 @@ function getPreviewBlockScrollTop(
 
 function getBodyLineScrollTop(
   writingEditor: HTMLElement,
-  bodyInput: HTMLTextAreaElement,
+  bodyInput: HTMLElement,
   lineNumber: number,
 ): number {
   const bodyTopInEditor =
@@ -209,11 +224,8 @@ export function useEditorPreviewScrollSync(
     bodyInput.scrollTop = 0;
 
     if (writingEditor) {
-      if (
-        document.activeElement === bodyInput &&
-        previousBodyInputScrollTop > 0
-      ) {
-        // 浏览器先把 textarea 内容向下滚动以追随光标；auto-height 后把这段位移转移给外层编辑器。
+      if (isBodyEditorActive(bodyInput) && previousBodyInputScrollTop > 0) {
+        // 浏览器可能先把正文编辑元素内部滚动以追随光标；auto-height 后把这段位移转移给外层编辑器。
         writingEditor.scrollTop = Math.min(
           previousEditorScrollTop + previousBodyInputScrollTop,
           getEditorMaxScrollTop(writingEditor),

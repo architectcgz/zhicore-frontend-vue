@@ -144,21 +144,13 @@
           @input="handleTitleInput"
           @keydown="handleEditorKeydown"
         />
-        <textarea
+        <div
           ref="bodyInputRef"
-          :value="body"
-          class="body-input"
-          rows="14"
-          :maxlength="bodyMaxLength"
+          class="body-input ProseMirror"
+          contenteditable="true"
           aria-label="文章正文"
-          placeholder="从这里开始写正文"
-          @input="handleBodyInput"
           @keydown="handleEditorKeydown"
-          @focus="rememberBodySelection"
-          @keyup="rememberBodySelection"
-          @mouseup="rememberBodySelection"
-          @select="rememberBodySelection"
-        />
+        ></div>
 
         <footer class="document-structure">
           <span>{{ wordCount }} 字</span>
@@ -169,7 +161,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { EditorState, TextSelection } from "prosemirror-state";
+import { EditorView } from "prosemirror-view";
 
 import type {
   EditorDraftSaveStatus,
@@ -179,6 +173,15 @@ import type {
   EditorShowcaseTextSelection,
   EditorShowcaseToolbarAction,
 } from "@/features/editor-showcase/model";
+import {
+  createProseMirrorDocFromSource,
+  createProseMirrorSliceFromSource,
+  editorProseMirrorSchema,
+  mapProseMirrorSelectionToSourceSelection,
+  mapSourceSelectionToProseMirrorSelection,
+  serializeProseMirrorDocToSource,
+  serializeProseMirrorSliceToSource,
+} from "@/features/editor-showcase/model/editorProseMirrorEngine";
 
 interface ToolbarItem {
   action: EditorShowcaseToolbarAction;
@@ -237,7 +240,7 @@ const toolbarGroups: ToolbarGroup[] = [
   },
 ];
 
-defineProps<{
+const props = defineProps<{
   activeMode: EditorShowcaseMode;
   activeBackgroundId: EditorShowcaseBackgroundId;
   backgroundCandidates: EditorShowcaseBackground[];
@@ -267,7 +270,7 @@ const emit = defineEmits<{
   scroll: [];
 }>();
 
-const bodyInputRef = ref<HTMLTextAreaElement | null>(null);
+const bodyInputRef = ref<HTMLElement | null>(null);
 const writingEditorRef = ref<HTMLElement | null>(null);
 const isToolbarExpanded = ref(false);
 const lastBodySelection = ref<EditorShowcaseTextSelection>({
@@ -276,14 +279,10 @@ const lastBodySelection = ref<EditorShowcaseTextSelection>({
 });
 const lastToolbarCommandScrollSnapshot =
   ref<ToolbarCommandScrollSnapshot | null>(null);
+let bodyEditorView: EditorView | null = null;
 
 function handleTitleInput(event: Event): void {
   emit("titleInput", (event.target as HTMLTextAreaElement).value);
-}
-
-function handleBodyInput(event: Event): void {
-  rememberBodySelection();
-  emit("bodyInput", (event.target as HTMLTextAreaElement).value);
 }
 
 function handleEditorKeydown(event: KeyboardEvent): void {
@@ -307,16 +306,16 @@ function handleEditorKeydown(event: KeyboardEvent): void {
 }
 
 function readBodySelection(): EditorShowcaseTextSelection | undefined {
-  const textarea = bodyInputRef.value;
+  const view = bodyEditorView;
 
-  if (!textarea) {
+  if (!view) {
     return undefined;
   }
 
-  return {
-    start: textarea.selectionStart,
-    end: textarea.selectionEnd,
-  };
+  return mapProseMirrorSelectionToSourceSelection(view.state.doc, {
+    from: view.state.selection.from,
+    to: view.state.selection.to,
+  });
 }
 
 function rememberBodySelection(): void {
@@ -328,15 +327,15 @@ function rememberBodySelection(): void {
 }
 
 function preserveBodySelectionBeforeToolbarCommand(event: Event): void {
-  // 工具栏命令依赖正文选区定位插入点；先拦截按钮聚焦，避免移动端触摸按下时把 textarea 光标折回末尾。
+  // 工具栏命令依赖正文选区定位插入点；先拦截按钮聚焦，避免移动端触摸按下时把编辑器选区折回末尾。
   event.preventDefault();
   rememberBodySelection();
   lastToolbarCommandScrollSnapshot.value = captureToolbarCommandScroll();
 }
 
 function getBodySelection(): EditorShowcaseTextSelection {
-  // 工具栏点击期间 textarea 可能已经失焦；此时移动端浏览器可能把 DOM selection 折到末尾。
-  if (document.activeElement !== bodyInputRef.value) {
+  // 工具栏点击期间编辑器可能已经失焦；此时移动端浏览器可能把 DOM selection 折到末尾。
+  if (!isBodyEditorFocused()) {
     return lastBodySelection.value;
   }
 
@@ -365,12 +364,7 @@ function createToolbarCommandScrollRestorer(): () => void {
       snapshot.writingEditor.scrollTop = snapshot.editorScrollTop;
     }
 
-    if (
-      window.scrollX !== snapshot.viewportScrollX ||
-      window.scrollY !== snapshot.viewportScrollY
-    ) {
-      window.scrollTo(snapshot.viewportScrollX, snapshot.viewportScrollY);
-    }
+    window.scrollTo(snapshot.viewportScrollX, snapshot.viewportScrollY);
   };
 }
 
@@ -389,24 +383,152 @@ function focusBody(): void {
   const restoreScroll = createToolbarCommandScrollRestorer();
 
   bodyInputRef.value?.focus({ preventScroll: true });
-  // 部分移动端浏览器会在 preventScroll 后延迟把 textarea 光标滚进视口；
+  // 部分移动端浏览器会在 preventScroll 后延迟把编辑器光标滚进视口；
   // 工具栏命令聚焦正文时应保持作者当前阅读位置。
   scheduleToolbarCommandScrollRestore(restoreScroll);
 }
 
 function setBodySelection(selection: EditorShowcaseTextSelection): void {
   const restoreScroll = createToolbarCommandScrollRestorer();
+  const view = bodyEditorView;
 
-  bodyInputRef.value?.setSelectionRange(selection.start, selection.end);
+  if (view) {
+    const prosemirrorSelection = mapSourceSelectionToProseMirrorSelection(
+      view.state.doc,
+      selection,
+    );
+
+    view.dispatch(
+      view.state.tr.setSelection(
+        TextSelection.create(
+          view.state.doc,
+          prosemirrorSelection.from,
+          prosemirrorSelection.to,
+        ),
+      ),
+    );
+  }
+
   lastBodySelection.value = selection;
-  // 移动端浏览器会在 setSelectionRange 后主动把 textarea 光标滚进视口；
+  // 移动端浏览器会在设置选区后主动把光标滚进视口；
   // 工具栏命令应保持作者当前阅读位置，只更新源码和选区。
   scheduleToolbarCommandScrollRestore(restoreScroll);
 }
 
+function isBodyEditorFocused(): boolean {
+  const bodyEditorElement = bodyInputRef.value;
+  const activeElement = document.activeElement;
+
+  return (
+    bodyEditorElement !== null &&
+    activeElement !== null &&
+    (activeElement === bodyEditorElement ||
+      bodyEditorElement.contains(activeElement))
+  );
+}
+
+function createBodyEditorState(source: string): EditorState {
+  return EditorState.create({
+    schema: editorProseMirrorSchema,
+    doc: createProseMirrorDocFromSource(source),
+  });
+}
+
+function syncBodyEditorFromSource(source: string): void {
+  const view = bodyEditorView;
+
+  if (!view || serializeProseMirrorDocToSource(view.state.doc) === source) {
+    return;
+  }
+
+  const doc = createProseMirrorDocFromSource(source);
+  const selection = mapSourceSelectionToProseMirrorSelection(
+    doc,
+    lastBodySelection.value,
+  );
+
+  view.updateState(
+    EditorState.create({
+      schema: editorProseMirrorSchema,
+      doc,
+      selection: TextSelection.create(doc, selection.from, selection.to),
+    }),
+  );
+  lastBodySelection.value = mapProseMirrorSelectionToSourceSelection(
+    doc,
+    selection,
+  );
+}
+
+function mountBodyEditor(): void {
+  const bodyEditorElement = bodyInputRef.value;
+
+  if (!bodyEditorElement) {
+    return;
+  }
+
+  // 正文长期保存事实仍是 source 字符串；ProseMirror 只负责当前输入会话的 DOM 与选区状态。
+  bodyEditorView = new EditorView(
+    { mount: bodyEditorElement },
+    {
+      state: createBodyEditorState(props.body),
+      transformPasted(slice) {
+        // 当前阶段 ProseMirror 只承载 Markdown-like source 输入，粘贴内容必须显式降级为纯文本。
+        return createProseMirrorSliceFromSource(
+          serializeProseMirrorSliceToSource(slice),
+        );
+      },
+      dispatchTransaction(transaction) {
+        const view = bodyEditorView;
+
+        if (!view) {
+          return;
+        }
+
+        const nextState = view.state.apply(transaction);
+        const nextBody = serializeProseMirrorDocToSource(nextState.doc);
+
+        if (transaction.docChanged && nextBody.length > props.bodyMaxLength) {
+          return;
+        }
+
+        view.updateState(nextState);
+        rememberBodySelection();
+
+        if (transaction.docChanged && nextBody !== props.body) {
+          emit("bodyInput", nextBody);
+        }
+      },
+    },
+  );
+  rememberBodySelection();
+}
+
+onMounted(() => {
+  mountBodyEditor();
+});
+
+onBeforeUnmount(() => {
+  bodyEditorView?.destroy();
+  bodyEditorView = null;
+});
+
+watch(
+  () => props.body,
+  (body) => {
+    syncBodyEditorFromSource(body);
+  },
+);
+
 defineExpose({
   get bodyInputElement() {
     return bodyInputRef.value;
+  },
+  get bodyEditorElement() {
+    return bodyInputRef.value;
+  },
+  get bodyEditorView() {
+    return bodyEditorView;
   },
   get writingEditorElement() {
     return writingEditorRef.value;
@@ -666,11 +788,17 @@ defineExpose({
   font-size: 18px;
   line-height: 1.84;
   overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .title-input:focus,
 .body-input:focus {
   caret-color: var(--editor-page-accent, #1f7f74);
+}
+
+.body-input :deep(p) {
+  margin: 0;
 }
 
 .document-structure {

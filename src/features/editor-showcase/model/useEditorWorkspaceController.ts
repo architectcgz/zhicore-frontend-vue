@@ -15,7 +15,7 @@ import {
 } from "./useEditorShowcaseDraft";
 
 export interface EditorWorkspaceWritingPaneRef {
-  bodyInputElement: HTMLTextAreaElement | null;
+  bodyInputElement: HTMLElement | null;
   writingEditorElement: HTMLElement | null;
   focusBody: () => void;
   getBodySelection: () => EditorShowcaseTextSelection | undefined;

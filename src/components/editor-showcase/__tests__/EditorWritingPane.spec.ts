@@ -1,4 +1,6 @@
 import { mount } from "@vue/test-utils";
+import { AllSelection } from "prosemirror-state";
+import type { EditorView } from "prosemirror-view";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { editorDraftBodyMaxLength } from "@/features/editor-showcase/model";
@@ -142,13 +144,86 @@ describe("EditorWritingPane", () => {
     );
   });
 
+  it("renders the body editor with ProseMirror instead of a textarea", () => {
+    const wrapper = mountWritingPane();
+
+    expect(wrapper.find("textarea.body-input").exists()).toBe(false);
+    expect(wrapper.find(".body-input.ProseMirror").exists()).toBe(true);
+    expect(wrapper.find(".body-input").attributes("contenteditable")).toBe(
+      "true",
+    );
+  });
+
+  it("emits body input when the ProseMirror document changes", async () => {
+    const wrapper = mountWritingPane();
+    const exposed = wrapper.vm as unknown as {
+      bodyEditorView: EditorView | null;
+    };
+
+    exposed.bodyEditorView?.dispatch(
+      exposed.bodyEditorView.state.tr.insertText("追加"),
+    );
+
+    expect(wrapper.emitted("bodyInput")?.at(-1)).toEqual(["追加草稿正文"]);
+  });
+
+  it("normalizes rich pasted content to plain source text", () => {
+    const wrapper = mountWritingPane();
+    const exposed = wrapper.vm as unknown as {
+      bodyEditorView: EditorView | null;
+    };
+
+    exposed.bodyEditorView?.dispatch(
+      exposed.bodyEditorView.state.tr.setSelection(
+        new AllSelection(exposed.bodyEditorView.state.doc),
+      ),
+    );
+    exposed.bodyEditorView?.pasteHTML(
+      "<h1>富文本标题</h1><p><strong>粗体正文</strong></p>",
+    );
+
+    expect(wrapper.emitted("bodyInput")?.at(-1)).toEqual([
+      "富文本标题\n粗体正文",
+    ]);
+  });
+
+  it("syncs external body changes into ProseMirror and clamps the source selection", async () => {
+    const wrapper = mountWritingPane();
+    const exposed = wrapper.vm as unknown as {
+      getBodySelection: () => EditorShowcaseTextSelection;
+      setBodySelection: (selection: EditorShowcaseTextSelection) => void;
+      bodyEditorView: EditorView | null;
+    };
+
+    exposed.setBodySelection({ start: 2, end: 4 });
+    await wrapper.setProps({ body: "短" });
+
+    expect(exposed.bodyEditorView?.state.doc.textContent).toBe("短");
+    expect(exposed.getBodySelection()).toEqual({ start: 1, end: 1 });
+  });
+
+  it("rejects ProseMirror changes that exceed the body limit", () => {
+    const wrapper = mountWritingPane();
+    const exposed = wrapper.vm as unknown as {
+      bodyEditorView: EditorView | null;
+    };
+    const oversizedBody = "x".repeat(editorDraftBodyMaxLength + 1);
+
+    exposed.bodyEditorView?.dispatch(
+      exposed.bodyEditorView.state.tr.insertText(oversizedBody),
+    );
+
+    expect(wrapper.emitted("bodyInput")).toBeUndefined();
+    expect(exposed.bodyEditorView?.state.doc.textContent).toBe("草稿正文");
+  });
+
   it("restores body focus without forcing the mobile viewport to scroll", () => {
     const wrapper = mountWritingPane();
-    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
-    const focusSpy = vi.spyOn(bodyInput.element, "focus");
     const exposed = wrapper.vm as unknown as {
+      bodyEditorElement: HTMLElement | null;
       focusBody: () => void;
     };
+    const focusSpy = vi.spyOn(exposed.bodyEditorElement!, "focus");
 
     exposed.focusBody();
 
@@ -158,9 +233,12 @@ describe("EditorWritingPane", () => {
   it("restores the current scroll position when mobile focus scrolls late", () => {
     vi.useFakeTimers();
     const wrapper = mountWritingPane();
-    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
+    const exposed = wrapper.vm as unknown as {
+      bodyEditorElement: HTMLElement | null;
+      focusBody: () => void;
+    };
     const focusSpy = vi
-      .spyOn(bodyInput.element, "focus")
+      .spyOn(exposed.bodyEditorElement!, "focus")
       .mockImplementation(() => {
         window.setTimeout(() => {
           Object.defineProperty(window, "scrollY", {
@@ -175,10 +253,6 @@ describe("EditorWritingPane", () => {
         value: 420,
       });
     });
-    const exposed = wrapper.vm as unknown as {
-      focusBody: () => void;
-    };
-
     Object.defineProperty(window, "scrollX", {
       configurable: true,
       value: 0,
@@ -240,17 +314,7 @@ describe("EditorWritingPane", () => {
 
   it("restores the current scroll position after resetting the body selection", () => {
     const wrapper = mountWritingPane();
-    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
     const writingEditor = wrapper.find<HTMLElement>(".writing-editor");
-    const setSelectionRangeSpy = vi
-      .spyOn(bodyInput.element, "setSelectionRange")
-      .mockImplementation(() => {
-        Object.defineProperty(window, "scrollY", {
-          configurable: true,
-          value: 0,
-        });
-        writingEditor.element.scrollTop = 0;
-      });
     const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {
       Object.defineProperty(window, "scrollY", {
         configurable: true,
@@ -258,6 +322,7 @@ describe("EditorWritingPane", () => {
       });
     });
     const exposed = wrapper.vm as unknown as {
+      getBodySelection: () => EditorShowcaseTextSelection;
       setBodySelection: (selection: EditorShowcaseTextSelection) => void;
     };
 
@@ -273,7 +338,7 @@ describe("EditorWritingPane", () => {
 
     exposed.setBodySelection({ start: 2, end: 4 });
 
-    expect(setSelectionRangeSpy).toHaveBeenCalledWith(2, 4);
+    expect(exposed.getBodySelection()).toEqual({ start: 2, end: 4 });
     expect(scrollToSpy).toHaveBeenCalledWith(0, 420);
     expect(writingEditor.element.scrollTop).toBe(180);
   });
@@ -289,7 +354,7 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("toolbarAction")).toEqual([["underline"]]);
   });
 
-  it("keeps toolbar mousedown from stealing the body textarea selection", () => {
+  it("keeps toolbar mousedown from stealing the body editor selection", () => {
     const wrapper = mountWritingPane();
     const tableButton = wrapper.find(
       '.selection-toolbar button[aria-label="表格"]',
@@ -304,7 +369,7 @@ describe("EditorWritingPane", () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it("keeps toolbar pointerdown from stealing the body textarea selection on touch devices", () => {
+  it("keeps toolbar pointerdown from stealing the body editor selection on touch devices", () => {
     const wrapper = mountWritingPane();
     const tableButton = wrapper.find(
       '.selection-toolbar button[aria-label="表格"]',
@@ -334,31 +399,23 @@ describe("EditorWritingPane", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("uses the remembered body selection when a toolbar command runs after the textarea lost focus", async () => {
+  it("uses the remembered body selection when a toolbar command runs after the editor lost focus", async () => {
     const host = document.createElement("div");
     document.body.append(host);
     const wrapper = mountWritingPane({ attachTo: host });
-    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
     const tableButton = wrapper.find<HTMLButtonElement>(
       '.selection-toolbar button[aria-label="表格"]',
     );
     const exposed = wrapper.vm as unknown as {
+      bodyEditorElement: HTMLElement | null;
       getBodySelection: () => EditorShowcaseTextSelection;
+      setBodySelection: (selection: EditorShowcaseTextSelection) => void;
     };
 
-    bodyInput.element.focus();
-    bodyInput.element.setSelectionRange(2, 2);
-    await bodyInput.trigger("select");
+    exposed.bodyEditorElement?.focus();
+    exposed.setBodySelection({ start: 2, end: 2 });
 
     tableButton.element.focus();
-    Object.defineProperty(bodyInput.element, "selectionStart", {
-      configurable: true,
-      value: 4,
-    });
-    Object.defineProperty(bodyInput.element, "selectionEnd", {
-      configurable: true,
-      value: 4,
-    });
 
     expect(document.activeElement).toBe(tableButton.element);
     expect(exposed.getBodySelection()).toEqual({ start: 2, end: 2 });
@@ -397,12 +454,10 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("selectBackground")).toEqual([["ink"]]);
   });
 
-  it("sets the body textarea maxlength from the editor limit", () => {
+  it("keeps the body limit visible in the editor status", () => {
     const wrapper = mountWritingPane();
 
-    expect(wrapper.find(".body-input").attributes("maxlength")).toBe(
-      String(editorDraftBodyMaxLength),
-    );
+    expect(wrapper.text()).toContain(`4 / ${editorDraftBodyMaxLength} 字符`);
   });
 
   it("keeps the document structure footer focused on the word count", () => {
@@ -411,7 +466,7 @@ describe("EditorWritingPane", () => {
     expect(wrapper.find(".document-structure").text()).toBe("4 字");
   });
 
-  it("emits undo when Ctrl+Z is pressed in the body textarea", async () => {
+  it("emits undo when Ctrl+Z is pressed in the body editor", async () => {
     const wrapper = mountWritingPane();
     const bodyInput = wrapper.find(".body-input");
 
@@ -423,7 +478,7 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("undo")).toEqual([[]]);
   });
 
-  it("emits redo when Ctrl+Shift+Z or Ctrl+Y is pressed in the body textarea", async () => {
+  it("emits redo when Ctrl+Shift+Z or Ctrl+Y is pressed in the body editor", async () => {
     const wrapper = mountWritingPane();
     const bodyInput = wrapper.find(".body-input");
 
