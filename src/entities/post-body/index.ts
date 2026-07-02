@@ -18,4 +18,10 @@ export type {
   QuoteBlock,
   TableBlock,
 } from "./model";
-export { sanitizePostBodyExternalUrl } from "./model";
+export {
+  allowedExternalEmbedProviders,
+  isAllowedExternalEmbedProvider,
+  isUploadBackedPostBodyBlock,
+  sanitizePostBodyExternalUrl,
+} from "./model";
+export type { ExternalEmbedProvider } from "./model";

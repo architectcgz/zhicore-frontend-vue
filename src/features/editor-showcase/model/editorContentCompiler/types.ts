@@ -8,6 +8,7 @@ export interface EditorCompiledSourceRange {
 export type EditorCompiledInlineMark =
   | { type: "bold" }
   | { type: "italic" }
+  | { type: "underline" }
   | { type: "strike" }
   | { type: "inline_code" }
   | { type: "link"; href: string };

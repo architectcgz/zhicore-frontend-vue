@@ -205,6 +205,7 @@ const toolbarGroups: ToolbarGroup[] = [
     items: [
       { action: "bold", label: "B", title: "加粗" },
       { action: "italic", label: "I", title: "斜体" },
+      { action: "underline", label: "U", title: "下划线" },
       { action: "strike", label: "S", title: "删除线" },
       { action: "inlineCode", label: "`", title: "行内代码" },
       { action: "link", label: "Link", title: "插入链接" },

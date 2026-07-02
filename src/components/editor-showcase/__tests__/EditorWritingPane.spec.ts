@@ -59,6 +59,7 @@ describe("EditorWritingPane", () => {
       "保存草稿",
       "B",
       "I",
+      "U",
       "S",
       "`",
       "Link",
@@ -279,13 +280,13 @@ describe("EditorWritingPane", () => {
 
   it("emits the matching toolbar action when a button is clicked", async () => {
     const wrapper = mountWritingPane();
-    const tableButton = wrapper.find(
-      '.selection-toolbar button[aria-label="表格"]',
+    const underlineButton = wrapper.find(
+      '.selection-toolbar button[aria-label="下划线"]',
     );
 
-    await tableButton.trigger("click");
+    await underlineButton.trigger("click");
 
-    expect(wrapper.emitted("toolbarAction")).toEqual([["table"]]);
+    expect(wrapper.emitted("toolbarAction")).toEqual([["underline"]]);
   });
 
   it("keeps toolbar mousedown from stealing the body textarea selection", () => {

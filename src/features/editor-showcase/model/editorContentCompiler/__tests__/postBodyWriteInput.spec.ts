@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { compileEditorContentToPostBodyWriteInput } from "@/features/editor-showcase/model/editorContentCompiler";
+import {
+  compileEditorContent,
+  compileEditorContentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPreviewReaderBlocks,
+} from "@/features/editor-showcase/model/editorContentCompiler";
 
 describe("compileEditorContentToPostBodyWriteInput", () => {
   it("compiles editor markdown-like source into the formal PostBodyWriteInput", () => {
@@ -33,10 +37,6 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
         },
         {
           type: "paragraph",
-          children: [{ type: "text", text: "\n" }],
-        },
-        {
-          type: "paragraph",
           children: [
             { type: "text", text: "阅读 " },
             {
@@ -51,10 +51,6 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
           type: "code_block",
           language: "ts",
           code: 'console.log("<ok>")',
-        },
-        {
-          type: "paragraph",
-          children: [{ type: "text", text: "\n" }],
         },
         {
           type: "table",
@@ -117,9 +113,27 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
     );
   });
 
+  it("compiles markdown image syntax into an external embed instead of a system image", () => {
+    const writeInput = compileEditorContentToPostBodyWriteInput(
+      "![架构图](https://example.com/assets/diagram.png)",
+    );
+
+    expect(writeInput.blocks).toEqual([
+      {
+        type: "external_embed",
+        provider: "image",
+        url: "https://example.com/assets/diagram.png",
+        title: "架构图",
+      },
+    ]);
+    expect(writeInput.blocks).not.toContainEqual(
+      expect.objectContaining({ type: "image" }),
+    );
+  });
+
   it("writes stacked inline marks into the formal post body contract", () => {
     const writeInput = compileEditorContentToPostBodyWriteInput(
-      "阅读 **[ZhiCore](https://example.com/docs)** 和 **_重点_**。",
+      "阅读 **[ZhiCore](https://example.com/docs)** 和 **++重点++**。",
     );
 
     expect(writeInput.blocks).toEqual([
@@ -139,8 +153,24 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
           {
             type: "text",
             text: "重点",
-            marks: [{ type: "bold" }, { type: "italic" }],
+            marks: [{ type: "bold" }, { type: "underline" }],
           },
+          { type: "text", text: "。" },
+        ],
+      },
+    ]);
+  });
+
+  it("writes underline marks into the formal post body contract", () => {
+    const writeInput =
+      compileEditorContentToPostBodyWriteInput("这是 ++重点++。");
+
+    expect(writeInput.blocks).toEqual([
+      {
+        type: "paragraph",
+        children: [
+          { type: "text", text: "这是 " },
+          { type: "text", text: "重点", marks: [{ type: "underline" }] },
           { type: "text", text: "。" },
         ],
       },
@@ -163,17 +193,11 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
     });
   });
 
-  it("preserves extra blank lines between block-level content as a visible spacer paragraph", () => {
+  it("does not write block spacer paragraphs into the formal post body contract", () => {
     const writeInput = compileEditorContentToPostBodyWriteInput(
       [
         "```go",
         "package main",
-        "",
-        'import "fmt"',
-        "",
-        "func main() {",
-        '  fmt.Println("hello zhicore")',
-        "}",
         "```",
         "",
         "",
@@ -183,22 +207,100 @@ describe("compileEditorContentToPostBodyWriteInput", () => {
       ].join("\n"),
     );
 
-    expect(writeInput.blocks).toMatchObject([
+    expect(writeInput.blocks).toEqual([
+      expect.objectContaining({ type: "code_block" }),
+      expect.objectContaining({ type: "table" }),
+    ]);
+    expect(writeInput.blocks).not.toContainEqual({
+      type: "paragraph",
+      children: [{ type: "text", text: "\n\n" }],
+    });
+  });
+
+  it("keeps blank-line spacers and source ranges in reader preview blocks", () => {
+    const compiledDocument = compileEditorContent(
+      [
+        "```go",
+        "package main",
+        "```",
+        "",
+        "",
+        "| 名称 | 说明 |",
+        "| --- | --- |",
+        "| ZhiCore | 内容社区 |",
+      ].join("\n"),
+    );
+
+    const previewBlocks =
+      mapEditorCompiledDocumentToPreviewReaderBlocks(compiledDocument);
+
+    expect(previewBlocks).toMatchObject([
       {
-        type: "code_block",
-        language: "go",
+        block: {
+          type: "code_block",
+        },
+        sourceRange: {
+          startLine: 0,
+          endLine: 2,
+        },
+        compiledBlockIndex: 0,
+      },
+      {
+        block: {
+          type: "paragraph",
+          children: [{ type: "text", text: "\n\n" }],
+        },
+      },
+      {
+        block: {
+          type: "table",
+        },
+        sourceRange: {
+          startLine: 5,
+          endLine: 7,
+        },
+        compiledBlockIndex: 1,
+      },
+    ]);
+    expect(previewBlocks[1]).not.toHaveProperty("sourceRange");
+    expect(previewBlocks[1]).not.toHaveProperty("compiledBlockIndex");
+  });
+
+  it("serializes the formal post body without editor-only preview fields", () => {
+    const writeInput = compileEditorContentToPostBodyWriteInput(
+      ["## 标题", "", "阅读 [ZhiCore](https://example.com/docs)。"].join("\n"),
+    );
+    const serialized = JSON.stringify(writeInput);
+
+    expect(serialized).not.toContain("stableKey");
+    expect(serialized).not.toContain("readerBlockIndex");
+    expect(serialized).not.toContain("compiledBlockIndex");
+    expect(serialized).not.toContain("sourceRange");
+    expect(serialized).not.toContain("label");
+    expect(serialized).not.toContain("content");
+    expect(writeInput.blocks).toEqual([
+      {
+        type: "heading",
+        level: 2,
+        children: [{ type: "text", text: "标题" }],
       },
       {
         type: "paragraph",
         children: [
           {
             type: "text",
-            text: "\n\n",
+            text: "阅读 ",
+          },
+          {
+            type: "text",
+            text: "ZhiCore",
+            marks: [{ type: "link", href: "https://example.com/docs" }],
+          },
+          {
+            type: "text",
+            text: "。",
           },
         ],
-      },
-      {
-        type: "table",
       },
     ]);
   });

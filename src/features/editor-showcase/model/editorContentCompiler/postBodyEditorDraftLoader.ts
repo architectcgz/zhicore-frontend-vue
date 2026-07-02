@@ -75,7 +75,7 @@ function hasMarkdownSyntax(value: string): boolean {
     hasBlockSyntax ||
     /`[^`\n]+`/.test(value) ||
     /\[[^\]\n]+]\([^)\s]+?\)/.test(value) ||
-    /(\*\*|__|~~)[\s\S]+?\1/.test(value) ||
+    /(\*\*|__|~~|\+\+)[\s\S]+?\1/.test(value) ||
     /(^|[^\w])([*_])[^*_]+?\2($|[^\w])/.test(value)
   );
 }
@@ -98,6 +98,10 @@ function hasInlineMarkDelimiterConflict(
 
   if (mark.type === "strike") {
     return text.includes("~~");
+  }
+
+  if (mark.type === "underline") {
+    return text.includes("++") || text.includes("\n");
   }
 
   if (mark.type === "link") {
@@ -127,6 +131,10 @@ function wrapInlineMark(
     return source(`~~${text}~~`);
   }
 
+  if (mark.type === "underline") {
+    return source(`++${text}++`);
+  }
+
   if (mark.type === "inline_code") {
     return source(`\`${text}\``);
   }
@@ -139,7 +147,7 @@ function wrapInlineMark(
       : unsupported("link mark has an unsafe href");
   }
 
-  return unsupported("underline mark is not editable in markdown source");
+  return unsupported("unknown mark is not editable in markdown source");
 }
 
 function serializeInlineNode(
@@ -147,6 +155,12 @@ function serializeInlineNode(
   ownerType: PostBodyBlock["type"],
 ): PostBodyBlockDraftLoadResult {
   const marks = node.marks ?? [];
+
+  for (const mark of marks) {
+    if (hasInlineMarkDelimiterConflict(node.text, mark)) {
+      return unsupported(`${mark.type} mark text is not lossless in markdown`);
+    }
+  }
 
   if (hasMarkdownSyntax(node.text)) {
     return unsupported(

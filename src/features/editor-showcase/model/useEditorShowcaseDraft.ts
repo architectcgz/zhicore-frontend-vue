@@ -7,6 +7,7 @@ import {
   watch,
 } from "vue";
 
+import type { SaveDraftBodyReq, SaveDraftBodyResp } from "@/api/post";
 import type { PostBodyBlock, PostBodyWriteInput } from "@/entities/post-body";
 
 import {
@@ -57,16 +58,32 @@ export interface UseEditorShowcaseDraftOptions {
   previewCompileDebounceMs?: number;
   historyMergeWindowMs?: number;
   now?: () => Date;
+  serverDraftBaseline?: EditorServerDraftBaseline;
+  serverSaveClient?: EditorDraftServerSaveClient;
 }
 
 export interface EditorSavedDraftSnapshot {
   title: string;
   sourceHash: string;
-  contentHash: `local:${string}`;
+  localContentHash: `local:${string}`;
   savedAt: Date;
   schemaVersion: PostBodyWriteInput["schemaVersion"];
   blockCount: number;
   postBodyWriteInput: PostBodyWriteInput;
+}
+
+export interface EditorServerDraftBaseline {
+  postId: string;
+  basePostVersion: number;
+  baseDraftBodyId?: string;
+  baseDraftBodyHash?: string;
+}
+
+export interface EditorDraftServerSaveClient {
+  saveDraftBody(
+    postId: string,
+    input: SaveDraftBodyReq,
+  ): Promise<SaveDraftBodyResp>;
 }
 
 export interface EditorDraftHistoryRestoreResult {
@@ -111,6 +128,28 @@ function clampSelectionToBody(
 
 function limitEditorDraftBodySource(bodySource: string): string {
   return bodySource.slice(0, editorDraftBodyMaxLength);
+}
+
+function isServerDraftBodyHash(hash: string | undefined): hash is string {
+  return Boolean(hash && !hash.startsWith("local:"));
+}
+
+function createSaveDraftBodyRequest(
+  baseline: EditorServerDraftBaseline,
+  writeInput: PostBodyWriteInput,
+  clientSavedAt: Date,
+): SaveDraftBodyReq {
+  return {
+    ...writeInput,
+    basePostVersion: baseline.basePostVersion,
+    ...(baseline.baseDraftBodyId
+      ? { baseDraftBodyId: baseline.baseDraftBodyId }
+      : {}),
+    ...(isServerDraftBodyHash(baseline.baseDraftBodyHash)
+      ? { baseDraftBodyHash: baseline.baseDraftBodyHash }
+      : {}),
+    clientSavedAt: clientSavedAt.toISOString(),
+  };
 }
 
 export function useEditorShowcaseDraft(
@@ -158,7 +197,7 @@ export function useEditorShowcaseDraft(
     return {
       title: previewTitle.value,
       sourceHash: currentSourceHash.value,
-      contentHash: `local:${contentHash}`,
+      localContentHash: `local:${contentHash}`,
       savedAt,
       schemaVersion: writeInput.schemaVersion,
       blockCount: writeInput.blocks.length,
@@ -168,6 +207,9 @@ export function useEditorShowcaseDraft(
 
   const savedDraftSnapshot = ref<EditorSavedDraftSnapshot>(
     createSavedDraftSnapshot(now()),
+  );
+  const serverDraftBaseline = ref<EditorServerDraftBaseline | undefined>(
+    options.serverDraftBaseline,
   );
   const isSavingDraft = ref(false);
   const hasUnsavedChanges = computed(
@@ -417,10 +459,35 @@ export function useEditorShowcaseDraft(
     isSavingDraft.value = true;
 
     try {
-      await Promise.resolve();
       // 保存快照必须基于当前 textarea 源文本重新编译，不能依赖可能仍在 debounce 中的预览结果。
       compilePreviewNow();
-      savedDraftSnapshot.value = createSavedDraftSnapshot(now());
+      const savedAt = now();
+      const baseline = serverDraftBaseline.value;
+
+      if (baseline && options.serverSaveClient) {
+        const response = await options.serverSaveClient.saveDraftBody(
+          baseline.postId,
+          createSaveDraftBodyRequest(
+            baseline,
+            postBodyWriteInput.value,
+            savedAt,
+          ),
+        );
+
+        // 服务端返回的 draftBodyHash 才是下一次乐观保存基线；本地 hash
+        // 只用于前端 dirty 判断，不能混入 Content API 请求。
+        serverDraftBaseline.value = {
+          postId: response.postId,
+          basePostVersion: response.postVersion,
+          baseDraftBodyId: response.draftBodyId,
+          baseDraftBodyHash: response.draftBodyHash,
+        };
+        savedDraftSnapshot.value = createSavedDraftSnapshot(savedAt);
+        return;
+      }
+
+      await Promise.resolve();
+      savedDraftSnapshot.value = createSavedDraftSnapshot(savedAt);
     } finally {
       isSavingDraft.value = false;
     }
@@ -458,6 +525,7 @@ export function useEditorShowcaseDraft(
     bodyCharacterCount,
     bodyMaxLength: editorDraftBodyMaxLength,
     savedDraftSnapshot,
+    serverDraftBaseline: readonly(serverDraftBaseline),
     draftSaveStatus,
     canSaveDraft,
     hasUnsavedChanges,

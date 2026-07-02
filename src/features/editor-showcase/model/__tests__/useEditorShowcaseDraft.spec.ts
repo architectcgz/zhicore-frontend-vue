@@ -610,9 +610,9 @@ describe("useEditorShowcaseDraft", () => {
       title: "真实编辑器",
       savedAt,
       schemaVersion: 1,
-      blockCount: 3,
+      blockCount: 2,
     });
-    expect(draft.savedDraftSnapshot.value.contentHash).toMatch(/^local:/);
+    expect(draft.savedDraftSnapshot.value.localContentHash).toMatch(/^local:/);
     expect(
       draft.savedDraftSnapshot.value.postBodyWriteInput.blocks[0],
     ).toMatchObject({
@@ -623,6 +623,120 @@ describe("useEditorShowcaseDraft", () => {
       draft.savedDraftSnapshot.value.postBodyWriteInput.blocks.at(-1),
     ).toMatchObject({
       type: "paragraph",
+    });
+  });
+
+  it("saves through the server client and advances the server draft baseline", async () => {
+    const savedAt = new Date("2026-07-02T00:00:00.000Z");
+    const saveDraftBody = vi.fn().mockResolvedValue({
+      postId: "post-1",
+      postVersion: 8,
+      draftBodyId: "body-2",
+      draftBodyHash: "sha256:next",
+      savedAt: "2026-07-02T00:00:00Z",
+      wordCount: 6,
+    });
+    const draft = useEditorShowcaseDraft({
+      previewCompileDebounceMs: 0,
+      now: () => savedAt,
+      serverDraftBaseline: {
+        postId: "post-1",
+        basePostVersion: 7,
+        baseDraftBodyId: "body-1",
+        baseDraftBodyHash: "sha256:base",
+      },
+      serverSaveClient: {
+        saveDraftBody,
+      },
+    });
+
+    draft.updateBody("## 新正文");
+
+    await draft.saveDraft();
+
+    expect(saveDraftBody).toHaveBeenCalledWith(
+      "post-1",
+      expect.objectContaining({
+        schemaVersion: 1,
+        basePostVersion: 7,
+        baseDraftBodyId: "body-1",
+        baseDraftBodyHash: "sha256:base",
+      }),
+    );
+    expect(draft.serverDraftBaseline.value).toEqual({
+      postId: "post-1",
+      basePostVersion: 8,
+      baseDraftBodyId: "body-2",
+      baseDraftBodyHash: "sha256:next",
+    });
+    expect(draft.hasUnsavedChanges.value).toBe(false);
+  });
+
+  it("does not send a local content hash as the server draft base hash", async () => {
+    const saveDraftBody = vi.fn().mockResolvedValue({
+      postId: "post-1",
+      postVersion: 8,
+      draftBodyId: "body-2",
+      draftBodyHash: "sha256:next",
+      savedAt: "2026-07-02T00:00:00Z",
+      wordCount: 6,
+    });
+    const draft = useEditorShowcaseDraft({
+      previewCompileDebounceMs: 0,
+      serverDraftBaseline: {
+        postId: "post-1",
+        basePostVersion: 7,
+        baseDraftBodyId: "body-1",
+      },
+      serverSaveClient: {
+        saveDraftBody,
+      },
+    });
+
+    expect(draft.savedDraftSnapshot.value.localContentHash).toMatch(/^local:/);
+
+    draft.updateBody("服务端保存正文");
+
+    await draft.saveDraft();
+
+    expect(saveDraftBody).toHaveBeenCalledWith(
+      "post-1",
+      expect.not.objectContaining({
+        baseDraftBodyHash: expect.stringMatching(/^local:/),
+      }),
+    );
+  });
+
+  it("keeps local input and dirty state when server save fails", async () => {
+    const error = new Error("save failed");
+    const saveDraftBody = vi.fn().mockRejectedValue(error);
+    const draft = useEditorShowcaseDraft({
+      previewCompileDebounceMs: 0,
+      serverDraftBaseline: {
+        postId: "post-1",
+        basePostVersion: 7,
+        baseDraftBodyId: "body-1",
+        baseDraftBodyHash: "sha256:base",
+      },
+      serverSaveClient: {
+        saveDraftBody,
+      },
+    });
+    const previousSnapshot = draft.savedDraftSnapshot.value;
+
+    draft.updateBody("未保存的服务端正文");
+
+    await expect(draft.saveDraft()).rejects.toThrow("save failed");
+
+    expect(draft.body.value).toBe("未保存的服务端正文");
+    expect(draft.hasUnsavedChanges.value).toBe(true);
+    expect(draft.draftSaveStatus.value).toBe("dirty");
+    expect(draft.savedDraftSnapshot.value).toBe(previousSnapshot);
+    expect(draft.serverDraftBaseline.value).toEqual({
+      postId: "post-1",
+      basePostVersion: 7,
+      baseDraftBodyId: "body-1",
+      baseDraftBodyHash: "sha256:base",
     });
   });
 });

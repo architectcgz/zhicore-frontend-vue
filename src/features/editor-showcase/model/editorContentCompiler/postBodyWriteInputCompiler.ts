@@ -1,5 +1,7 @@
 import {
+  isAllowedExternalEmbedProvider,
   sanitizePostBodyExternalUrl,
+  type ExternalEmbedProvider,
   type PostBodyBlock,
   type PostBodyInlineMark,
   type PostBodyInlineNode,
@@ -46,6 +48,11 @@ export interface EditorPreviewBlockKeyResolver {
 
 export interface MapEditorCompiledDocumentToPreviewReaderBlocksOptions {
   keyResolver?: EditorPreviewBlockKeyResolver;
+}
+
+export interface PostBodyWriteInputWithSourceMap {
+  writeInput: PostBodyWriteInput;
+  blockSourceRanges: Array<EditorCompiledSourceRange | undefined>;
 }
 
 function createContentHash(content: string): string {
@@ -205,8 +212,9 @@ function mapCompiledBlock(block: EditorCompiledBlock): PostBodyBlock {
 
   if (block.type === "media") {
     const url = sanitizePostBodyExternalUrl(block.src);
+    const provider = "image" satisfies ExternalEmbedProvider;
 
-    if (!url) {
+    if (!url || !isAllowedExternalEmbedProvider(provider)) {
       return {
         type: "paragraph",
         children: [
@@ -221,7 +229,7 @@ function mapCompiledBlock(block: EditorCompiledBlock): PostBodyBlock {
     // Markdown 图片没有 Upload fileId，不能伪装成系统内 image block，只能降级为安全外部嵌入。
     return {
       type: "external_embed",
-      provider: "image",
+      provider,
       url,
       title: block.alt,
     };
@@ -263,13 +271,20 @@ function getVisibleBlankLineCountBetweenBlocks(
 export function mapEditorCompiledDocumentToPostBodyWriteInput(
   document: EditorCompiledDocument,
 ): PostBodyWriteInput {
-  const blocks = mapEditorCompiledDocumentToPreviewReaderBlocks(document).map(
-    (previewBlock) => previewBlock.block,
-  );
-
   return {
     schemaVersion: 1,
-    blocks,
+    // Reader preview spacers only preserve visual whitespace and scroll anchors;
+    // they are not part of the long-lived Content save contract.
+    blocks: document.blocks.map(mapCompiledBlock),
+  };
+}
+
+export function mapEditorCompiledDocumentToPostBodyWriteInputWithSourceMap(
+  document: EditorCompiledDocument,
+): PostBodyWriteInputWithSourceMap {
+  return {
+    writeInput: mapEditorCompiledDocumentToPostBodyWriteInput(document),
+    blockSourceRanges: document.blocks.map((block) => block.sourceRange),
   };
 }
 
@@ -365,6 +380,14 @@ export function compileEditorContentToPostBodyWriteInput(
   input: string,
 ): PostBodyWriteInput {
   return mapEditorCompiledDocumentToPostBodyWriteInput(
+    compileEditorContent(input),
+  );
+}
+
+export function compileEditorContentToPostBodyWriteInputWithSourceMap(
+  input: string,
+): PostBodyWriteInputWithSourceMap {
+  return mapEditorCompiledDocumentToPostBodyWriteInputWithSourceMap(
     compileEditorContent(input),
   );
 }

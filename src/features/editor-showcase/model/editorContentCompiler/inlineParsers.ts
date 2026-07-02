@@ -24,6 +24,11 @@ const delimitedMarkSpecs: DelimitedMarkSpec[] = [
     marks: [{ type: "strike" }],
   },
   {
+    opener: "++",
+    closer: "++",
+    marks: [{ type: "underline" }],
+  },
+  {
     opener: "***",
     closer: "***",
     marks: [{ type: "bold" }, { type: "italic" }],

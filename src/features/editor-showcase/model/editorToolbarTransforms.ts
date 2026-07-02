@@ -1,6 +1,7 @@
 export type EditorShowcaseToolbarAction =
   | "bold"
   | "italic"
+  | "underline"
   | "strike"
   | "inlineCode"
   | "link"
@@ -204,6 +205,12 @@ export function applyToolbarActionToBody(
         prefix: "_",
         suffix: "_",
         placeholder: "斜体文本",
+      });
+    case "underline":
+      return applyInlineToolbarAction(currentBody, normalizedSelection, {
+        prefix: "++",
+        suffix: "++",
+        placeholder: "下划线文本",
       });
     case "strike":
       return applyInlineToolbarAction(currentBody, normalizedSelection, {

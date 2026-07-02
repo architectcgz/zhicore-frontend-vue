@@ -178,9 +178,34 @@ describe("editorContentCompiler", () => {
     ]);
   });
 
+  it("compiles underline inline markdown into text nodes with marks", () => {
+    const compiledDocument = compileEditorContent("这是 ++重点++ 文本。");
+
+    expect(compiledDocument.blocks).toMatchObject([
+      {
+        type: "text",
+        inlineNodes: [
+          {
+            type: "text",
+            text: "这是 ",
+          },
+          {
+            type: "text",
+            text: "重点",
+            marks: [{ type: "underline" }],
+          },
+          {
+            type: "text",
+            text: " 文本。",
+          },
+        ],
+      },
+    ]);
+  });
+
   it("preserves stacked inline marks on the same text node", () => {
     const compiledDocument = compileEditorContent(
-      "阅读 **[ZhiCore](https://example.com/docs)** 和 **_重点_**。",
+      "阅读 **[ZhiCore](https://example.com/docs)**、**++重点++** 和 ++[链接](https://example.com)++。",
     );
 
     expect(compiledDocument.blocks).toMatchObject([
@@ -201,12 +226,24 @@ describe("editorContentCompiler", () => {
           },
           {
             type: "text",
-            text: " 和 ",
+            text: "、",
           },
           {
             type: "text",
             text: "重点",
-            marks: [{ type: "bold" }, { type: "italic" }],
+            marks: [{ type: "bold" }, { type: "underline" }],
+          },
+          {
+            type: "text",
+            text: " 和 ",
+          },
+          {
+            type: "text",
+            text: "链接",
+            marks: [
+              { type: "underline" },
+              { type: "link", href: "https://example.com/" },
+            ],
           },
           {
             type: "text",

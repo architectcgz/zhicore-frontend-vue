@@ -125,6 +125,63 @@ describe("createEditorDraftFromPostBody", () => {
     });
   });
 
+  it("loads underline inline marks into markdown-like draft source", () => {
+    const postBody: PostBody = {
+      bodyId: "body-with-underline",
+      schemaVersion: 1,
+      format: "blocks",
+      contentHash: "sha256:underline",
+      plainText: "这是重点",
+      sizeBytes: 128,
+      createdAt: "2026-07-01T00:00:00Z",
+      blocks: [
+        {
+          type: "paragraph",
+          children: [
+            { type: "text", text: "这是" },
+            { type: "text", text: "重点", marks: [{ type: "underline" }] },
+          ],
+        },
+      ],
+    };
+
+    expect(createEditorDraftFromPostBody(postBody)).toEqual({
+      body: "这是++重点++",
+      unsupportedBlocks: [],
+    });
+  });
+
+  it("does not load underline text that cannot round-trip losslessly", () => {
+    const postBody: PostBody = {
+      bodyId: "body-with-conflicting-underline",
+      schemaVersion: 1,
+      format: "blocks",
+      contentHash: "sha256:underline-conflict",
+      plainText: "a++b",
+      sizeBytes: 128,
+      createdAt: "2026-07-01T00:00:00Z",
+      blocks: [
+        {
+          type: "paragraph",
+          children: [
+            { type: "text", text: "a++b", marks: [{ type: "underline" }] },
+          ],
+        },
+      ],
+    };
+
+    expect(createEditorDraftFromPostBody(postBody)).toEqual({
+      body: "",
+      unsupportedBlocks: [
+        {
+          blockIndex: 0,
+          block: postBody.blocks[0],
+          reason: "underline mark text is not lossless in markdown",
+        },
+      ],
+    });
+  });
+
   it("does not load markdown-like plain text that would compile into a different structure", () => {
     const postBody: PostBody = {
       bodyId: "body-with-markdown-like-text",

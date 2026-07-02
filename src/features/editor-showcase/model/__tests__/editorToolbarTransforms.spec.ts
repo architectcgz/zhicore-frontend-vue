@@ -33,6 +33,19 @@ describe("editorToolbarTransforms", () => {
     });
 
     expect(
+      applyToolbarActionToBody("写作文本", "underline", {
+        start: 0,
+        end: 2,
+      }),
+    ).toEqual({
+      nextBody: "++写作++文本",
+      nextSelection: {
+        start: 2,
+        end: 4,
+      },
+    });
+
+    expect(
       applyToolbarActionToBody("写作文本", "strike", {
         start: 0,
         end: 2,

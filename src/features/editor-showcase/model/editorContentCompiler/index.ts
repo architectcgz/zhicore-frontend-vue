@@ -5,7 +5,9 @@ export {
 export {
   createEditorPreviewBlockKeyResolver,
   compileEditorContentToPostBodyWriteInput,
+  compileEditorContentToPostBodyWriteInputWithSourceMap,
   mapEditorCompiledDocumentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPostBodyWriteInputWithSourceMap,
   mapEditorCompiledDocumentToPreviewReaderBlocks,
   mapPreviewReaderBlocksToAnchors,
 } from "./postBodyWriteInputCompiler";
@@ -14,6 +16,7 @@ export type {
   EditorPreviewBlockAnchor,
   EditorPreviewReaderBlock,
   MapEditorCompiledDocumentToPreviewReaderBlocksOptions,
+  PostBodyWriteInputWithSourceMap,
 } from "./postBodyWriteInputCompiler";
 export type {
   EditorCompiledBlock,

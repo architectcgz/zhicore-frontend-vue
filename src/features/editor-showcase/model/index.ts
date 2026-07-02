@@ -1,12 +1,26 @@
 export {
+  contentV1InlineOnlyCapabilities,
+  textareaEditorContentAdapter,
+} from "./editorContentAdapter";
+export type {
+  EditorContentAdapter,
+  EditorContentAdapterCapabilities,
+  EditorInternalDocumentKind,
+  EditorUnsupportedContentReason,
+} from "./editorContentAdapter";
+export {
   compileEditorBlocks,
   compileEditorContent,
   compileEditorContentToPostBodyWriteInput,
+  compileEditorContentToPostBodyWriteInputWithSourceMap,
   createEditorPreviewBlockKeyResolver,
   mapEditorCompiledDocumentToPostBodyWriteInput,
+  mapEditorCompiledDocumentToPostBodyWriteInputWithSourceMap,
   mapEditorCompiledDocumentToPreviewReaderBlocks,
   mapPreviewReaderBlocksToAnchors,
 } from "./editorContentCompiler";
+export { mapPostBodyValidationPathToEditorTarget } from "./editorValidationPathMapper";
+export type { EditorValidationPathTarget } from "./editorValidationPathMapper";
 export {
   createEditorDebugLogger,
   createEditorLogger,
@@ -31,6 +45,7 @@ export type {
   EditorPreviewBlockAnchor,
   EditorPreviewReaderBlock,
   MapEditorCompiledDocumentToPreviewReaderBlocksOptions,
+  PostBodyWriteInputWithSourceMap,
 } from "./editorContentCompiler";
 export {
   buildBlockLineAnchors,
@@ -52,7 +67,9 @@ export {
 } from "./useEditorShowcaseDraft";
 export type {
   EditorDraftSaveStatus,
+  EditorDraftServerSaveClient,
   EditorSavedDraftSnapshot,
+  EditorServerDraftBaseline,
   EditorShowcaseDraftBlock,
   EditorShowcaseDraftBlockType,
   EditorShowcaseInlineNode,
