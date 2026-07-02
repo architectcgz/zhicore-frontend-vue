@@ -79,7 +79,8 @@ blocks 的切分按内容类型边界进行，不按视觉空行机械切分：
 - 预览组件消费 compiler 的 blocks 渲染，不自行解析 markdown、code fence 或链接。
 - 后续接后端 Content 契约时，应优先复用 compiler 输出的结构化 blocks，再做 API DTO 映射。
 - 读者预览为了视觉留白和滚动锚点可以生成 spacer block，但 spacer 不进入 `PostBodyWriteInput` 保存事实。
-- ProseMirror 接入后，ProseMirror JSON 仍只是内部编辑状态；保存、预览和错误定位都通过 adapter 输出，不把内部 JSON 持久化。
+- `/editor` 正文输入层已切换为 ProseMirror `EditorView`，但当前 ProseMirror doc 仍承载 Markdown-like source；保存、预览和错误定位继续通过 source compiler / adapter 输出，不把 ProseMirror JSON 持久化。
+- 富文本 adapter 落地前，ProseMirror schema 只允许 `doc`、`paragraph`、`text`，粘贴内容显式降级为纯文本 source，避免不支持的 rich document 结构被静默写入或压平。
 - adapter 遇到 Content V1 不支持的多段 quote、嵌套 list 或无 `fileId` 的系统媒体时，应阻止保存并定位提示，不能静默压平为 inline 文本。
 
 ## 与后端契约的关系

@@ -39,13 +39,13 @@
 
 ## 编辑器 Adapter 边界
 
-编辑器内部文档不是长期保存事实。当前 textarea source 和未来 ProseMirror doc 都必须先经过 editor content adapter，分别输出：
+编辑器内部文档不是长期保存事实。当前 `/editor` 输入层使用 ProseMirror，但运行时仍把 ProseMirror doc 序列化为 Markdown-like source，再经过 editor content adapter 输出；富文本 adapter 落地前，ProseMirror schema 只允许纯文本 source 结构，粘贴内容降级为纯文本。
 
 - `PostBodyWriteInput`：唯一允许进入 Content 保存 API 的正文写入模型。
 - Reader preview blocks：只服务读者预览、滚动同步和视觉 spacer。
 - 校验错误位置映射：把后端保存模型 path 映射回编辑位置。
 
-ProseMirror JSON 只能作为编辑器内部状态或短期 UI 状态存在，不进入 API 请求、草稿 hash、发布 payload 或长期缓存。ProseMirror adapter 遇到多段 quote、嵌套 list、list item 内 block、缺少 Upload `fileId` 的系统媒体等 Content V1 不支持结构时，必须返回“不支持保存”的校验结果并阻止保存，不得静默 flatten 或丢弃结构。
+ProseMirror JSON 只能作为编辑器内部状态或短期 UI 状态存在，不进入 API 请求、草稿 hash、发布 payload 或长期缓存。后续富文本 ProseMirror adapter 遇到多段 quote、嵌套 list、list item 内 block、缺少 Upload `fileId` 的系统媒体等 Content V1 不支持结构时，必须返回“不支持保存”的校验结果并阻止保存，不得静默 flatten 或丢弃结构。
 
 ## HTTP Envelope
 
