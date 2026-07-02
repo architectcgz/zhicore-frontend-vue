@@ -1,11 +1,16 @@
 import { mount } from "@vue/test-utils";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { editorDraftBodyMaxLength } from "@/features/editor-showcase/model";
 import type { EditorShowcaseTextSelection } from "@/features/editor-showcase/model";
 
 import writingPaneSource from "../EditorWritingPane.vue?raw";
 import EditorWritingPane from "../EditorWritingPane.vue";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 function mountWritingPane(options: { attachTo?: HTMLElement } = {}) {
   return mount(EditorWritingPane, {
@@ -147,6 +152,129 @@ describe("EditorWritingPane", () => {
     exposed.focusBody();
 
     expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
+  it("restores the current scroll position when mobile focus scrolls late", () => {
+    vi.useFakeTimers();
+    const wrapper = mountWritingPane();
+    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
+    const focusSpy = vi
+      .spyOn(bodyInput.element, "focus")
+      .mockImplementation(() => {
+        window.setTimeout(() => {
+          Object.defineProperty(window, "scrollY", {
+            configurable: true,
+            value: 0,
+          });
+        }, 10);
+      });
+    const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {
+      Object.defineProperty(window, "scrollY", {
+        configurable: true,
+        value: 420,
+      });
+    });
+    const exposed = wrapper.vm as unknown as {
+      focusBody: () => void;
+    };
+
+    Object.defineProperty(window, "scrollX", {
+      configurable: true,
+      value: 0,
+    });
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 420,
+    });
+
+    exposed.focusBody();
+    vi.advanceTimersByTime(120);
+
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 420);
+  });
+
+  it("uses the scroll position captured before a toolbar command click", () => {
+    vi.useFakeTimers();
+    const wrapper = mountWritingPane();
+    const quoteButton = wrapper.find<HTMLButtonElement>(
+      '.selection-toolbar button[aria-label="引用块"]',
+    );
+    const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {
+      Object.defineProperty(window, "scrollY", {
+        configurable: true,
+        value: 420,
+      });
+    });
+    const exposed = wrapper.vm as unknown as {
+      focusBody: () => void;
+    };
+
+    Object.defineProperty(window, "scrollX", {
+      configurable: true,
+      value: 0,
+    });
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 420,
+    });
+
+    quoteButton.element.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        pointerType: "touch",
+      }),
+    );
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 0,
+    });
+
+    exposed.focusBody();
+    vi.advanceTimersByTime(120);
+
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 420);
+  });
+
+  it("restores the current scroll position after resetting the body selection", () => {
+    const wrapper = mountWritingPane();
+    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
+    const writingEditor = wrapper.find<HTMLElement>(".writing-editor");
+    const setSelectionRangeSpy = vi
+      .spyOn(bodyInput.element, "setSelectionRange")
+      .mockImplementation(() => {
+        Object.defineProperty(window, "scrollY", {
+          configurable: true,
+          value: 0,
+        });
+        writingEditor.element.scrollTop = 0;
+      });
+    const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {
+      Object.defineProperty(window, "scrollY", {
+        configurable: true,
+        value: 420,
+      });
+    });
+    const exposed = wrapper.vm as unknown as {
+      setBodySelection: (selection: EditorShowcaseTextSelection) => void;
+    };
+
+    Object.defineProperty(window, "scrollX", {
+      configurable: true,
+      value: 0,
+    });
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 420,
+    });
+    writingEditor.element.scrollTop = 180;
+
+    exposed.setBodySelection({ start: 2, end: 4 });
+
+    expect(setSelectionRangeSpy).toHaveBeenCalledWith(2, 4);
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 420);
+    expect(writingEditor.element.scrollTop).toBe(180);
   });
 
   it("emits the matching toolbar action when a button is clicked", async () => {

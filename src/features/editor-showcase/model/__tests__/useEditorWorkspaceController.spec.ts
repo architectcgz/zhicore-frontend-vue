@@ -66,4 +66,35 @@ describe("useEditorWorkspaceController", () => {
 
     expect(bodyInput.style.height).toBe("640px");
   });
+
+  it("restores toolbar selection before focusing the body input", async () => {
+    const wrapper = mount(createControllerHost());
+    const controller = (
+      wrapper.vm as unknown as {
+        controller: ReturnType<typeof useEditorWorkspaceController>;
+      }
+    ).controller;
+    const callOrder: string[] = [];
+    const bodyInput = document.createElement("textarea");
+    const writingEditor = document.createElement("main");
+    const shell: EditorWorkspaceShellRef = {
+      bodyInputElement: bodyInput,
+      writingEditorElement: writingEditor,
+      readerPreviewElement: null,
+      focusBody: vi.fn(() => {
+        callOrder.push("focus");
+      }),
+      getBodySelection: vi.fn(() => ({ start: 0, end: 0 })),
+      setBodySelection: vi.fn(() => {
+        callOrder.push("selection");
+      }),
+    };
+
+    defineReadonlyNumberProperty(bodyInput, "scrollHeight", 640);
+    controller.workspaceShellRef.value = shell;
+
+    await controller.handleToolbarAction("quote");
+
+    expect(callOrder).toEqual(["selection", "focus"]);
+  });
 });

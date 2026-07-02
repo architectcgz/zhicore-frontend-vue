@@ -114,9 +114,9 @@ export function useEditorWorkspaceController() {
 
     await nextTick();
     resizeBodyInput();
-    workspaceShellRef.value?.focusBody();
     // 工具栏会重写 markdown 标记，恢复选区让作者可以继续在原位置输入。
     workspaceShellRef.value?.setBodySelection(nextSelection);
+    workspaceShellRef.value?.focusBody();
     syncPreviewScroll();
   }
 
@@ -126,11 +126,11 @@ export function useEditorWorkspaceController() {
     await nextTick();
 
     if (result.activeField === "body") {
-      workspaceShellRef.value?.focusBody();
-
       if (result.selection) {
         workspaceShellRef.value?.setBodySelection(result.selection);
       }
+
+      workspaceShellRef.value?.focusBody();
     }
 
     await nextTick();

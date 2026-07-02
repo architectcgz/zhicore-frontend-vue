@@ -191,6 +191,14 @@ interface ToolbarGroup {
   items: ToolbarItem[];
 }
 
+interface ToolbarCommandScrollSnapshot {
+  writingEditor: HTMLElement | null;
+  viewportScrollX: number;
+  viewportScrollY: number;
+  editorScrollLeft: number;
+  editorScrollTop: number;
+}
+
 const toolbarGroups: ToolbarGroup[] = [
   {
     id: "inline",
@@ -265,6 +273,8 @@ const lastBodySelection = ref<EditorShowcaseTextSelection>({
   start: 0,
   end: 0,
 });
+const lastToolbarCommandScrollSnapshot =
+  ref<ToolbarCommandScrollSnapshot | null>(null);
 
 function handleTitleInput(event: Event): void {
   emit("titleInput", (event.target as HTMLTextAreaElement).value);
@@ -320,6 +330,7 @@ function preserveBodySelectionBeforeToolbarCommand(event: Event): void {
   // 工具栏命令依赖正文选区定位插入点；先拦截按钮聚焦，避免移动端触摸按下时把 textarea 光标折回末尾。
   event.preventDefault();
   rememberBodySelection();
+  lastToolbarCommandScrollSnapshot.value = captureToolbarCommandScroll();
 }
 
 function getBodySelection(): EditorShowcaseTextSelection {
@@ -331,13 +342,65 @@ function getBodySelection(): EditorShowcaseTextSelection {
   return readBodySelection() ?? lastBodySelection.value;
 }
 
+function captureToolbarCommandScroll(): ToolbarCommandScrollSnapshot {
+  const writingEditor = writingEditorRef.value;
+
+  return {
+    writingEditor,
+    viewportScrollX: window.scrollX,
+    viewportScrollY: window.scrollY,
+    editorScrollLeft: writingEditor?.scrollLeft ?? 0,
+    editorScrollTop: writingEditor?.scrollTop ?? 0,
+  };
+}
+
+function createToolbarCommandScrollRestorer(): () => void {
+  const snapshot =
+    lastToolbarCommandScrollSnapshot.value ?? captureToolbarCommandScroll();
+
+  return () => {
+    if (snapshot.writingEditor) {
+      snapshot.writingEditor.scrollLeft = snapshot.editorScrollLeft;
+      snapshot.writingEditor.scrollTop = snapshot.editorScrollTop;
+    }
+
+    if (
+      window.scrollX !== snapshot.viewportScrollX ||
+      window.scrollY !== snapshot.viewportScrollY
+    ) {
+      window.scrollTo(snapshot.viewportScrollX, snapshot.viewportScrollY);
+    }
+  };
+}
+
+function scheduleToolbarCommandScrollRestore(restoreScroll: () => void): void {
+  restoreScroll();
+  window.requestAnimationFrame(restoreScroll);
+  window.setTimeout(restoreScroll, 0);
+  window.setTimeout(restoreScroll, 80);
+  window.setTimeout(restoreScroll, 180);
+  window.setTimeout(() => {
+    lastToolbarCommandScrollSnapshot.value = null;
+  }, 220);
+}
+
 function focusBody(): void {
+  const restoreScroll = createToolbarCommandScrollRestorer();
+
   bodyInputRef.value?.focus({ preventScroll: true });
+  // 部分移动端浏览器会在 preventScroll 后延迟把 textarea 光标滚进视口；
+  // 工具栏命令聚焦正文时应保持作者当前阅读位置。
+  scheduleToolbarCommandScrollRestore(restoreScroll);
 }
 
 function setBodySelection(selection: EditorShowcaseTextSelection): void {
+  const restoreScroll = createToolbarCommandScrollRestorer();
+
   bodyInputRef.value?.setSelectionRange(selection.start, selection.end);
   lastBodySelection.value = selection;
+  // 移动端浏览器会在 setSelectionRange 后主动把 textarea 光标滚进视口；
+  // 工具栏命令应保持作者当前阅读位置，只更新源码和选区。
+  scheduleToolbarCommandScrollRestore(restoreScroll);
 }
 
 defineExpose({
