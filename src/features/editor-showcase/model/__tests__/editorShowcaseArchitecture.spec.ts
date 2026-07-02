@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import actionBarSource from "@/components/editor-showcase/EditorActionBar.vue?raw";
 import documentViewerSource from "@/components/editor-showcase/EditorDocumentViewerDemo.vue?raw";
 import previewPaneSource from "@/components/editor-showcase/EditorPreviewPane.vue?raw";
 import writingPaneSource from "@/components/editor-showcase/EditorWritingPane.vue?raw";
@@ -30,16 +29,13 @@ describe("editor showcase architecture boundaries", () => {
   });
 
   it("keeps workflow owner composables out of editor showcase render components", () => {
-    [
-      actionBarSource,
-      documentViewerSource,
-      previewPaneSource,
-      writingPaneSource,
-    ].forEach((source) => {
-      expect(source).not.toMatch(
-        /useEditor(?:ShowcaseDraft|ShowcaseDisplay|PreviewScrollSync)/,
-      );
-    });
+    [documentViewerSource, previewPaneSource, writingPaneSource].forEach(
+      (source) => {
+        expect(source).not.toMatch(
+          /useEditor(?:ShowcaseDraft|ShowcaseDisplay|PreviewScrollSync)/,
+        );
+      },
+    );
   });
 
   it("does not expose the unowned HTML compiler path from public editor APIs", () => {
@@ -54,7 +50,7 @@ describe("editor showcase architecture boundaries", () => {
   });
 
   it("keeps ink theme overrides on workspace variables instead of component globals", () => {
-    [actionBarSource, previewPaneSource, writingPaneSource].forEach((source) => {
+    [previewPaneSource, writingPaneSource].forEach((source) => {
       expect(source).not.toContain(":global(.editor-showcase--ink)");
     });
   });

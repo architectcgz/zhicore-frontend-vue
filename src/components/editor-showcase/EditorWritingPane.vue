@@ -5,18 +5,52 @@
     aria-label="可输入编辑区"
     @scroll="emit('scroll')"
   >
-    <div class="writing-editor__meta" aria-live="polite">
-      <span
-        :class="[
-          'writing-editor__save-state',
-          `writing-editor__save-state--${saveStatus}`,
-        ]"
-      >
-        {{ saveStatusLabel }}
-      </span>
-      <span>上次保存 {{ lastSavedLabel }}</span>
-      <span>{{ wordCount }} 字</span>
-      <span>{{ bodyCharacterCount }} / {{ bodyMaxLength }} 字符</span>
+    <div class="writing-editor__meta">
+      <div class="writing-editor__status" aria-live="polite">
+        <span
+          :class="[
+            'writing-editor__save-state',
+            `writing-editor__save-state--${saveStatus}`,
+          ]"
+        >
+          {{ saveStatusLabel }}
+        </span>
+        <span>上次保存 {{ lastSavedLabel }}</span>
+        <span>{{ wordCount }} 字</span>
+        <span>{{ bodyCharacterCount }} / {{ bodyMaxLength }} 字符</span>
+      </div>
+
+      <div class="writing-editor__mode-switch" aria-label="编辑器视图">
+        <button
+          type="button"
+          :aria-pressed="activeMode === 'focus'"
+          @click="emit('selectMode', 'focus')"
+        >
+          专注写作
+        </button>
+        <button
+          type="button"
+          :aria-pressed="activeMode === 'preview'"
+          @click="emit('selectMode', 'preview')"
+        >
+          写作 + 预览
+        </button>
+      </div>
+
+      <div class="writing-editor__background-picker" aria-label="背景候选">
+        <button
+          v-for="background in backgroundCandidates"
+          :key="background.id"
+          class="writing-editor__background-swatch"
+          type="button"
+          :aria-label="`切换到${background.name}背景`"
+          :aria-pressed="activeBackgroundId === background.id"
+          @click="emit('selectBackground', background.id)"
+        >
+          <span :style="{ background: background.swatch }"></span>
+          {{ background.name }}
+        </button>
+      </div>
     </div>
 
     <section class="writing-editor__canvas">
@@ -115,6 +149,9 @@ import { ref } from "vue";
 
 import type {
   EditorDraftSaveStatus,
+  EditorShowcaseBackground,
+  EditorShowcaseBackgroundId,
+  EditorShowcaseMode,
   EditorShowcaseTextSelection,
   EditorShowcaseToolbarAction,
 } from "@/features/editor-showcase/model";
@@ -168,6 +205,9 @@ const toolbarGroups: ToolbarGroup[] = [
 ];
 
 defineProps<{
+  activeMode: EditorShowcaseMode;
+  activeBackgroundId: EditorShowcaseBackgroundId;
+  backgroundCandidates: EditorShowcaseBackground[];
   title: string;
   body: string;
   wordCount: number;
@@ -189,6 +229,8 @@ const emit = defineEmits<{
   redo: [];
   saveDraft: [];
   toolbarAction: [action: EditorShowcaseToolbarAction];
+  selectMode: [mode: EditorShowcaseMode];
+  selectBackground: [backgroundId: EditorShowcaseBackgroundId];
   scroll: [];
 }>();
 
@@ -288,15 +330,27 @@ defineExpose({
 }
 
 .writing-editor__meta {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 10px;
   align-items: center;
-  justify-content: space-between;
   padding: 8px 12px;
   border-bottom: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.1));
   color: var(--editor-page-muted, #647280);
   font-size: 13px;
+}
+
+.writing-editor__status,
+.writing-editor__mode-switch,
+.writing-editor__background-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.writing-editor__status span {
+  white-space: nowrap;
 }
 
 .writing-editor__save-state {
@@ -324,6 +378,58 @@ defineExpose({
 
 .writing-editor__save-state--saving::before {
   background: var(--editor-page-saving, #2563eb);
+}
+
+.writing-editor__mode-switch,
+.writing-editor__background-picker {
+  justify-content: flex-end;
+}
+
+.writing-editor__mode-switch button,
+.writing-editor__background-swatch {
+  min-height: 32px;
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
+  border-radius: 999px;
+  background: var(--editor-control-bg-muted, rgba(255, 255, 255, 0.56));
+  color: var(--editor-page-muted, #405466);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.writing-editor__mode-switch button {
+  padding: 5px 11px;
+}
+
+.writing-editor__mode-switch button[aria-pressed="true"],
+.writing-editor__background-swatch[aria-pressed="true"] {
+  border-color: var(--editor-page-accent, #1f7f74);
+  background: var(--editor-control-bg-active, #ffffff);
+  color: var(--editor-page-text, #17202a);
+}
+
+.writing-editor__mode-switch button:hover,
+.writing-editor__mode-switch button:focus-visible,
+.writing-editor__background-swatch:hover,
+.writing-editor__background-swatch:focus-visible {
+  transform: translateY(-1px);
+}
+
+.writing-editor__background-swatch {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 9px 4px 5px;
+}
+
+.writing-editor__background-swatch span {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.16));
+  border-radius: 50%;
 }
 
 .writing-editor__canvas {
@@ -468,6 +574,16 @@ defineExpose({
 }
 
 @media (max-width: 980px) {
+  .writing-editor__meta {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .writing-editor__mode-switch,
+  .writing-editor__background-picker {
+    justify-content: flex-start;
+  }
+
   .writing-editor__canvas {
     grid-template-columns: minmax(0, 1fr);
     padding-inline: 12px;
@@ -475,7 +591,7 @@ defineExpose({
 }
 
 @media (max-width: 640px) {
-  .writing-editor__meta {
+  .writing-editor__status {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -497,6 +613,13 @@ defineExpose({
 
   .body-input {
     font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .writing-editor__mode-switch button,
+  .writing-editor__background-swatch {
+    transition: none;
   }
 }
 </style>

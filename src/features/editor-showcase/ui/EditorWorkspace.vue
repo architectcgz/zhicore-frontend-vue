@@ -21,18 +21,6 @@
     </header>
 
     <section class="editor-frame">
-      <EditorActionBar
-        :active-mode="activeMode"
-        :active-background-id="activeBackground.id"
-        :background-candidates="backgroundCandidates"
-        :save-status="draftSaveStatus"
-        :save-status-label="saveStatusLabel"
-        :last-saved-label="lastSavedLabel"
-        :word-count="wordCount"
-        @select-mode="handleModeSelect"
-        @select-background="selectBackground"
-      />
-
       <div
         class="editor-stage"
         :class="{
@@ -42,6 +30,9 @@
       >
         <EditorWritingPane
           ref="writingPaneRef"
+          :active-mode="activeMode"
+          :active-background-id="activeBackground.id"
+          :background-candidates="backgroundCandidates"
           :title="title"
           :body="body"
           :word-count="wordCount"
@@ -60,6 +51,8 @@
           @redo="handleRedoDraft"
           @save-draft="handleSaveDraft"
           @toolbar-action="handleToolbarAction"
+          @select-mode="handleModeSelect"
+          @select-background="selectBackground"
           @scroll="syncPreviewScroll"
         />
 
@@ -78,7 +71,6 @@
 <script setup lang="ts">
 import { useEditorWorkspaceController } from "@/features/editor-showcase/model";
 
-import EditorActionBar from "@/components/editor-showcase/EditorActionBar.vue";
 import EditorPreviewPane from "@/components/editor-showcase/EditorPreviewPane.vue";
 import EditorWritingPane from "@/components/editor-showcase/EditorWritingPane.vue";
 

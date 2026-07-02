@@ -8,6 +8,22 @@ import EditorWritingPane from "../EditorWritingPane.vue";
 function mountWritingPane() {
   return mount(EditorWritingPane, {
     props: {
+      activeMode: "focus",
+      activeBackgroundId: "paper",
+      backgroundCandidates: [
+        {
+          id: "paper",
+          name: "纸面",
+          className: "editor-showcase--paper",
+          swatch: "linear-gradient(135deg, #f7f4ee, #edf1f6)",
+        },
+        {
+          id: "ink",
+          name: "墨蓝",
+          className: "editor-showcase--ink",
+          swatch: "linear-gradient(135deg, #141a24, #263341)",
+        },
+      ],
       title: "草稿标题",
       body: "草稿正文",
       wordCount: 4,
@@ -95,6 +111,20 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("undo")).toEqual([[]]);
     expect(wrapper.emitted("redo")).toEqual([[]]);
     expect(wrapper.emitted("saveDraft")).toEqual([[]]);
+  });
+
+  it("emits editor display changes from the writing meta bar", async () => {
+    const wrapper = mountWritingPane();
+
+    await wrapper
+      .find('.writing-editor__mode-switch button[aria-pressed="false"]')
+      .trigger("click");
+    await wrapper
+      .find('.writing-editor__background-swatch[aria-label="切换到墨蓝背景"]')
+      .trigger("click");
+
+    expect(wrapper.emitted("selectMode")).toEqual([["preview"]]);
+    expect(wrapper.emitted("selectBackground")).toEqual([["ink"]]);
   });
 
   it("sets the body textarea maxlength from the editor limit", () => {
