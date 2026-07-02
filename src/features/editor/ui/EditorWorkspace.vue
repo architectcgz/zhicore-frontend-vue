@@ -164,14 +164,12 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 }
 
 .editor--paper {
-  --editor-page-bg: #f3f6f8;
   --editor-control-bg: #f7f4ee;
   --editor-control-bg-muted: rgba(247, 244, 238, 0.72);
   --editor-control-bg-active: #fffdf8;
 }
 
 .editor--sage {
-  --editor-page-bg: #f3f6f8;
   --editor-page-panel: rgba(237, 245, 241, 0.74);
   --editor-control-bg: #edf5f1;
   --editor-control-bg-muted: rgba(224, 239, 232, 0.74);
@@ -182,7 +180,6 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 }
 
 .editor--sand {
-  --editor-page-bg: #f3f6f8;
   --editor-page-panel: rgba(244, 239, 232, 0.74);
   --editor-control-bg: #f4efe8;
   --editor-control-bg-muted: rgba(235, 223, 207, 0.72);
@@ -195,7 +192,6 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 }
 
 .editor--ink {
-  --editor-page-bg: #0f1720;
   --editor-page-text: #e6edf3;
   --editor-page-muted: #aab8c5;
   --editor-page-panel: rgba(19, 27, 38, 0.78);

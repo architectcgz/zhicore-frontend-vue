@@ -4,6 +4,10 @@ export type EditorMode = "focus" | "preview";
 
 export type EditorBackgroundId = "paper" | "sage" | "sand" | "ink";
 
+interface EditorDisplayPreference {
+  backgroundId: EditorBackgroundId;
+}
+
 export interface EditorBackground {
   id: EditorBackgroundId;
   name: string;
@@ -38,9 +42,52 @@ const backgroundCandidates: EditorBackground[] = [
   },
 ];
 
+const editorDisplayPreferenceStorageKey = "zhicore:editor:display-preference";
+const defaultEditorBackgroundId: EditorBackgroundId = "paper";
+
+function isEditorBackgroundId(value: unknown): value is EditorBackgroundId {
+  return backgroundCandidates.some((background) => background.id === value);
+}
+
+function readStoredEditorBackgroundId(): EditorBackgroundId {
+  try {
+    const rawPreference = window.localStorage.getItem(
+      editorDisplayPreferenceStorageKey,
+    );
+
+    if (!rawPreference) {
+      return defaultEditorBackgroundId;
+    }
+
+    const parsedPreference = JSON.parse(
+      rawPreference,
+    ) as Partial<EditorDisplayPreference>;
+
+    return isEditorBackgroundId(parsedPreference.backgroundId)
+      ? parsedPreference.backgroundId
+      : defaultEditorBackgroundId;
+  } catch {
+    // 本地显示偏好不是编辑主流程事实，读取失败时回到默认背景，避免配置损坏阻断编辑器打开。
+    return defaultEditorBackgroundId;
+  }
+}
+
+function persistEditorBackgroundId(backgroundId: EditorBackgroundId): void {
+  try {
+    window.localStorage.setItem(
+      editorDisplayPreferenceStorageKey,
+      JSON.stringify({ backgroundId } satisfies EditorDisplayPreference),
+    );
+  } catch {
+    // 浏览器禁止写入 localStorage 时仍允许用户临时切换当前会话的编辑器背景。
+  }
+}
+
 export function useEditorDisplay() {
   const activeMode = ref<EditorMode>("focus");
-  const activeBackgroundId = ref<EditorBackgroundId>("paper");
+  const activeBackgroundId = ref<EditorBackgroundId>(
+    readStoredEditorBackgroundId(),
+  );
 
   const activeBackground = computed(() => {
     return (
@@ -61,6 +108,7 @@ export function useEditorDisplay() {
 
   function selectBackground(backgroundId: EditorBackgroundId): void {
     activeBackgroundId.value = backgroundId;
+    persistEditorBackgroundId(backgroundId);
   }
 
   return {

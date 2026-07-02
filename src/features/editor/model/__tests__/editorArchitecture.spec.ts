@@ -103,4 +103,16 @@ describe("editor architecture boundaries", () => {
       expect(source).not.toContain(":global(.editor--ink)");
     });
   });
+
+  it("keeps editor background themes from overriding the full page background", () => {
+    const backgroundThemeBlocks =
+      workspaceSource.match(
+        /\.editor--(?:paper|sage|sand|ink)\s*\{[\s\S]*?\n\}/g,
+      ) ?? [];
+
+    expect(backgroundThemeBlocks).toHaveLength(4);
+    backgroundThemeBlocks.forEach((source) => {
+      expect(source).not.toContain("--editor-page-bg");
+    });
+  });
 });

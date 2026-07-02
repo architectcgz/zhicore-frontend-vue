@@ -1,8 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { useEditorDisplay } from "../useEditorDisplay";
 
 describe("useEditorDisplay", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   it("starts in focus mode with the paper background selected", () => {
     const display = useEditorDisplay();
 
@@ -32,5 +40,14 @@ describe("useEditorDisplay", () => {
 
     expect(display.activeBackground.value.id).toBe("sage");
     expect(display.activeBackgroundClass.value).toBe("editor--sage");
+  });
+
+  it("persists the selected background as a local display preference", () => {
+    const display = useEditorDisplay();
+
+    display.selectBackground("ink");
+
+    const restoredDisplay = useEditorDisplay();
+    expect(restoredDisplay.activeBackground.value.id).toBe("ink");
   });
 });
