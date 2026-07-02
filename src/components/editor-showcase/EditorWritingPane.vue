@@ -55,7 +55,13 @@
 
     <section class="writing-editor__canvas">
       <article class="document-sheet">
-        <nav class="selection-toolbar" aria-label="格式工具">
+        <nav
+          :class="[
+            'selection-toolbar',
+            { 'selection-toolbar--expanded': isToolbarExpanded },
+          ]"
+          aria-label="格式工具"
+        >
           <div class="selection-toolbar__group">
             <button
               class="selection-toolbar__command"
@@ -108,6 +114,17 @@
               {{ item.label }}
             </button>
           </div>
+
+          <button
+            class="selection-toolbar__toggle"
+            type="button"
+            :aria-expanded="isToolbarExpanded"
+            aria-label="展开或收起全部格式工具"
+            @mousedown.prevent
+            @click="isToolbarExpanded = !isToolbarExpanded"
+          >
+            {{ isToolbarExpanded ? "收起" : "更多" }}
+          </button>
         </nav>
 
         <p class="document-sheet__path">作者工作台 / 草稿</p>
@@ -236,6 +253,7 @@ const emit = defineEmits<{
 
 const bodyInputRef = ref<HTMLTextAreaElement | null>(null);
 const writingEditorRef = ref<HTMLElement | null>(null);
+const isToolbarExpanded = ref(false);
 const lastBodySelection = ref<EditorShowcaseTextSelection>({
   start: 0,
   end: 0,
@@ -452,24 +470,36 @@ defineExpose({
   z-index: 2;
   display: flex;
   flex-wrap: wrap;
-  width: min(100%, max-content);
+  width: 100%;
+  max-height: 38px;
+  overflow: hidden;
   gap: 6px;
   margin: 0 auto 12px;
   padding: 4px;
   border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 8px;
   background: var(--editor-control-bg-active, rgba(255, 255, 255, 0.88));
+  transition:
+    max-height 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease;
+}
+
+.selection-toolbar--expanded {
+  max-height: 172px;
+  box-shadow: 0 6px 8px rgba(23, 32, 42, 0.08);
 }
 
 .selection-toolbar__group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+  display: contents;
 }
 
-.selection-toolbar__group + .selection-toolbar__group {
-  padding-left: 6px;
-  border-left: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
+.selection-toolbar__group + .selection-toolbar__group button:first-child {
+  margin-left: 4px;
+  box-shadow: inset 1px 0 0 var(--editor-page-border, rgba(49, 74, 91, 0.14));
+}
+
+.selection-toolbar__toggle {
+  display: none;
 }
 
 .selection-toolbar button {
@@ -616,9 +646,34 @@ defineExpose({
   }
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .selection-toolbar:hover,
+  .selection-toolbar:focus-within {
+    max-height: 172px;
+    box-shadow: 0 6px 8px rgba(23, 32, 42, 0.08);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .selection-toolbar {
+    position: sticky;
+    padding-right: 60px;
+  }
+
+  .selection-toolbar__toggle {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--editor-control-bg-active, #ffffff);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .writing-editor__mode-switch button,
-  .writing-editor__background-swatch {
+  .writing-editor__background-swatch,
+  .selection-toolbar {
     transition: none;
   }
 }

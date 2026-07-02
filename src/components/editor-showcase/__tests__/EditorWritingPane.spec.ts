@@ -68,7 +68,34 @@ describe("EditorWritingPane", () => {
       "Code",
       "Tbl",
       "Math",
+      "更多",
     ]);
+  });
+
+  it("toggles the compact toolbar open for touch devices", async () => {
+    const wrapper = mountWritingPane();
+    const toggleButton = wrapper.find(".selection-toolbar__toggle");
+
+    expect(wrapper.find(".selection-toolbar").classes()).not.toContain(
+      "selection-toolbar--expanded",
+    );
+    expect(toggleButton.attributes("aria-expanded")).toBe("false");
+
+    await toggleButton.trigger("click");
+
+    expect(wrapper.find(".selection-toolbar").classes()).toContain(
+      "selection-toolbar--expanded",
+    );
+    expect(toggleButton.text()).toBe("收起");
+    expect(toggleButton.attributes("aria-expanded")).toBe("true");
+
+    await toggleButton.trigger("click");
+
+    expect(wrapper.find(".selection-toolbar").classes()).not.toContain(
+      "selection-toolbar--expanded",
+    );
+    expect(toggleButton.text()).toBe("更多");
+    expect(toggleButton.attributes("aria-expanded")).toBe("false");
   });
 
   it("emits the matching toolbar action when a button is clicked", async () => {
