@@ -152,6 +152,22 @@ describe("EditorWritingPane", () => {
     ]);
   });
 
+  it("keeps the desktop toolbar as a sticky zero-height overlay with a fixed reserved slot", () => {
+    expect(writingPaneSource).toContain('class="selection-toolbar-layer"');
+    expect(writingPaneStyleSource).toMatch(
+      /\.document-sheet\s*\{[\s\S]*--selection-toolbar-top: 14px;[\s\S]*--selection-toolbar-reserved-space: 50px;[\s\S]*--selection-toolbar-sticky-top: 8px;[\s\S]*padding: calc\(/,
+    );
+    expect(writingPaneStyleSource).toMatch(
+      /\.selection-toolbar-layer\s*\{[\s\S]*position: sticky;[\s\S]*var\(--selection-toolbar-sticky-top\)[\s\S]*var\(--selection-toolbar-reserved-space\)[\s\S]*height: 0;/,
+    );
+    expect(writingPaneStyleSource).toMatch(
+      /\.selection-toolbar\s*\{[\s\S]*position: relative;[\s\S]*margin: 0 auto;[\s\S]*transform: translateY\(calc\(-1 \* var\(--selection-toolbar-reserved-space\)\)\);/,
+    );
+    expect(writingPaneStyleSource).toMatch(
+      /@media \(max-width: 980px\) \{[\s\S]*\.document-sheet\s*\{[\s\S]*padding: 14px 0 0;[\s\S]*\.selection-toolbar-layer\s*\{[\s\S]*position: static;[\s\S]*\.selection-toolbar\s*\{[\s\S]*position: fixed;[\s\S]*transform: none;/,
+    );
+  });
+
   it("defines the mobile toolbar as a bottom floating editor bar", () => {
     expect(writingPaneStyleSource).toContain("position: fixed;");
     expect(writingPaneStyleSource).toContain("top: auto;");

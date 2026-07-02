@@ -55,84 +55,86 @@
 
     <section class="writing-editor__canvas">
       <article class="document-sheet">
-        <nav
-          :class="[
-            'selection-toolbar',
-            { 'selection-toolbar--expanded': isToolbarExpanded },
-          ]"
-          aria-label="格式工具"
-        >
-          <div class="selection-toolbar__group">
-            <button
-              class="selection-toolbar__command selection-toolbar__mobile-primary"
-              type="button"
-              aria-label="撤销上一步编辑"
-              title="撤销"
-              :disabled="!canUndo"
-              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
-              @mousedown="preserveBodySelectionBeforeToolbarCommand"
-              @click="emit('undo')"
-            >
-              撤销
-            </button>
-            <button
-              class="selection-toolbar__command selection-toolbar__mobile-primary"
-              type="button"
-              aria-label="重做上一步编辑"
-              title="重做"
-              :disabled="!canRedo"
-              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
-              @mousedown="preserveBodySelectionBeforeToolbarCommand"
-              @click="emit('redo')"
-            >
-              重做
-            </button>
-            <button
-              class="selection-toolbar__command selection-toolbar__command--save selection-toolbar__mobile-primary"
-              type="button"
-              title="保存草稿"
-              :disabled="!canSaveDraft"
-              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
-              @mousedown="preserveBodySelectionBeforeToolbarCommand"
-              @click="emit('saveDraft')"
-            >
-              {{ saveButtonLabel }}
-            </button>
-          </div>
-
-          <div
-            v-for="group in toolbarGroups"
-            :key="group.id"
-            class="selection-toolbar__group"
+        <div class="selection-toolbar-layer">
+          <nav
+            :class="[
+              'selection-toolbar',
+              { 'selection-toolbar--expanded': isToolbarExpanded },
+            ]"
+            aria-label="格式工具"
           >
-            <button
-              v-for="item in group.items"
-              :key="item.action"
-              :class="{
-                'selection-toolbar__mobile-primary':
-                  item.action === 'bold' || item.action === 'link',
-              }"
-              type="button"
-              :aria-label="item.title"
-              :title="item.title"
-              @pointerdown="preserveBodySelectionBeforeToolbarCommand"
-              @mousedown="preserveBodySelectionBeforeToolbarCommand"
-              @click="handleToolbarButtonClick(item.action)"
-            >
-              {{ item.label }}
-            </button>
-          </div>
+            <div class="selection-toolbar__group">
+              <button
+                class="selection-toolbar__command selection-toolbar__mobile-primary"
+                type="button"
+                aria-label="撤销上一步编辑"
+                title="撤销"
+                :disabled="!canUndo"
+                @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+                @mousedown="preserveBodySelectionBeforeToolbarCommand"
+                @click="emit('undo')"
+              >
+                撤销
+              </button>
+              <button
+                class="selection-toolbar__command selection-toolbar__mobile-primary"
+                type="button"
+                aria-label="重做上一步编辑"
+                title="重做"
+                :disabled="!canRedo"
+                @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+                @mousedown="preserveBodySelectionBeforeToolbarCommand"
+                @click="emit('redo')"
+              >
+                重做
+              </button>
+              <button
+                class="selection-toolbar__command selection-toolbar__command--save selection-toolbar__mobile-primary"
+                type="button"
+                title="保存草稿"
+                :disabled="!canSaveDraft"
+                @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+                @mousedown="preserveBodySelectionBeforeToolbarCommand"
+                @click="emit('saveDraft')"
+              >
+                {{ saveButtonLabel }}
+              </button>
+            </div>
 
-          <button
-            class="selection-toolbar__toggle"
-            type="button"
-            :aria-expanded="isToolbarExpanded"
-            aria-label="展开或收起全部格式工具"
-            @click="isToolbarExpanded = !isToolbarExpanded"
-          >
-            {{ isToolbarExpanded ? "收起" : "更多" }}
-          </button>
-        </nav>
+            <div
+              v-for="group in toolbarGroups"
+              :key="group.id"
+              class="selection-toolbar__group"
+            >
+              <button
+                v-for="item in group.items"
+                :key="item.action"
+                :class="{
+                  'selection-toolbar__mobile-primary':
+                    item.action === 'bold' || item.action === 'link',
+                }"
+                type="button"
+                :aria-label="item.title"
+                :title="item.title"
+                @pointerdown="preserveBodySelectionBeforeToolbarCommand"
+                @mousedown="preserveBodySelectionBeforeToolbarCommand"
+                @click="handleToolbarButtonClick(item.action)"
+              >
+                {{ item.label }}
+              </button>
+            </div>
+
+            <button
+              class="selection-toolbar__toggle"
+              type="button"
+              :aria-expanded="isToolbarExpanded"
+              aria-label="展开或收起全部格式工具"
+              @click="isToolbarExpanded = !isToolbarExpanded"
+            >
+              {{ isToolbarExpanded ? "收起" : "更多" }}
+            </button>
+          </nav>
+        </div>
 
         <textarea
           :value="title"
