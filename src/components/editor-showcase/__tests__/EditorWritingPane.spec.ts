@@ -1,9 +1,10 @@
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { editorDraftBodyMaxLength } from "@/features/editor-showcase/model";
 import type { EditorShowcaseTextSelection } from "@/features/editor-showcase/model";
 
+import writingPaneSource from "../EditorWritingPane.vue?raw";
 import EditorWritingPane from "../EditorWritingPane.vue";
 
 function mountWritingPane(options: { attachTo?: HTMLElement } = {}) {
@@ -100,6 +101,54 @@ describe("EditorWritingPane", () => {
     expect(toggleButton.attributes("aria-expanded")).toBe("false");
   });
 
+  it("marks the mobile floating toolbar primary actions", () => {
+    const wrapper = mountWritingPane();
+    const primaryButtons = wrapper.findAll(
+      ".selection-toolbar__mobile-primary",
+    );
+
+    expect(primaryButtons.map((button) => button.text())).toEqual([
+      "撤销",
+      "重做",
+      "保存草稿",
+      "B",
+      "Link",
+    ]);
+  });
+
+  it("defines the mobile toolbar as a bottom floating editor bar", () => {
+    expect(writingPaneSource).toContain("position: fixed;");
+    expect(writingPaneSource).toContain("top: auto;");
+    expect(writingPaneSource).toContain(
+      "bottom: calc(12px + env(safe-area-inset-bottom, 0px));",
+    );
+    expect(writingPaneSource).toContain(
+      "padding: 10px 12px calc(92px + env(safe-area-inset-bottom, 0px));",
+    );
+    expect(writingPaneSource).toContain(
+      "padding: 8px 10px calc(92px + env(safe-area-inset-bottom, 0px));",
+    );
+    expect(writingPaneSource).toContain(
+      ".selection-toolbar.selection-toolbar--expanded",
+    );
+    expect(writingPaneSource).toContain(
+      "grid-template-columns: repeat(6, minmax(0, 1fr));",
+    );
+  });
+
+  it("restores body focus without forcing the mobile viewport to scroll", () => {
+    const wrapper = mountWritingPane();
+    const bodyInput = wrapper.find<HTMLTextAreaElement>(".body-input");
+    const focusSpy = vi.spyOn(bodyInput.element, "focus");
+    const exposed = wrapper.vm as unknown as {
+      focusBody: () => void;
+    };
+
+    exposed.focusBody();
+
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
   it("emits the matching toolbar action when a button is clicked", async () => {
     const wrapper = mountWritingPane();
     const tableButton = wrapper.find(
@@ -140,6 +189,20 @@ describe("EditorWritingPane", () => {
     tableButton.element.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("does not cancel pointer events on the mobile toolbar more toggle", () => {
+    const wrapper = mountWritingPane();
+    const toggleButton = wrapper.find(".selection-toolbar__toggle");
+    const event = new PointerEvent("pointerdown", {
+      bubbles: true,
+      cancelable: true,
+      pointerType: "touch",
+    });
+
+    toggleButton.element.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
   });
 
   it("uses the remembered body selection when a toolbar command runs after the textarea lost focus", async () => {

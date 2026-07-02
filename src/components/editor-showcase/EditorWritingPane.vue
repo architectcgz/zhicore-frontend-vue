@@ -64,7 +64,7 @@
         >
           <div class="selection-toolbar__group">
             <button
-              class="selection-toolbar__command"
+              class="selection-toolbar__command selection-toolbar__mobile-primary"
               type="button"
               aria-label="撤销上一步编辑"
               title="撤销"
@@ -76,7 +76,7 @@
               撤销
             </button>
             <button
-              class="selection-toolbar__command"
+              class="selection-toolbar__command selection-toolbar__mobile-primary"
               type="button"
               aria-label="重做上一步编辑"
               title="重做"
@@ -88,7 +88,7 @@
               重做
             </button>
             <button
-              class="selection-toolbar__command selection-toolbar__command--save"
+              class="selection-toolbar__command selection-toolbar__command--save selection-toolbar__mobile-primary"
               type="button"
               title="保存草稿"
               :disabled="!canSaveDraft"
@@ -108,6 +108,10 @@
             <button
               v-for="item in group.items"
               :key="item.action"
+              :class="{
+                'selection-toolbar__mobile-primary':
+                  item.action === 'bold' || item.action === 'link',
+              }"
               type="button"
               :aria-label="item.title"
               :title="item.title"
@@ -124,8 +128,6 @@
             type="button"
             :aria-expanded="isToolbarExpanded"
             aria-label="展开或收起全部格式工具"
-            @pointerdown="preserveBodySelectionBeforeToolbarCommand"
-            @mousedown="preserveBodySelectionBeforeToolbarCommand"
             @click="isToolbarExpanded = !isToolbarExpanded"
           >
             {{ isToolbarExpanded ? "收起" : "更多" }}
@@ -330,7 +332,7 @@ function getBodySelection(): EditorShowcaseTextSelection {
 }
 
 function focusBody(): void {
-  bodyInputRef.value?.focus();
+  bodyInputRef.value?.focus({ preventScroll: true });
 }
 
 function setBodySelection(selection: EditorShowcaseTextSelection): void {
@@ -640,7 +642,71 @@ defineExpose({
 
   .writing-editor__canvas {
     grid-template-columns: minmax(0, 1fr);
-    padding-inline: 12px;
+    padding: 10px 12px calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .selection-toolbar {
+    position: fixed;
+    top: auto;
+    right: 16px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    left: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    width: auto;
+    max-height: 54px;
+    margin: 0;
+    padding: 7px 54px 7px 7px;
+    border-color: var(--editor-page-border, rgba(49, 74, 91, 0.18));
+    background: var(--editor-control-bg-active, #ffffff);
+    box-shadow: 0 8px 14px rgba(23, 32, 42, 0.14);
+  }
+
+  .selection-toolbar.selection-toolbar--expanded {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-auto-rows: 40px;
+    align-content: start;
+    max-height: min(42dvh, 220px);
+    overflow-y: auto;
+  }
+
+  .selection-toolbar button {
+    min-height: 40px;
+  }
+
+  .selection-toolbar
+    button:not(.selection-toolbar__mobile-primary):not(
+      .selection-toolbar__toggle
+    ) {
+    display: none;
+  }
+
+  .selection-toolbar.selection-toolbar--expanded
+    button:not(.selection-toolbar__toggle) {
+    display: inline-flex;
+  }
+
+  .selection-toolbar__mobile-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .selection-toolbar__group + .selection-toolbar__group button:first-child {
+    margin-left: 0;
+    box-shadow: none;
+  }
+
+  .selection-toolbar__toggle {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    display: inline-flex;
+    align-items: center;
+    min-width: 44px;
+    background: var(--editor-control-bg-active, #ffffff);
   }
 }
 
@@ -652,7 +718,7 @@ defineExpose({
 
   .writing-editor__canvas {
     grid-template-columns: minmax(0, 1fr);
-    padding: 8px 10px 18px;
+    padding: 8px 10px calc(92px + env(safe-area-inset-bottom, 0px));
   }
 
   .selection-toolbar {
@@ -680,7 +746,6 @@ defineExpose({
 
 @media (hover: none), (pointer: coarse) {
   .selection-toolbar {
-    position: sticky;
     padding-right: 60px;
   }
 
@@ -689,9 +754,6 @@ defineExpose({
   }
 
   .selection-toolbar__toggle {
-    position: absolute;
-    top: 4px;
-    right: 4px;
     display: inline-flex;
     align-items: center;
     background: var(--editor-control-bg-active, #ffffff);
