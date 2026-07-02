@@ -54,6 +54,10 @@ pnpm format           # Prettier 格式化
 - CSS owner、命名、token、响应式与组件样式 contract 遵循 `docs/design/css-style-guide.md`
 - 依赖变更后不要格式化 `pnpm-lock.yaml`；如果 lockfile 出现大范围格式化噪音，先恢复 lockfile 原格式，再运行 `pnpm install --lockfile-only` 生成最小 lockfile 变更。
 
+## Git 提交身份
+
+- 本项目提交作者固定使用 `DimensionR <architect0x0@foxmail.com>`，与 `ctf` 项目保持一致；不要使用 `codex <codex@local>`。
+
 ## 路由结构
 
 | 路径                        | 名称                   | 认证 | 说明                   |
