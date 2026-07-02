@@ -73,9 +73,6 @@ export function useEditorWorkspaceController() {
   const saveButtonLabel = computed(() =>
     draft.draftSaveStatus.value === "saving" ? "保存中" : "保存草稿",
   );
-  const savedContentHash = computed(
-    () => draft.savedDraftSnapshot.value.contentHash,
-  );
 
   const {
     resizeBodyInput,
@@ -198,7 +195,6 @@ export function useEditorWorkspaceController() {
     saveStatusLabel,
     saveButtonLabel,
     lastSavedLabel,
-    savedContentHash,
     writingPaneRef,
     previewPaneRef,
     handleBodyInput,

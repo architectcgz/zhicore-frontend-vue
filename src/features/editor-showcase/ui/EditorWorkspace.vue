@@ -27,17 +27,10 @@
         :background-candidates="backgroundCandidates"
         :save-status="draftSaveStatus"
         :save-status-label="saveStatusLabel"
-        :save-button-label="saveButtonLabel"
-        :can-save-draft="canSaveDraft"
-        :can-undo="canUndo"
-        :can-redo="canRedo"
         :last-saved-label="lastSavedLabel"
         :word-count="wordCount"
         @select-mode="handleModeSelect"
         @select-background="selectBackground"
-        @undo="handleUndoDraft"
-        @redo="handleRedoDraft"
-        @save-draft="handleSaveDraft"
       />
 
       <div
@@ -57,11 +50,15 @@
           :save-status="draftSaveStatus"
           :save-status-label="saveStatusLabel"
           :last-saved-label="lastSavedLabel"
-          :saved-content-hash="savedContentHash"
+          :save-button-label="saveButtonLabel"
+          :can-save-draft="canSaveDraft"
+          :can-undo="canUndo"
+          :can-redo="canRedo"
           @title-input="handleTitleInput"
           @body-input="handleBodyInput"
           @undo="handleUndoDraft"
           @redo="handleRedoDraft"
+          @save-draft="handleSaveDraft"
           @toolbar-action="handleToolbarAction"
           @scroll="syncPreviewScroll"
         />
@@ -112,7 +109,6 @@ const {
   saveButtonLabel,
   saveStatusLabel,
   selectBackground,
-  savedContentHash,
   syncEditorScroll,
   syncPreviewScroll,
   title,

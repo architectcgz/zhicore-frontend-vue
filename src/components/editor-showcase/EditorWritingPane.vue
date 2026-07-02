@@ -22,6 +22,41 @@
     <section class="writing-editor__canvas">
       <article class="document-sheet">
         <nav class="selection-toolbar" aria-label="格式工具">
+          <div class="selection-toolbar__group">
+            <button
+              class="selection-toolbar__command"
+              type="button"
+              aria-label="撤销上一步编辑"
+              title="撤销"
+              :disabled="!canUndo"
+              @mousedown.prevent
+              @click="emit('undo')"
+            >
+              撤销
+            </button>
+            <button
+              class="selection-toolbar__command"
+              type="button"
+              aria-label="重做上一步编辑"
+              title="重做"
+              :disabled="!canRedo"
+              @mousedown.prevent
+              @click="emit('redo')"
+            >
+              重做
+            </button>
+            <button
+              class="selection-toolbar__command selection-toolbar__command--save"
+              type="button"
+              title="保存草稿"
+              :disabled="!canSaveDraft"
+              @mousedown.prevent
+              @click="emit('saveDraft')"
+            >
+              {{ saveButtonLabel }}
+            </button>
+          </div>
+
           <div
             v-for="group in toolbarGroups"
             :key="group.id"
@@ -68,11 +103,7 @@
         />
 
         <footer class="document-structure">
-          <span>PostBodyWriteInput</span>
-          <strong>schema v1</strong>
           <span>{{ wordCount }} 字</span>
-          <span>{{ bodyCharacterCount }} / {{ bodyMaxLength }} 字符</span>
-          <span>{{ savedContentHash }}</span>
         </footer>
       </article>
     </section>
@@ -145,7 +176,10 @@ defineProps<{
   saveStatus: EditorDraftSaveStatus;
   saveStatusLabel: string;
   lastSavedLabel: string;
-  savedContentHash: string;
+  saveButtonLabel: string;
+  canSaveDraft: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -153,6 +187,7 @@ const emit = defineEmits<{
   bodyInput: [value: string];
   undo: [];
   redo: [];
+  saveDraft: [];
   toolbarAction: [action: EditorShowcaseToolbarAction];
   scroll: [];
 }>();
@@ -350,6 +385,31 @@ defineExpose({
   color: var(--editor-page-text, #17202a);
 }
 
+.selection-toolbar button:disabled {
+  color: var(--editor-control-disabled-text, #6b7b88);
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.selection-toolbar button:disabled:hover {
+  background: transparent;
+}
+
+.selection-toolbar__command {
+  min-width: 44px;
+}
+
+.selection-toolbar__command--save:not(:disabled) {
+  background: var(--editor-control-primary, #1f7f74);
+  color: #ffffff;
+}
+
+.selection-toolbar__command--save:hover:not(:disabled),
+.selection-toolbar__command--save:focus-visible:not(:disabled) {
+  background: var(--editor-control-primary-hover, #176b62);
+  color: #ffffff;
+}
+
 .document-sheet__path {
   margin: 0 0 6px;
   color: var(--editor-page-muted, #7d6b5a);
@@ -405,10 +465,6 @@ defineExpose({
   border-top: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.1));
   color: var(--editor-page-muted, #657785);
   font-size: 13px;
-}
-
-.document-structure strong {
-  color: var(--editor-page-text, #17202a);
 }
 
 @media (max-width: 980px) {

@@ -44,35 +44,6 @@
           {{ background.name }}
         </button>
       </div>
-
-      <button
-        class="editor-action-bar__history"
-        type="button"
-        aria-label="撤销上一步编辑"
-        :disabled="!canUndo"
-        @click="emit('undo')"
-      >
-        撤销
-      </button>
-
-      <button
-        class="editor-action-bar__history"
-        type="button"
-        aria-label="重做上一步编辑"
-        :disabled="!canRedo"
-        @click="emit('redo')"
-      >
-        重做
-      </button>
-
-      <button
-        class="editor-action-bar__save"
-        type="button"
-        :disabled="!canSaveDraft"
-        @click="emit('saveDraft')"
-      >
-        {{ saveButtonLabel }}
-      </button>
     </div>
   </div>
 </template>
@@ -91,10 +62,6 @@ defineProps<{
   backgroundCandidates: EditorShowcaseBackground[];
   saveStatus: EditorDraftSaveStatus;
   saveStatusLabel: string;
-  saveButtonLabel: string;
-  canSaveDraft: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
   lastSavedLabel: string;
   wordCount: number;
 }>();
@@ -102,9 +69,6 @@ defineProps<{
 const emit = defineEmits<{
   selectMode: [mode: EditorShowcaseMode];
   selectBackground: [backgroundId: EditorShowcaseBackgroundId];
-  undo: [];
-  redo: [];
-  saveDraft: [];
 }>();
 </script>
 
@@ -219,50 +183,6 @@ const emit = defineEmits<{
   justify-content: flex-end;
 }
 
-.editor-action-bar__history,
-.editor-action-bar__save {
-  min-width: 96px;
-  min-height: 36px;
-  border: 1px solid var(--editor-control-primary, #1f7f74);
-  border-radius: 999px;
-  font-weight: 760;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    opacity 0.18s ease,
-    transform 0.18s ease;
-}
-
-.editor-action-bar__history {
-  background: var(--editor-control-bg-active, #ffffff);
-  color: var(--editor-page-text, #17202a);
-}
-
-.editor-action-bar__save {
-  background: var(--editor-control-primary, #1f7f74);
-  color: #ffffff;
-}
-
-.editor-action-bar__history:hover:not(:disabled),
-.editor-action-bar__history:focus-visible:not(:disabled),
-.editor-action-bar__save:hover:not(:disabled),
-.editor-action-bar__save:focus-visible:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.editor-action-bar__save:hover:not(:disabled),
-.editor-action-bar__save:focus-visible:not(:disabled) {
-  background: var(--editor-control-primary-hover, #176b62);
-}
-
-.editor-action-bar__history:disabled,
-.editor-action-bar__save:disabled {
-  border-color: var(--editor-page-border, rgba(49, 74, 91, 0.12));
-  background: var(--editor-control-disabled-bg, rgba(49, 74, 91, 0.12));
-  color: var(--editor-control-disabled-text, #6b7b88);
-  cursor: not-allowed;
-}
-
 @media (max-width: 980px) {
   .editor-action-bar {
     grid-template-columns: 1fr;
@@ -272,9 +192,7 @@ const emit = defineEmits<{
 
 @media (prefers-reduced-motion: reduce) {
   .mode-switch button,
-  .background-swatch,
-  .editor-action-bar__history,
-  .editor-action-bar__save {
+  .background-swatch {
     transition: none;
   }
 }
