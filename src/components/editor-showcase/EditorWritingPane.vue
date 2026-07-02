@@ -21,46 +21,23 @@
     <section class="writing-editor__canvas">
       <article class="document-sheet">
         <nav class="selection-toolbar" aria-label="格式工具">
-          <button
-            type="button"
-            aria-label="加粗"
-            title="加粗"
-            @click="emit('toolbarAction', 'bold')"
+          <div
+            v-for="group in toolbarGroups"
+            :key="group.id"
+            class="selection-toolbar__group"
           >
-            B
-          </button>
-          <button
-            type="button"
-            aria-label="斜体"
-            title="斜体"
-            @click="emit('toolbarAction', 'italic')"
-          >
-            I
-          </button>
-          <button
-            type="button"
-            aria-label="插入链接"
-            title="插入链接"
-            @click="emit('toolbarAction', 'link')"
-          >
-            Link
-          </button>
-          <button
-            type="button"
-            aria-label="插入代码块"
-            title="插入代码块"
-            @click="emit('toolbarAction', 'code')"
-          >
-            Code
-          </button>
-          <button
-            type="button"
-            aria-label="插入二级标题"
-            title="插入二级标题"
-            @click="emit('toolbarAction', 'heading2')"
-          >
-            H2
-          </button>
+            <button
+              v-for="item in group.items"
+              :key="item.action"
+              type="button"
+              :aria-label="item.title"
+              :title="item.title"
+              @mousedown.prevent
+              @click="emit('toolbarAction', item.action)"
+            >
+              {{ item.label }}
+            </button>
+          </div>
         </nav>
 
         <p class="document-sheet__path">作者工作台 / 草稿</p>
@@ -80,6 +57,10 @@
           aria-label="文章正文"
           placeholder="从这里开始写正文"
           @input="handleBodyInput"
+          @focus="rememberBodySelection"
+          @keyup="rememberBodySelection"
+          @mouseup="rememberBodySelection"
+          @select="rememberBodySelection"
         />
 
         <footer class="document-structure">
@@ -102,6 +83,54 @@ import type {
   EditorShowcaseToolbarAction,
 } from "@/features/editor-showcase/model";
 
+interface ToolbarItem {
+  action: EditorShowcaseToolbarAction;
+  label: string;
+  title: string;
+}
+
+interface ToolbarGroup {
+  id: string;
+  items: ToolbarItem[];
+}
+
+const toolbarGroups: ToolbarGroup[] = [
+  {
+    id: "inline",
+    items: [
+      { action: "bold", label: "B", title: "加粗" },
+      { action: "italic", label: "I", title: "斜体" },
+      { action: "strike", label: "S", title: "删除线" },
+      { action: "inlineCode", label: "`", title: "行内代码" },
+      { action: "link", label: "Link", title: "插入链接" },
+    ],
+  },
+  {
+    id: "heading",
+    items: [
+      { action: "heading1", label: "H1", title: "一级标题" },
+      { action: "heading2", label: "H2", title: "二级标题" },
+      { action: "heading3", label: "H3", title: "三级标题" },
+      { action: "heading4", label: "H4", title: "四级标题" },
+      { action: "heading5", label: "H5", title: "五级标题" },
+      { action: "heading6", label: "H6", title: "六级标题" },
+    ],
+  },
+  {
+    id: "block",
+    items: [
+      { action: "quote", label: ">", title: "引用块" },
+      { action: "unorderedList", label: "-", title: "无序列表" },
+      { action: "orderedList", label: "1.", title: "有序列表" },
+      { action: "taskList", label: "[]", title: "任务列表" },
+      { action: "image", label: "Img", title: "插入图片" },
+      { action: "code", label: "Code", title: "代码块" },
+      { action: "table", label: "Tbl", title: "表格" },
+      { action: "math", label: "Math", title: "数学公式" },
+    ],
+  },
+];
+
 defineProps<{
   title: string;
   body: string;
@@ -122,6 +151,10 @@ const emit = defineEmits<{
 
 const bodyInputRef = ref<HTMLTextAreaElement | null>(null);
 const writingEditorRef = ref<HTMLElement | null>(null);
+const lastBodySelection = ref<EditorShowcaseTextSelection>({
+  start: 0,
+  end: 0,
+});
 
 function handleTitleInput(event: Event): void {
   emit("update:title", (event.target as HTMLTextAreaElement).value);
@@ -129,10 +162,11 @@ function handleTitleInput(event: Event): void {
 
 function handleBodyInput(event: Event): void {
   emit("update:body", (event.target as HTMLTextAreaElement).value);
+  rememberBodySelection();
   emit("bodyInput");
 }
 
-function getBodySelection(): EditorShowcaseTextSelection | undefined {
+function readBodySelection(): EditorShowcaseTextSelection | undefined {
   const textarea = bodyInputRef.value;
 
   if (!textarea) {
@@ -145,12 +179,25 @@ function getBodySelection(): EditorShowcaseTextSelection | undefined {
   };
 }
 
+function rememberBodySelection(): void {
+  const selection = readBodySelection();
+
+  if (selection) {
+    lastBodySelection.value = selection;
+  }
+}
+
+function getBodySelection(): EditorShowcaseTextSelection {
+  return readBodySelection() ?? lastBodySelection.value;
+}
+
 function focusBody(): void {
   bodyInputRef.value?.focus();
 }
 
 function setBodySelection(selection: EditorShowcaseTextSelection): void {
   bodyInputRef.value?.setSelectionRange(selection.start, selection.end);
+  lastBodySelection.value = selection;
 }
 
 defineExpose({
@@ -236,8 +283,9 @@ defineExpose({
   top: 8px;
   z-index: 2;
   display: flex;
-  width: fit-content;
-  gap: 4px;
+  flex-wrap: wrap;
+  width: min(100%, max-content);
+  gap: 6px;
   margin: 0 auto 12px;
   padding: 4px;
   border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
@@ -245,9 +293,21 @@ defineExpose({
   background: var(--editor-control-bg-active, rgba(255, 255, 255, 0.88));
 }
 
+.selection-toolbar__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.selection-toolbar__group + .selection-toolbar__group {
+  padding-left: 6px;
+  border-left: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
+}
+
 .selection-toolbar button {
-  min-width: 34px;
+  min-width: 32px;
   min-height: 28px;
+  padding: 0 7px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -344,7 +404,7 @@ defineExpose({
 
   .selection-toolbar {
     max-width: 100%;
-    overflow-x: auto;
+    justify-content: flex-start;
   }
 
   .title-input {
