@@ -1,7 +1,10 @@
 import { isReadonly } from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useEditorShowcaseDraft } from "../useEditorShowcaseDraft";
+import {
+  editorDraftBodyMaxLength,
+  useEditorShowcaseDraft,
+} from "../useEditorShowcaseDraft";
 
 describe("useEditorShowcaseDraft", () => {
   afterEach(() => {
@@ -41,6 +44,22 @@ describe("useEditorShowcaseDraft", () => {
       "第一段正文。\n\n第二段正文，用于预览。",
     ]);
     expect(draft.wordCount.value).toBe(14);
+  });
+
+  it("limits pasted body source to the editor maximum length", () => {
+    const draft = useEditorShowcaseDraft();
+    const oversizedBody = "文".repeat(editorDraftBodyMaxLength + 20);
+
+    draft.updateBody(oversizedBody, {
+      start: oversizedBody.length,
+      end: oversizedBody.length,
+    });
+
+    expect(draft.body.value).toHaveLength(editorDraftBodyMaxLength);
+
+    const restoreResult = draft.redoDraft();
+
+    expect(restoreResult).toBeUndefined();
   });
 
   it("debounces body compilation until typing stops", async () => {
@@ -322,6 +341,20 @@ describe("useEditorShowcaseDraft", () => {
 
     expect(draft.body.value).toBe("**需要加粗**");
     expect(selection).toEqual({ start: 2, end: 6 });
+  });
+
+  it("does not apply toolbar actions that would exceed the body source limit", () => {
+    const draft = useEditorShowcaseDraft();
+    const bodyAtLimit = "文".repeat(editorDraftBodyMaxLength);
+
+    draft.updateBody(bodyAtLimit, {
+      start: editorDraftBodyMaxLength,
+      end: editorDraftBodyMaxLength,
+    });
+    const selection = draft.applyToolbarAction("bold", { start: 0, end: 1 });
+
+    expect(draft.body.value).toBe(bodyAtLimit);
+    expect(selection).toEqual({ start: 0, end: 1 });
   });
 
   it("undoes a body update and exposes redo for the restored change", () => {

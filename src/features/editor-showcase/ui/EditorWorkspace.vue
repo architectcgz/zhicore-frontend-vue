@@ -52,6 +52,8 @@
           :title="title"
           :body="body"
           :word-count="wordCount"
+          :body-character-count="bodyCharacterCount"
+          :body-max-length="bodyMaxLength"
           :save-status="draftSaveStatus"
           :save-status-label="saveStatusLabel"
           :last-saved-label="lastSavedLabel"
@@ -89,6 +91,8 @@ const {
   activeBackgroundClass,
   backgroundCandidates,
   body,
+  bodyCharacterCount,
+  bodyMaxLength,
   canRedo,
   handleBodyInput,
   handleModeSelect,

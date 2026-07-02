@@ -74,6 +74,8 @@ export interface EditorDraftHistoryRestoreResult {
   selection?: EditorShowcaseTextSelection;
 }
 
+export const editorDraftBodyMaxLength = 20000;
+
 const defaultPreviewCompileDebounceMs = 160;
 const defaultHistoryMergeWindowMs = 500;
 const compilerLogger = createEditorLogger("compiler");
@@ -88,6 +90,27 @@ function createContentHash(content: string): string {
   }
 
   return hash.toString(36);
+}
+
+function clampSelectionToBody(
+  selection: EditorShowcaseTextSelection | undefined,
+  bodySource: string,
+): EditorShowcaseTextSelection | undefined {
+  if (!selection) {
+    return undefined;
+  }
+
+  const start = Math.min(selection.start, bodySource.length);
+  const end = Math.min(selection.end, bodySource.length);
+
+  return {
+    start,
+    end,
+  };
+}
+
+function limitEditorDraftBodySource(bodySource: string): string {
+  return bodySource.slice(0, editorDraftBodyMaxLength);
 }
 
 export function useEditorShowcaseDraft(
@@ -208,6 +231,7 @@ export function useEditorShowcaseDraft(
     const contentChars = body.value.match(/\p{Script=Han}|[A-Za-z0-9]+/gu);
     return contentChars?.length ?? 0;
   });
+  const bodyCharacterCount = computed(() => body.value.length);
 
   function createCurrentHistorySnapshot(
     activeField: EditorDraftHistoryField,
@@ -299,22 +323,25 @@ export function useEditorShowcaseDraft(
     nextBody: string,
     selection?: EditorShowcaseTextSelection,
   ): void {
-    if (nextBody === body.value) {
+    const limitedBody = limitEditorDraftBodySource(nextBody);
+    const limitedSelection = clampSelectionToBody(selection, limitedBody);
+
+    if (limitedBody === body.value) {
       return;
     }
 
     history.value = recordEditorDraftHistoryChange(
       history.value,
       {
-        ...createCurrentHistorySnapshot("body", selection),
-        body: nextBody,
+        ...createCurrentHistorySnapshot("body", limitedSelection),
+        body: limitedBody,
       },
       {
         kind: "typing",
         mergeWindowMs: historyMergeWindowMs,
       },
     );
-    body.value = nextBody;
+    body.value = limitedBody;
   }
 
   function applyToolbarAction(
@@ -322,6 +349,12 @@ export function useEditorShowcaseDraft(
     selection?: EditorShowcaseTextSelection,
   ): EditorShowcaseTextSelection {
     const result = applyToolbarActionToBody(body.value, action, selection);
+
+    if (result.nextBody.length > editorDraftBodyMaxLength) {
+      // Toolbar actions add markdown syntax around source text; rejecting an
+      // overflowing transform avoids storing a truncated, invalid markdown edit.
+      return selection ?? { start: body.value.length, end: body.value.length };
+    }
 
     history.value = recordEditorDraftHistoryChange(
       history.value,
@@ -422,6 +455,8 @@ export function useEditorShowcaseDraft(
     previewBlocks,
     previewParagraphs,
     wordCount,
+    bodyCharacterCount,
+    bodyMaxLength: editorDraftBodyMaxLength,
     savedDraftSnapshot,
     draftSaveStatus,
     canSaveDraft,

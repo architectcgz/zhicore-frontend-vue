@@ -46,7 +46,10 @@ export type {
   EditorShowcaseBackgroundId,
   EditorShowcaseMode,
 } from "./useEditorShowcaseDisplay";
-export { useEditorShowcaseDraft } from "./useEditorShowcaseDraft";
+export {
+  editorDraftBodyMaxLength,
+  useEditorShowcaseDraft,
+} from "./useEditorShowcaseDraft";
 export type {
   EditorDraftSaveStatus,
   EditorSavedDraftSnapshot,

@@ -16,6 +16,7 @@
       </span>
       <span>上次保存 {{ lastSavedLabel }}</span>
       <span>{{ wordCount }} 字</span>
+      <span>{{ bodyCharacterCount }} / {{ bodyMaxLength }} 字符</span>
     </div>
 
     <section class="writing-editor__canvas">
@@ -55,6 +56,7 @@
           :value="body"
           class="body-input"
           rows="14"
+          :maxlength="bodyMaxLength"
           aria-label="文章正文"
           placeholder="从这里开始写正文"
           @input="handleBodyInput"
@@ -69,6 +71,7 @@
           <span>PostBodyWriteInput</span>
           <strong>schema v1</strong>
           <span>{{ wordCount }} 字</span>
+          <span>{{ bodyCharacterCount }} / {{ bodyMaxLength }} 字符</span>
           <span>{{ savedContentHash }}</span>
         </footer>
       </article>
@@ -137,6 +140,8 @@ defineProps<{
   title: string;
   body: string;
   wordCount: number;
+  bodyCharacterCount: number;
+  bodyMaxLength: number;
   saveStatus: EditorDraftSaveStatus;
   saveStatusLabel: string;
   lastSavedLabel: string;

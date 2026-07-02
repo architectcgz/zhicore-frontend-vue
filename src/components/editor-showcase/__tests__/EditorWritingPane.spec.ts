@@ -1,6 +1,8 @@
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
+import { editorDraftBodyMaxLength } from "@/features/editor-showcase/model";
+
 import EditorWritingPane from "../EditorWritingPane.vue";
 
 function mountWritingPane() {
@@ -9,10 +11,12 @@ function mountWritingPane() {
       title: "草稿标题",
       body: "草稿正文",
       wordCount: 4,
+      bodyCharacterCount: 4,
       saveStatus: "saved",
       saveStatusLabel: "已保存",
       lastSavedLabel: "09:00",
       savedContentHash: "local:test",
+      bodyMaxLength: editorDraftBodyMaxLength,
     },
   });
 }
@@ -65,6 +69,14 @@ describe("EditorWritingPane", () => {
     tableButton.element.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("sets the body textarea maxlength from the editor limit", () => {
+    const wrapper = mountWritingPane();
+
+    expect(wrapper.find(".body-input").attributes("maxlength")).toBe(
+      String(editorDraftBodyMaxLength),
+    );
   });
 
   it("emits undo when Ctrl+Z is pressed in the body textarea", async () => {

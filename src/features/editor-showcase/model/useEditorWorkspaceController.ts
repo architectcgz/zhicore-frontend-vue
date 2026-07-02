@@ -189,6 +189,8 @@ export function useEditorWorkspaceController() {
     readerBlocks: draft.readerBlocks,
     readerPreviewBlocks: draft.readerPreviewBlocks,
     wordCount: draft.wordCount,
+    bodyCharacterCount: draft.bodyCharacterCount,
+    bodyMaxLength: draft.bodyMaxLength,
     draftSaveStatus: draft.draftSaveStatus,
     canSaveDraft: draft.canSaveDraft,
     canUndo: draft.canUndo,
