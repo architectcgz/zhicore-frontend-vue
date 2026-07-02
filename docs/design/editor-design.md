@@ -78,6 +78,9 @@ blocks 的切分按内容类型边界进行，不按视觉空行机械切分：
 - compiler 负责把编辑器源文本编译为结构化 blocks 和 HTML 字符串，不依赖 Vue 响应式或组件。
 - 预览组件消费 compiler 的 blocks 渲染，不自行解析 markdown、code fence 或链接。
 - 后续接后端 Content 契约时，应优先复用 compiler 输出的结构化 blocks，再做 API DTO 映射。
+- 读者预览为了视觉留白和滚动锚点可以生成 spacer block，但 spacer 不进入 `PostBodyWriteInput` 保存事实。
+- ProseMirror 接入后，ProseMirror JSON 仍只是内部编辑状态；保存、预览和错误定位都通过 adapter 输出，不把内部 JSON 持久化。
+- adapter 遇到 Content V1 不支持的多段 quote、嵌套 list 或无 `fileId` 的系统媒体时，应阻止保存并定位提示，不能静默压平为 inline 文本。
 
 ## 与后端契约的关系
 

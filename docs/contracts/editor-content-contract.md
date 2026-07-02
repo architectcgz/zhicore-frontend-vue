@@ -37,6 +37,16 @@
 
 当前原型里的 `label`、`content`、`sourceRange`、`html` 是前端预览和错误定位辅助字段，不属于后端 contract。
 
+## 编辑器 Adapter 边界
+
+编辑器内部文档不是长期保存事实。当前 textarea source 和未来 ProseMirror doc 都必须先经过 editor content adapter，分别输出：
+
+- `PostBodyWriteInput`：唯一允许进入 Content 保存 API 的正文写入模型。
+- Reader preview blocks：只服务读者预览、滚动同步和视觉 spacer。
+- 校验错误位置映射：把后端保存模型 path 映射回编辑位置。
+
+ProseMirror JSON 只能作为编辑器内部状态或短期 UI 状态存在，不进入 API 请求、草稿 hash、发布 payload 或长期缓存。ProseMirror adapter 遇到多段 quote、嵌套 list、list item 内 block、缺少 Upload `fileId` 的系统媒体等 Content V1 不支持结构时，必须返回“不支持保存”的校验结果并阻止保存，不得静默 flatten 或丢弃结构。
+
 ## HTTP Envelope
 
 Content API 仍使用 ZhiCore 统一 envelope。前端 API adapter 只把 `data` 映射给业务 feature，不能把 `code/message/timestamp/traceId` 散落到组件中。
@@ -231,12 +241,13 @@ interface AttachmentGalleryBlock {
 约束：
 
 - `table` 第一阶段只支持简单二维表，不支持 `rowspan` / `colspan`。
+- `quote` 和 `list` V1 只支持 inline-only children；多段 quote、嵌套 list 或 list item 内 block 属于“不支持保存”，前端 adapter 不得静默 flatten。
 - `collapsible` 最大嵌套深度为 2。
 - `math.latex` 只保存 LaTeX 字符串，前端用 KaTeX / MathJax 渲染，后端不执行公式。
 - `code_block.language` 只是高亮 hint，后端只做格式和长度限制。
 - `image.fileId` 是系统内图片事实；`url` 如出现，只是后端或 Upload 解析出的展示派生字段。外部媒体不要塞进 `image.url`，使用 `external_embed`。
-- `external_embed` 由 provider 白名单控制，禁止任意 iframe / HTML。
-- `attachment_gallery` 只允许 Upload `fileId`。
+- `external_embed` 由 provider 白名单控制，当前前端只允许 `image`，禁止任意 iframe / HTML。
+- `attachment_gallery` 只允许 Upload `fileId`；系统内图片和附件都必须能追溯到非空 `fileId`。
 - `mention`、`poll`、`custom_widget` 当前只预留，不允许发布；出现时按 `4014 BLOCK_TYPE_NOT_ENABLED` 处理。
 
 ## Inline Marks
@@ -272,16 +283,16 @@ type PostBodyInlineMark =
 
 当前前端原型的 Markdown-like compiler 到后端写入模型的映射规则：
 
-| 原型 block | 后端 block                                                  |
-| ---------- | ----------------------------------------------------------- |
-| `text`     | `paragraph`                                                 |
-| `heading`  | `heading`                                                   |
-| `quote`    | `quote`                                                     |
-| `code`     | `code_block`                                                |
-| `list`     | `list`                                                      |
-| `table`    | `table`                                                     |
-| `math`     | `math`                                                      |
-| `media`    | `image` 或 `external_embed`，取决于是否已有 Upload `fileId` |
+| 原型 block | 后端 block                                                                      |
+| ---------- | ------------------------------------------------------------------------------- |
+| `text`     | `paragraph`                                                                     |
+| `heading`  | `heading`                                                                       |
+| `quote`    | `quote`                                                                         |
+| `code`     | `code_block`                                                                    |
+| `list`     | `list`                                                                          |
+| `table`    | `table`                                                                         |
+| `math`     | `math`                                                                          |
+| `media`    | 当前 Markdown-like `![alt](url)` 只映射为 `external_embed`，provider 为 `image` |
 
 行内映射：
 
@@ -289,11 +300,12 @@ type PostBodyInlineMark =
 | --------------- | ------------- |
 | `strong`        | `bold`        |
 | `emphasis`      | `italic`      |
+| `underline`     | `underline`   |
 | `strikethrough` | `strike`      |
 | `inlineCode`    | `inline_code` |
 | `link`          | `link`        |
 
-前端 adapter 的职责是把原型中为预览服务的扁平 inline 节点合并成 `PostBodyInlineNode + marks`，并在提交前剔除空段落和 UI 辅助字段。
+前端 adapter 的职责是把原型中为预览服务的扁平 inline 节点合并成 `PostBodyInlineNode + marks`，并在提交前剔除 `stableKey`、`sourceRange`、`label`、reader spacer 等 UI 辅助字段。系统内 `image` / `attachment_gallery` 只能来自 Upload `fileId` 流程，不能由 Markdown 图片 URL 伪造。
 
 ## 草稿工作流
 
@@ -457,7 +469,7 @@ interface PublishPostResp {
 
 - 每个 block 的 JSON 字段名和必填 / 可选边界。
 - `PostBodyInlineNode + marks` 是否作为最终 inline 结构。
-- `image` 是否只允许系统内 `fileId`，外部图片是否全部归入 `external_embed`。
+- 除当前 `image` 外，后续视频、卡片、链接预览等 `external_embed.provider` 取值。
 - `collapsible` 的 title / children 字段命名和嵌套深度校验路径。
 - `table` 空表、空 header、行列数量上限。
 - blocks canonical JSON 的字段排序、空字段剔除和 hash 细节。

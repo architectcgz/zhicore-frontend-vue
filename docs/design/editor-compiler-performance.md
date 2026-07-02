@@ -37,6 +37,7 @@
 - `` ` ``：inline code
 - `[`：link
 - `~`：strikethrough
+- `+`：underline
 - `*`：strong / emphasis
 - `_`：strong / emphasis
 
