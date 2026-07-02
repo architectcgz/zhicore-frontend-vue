@@ -4,6 +4,7 @@ import type { EditorPreviewBlockAnchor } from "./editorContentCompiler";
 import { createEditorLogger } from "./editorDebug";
 import {
   getActiveBlockIndexFromLine,
+  getPreviewToEditorScrollTarget,
   getSyncedScrollTop,
   type BlockLineAnchor,
 } from "./editorScrollSync";
@@ -329,35 +330,50 @@ export function useEditorPreviewScrollSync(
         : options.previewBlockAnchors.value.find(
             (anchor) => anchor.readerBlockIndex === activeReaderBlockIndex,
           );
+    const activeSourceLineNumber = activeAnchor?.sourceRange.startLine ?? null;
+    const activeAnchorScrollTop = activeAnchor
+      ? getBodyLineScrollTop(
+          writingEditor,
+          bodyInput,
+          activeAnchor.sourceRange.startLine,
+        )
+      : null;
+    const editorScrollTarget = getPreviewToEditorScrollTarget({
+      previewScrollTop: readerPreview.scrollTop,
+      previewScrollHeight: readerPreview.scrollHeight,
+      previewClientHeight: readerPreview.clientHeight,
+      editorScrollHeight: writingEditor.scrollHeight,
+      editorClientHeight: writingEditor.clientHeight,
+      activeAnchorScrollTop,
+      tolerancePx: syncedScrollTolerancePx,
+    });
 
-    if (activeAnchor) {
-      const nextEditorScrollTop = getBodyLineScrollTop(
-        writingEditor,
-        bodyInput,
-        activeAnchor.sourceRange.startLine,
-      );
-      pendingEditorScrollTop = nextEditorScrollTop;
-      writingEditor.scrollTop = nextEditorScrollTop;
+    pendingEditorScrollTop = editorScrollTarget.scrollTop;
+    writingEditor.scrollTop = editorScrollTarget.scrollTop;
+
+    if (editorScrollTarget.strategy === "anchor") {
       scrollLogger.debug(() => [
         "synced editor by preview block anchor",
         {
           activeReaderBlockIndex,
-          sourceLineNumber: activeAnchor.sourceRange.startLine,
+          sourceLineNumber: activeSourceLineNumber,
           targetScrollTop: writingEditor.scrollTop,
         },
       ]);
       return;
     }
 
-    const nextEditorScrollTop = getSyncedScrollTop({
-      sourceScrollTop: readerPreview.scrollTop,
-      sourceScrollHeight: readerPreview.scrollHeight,
-      sourceClientHeight: readerPreview.clientHeight,
-      targetScrollHeight: writingEditor.scrollHeight,
-      targetClientHeight: writingEditor.clientHeight,
-    });
-    pendingEditorScrollTop = nextEditorScrollTop;
-    writingEditor.scrollTop = nextEditorScrollTop;
+    if (editorScrollTarget.strategy === "bottom") {
+      scrollLogger.debug(() => [
+        "synced editor to document bottom",
+        {
+          sourceScrollTop: readerPreview.scrollTop,
+          targetScrollTop: writingEditor.scrollTop,
+        },
+      ]);
+      return;
+    }
+
     scrollLogger.debug(() => [
       "synced editor by preview scroll progress",
       {

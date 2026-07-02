@@ -317,4 +317,45 @@ describe("useEditorPreviewScrollSync", () => {
 
     expect(writingEditor.scrollTop).toBe(160);
   });
+
+  it("syncs the editor to the bottom when the reader preview reaches the bottom", () => {
+    const bodyInput = document.createElement("textarea");
+    const writingEditor = document.createElement("main");
+    const readerPreview = document.createElement("aside");
+    const tableBlock = document.createElement("div");
+    const previewBlockAnchors = [
+      {
+        readerBlockIndex: 0,
+        sourceRange: {
+          startLine: 20,
+          endLine: 40,
+        },
+      },
+    ];
+
+    bodyInput.style.lineHeight = "20px";
+    tableBlock.dataset.previewReaderBlockIndex = "0";
+    readerPreview.append(tableBlock);
+    readerPreview.scrollTop = 600;
+    defineRectTop(bodyInput, 0);
+    defineRectTop(writingEditor, 0);
+    defineRectTop(readerPreview, 100);
+    defineRectTop(tableBlock, 80);
+    defineReadonlyNumberProperty(readerPreview, "scrollHeight", 1000);
+    defineReadonlyNumberProperty(readerPreview, "clientHeight", 400);
+    defineReadonlyNumberProperty(writingEditor, "scrollHeight", 1200);
+    defineReadonlyNumberProperty(writingEditor, "clientHeight", 400);
+
+    const { syncEditorScroll } = useEditorPreviewScrollSync({
+      bodyInputRef: ref(bodyInput),
+      writingEditorRef: ref(writingEditor),
+      readerPreviewRef: ref(readerPreview),
+      previewBlockAnchors: ref(previewBlockAnchors),
+      isPreviewMode: ref(true),
+    });
+
+    syncEditorScroll();
+
+    expect(writingEditor.scrollTop).toBe(800);
+  });
 });

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildBlockLineAnchors,
   getActiveBlockIndexFromLine,
+  getPreviewToEditorScrollTarget,
   getSyncedScrollTop,
 } from "../editorScrollSync";
 
@@ -127,5 +128,53 @@ describe("editorScrollSync", () => {
 
     expect(getActiveBlockIndexFromLine(anchors, 1)).toBe(0);
     expect(getActiveBlockIndexFromLine(anchors, 3)).toBe(1);
+  });
+
+  it("prioritizes the document bottom when preview-to-editor sync reaches the bottom", () => {
+    expect(
+      getPreviewToEditorScrollTarget({
+        previewScrollTop: 600,
+        previewScrollHeight: 1000,
+        previewClientHeight: 400,
+        editorScrollHeight: 1200,
+        editorClientHeight: 400,
+        activeAnchorScrollTop: 400,
+      }),
+    ).toEqual({
+      strategy: "bottom",
+      scrollTop: 800,
+    });
+  });
+
+  it("uses the active source anchor when preview-to-editor sync is inside the document", () => {
+    expect(
+      getPreviewToEditorScrollTarget({
+        previewScrollTop: 180,
+        previewScrollHeight: 1000,
+        previewClientHeight: 400,
+        editorScrollHeight: 1200,
+        editorClientHeight: 400,
+        activeAnchorScrollTop: 160,
+      }),
+    ).toEqual({
+      strategy: "anchor",
+      scrollTop: 160,
+    });
+  });
+
+  it("falls back to scroll progress when preview-to-editor sync has no active source anchor", () => {
+    expect(
+      getPreviewToEditorScrollTarget({
+        previewScrollTop: 300,
+        previewScrollHeight: 1000,
+        previewClientHeight: 400,
+        editorScrollHeight: 1600,
+        editorClientHeight: 400,
+        activeAnchorScrollTop: null,
+      }),
+    ).toEqual({
+      strategy: "progress",
+      scrollTop: 600,
+    });
   });
 });

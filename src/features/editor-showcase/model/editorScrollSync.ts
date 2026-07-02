@@ -8,10 +8,42 @@ export interface SyncedScrollInput {
   targetClientHeight: number;
 }
 
+export interface PreviewToEditorScrollTargetInput {
+  previewScrollTop: number;
+  previewScrollHeight: number;
+  previewClientHeight: number;
+  editorScrollHeight: number;
+  editorClientHeight: number;
+  activeAnchorScrollTop: number | null;
+  tolerancePx?: number;
+}
+
+export interface PreviewToEditorScrollTarget {
+  strategy: "bottom" | "anchor" | "progress";
+  scrollTop: number;
+}
+
 export interface BlockLineAnchor {
   blockIndex: number;
   startLine: number;
   endLine: number;
+}
+
+const defaultScrollTolerancePx = 1;
+
+function getMaxScrollTop(scrollHeight: number, clientHeight: number): number {
+  return Math.max(0, scrollHeight - clientHeight);
+}
+
+function isScrollAtBottom(
+  scrollTop: number,
+  scrollHeight: number,
+  clientHeight: number,
+  tolerancePx: number,
+): boolean {
+  const maxScrollTop = getMaxScrollTop(scrollHeight, clientHeight);
+
+  return maxScrollTop > tolerancePx && scrollTop >= maxScrollTop - tolerancePx;
 }
 
 export function getSyncedScrollTop(input: SyncedScrollInput): number {
@@ -27,6 +59,48 @@ export function getSyncedScrollTop(input: SyncedScrollInput): number {
   const progress = input.sourceScrollTop / sourceScrollableHeight;
 
   return Math.round(progress * targetScrollableHeight);
+}
+
+export function getPreviewToEditorScrollTarget(
+  input: PreviewToEditorScrollTargetInput,
+): PreviewToEditorScrollTarget {
+  const tolerancePx = input.tolerancePx ?? defaultScrollTolerancePx;
+
+  if (
+    isScrollAtBottom(
+      input.previewScrollTop,
+      input.previewScrollHeight,
+      input.previewClientHeight,
+      tolerancePx,
+    )
+  ) {
+    // 文档底部是强边界：长表格等最后一个 block 内滚到底时，不能只同步到该 block 起始行。
+    return {
+      strategy: "bottom",
+      scrollTop: getMaxScrollTop(
+        input.editorScrollHeight,
+        input.editorClientHeight,
+      ),
+    };
+  }
+
+  if (input.activeAnchorScrollTop !== null) {
+    return {
+      strategy: "anchor",
+      scrollTop: input.activeAnchorScrollTop,
+    };
+  }
+
+  return {
+    strategy: "progress",
+    scrollTop: getSyncedScrollTop({
+      sourceScrollTop: input.previewScrollTop,
+      sourceScrollHeight: input.previewScrollHeight,
+      sourceClientHeight: input.previewClientHeight,
+      targetScrollHeight: input.editorScrollHeight,
+      targetClientHeight: input.editorClientHeight,
+    }),
+  };
 }
 
 export function buildBlockLineAnchors(
