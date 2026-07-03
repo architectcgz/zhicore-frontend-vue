@@ -39,8 +39,8 @@ const renderedMathHtml = computed(() => {
 <style scoped>
 .reader-preview__math-block {
   overflow-x: auto;
-  margin: 16px 0;
-  padding: 10px 12px;
+  margin: 12px 0;
+  padding: 8px 10px;
   border-radius: 8px;
   background: var(--reader-block-bg);
   color: var(--reader-text);
@@ -53,13 +53,13 @@ const renderedMathHtml = computed(() => {
 .reader-preview__math-source {
   overflow-x: auto;
   margin: 0;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   background: transparent;
   color: var(--reader-text);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 15px;
-  line-height: 1.68;
+  line-height: 1.56;
   white-space: pre-wrap;
 }
 </style>

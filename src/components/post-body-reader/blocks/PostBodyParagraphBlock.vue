@@ -26,13 +26,14 @@ const isEmptyParagraph = computed(() => props.block.children.length === 0);
 
 <style scoped>
 .reader-preview__text-block {
+  margin: 8px 0;
   color: var(--reader-text);
   font-size: 15px;
-  line-height: 1.68;
+  line-height: 1.62;
   white-space: pre-line;
 }
 
 .reader-preview__text-block--empty {
-  min-height: 1.68em;
+  min-height: 1.62em;
 }
 </style>

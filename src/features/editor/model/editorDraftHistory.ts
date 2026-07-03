@@ -1,5 +1,5 @@
 import type { EditorTextSelection } from "./editorToolbarTypes";
-import type { EditorProseMirrorDocumentJson } from "./editorProseMirrorEngine";
+import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
 
 export type EditorDraftHistoryField = "title" | "body";
 export type EditorDraftHistoryChangeKind =
@@ -7,7 +7,7 @@ export type EditorDraftHistoryChangeKind =
 
 export interface EditorDraftHistorySnapshot {
   title: string;
-  bodyDocumentJson: EditorProseMirrorDocumentJson;
+  bodyDocumentJson: EditorTiptapDocumentJson;
   activeField: EditorDraftHistoryField;
   selection?: EditorTextSelection;
   changedAt: number;

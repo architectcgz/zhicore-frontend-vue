@@ -6,15 +6,21 @@
   >
     <li
       v-for="(item, itemIndex) in block.items"
-      :key="`${itemIndex}-${item.children.map((node) => node.text).join('')}`"
+      :key="`${itemIndex}-${item.blocks.length}`"
     >
       <input
-        v-if="item.checked !== undefined"
+        v-if="block.task && item.checked !== undefined"
         type="checkbox"
         :checked="item.checked"
         disabled
       />
-      <PostBodyInlineNodes :nodes="item.children" />
+      <div class="reader-preview__list-item-blocks">
+        <PostBodyReaderBlock
+          v-for="(childBlock, childIndex) in item.blocks"
+          :key="`${childIndex}-${childBlock.type}`"
+          :block="childBlock"
+        />
+      </div>
     </li>
   </component>
 </template>
@@ -24,7 +30,7 @@ import { computed } from "vue";
 
 import type { ListBlock } from "@/entities/post-body";
 
-import PostBodyInlineNodes from "../PostBodyInlineNodes.vue";
+import PostBodyReaderBlock from "../PostBodyReaderBlock.vue";
 
 type ListTag = "ol" | "ul";
 
@@ -37,15 +43,15 @@ const listTag = computed<ListTag>(() => (props.block.ordered ? "ol" : "ul"));
 
 <style scoped>
 .reader-preview__list {
-  margin: 12px 0;
+  margin: 10px 0;
   padding-left: 22px;
   color: var(--reader-text);
   font-size: 15px;
-  line-height: 1.68;
+  line-height: 1.62;
 }
 
 .reader-preview__list li + li {
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 .reader-preview__task-list {
@@ -60,9 +66,22 @@ const listTag = computed<ListTag>(() => (props.block.ordered ? "ol" : "ul"));
 }
 
 .reader-preview__task-list input {
+  flex: 0 0 auto;
   width: 14px;
   height: 14px;
   margin-top: 6px;
   accent-color: var(--reader-task-accent);
+}
+
+.reader-preview__list-item-blocks {
+  min-width: 0;
+}
+
+.reader-preview__list-item-blocks > :first-child {
+  margin-top: 0;
+}
+
+.reader-preview__list-item-blocks > :last-child {
+  margin-bottom: 0;
 }
 </style>

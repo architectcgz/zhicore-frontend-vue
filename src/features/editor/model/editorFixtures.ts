@@ -1,110 +1,228 @@
-import type { Node as ProseMirrorNode } from "prosemirror-model";
-
 import type { PostBodyBlock } from "@/entities/post-body";
-import {
-  editorProseMirrorSchema,
-  serializeProseMirrorDocToJson,
-  type EditorProseMirrorDocumentJson,
-} from "./editorProseMirrorEngine";
+
+import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
 
 export const defaultEditorTitle = "把复杂系统讲成可以协作的结构";
 
-function createDefaultEditorDocument() {
-  const { nodes, marks } = editorProseMirrorSchema;
-  const emptyParagraph = () => nodes.paragraph.create();
-  const paragraph = (...content: ProseMirrorNode[]) =>
-    nodes.paragraph.create(null, content);
-  const heading = (level: 1 | 2, text: string) =>
-    nodes.heading.create({ level }, editorProseMirrorSchema.text(text));
-  const listItem = (text: string, checked: boolean | null = null) =>
-    nodes.list_item.create({ checked }, editorProseMirrorSchema.text(text));
-  const tableCell = (text: string) =>
-    nodes.table_cell.create(null, editorProseMirrorSchema.text(text));
-  const tableRow = (cells: string[]) =>
-    nodes.table_row.create(null, cells.map(tableCell));
-
-  return editorProseMirrorSchema.nodes.doc.create(null, [
-    heading(1, "ProseMirror 编辑器验收稿"),
-    emptyParagraph(),
-    paragraph(
-      editorProseMirrorSchema.text(
-        "一篇文章的价值不只来自观点，也来自读者能否沿着清晰的段落进入上下文。",
-      ),
-    ),
-    emptyParagraph(),
-    heading(2, "Inline"),
-    emptyParagraph(),
-    paragraph(
-      editorProseMirrorSchema.text("这行包含 "),
-      editorProseMirrorSchema.text("加粗", [marks.bold.create()]),
-      editorProseMirrorSchema.text("、"),
-      editorProseMirrorSchema.text("删除线", [marks.strike.create()]),
-      editorProseMirrorSchema.text("、"),
-      editorProseMirrorSchema.text("inline code", [marks.inline_code.create()]),
-      editorProseMirrorSchema.text(" 和 "),
-      editorProseMirrorSchema.text("ZhiCore 链接", [
-        marks.link.create({ href: "https://example.com/docs" }),
-      ]),
-      editorProseMirrorSchema.text("。"),
-    ),
-    emptyParagraph(),
-    heading(2, "Quote"),
-    emptyParagraph(),
-    nodes.quote.create(null, [
-      editorProseMirrorSchema.text("引用块支持 "),
-      editorProseMirrorSchema.text("inline code", [marks.inline_code.create()]),
-      editorProseMirrorSchema.text(" 和 "),
-      editorProseMirrorSchema.text("加粗", [marks.bold.create()]),
-      editorProseMirrorSchema.text("。"),
-    ]),
-    emptyParagraph(),
-    heading(2, "Lists"),
-    emptyParagraph(),
-    nodes.list.create({ ordered: false, task: false }, [
-      listItem("无序列表第一项"),
-      nodes.list_item.create(null, [
-        editorProseMirrorSchema.text("无序列表第二项 "),
-        editorProseMirrorSchema.text("加粗", [marks.bold.create()]),
-      ]),
-    ]),
-    nodes.list.create({ ordered: true, task: false }, [
-      listItem("有序列表第一步"),
-      listItem("有序列表第二步"),
-    ]),
-    nodes.list.create({ ordered: false, task: true }, [
-      listItem("已完成任务", true),
-      listItem("未完成任务", false),
-    ]),
-    emptyParagraph(),
-    heading(2, "Code"),
-    emptyParagraph(),
-    nodes.code_block.create(
-      { language: "go" },
-      editorProseMirrorSchema.text(
-        [
-          "package main",
-          "",
-          'import "fmt"',
-          "",
-          "func main() {",
-          '  fmt.Println("hello zhicore")',
-          "}",
-        ].join("\n"),
-      ),
-    ),
-    emptyParagraph(),
-    heading(2, "Table"),
-    emptyParagraph(),
-    nodes.table.create(null, [
-      tableRow(["表头1", "表头2", "表头3"]),
-      tableRow(["数据1", "数据2", "数据3"]),
-      tableRow(["数据4", "数据5", "数据6"]),
-    ]),
-  ]);
-}
-
-export function createDefaultEditorDocumentJson(): EditorProseMirrorDocumentJson {
-  return serializeProseMirrorDocToJson(createDefaultEditorDocument());
+export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Tiptap 编辑器验收稿" }],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "一篇文章的价值不只来自观点，也来自读者能否沿着清晰的段落进入上下文。",
+          },
+        ],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Inline" }],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "paragraph",
+        content: [
+          { type: "text", text: "这行包含 " },
+          { type: "text", text: "加粗", marks: [{ type: "bold" }] },
+          { type: "text", text: "、" },
+          { type: "text", text: "删除线", marks: [{ type: "strike" }] },
+          { type: "text", text: "、" },
+          { type: "text", text: "inline code", marks: [{ type: "code" }] },
+          { type: "text", text: " 和 " },
+          {
+            type: "text",
+            text: "ZhiCore 链接",
+            marks: [
+              { type: "link", attrs: { href: "https://example.com/docs" } },
+            ],
+          },
+          { type: "text", text: "。" },
+        ],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Quote" }],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "blockquote",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", text: "引用块支持 " },
+              {
+                type: "text",
+                text: "inline code",
+                marks: [{ type: "code" }],
+              },
+              { type: "text", text: " 和 " },
+              { type: "text", text: "加粗", marks: [{ type: "bold" }] },
+              { type: "text", text: "。" },
+            ],
+          },
+        ],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Lists" }],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "bulletList",
+        content: [
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "无序列表第一项" }],
+              },
+            ],
+          },
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  { type: "text", text: "无序列表第二项 " },
+                  { type: "text", text: "加粗", marks: [{ type: "bold" }] },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "orderedList",
+        content: [
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "有序列表第一步" }],
+              },
+            ],
+          },
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "有序列表第二步" }],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "taskList",
+        content: [
+          {
+            type: "taskItem",
+            attrs: { checked: true },
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "已完成任务" }],
+              },
+            ],
+          },
+          {
+            type: "taskItem",
+            attrs: { checked: false },
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "未完成任务" }],
+              },
+            ],
+          },
+        ],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Code" }],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "codeBlock",
+        attrs: { language: "go" },
+        content: [
+          {
+            type: "text",
+            text: [
+              "package main",
+              "",
+              'import "fmt"',
+              "",
+              "func main() {",
+              '  fmt.Println("hello zhicore")',
+              "}",
+            ].join("\n"),
+          },
+        ],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Table" }],
+      },
+      { type: "paragraph", content: [] },
+      {
+        type: "table",
+        content: [
+          {
+            type: "tableRow",
+            content: ["表头1", "表头2", "表头3"].map((text) => ({
+              type: "tableHeader",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text }],
+                },
+              ],
+            })),
+          },
+          ...[
+            ["数据1", "数据2", "数据3"],
+            ["数据4", "数据5", "数据6"],
+          ].map((row) => ({
+            type: "tableRow",
+            content: row.map((text) => ({
+              type: "tableCell",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text }],
+                },
+              ],
+            })),
+          })),
+        ],
+      },
+    ],
+  };
 }
 
 export const fallbackReaderBlock: PostBodyBlock = {

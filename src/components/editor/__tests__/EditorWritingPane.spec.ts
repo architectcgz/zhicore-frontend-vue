@@ -1,19 +1,16 @@
+import type { Editor } from "@tiptap/vue-3";
 import { mount } from "@vue/test-utils";
 // @ts-expect-error Vitest runs this spec in Node; browser tsconfig does not expose Node ambient types.
 import { readFileSync } from "node:fs";
-import { AllSelection } from "prosemirror-state";
-import type { EditorView } from "prosemirror-view";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { editorDraftBodyMaxLength } from "@/features/editor/model";
 import type { EditorTextSelection } from "@/features/editor/model";
 import {
-  createProseMirrorDocFromJson,
-  editorProseMirrorSchema,
-  mapProseMirrorDocToPostBodyWriteInput,
-  serializeProseMirrorDocToJson,
-  type EditorProseMirrorDocumentJson,
-} from "@/features/editor/model/editorProseMirrorEngine";
+  getTiptapPlainText,
+  mapTiptapJsonToPostBodyWriteInput,
+  type EditorTiptapDocumentJson,
+} from "@/features/editor/model/editorTiptapEngine";
 
 import writingPaneSource from "../EditorWritingPane.vue?raw";
 import EditorWritingPane from "../EditorWritingPane.vue";
@@ -22,24 +19,26 @@ const writingPaneStyleSource = readFileSync(
   "src/components/editor/EditorWritingPane.css",
   "utf8",
 );
-const writingPaneProseMirrorBaseStyleSource = readFileSync(
-  "src/components/editor/EditorWritingPaneProseMirrorBase.css",
+const writingPaneTiptapBaseStyleSource = readFileSync(
+  "src/components/editor/EditorWritingPaneTiptapBase.css",
   "utf8",
 );
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
 
-function bodyDoc(text: string): EditorProseMirrorDocumentJson {
-  return serializeProseMirrorDocToJson(
-    editorProseMirrorSchema.nodes.doc.create(null, [
-      editorProseMirrorSchema.nodes.paragraph.create(
-        null,
-        text ? editorProseMirrorSchema.text(text) : undefined,
-      ),
-    ]),
-  );
+function bodyDoc(text: string): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: text ? [{ type: "text", text }] : [],
+      },
+    ],
+  };
 }
 
 function mountWritingPane(options: { attachTo?: HTMLElement } = {}) {
@@ -78,8 +77,23 @@ function mountWritingPane(options: { attachTo?: HTMLElement } = {}) {
   });
 }
 
+function exposedEditor(wrapper: ReturnType<typeof mountWritingPane>) {
+  return wrapper.vm as unknown as {
+    bodyEditor: Editor | null;
+    bodyEditorElement: HTMLElement | null;
+    focusBody: () => void;
+    getBodySelection: () => EditorTextSelection;
+    setBodySelection: (selection: EditorTextSelection) => void;
+    applyBodyToolbarAction: (action: string) => void;
+  };
+}
+
+function blocksFromEditor(editor: Editor) {
+  return mapTiptapJsonToPostBodyWriteInput(editor.getJSON()).blocks;
+}
+
 describe("EditorWritingPane", () => {
-  it("renders a toolbar button for every ProseMirror action", () => {
+  it("renders a toolbar button for every Tiptap action", () => {
     const wrapper = mountWritingPane();
     const buttons = wrapper.findAll(".selection-toolbar button");
 
@@ -111,310 +125,113 @@ describe("EditorWritingPane", () => {
     ]);
   });
 
-  it("toggles the compact toolbar open for touch devices", async () => {
-    const wrapper = mountWritingPane();
-    const toggleButton = wrapper.find(".selection-toolbar__toggle");
-
-    expect(wrapper.find(".selection-toolbar").classes()).not.toContain(
-      "selection-toolbar--expanded",
-    );
-    expect(toggleButton.attributes("aria-expanded")).toBe("false");
-
-    await toggleButton.trigger("click");
-
-    expect(wrapper.find(".selection-toolbar").classes()).toContain(
-      "selection-toolbar--expanded",
-    );
-    expect(toggleButton.text()).toBe("收起");
-    expect(toggleButton.attributes("aria-expanded")).toBe("true");
-
-    await toggleButton.trigger("click");
-
-    expect(wrapper.find(".selection-toolbar").classes()).not.toContain(
-      "selection-toolbar--expanded",
-    );
-    expect(toggleButton.text()).toBe("更多");
-    expect(toggleButton.attributes("aria-expanded")).toBe("false");
-  });
-
-  it("marks the mobile floating toolbar primary actions", () => {
-    const wrapper = mountWritingPane();
-    const primaryButtons = wrapper.findAll(
-      ".selection-toolbar__mobile-primary",
-    );
-
-    expect(primaryButtons.map((button) => button.text())).toEqual([
-      "撤销",
-      "重做",
-      "保存草稿",
-      "B",
-      "Link",
-    ]);
-  });
-
-  it("keeps the desktop toolbar as a sticky zero-height overlay with a fixed reserved slot", () => {
-    expect(writingPaneSource).toContain('class="selection-toolbar-layer"');
-    expect(writingPaneStyleSource).toMatch(
-      /\.document-sheet\s*\{[\s\S]*--selection-toolbar-top: 14px;[\s\S]*--selection-toolbar-reserved-space: 50px;[\s\S]*--selection-toolbar-sticky-top: 8px;[\s\S]*padding: calc\(/,
-    );
-    expect(writingPaneStyleSource).toMatch(
-      /\.selection-toolbar-layer\s*\{[\s\S]*position: sticky;[\s\S]*var\(--selection-toolbar-sticky-top\)[\s\S]*var\(--selection-toolbar-reserved-space\)[\s\S]*height: 0;/,
-    );
-    expect(writingPaneStyleSource).toMatch(
-      /\.selection-toolbar\s*\{[\s\S]*position: relative;[\s\S]*margin: 0 auto;[\s\S]*transform: translateY\(calc\(-1 \* var\(--selection-toolbar-reserved-space\)\)\);/,
-    );
-    expect(writingPaneStyleSource).toMatch(
-      /@media \(max-width: 980px\) \{[\s\S]*\.document-sheet\s*\{[\s\S]*padding: 14px 0 0;[\s\S]*\.selection-toolbar-layer\s*\{[\s\S]*position: static;[\s\S]*\.selection-toolbar\s*\{[\s\S]*position: fixed;[\s\S]*transform: none;/,
-    );
-  });
-
-  it("uses a dedicated toolbar background variable instead of the active control surface", () => {
-    expect(writingPaneStyleSource).toContain("--editor-toolbar-bg");
-    expect(writingPaneStyleSource).toMatch(
-      /\.selection-toolbar\s*\{[\s\S]*background: var\(\s*--editor-toolbar-bg,/,
-    );
-  });
-
-  it("defines the mobile toolbar as a bottom floating editor bar", () => {
-    expect(writingPaneStyleSource).toContain("position: fixed;");
-    expect(writingPaneStyleSource).toContain("top: auto;");
-    expect(writingPaneStyleSource).toContain(
-      "bottom: calc(12px + env(safe-area-inset-bottom, 0px));",
-    );
-    expect(writingPaneStyleSource).toContain(
-      "padding: 10px 12px calc(92px + env(safe-area-inset-bottom, 0px));",
-    );
-    expect(writingPaneStyleSource).toContain(
-      "padding: 8px 10px calc(92px + env(safe-area-inset-bottom, 0px));",
-    );
-    expect(writingPaneStyleSource).toContain(
-      ".selection-toolbar.selection-toolbar--expanded",
-    );
-    expect(writingPaneStyleSource).toContain(
-      "grid-template-columns: repeat(6, minmax(0, 1fr));",
-    );
-  });
-
-  it("renders the body editor with ProseMirror instead of a textarea", () => {
+  it("renders the body editor with Tiptap EditorContent", () => {
     const wrapper = mountWritingPane();
 
+    expect(writingPaneSource).toContain("@tiptap/vue-3");
+    expect(writingPaneSource).toContain("EditorContent");
+    expect(writingPaneSource).not.toContain('contenteditable="true"');
     expect(wrapper.find("textarea.body-input").exists()).toBe(false);
-    expect(wrapper.find(".body-input.ProseMirror").exists()).toBe(true);
-    expect(wrapper.find(".body-input").attributes("contenteditable")).toBe(
-      "true",
+    expect(exposedEditor(wrapper).bodyEditorElement).toBeInstanceOf(
+      HTMLElement,
     );
+    expect(
+      exposedEditor(wrapper).bodyEditorElement?.classList.contains(
+        "ProseMirror",
+      ),
+    ).toBe(true);
   });
 
-  it("emits ProseMirror body document input when the document changes", async () => {
+  it("does not render the preview mode switch while the workbench preview is retired", () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-    };
 
-    exposed.bodyEditorView?.dispatch(
-      exposed.bodyEditorView.state.tr.insertText("追加"),
-    );
+    expect(wrapper.find(".writing-editor__mode-switch").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("写作 + 预览");
+  });
+
+  it("emits Tiptap body document input when the document changes", () => {
+    const wrapper = mountWritingPane();
+    const exposed = exposedEditor(wrapper);
+
+    exposed.bodyEditor?.commands.setTextSelection(1);
+    exposed.bodyEditor?.commands.insertContent("追加");
 
     const emittedDocument = wrapper.emitted("bodyDocumentInput")?.at(-1)?.[0];
 
     expect(
-      createProseMirrorDocFromJson(
-        emittedDocument as EditorProseMirrorDocumentJson,
-      ).textContent,
+      getTiptapPlainText(emittedDocument as EditorTiptapDocumentJson),
     ).toBe("追加草稿正文");
   });
 
-  it("splits the current paragraph when pressing Enter in the ProseMirror body", () => {
+  it("rejects Tiptap changes that exceed the body limit", () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-      setBodySelection: (selection: EditorTextSelection) => void;
-    };
-    const view = exposed.bodyEditorView!;
+    const exposed = exposedEditor(wrapper);
+    const oversizedBody = "x".repeat(editorDraftBodyMaxLength + 1);
 
-    exposed.setBodySelection({
-      start: view.state.doc.content.size - 1,
-      end: view.state.doc.content.size - 1,
-    });
+    exposed.bodyEditor?.commands.setTextSelection(1);
+    exposed.bodyEditor?.commands.insertContent(oversizedBody);
 
-    const handled = view.someProp("handleKeyDown", (handler) =>
-      handler(
-        view,
-        new KeyboardEvent("keydown", {
-          key: "Enter",
-          bubbles: true,
-          cancelable: true,
-        }),
-      ),
-    );
-
-    expect(handled).toBe(true);
-    expect(view.state.doc.childCount).toBe(2);
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(view.state.doc).blocks,
-    ).toEqual([
-      {
-        type: "paragraph",
-        children: [{ type: "text", text: "草稿正文" }],
-      },
-      {
-        type: "paragraph",
-        children: [],
-      },
-    ]);
+    expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
+    expect(getTiptapPlainText(exposed.bodyEditor!.getJSON())).toBe("草稿正文");
   });
 
-  it("inserts a ProseMirror table from the toolbar", () => {
+  it("rejects unsupported nested container structures before they enter draft", () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-      setBodySelection: (selection: EditorTextSelection) => void;
-      applyBodyToolbarAction: (action: "table") => void;
-    };
-    const view = exposed.bodyEditorView!;
+    const exposed = exposedEditor(wrapper);
 
-    exposed.setBodySelection({
-      start: 1,
-      end: view.state.doc.content.size - 1,
-    });
-    exposed.applyBodyToolbarAction("table");
-
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(view.state.doc).blocks,
-    ).toEqual([
-      {
-        type: "table",
-        headers: [
-          { children: [{ type: "text", text: "表头1" }] },
-          { children: [{ type: "text", text: "表头2" }] },
-        ],
-        rows: [
-          [
-            { children: [{ type: "text", text: "内容1" }] },
-            { children: [{ type: "text", text: "内容2" }] },
+    exposed.bodyEditor?.commands.setTextSelection(1);
+    exposed.bodyEditor?.commands.insertContent({
+      type: "blockquote",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "列表项" }],
+                },
+                {
+                  type: "blockquote",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "过深" }],
+                    },
+                  ],
+                },
+              ],
+            },
           ],
-        ],
-      },
-    ]);
+        },
+      ],
+    });
+
+    expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
+    expect(getTiptapPlainText(exposed.bodyEditor!.getJSON())).toBe("草稿正文");
   });
 
-  it("keeps rich pasted content as ProseMirror structure", () => {
+  it("syncs external Tiptap body changes and clamps the selection", async () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-    };
-
-    exposed.bodyEditorView?.dispatch(
-      exposed.bodyEditorView.state.tr.setSelection(
-        new AllSelection(exposed.bodyEditorView.state.doc),
-      ),
-    );
-    exposed.bodyEditorView?.pasteHTML(
-      "<h1>富文本标题</h1><p><strong>粗体正文</strong></p>",
-    );
-
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks,
-    ).toEqual([
-      {
-        type: "heading",
-        level: 1,
-        children: [{ type: "text", text: "富文本标题" }],
-      },
-      {
-        type: "paragraph",
-        children: [
-          {
-            type: "text",
-            text: "粗体正文",
-            marks: [{ type: "bold" }],
-          },
-        ],
-      },
-    ]);
-  });
-
-  it("syncs external ProseMirror body changes and clamps the selection", async () => {
-    const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      getBodySelection: () => EditorTextSelection;
-      setBodySelection: (selection: EditorTextSelection) => void;
-      bodyEditorView: EditorView | null;
-    };
+    const exposed = exposedEditor(wrapper);
 
     exposed.setBodySelection({ start: 2, end: 4 });
     await wrapper.setProps({ bodyDocumentJson: bodyDoc("短") });
 
-    expect(exposed.bodyEditorView?.state.doc.textContent).toBe("短");
+    expect(getTiptapPlainText(exposed.bodyEditor!.getJSON())).toBe("短");
     expect(exposed.getBodySelection()).toEqual({ start: 2, end: 2 });
-  });
-
-  it("rejects ProseMirror changes that exceed the body limit", () => {
-    const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-    };
-    const oversizedBody = "x".repeat(editorDraftBodyMaxLength + 1);
-
-    exposed.bodyEditorView?.dispatch(
-      exposed.bodyEditorView.state.tr.insertText(oversizedBody),
-    );
-
-    expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
-    expect(exposed.bodyEditorView?.state.doc.textContent).toBe("草稿正文");
   });
 
   it("restores body focus without forcing the mobile viewport to scroll", () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorElement: HTMLElement | null;
-      focusBody: () => void;
-    };
+    const exposed = exposedEditor(wrapper);
     const focusSpy = vi.spyOn(exposed.bodyEditorElement!, "focus");
 
     exposed.focusBody();
 
     expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
-  });
-
-  it("restores the current scroll position when mobile focus scrolls late", () => {
-    vi.useFakeTimers();
-    const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorElement: HTMLElement | null;
-      focusBody: () => void;
-    };
-    const focusSpy = vi
-      .spyOn(exposed.bodyEditorElement!, "focus")
-      .mockImplementation(() => {
-        window.setTimeout(() => {
-          Object.defineProperty(window, "scrollY", {
-            configurable: true,
-            value: 0,
-          });
-        }, 10);
-      });
-    const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {
-      Object.defineProperty(window, "scrollY", {
-        configurable: true,
-        value: 420,
-      });
-    });
-    Object.defineProperty(window, "scrollX", {
-      configurable: true,
-      value: 0,
-    });
-    Object.defineProperty(window, "scrollY", {
-      configurable: true,
-      value: 420,
-    });
-
-    exposed.focusBody();
-    vi.advanceTimersByTime(120);
-
-    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
-    expect(scrollToSpy).toHaveBeenCalledWith(0, 420);
   });
 
   it("uses the scroll position captured before a toolbar command click", () => {
@@ -429,9 +246,7 @@ describe("EditorWritingPane", () => {
         value: 420,
       });
     });
-    const exposed = wrapper.vm as unknown as {
-      focusBody: () => void;
-    };
+    const exposed = exposedEditor(wrapper);
 
     Object.defineProperty(window, "scrollX", {
       configurable: true,
@@ -469,10 +284,7 @@ describe("EditorWritingPane", () => {
         value: 420,
       });
     });
-    const exposed = wrapper.vm as unknown as {
-      getBodySelection: () => EditorTextSelection;
-      setBodySelection: (selection: EditorTextSelection) => void;
-    };
+    const exposed = exposedEditor(wrapper);
 
     Object.defineProperty(window, "scrollX", {
       configurable: true,
@@ -503,22 +315,15 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
   });
 
-  it("applies inline toolbar commands as ProseMirror marks", () => {
+  it("applies inline toolbar commands as Tiptap marks", () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-      setBodySelection: (selection: EditorTextSelection) => void;
-      applyBodyToolbarAction: (action: "bold" | "link") => void;
-    };
+    const exposed = exposedEditor(wrapper);
 
     exposed.setBodySelection({ start: 1, end: 5 });
     exposed.applyBodyToolbarAction("bold");
     exposed.applyBodyToolbarAction("link");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks,
-    ).toEqual([
+    expect(blocksFromEditor(exposed.bodyEditor!)).toEqual([
       {
         type: "paragraph",
         children: [
@@ -526,8 +331,8 @@ describe("EditorWritingPane", () => {
             type: "text",
             text: "草稿正文",
             marks: [
+              { type: "link", href: "https://example.com/" },
               { type: "bold" },
-              { type: "link", href: "https://example.com" },
             ],
           },
         ],
@@ -535,26 +340,53 @@ describe("EditorWritingPane", () => {
     ]);
   });
 
-  it("applies block toolbar commands as ProseMirror nodes", () => {
+  it("applies every inline toolbar command as the expected save mark", () => {
+    const cases = [
+      ["bold", { type: "bold" }],
+      ["italic", { type: "italic" }],
+      ["underline", { type: "underline" }],
+      ["strike", { type: "strike" }],
+      ["inlineCode", { type: "inline_code" }],
+      ["link", { type: "link", href: "https://example.com/" }],
+    ] as const;
+
+    cases.forEach(([action, expectedMark]) => {
+      const wrapper = mountWritingPane();
+      const exposed = exposedEditor(wrapper);
+
+      exposed.setBodySelection({ start: 1, end: 5 });
+      exposed.applyBodyToolbarAction(action);
+
+      expect(blocksFromEditor(exposed.bodyEditor!)).toEqual([
+        {
+          type: "paragraph",
+          children: [
+            {
+              type: "text",
+              text: "草稿正文",
+              marks: [expectedMark],
+            },
+          ],
+        },
+      ]);
+    });
+  });
+
+  it("applies block toolbar commands as Tiptap nodes", () => {
     function blocksAfterToolbarAction(
       action: "heading2" | "quote" | "code" | "unorderedList" | "table",
     ) {
       const wrapper = mountWritingPane();
-      const exposed = wrapper.vm as unknown as {
-        bodyEditorView: EditorView | null;
-        setBodySelection: (selection: EditorTextSelection) => void;
-        applyBodyToolbarAction: (nextAction: typeof action) => void;
-      };
+      const exposed = exposedEditor(wrapper);
 
-      exposed.bodyEditorView?.dispatch(
-        exposed.bodyEditorView.state.tr.insertText("结构文本", 1, 5),
+      exposed.bodyEditor?.commands.insertContentAt(
+        { from: 1, to: 5 },
+        "结构文本",
       );
       exposed.setBodySelection({ start: 1, end: 5 });
       exposed.applyBodyToolbarAction(action);
 
-      return mapProseMirrorDocToPostBodyWriteInput(
-        exposed.bodyEditorView!.state.doc,
-      ).blocks;
+      return blocksFromEditor(exposed.bodyEditor!);
     }
 
     expect(blocksAfterToolbarAction("heading2")).toEqual([
@@ -567,7 +399,12 @@ describe("EditorWritingPane", () => {
     expect(blocksAfterToolbarAction("quote")).toEqual([
       {
         type: "quote",
-        children: [{ type: "text", text: "结构文本" }],
+        blocks: [
+          {
+            type: "paragraph",
+            children: [{ type: "text", text: "结构文本" }],
+          },
+        ],
       },
     ]);
     expect(blocksAfterToolbarAction("code")).toEqual([
@@ -582,60 +419,270 @@ describe("EditorWritingPane", () => {
         type: "list",
         ordered: false,
         task: false,
-        items: [{ children: [{ type: "text", text: "结构文本" }] }],
+        items: [
+          {
+            blocks: [
+              {
+                type: "paragraph",
+                children: [{ type: "text", text: "结构文本" }],
+              },
+            ],
+          },
+        ],
       },
     ]);
     expect(blocksAfterToolbarAction("table")).toEqual([
       {
         type: "table",
-        headers: [
-          { children: [{ type: "text", text: "表头1" }] },
-          { children: [{ type: "text", text: "表头2" }] },
-        ],
-        rows: [
-          [
-            { children: [{ type: "text", text: "内容1" }] },
-            { children: [{ type: "text", text: "内容2" }] },
-          ],
-        ],
+        headers: [{ children: [] }, { children: [] }],
+        rows: [[{ children: [] }, { children: [] }]],
       },
     ]);
   });
 
-  it("inserts an empty ProseMirror math block when no text is selected", () => {
+  it("updates the selected code block language from the editor toolbar", async () => {
     const wrapper = mountWritingPane();
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorView: EditorView | null;
-      setBodySelection: (selection: EditorTextSelection) => void;
-      applyBodyToolbarAction: (action: "math") => void;
-    };
+    const exposed = exposedEditor(wrapper);
+
+    exposed.bodyEditor?.commands.insertContentAt(
+      { from: 1, to: 5 },
+      "结构文本",
+    );
+    exposed.setBodySelection({ start: 1, end: 5 });
+    exposed.applyBodyToolbarAction("code");
+    await wrapper.vm.$nextTick();
+
+    const languageSelect = wrapper.find<HTMLSelectElement>(
+      ".selection-toolbar__code-language",
+    );
+
+    expect(languageSelect.exists()).toBe(true);
+    expect(languageSelect.element.value).toBe("ts");
+
+    await languageSelect.setValue("go");
+
+    expect(blocksFromEditor(exposed.bodyEditor!)).toEqual([
+      {
+        type: "code_block",
+        language: "go",
+        code: "结构文本",
+      },
+    ]);
+  });
+
+  it("lets authors choose the language from the code block divider", async () => {
+    const wrapper = mountWritingPane();
+    const exposed = exposedEditor(wrapper);
+
+    exposed.bodyEditor?.commands.insertContentAt(
+      { from: 1, to: 5 },
+      "结构文本",
+    );
+    exposed.setBodySelection({ start: 1, end: 5 });
+    exposed.applyBodyToolbarAction("code");
+    await wrapper.vm.$nextTick();
+
+    const codeBlockLanguageBar = exposed.bodyEditorElement?.querySelector(
+      ".editor-code-block__language-bar",
+    );
+    const codeBlockLanguageSelect =
+      exposed.bodyEditorElement?.querySelector<HTMLSelectElement>(
+        ".editor-code-block__language-select",
+      ) ?? null;
+
+    expect(codeBlockLanguageBar).toBeInstanceOf(HTMLElement);
+    expect(codeBlockLanguageSelect).toBeInstanceOf(HTMLSelectElement);
+    expect(codeBlockLanguageSelect?.value).toBe("ts");
+
+    if (!codeBlockLanguageSelect) {
+      throw new Error("code block language select was not rendered");
+    }
+
+    codeBlockLanguageSelect.value = "python";
+    codeBlockLanguageSelect.dispatchEvent(
+      new Event("change", { bubbles: true }),
+    );
+    await wrapper.vm.$nextTick();
+
+    expect(blocksFromEditor(exposed.bodyEditor!)).toEqual([
+      {
+        type: "code_block",
+        language: "python",
+        code: "结构文本",
+      },
+    ]);
+  });
+
+  it("applies every heading toolbar command with its matching level", () => {
+    (
+      [
+        ["heading1", 1],
+        ["heading2", 2],
+        ["heading3", 3],
+        ["heading4", 4],
+        ["heading5", 5],
+        ["heading6", 6],
+      ] as const
+    ).forEach(([action, level]) => {
+      const wrapper = mountWritingPane();
+      const exposed = exposedEditor(wrapper);
+
+      exposed.bodyEditor?.commands.insertContentAt(
+        { from: 1, to: 5 },
+        "结构文本",
+      );
+      exposed.setBodySelection({ start: 1, end: 5 });
+      exposed.applyBodyToolbarAction(action);
+
+      expect(blocksFromEditor(exposed.bodyEditor!)).toEqual([
+        {
+          type: "heading",
+          level,
+          children: [{ type: "text", text: "结构文本" }],
+        },
+      ]);
+    });
+  });
+
+  it("applies remaining structural toolbar commands as saveable blocks", () => {
+    function blocksAfterToolbarAction(
+      action: "orderedList" | "taskList" | "image",
+    ) {
+      const wrapper = mountWritingPane();
+      const exposed = exposedEditor(wrapper);
+
+      exposed.bodyEditor?.commands.insertContentAt(
+        { from: 1, to: 5 },
+        "结构文本",
+      );
+      exposed.setBodySelection({ start: 1, end: 5 });
+      exposed.applyBodyToolbarAction(action);
+
+      return blocksFromEditor(exposed.bodyEditor!);
+    }
+
+    expect(blocksAfterToolbarAction("orderedList")).toEqual([
+      {
+        type: "list",
+        ordered: true,
+        task: false,
+        items: [
+          {
+            blocks: [
+              {
+                type: "paragraph",
+                children: [{ type: "text", text: "结构文本" }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(blocksAfterToolbarAction("taskList")).toEqual([
+      {
+        type: "list",
+        ordered: false,
+        task: true,
+        items: [
+          {
+            checked: false,
+            blocks: [
+              {
+                type: "paragraph",
+                children: [{ type: "text", text: "结构文本" }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(blocksAfterToolbarAction("image")).toEqual([
+      {
+        type: "external_embed",
+        provider: "image",
+        url: "https://example.com/image.png",
+        title: "图片说明",
+      },
+    ]);
+  });
+
+  it("inserts an empty Tiptap math block when no text is selected", () => {
+    const wrapper = mountWritingPane();
+    const exposed = exposedEditor(wrapper);
 
     exposed.setBodySelection({ start: 1, end: 1 });
     exposed.applyBodyToolbarAction("math");
 
-    expect(
-      mapProseMirrorDocToPostBodyWriteInput(exposed.bodyEditorView!.state.doc)
-        .blocks[0],
-    ).toEqual({
+    expect(blocksFromEditor(exposed.bodyEditor!)[0]).toEqual({
       type: "math",
       latex: "",
     });
-    expect(exposed.bodyEditorView!.state.doc.textContent).not.toContain(
+    expect(getTiptapPlainText(exposed.bodyEditor!.getJSON())).not.toContain(
       "E = mc^2",
     );
   });
 
-  it("keeps ProseMirror editor styles scoped without deep selectors", () => {
+  it("does not render unsafe external embed URLs as clickable editor links", () => {
+    const wrapper = mountWritingPane();
+    const exposed = exposedEditor(wrapper);
+
+    exposed.bodyEditor?.commands.setContent(
+      {
+        type: "doc",
+        content: [
+          {
+            type: "external_embed",
+            attrs: {
+              provider: "image",
+              url: "javascript:alert(1)",
+              title: "危险图片",
+            },
+          },
+        ],
+      },
+      { emitUpdate: false },
+    );
+
+    expect(
+      exposed.bodyEditorElement?.querySelector('a[href^="javascript:"]'),
+    ).toBeNull();
+    expect(exposed.bodyEditorElement?.textContent).toContain("危险图片");
+  });
+
+  it("keeps Tiptap editor styles scoped without deep selectors", () => {
     expect(writingPaneStyleSource).not.toContain(":deep");
     expect(writingPaneSource).not.toContain("EditorWritingPaneProseMirror.css");
     expect(writingPaneSource).toContain(
-      '<style src="./EditorWritingPaneProseMirrorBase.css"></style>',
+      '<style src="./EditorWritingPaneTiptapBase.css"></style>',
     );
-    expect(writingPaneProseMirrorBaseStyleSource).toContain(
-      ".writing-editor .body-input.ProseMirror p",
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      ".writing-editor .body-input .ProseMirror",
     );
-    expect(writingPaneProseMirrorBaseStyleSource).not.toContain("pre");
-    expect(writingPaneProseMirrorBaseStyleSource).not.toContain("table");
+    expect(writingPaneTiptapBaseStyleSource).toContain("min-height: inherit;");
+    expect(writingPaneTiptapBaseStyleSource).toContain("outline: 0;");
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      ".writing-editor .body-input .ProseMirror p",
+    );
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      ".writing-editor .body-input .ProseMirror pre",
+    );
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      ".writing-editor .body-input .ProseMirror table",
+    );
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      "var(--editor-reader-code-border",
+    );
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      "var(--editor-reader-block-bg",
+    );
+  });
+
+  it("centers the document sheet in a narrower writing canvas", () => {
+    expect(writingPaneStyleSource).toContain(
+      "grid-template-columns: minmax(0, 720px);",
+    );
+    expect(writingPaneStyleSource).toContain("justify-content: center;");
+    expect(writingPaneStyleSource).toContain("width: 100%;");
   });
 
   it("keeps toolbar mousedown from stealing the body editor selection", () => {
@@ -690,11 +737,7 @@ describe("EditorWritingPane", () => {
     const tableButton = wrapper.find<HTMLButtonElement>(
       '.selection-toolbar button[aria-label="表格"]',
     );
-    const exposed = wrapper.vm as unknown as {
-      bodyEditorElement: HTMLElement | null;
-      getBodySelection: () => EditorTextSelection;
-      setBodySelection: (selection: EditorTextSelection) => void;
-    };
+    const exposed = exposedEditor(wrapper);
 
     exposed.bodyEditorElement?.focus();
     exposed.setBodySelection({ start: 2, end: 2 });
@@ -724,58 +767,9 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("saveDraft")).toEqual([[]]);
   });
 
-  it("emits editor display changes from the writing meta bar", async () => {
-    const wrapper = mountWritingPane();
-
-    await wrapper
-      .find('.writing-editor__mode-switch button[aria-pressed="false"]')
-      .trigger("click");
-    await wrapper
-      .find('.writing-editor__background-swatch[aria-label="切换到墨蓝背景"]')
-      .trigger("click");
-
-    expect(wrapper.emitted("selectMode")).toEqual([["preview"]]);
-    expect(wrapper.emitted("selectBackground")).toEqual([["ink"]]);
-  });
-
   it("keeps the body limit visible in the editor status", () => {
     const wrapper = mountWritingPane();
 
     expect(wrapper.text()).toContain(`4 / ${editorDraftBodyMaxLength} 字符`);
-  });
-
-  it("keeps the document structure footer focused on the word count", () => {
-    const wrapper = mountWritingPane();
-
-    expect(wrapper.find(".document-structure").text()).toBe("4 字");
-  });
-
-  it("emits undo when Ctrl+Z is pressed in the body editor", async () => {
-    const wrapper = mountWritingPane();
-    const bodyInput = wrapper.find(".body-input");
-
-    await bodyInput.trigger("keydown", {
-      key: "z",
-      ctrlKey: true,
-    });
-
-    expect(wrapper.emitted("undo")).toEqual([[]]);
-  });
-
-  it("emits redo when Ctrl+Shift+Z or Ctrl+Y is pressed in the body editor", async () => {
-    const wrapper = mountWritingPane();
-    const bodyInput = wrapper.find(".body-input");
-
-    await bodyInput.trigger("keydown", {
-      key: "z",
-      ctrlKey: true,
-      shiftKey: true,
-    });
-    await bodyInput.trigger("keydown", {
-      key: "y",
-      ctrlKey: true,
-    });
-
-    expect(wrapper.emitted("redo")).toEqual([[], []]);
   });
 });

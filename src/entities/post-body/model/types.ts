@@ -42,17 +42,19 @@ export interface HeadingBlock {
 
 export interface QuoteBlock {
   type: "quote";
-  children: PostBodyInlineNode[];
+  blocks: PostBodyBlock[];
 }
 
 export interface ListBlock {
   type: "list";
   ordered: boolean;
   task: boolean;
-  items: Array<{
-    children: PostBodyInlineNode[];
-    checked?: boolean;
-  }>;
+  items: PostBodyListItem[];
+}
+
+export interface PostBodyListItem {
+  blocks: PostBodyBlock[];
+  checked?: boolean;
 }
 
 export interface CodeBlock {

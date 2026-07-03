@@ -1,0 +1,193 @@
+.writing-editor .body-input {
+  --reader-text: var(--editor-reader-text, #485765);
+  --reader-strong: var(--editor-reader-strong, #17202a);
+  --reader-code-text: var(--editor-reader-code-text, #23424d);
+  --reader-code-bg: var(--editor-reader-code-bg, rgba(23, 32, 42, 0.08));
+  --reader-code-border: var(--editor-reader-code-border, rgba(23, 32, 42, 0.1));
+  --reader-code-caption-border: var(
+    --editor-reader-code-caption-border,
+    rgba(23, 32, 42, 0.08)
+  );
+  --reader-block-bg: var(--editor-reader-block-bg, rgba(23, 32, 42, 0.07));
+}
+
+.writing-editor .body-input .ProseMirror {
+  box-sizing: border-box;
+  min-height: inherit;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  overflow-x: auto;
+  white-space: inherit;
+  word-break: inherit;
+  caret-color: var(--editor-page-accent, #1f7f74);
+}
+
+.writing-editor .body-input .ProseMirror p {
+  margin: 0;
+}
+
+.writing-editor .body-input .ProseMirror h1,
+.writing-editor .body-input .ProseMirror h2,
+.writing-editor .body-input .ProseMirror h3,
+.writing-editor .body-input .ProseMirror h4,
+.writing-editor .body-input .ProseMirror h5,
+.writing-editor .body-input .ProseMirror h6 {
+  margin: 10px 0 4px;
+  color: var(--reader-strong);
+  font-weight: 760;
+  line-height: 1.28;
+}
+
+.writing-editor .body-input .ProseMirror h1:first-child,
+.writing-editor .body-input .ProseMirror h2:first-child,
+.writing-editor .body-input .ProseMirror h3:first-child,
+.writing-editor .body-input .ProseMirror h4:first-child,
+.writing-editor .body-input .ProseMirror h5:first-child,
+.writing-editor .body-input .ProseMirror h6:first-child {
+  margin-top: 0;
+}
+
+.writing-editor .body-input .ProseMirror h1,
+.writing-editor .body-input .ProseMirror h2 {
+  font-size: 1.32em;
+}
+
+.writing-editor .body-input .ProseMirror h3,
+.writing-editor .body-input .ProseMirror h4,
+.writing-editor .body-input .ProseMirror h5,
+.writing-editor .body-input .ProseMirror h6 {
+  font-size: 1.16em;
+}
+
+.writing-editor .body-input .ProseMirror pre {
+  overflow-x: auto;
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid var(--reader-code-border);
+  border-radius: 8px;
+  background: var(--reader-block-bg);
+  color: var(--reader-code-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 15px;
+  line-height: 1.56;
+  white-space: pre;
+}
+
+.writing-editor .body-input .ProseMirror pre code {
+  font: inherit;
+  white-space: inherit;
+}
+
+.writing-editor .body-input .ProseMirror .editor-code-block {
+  overflow: hidden;
+  margin: 12px 0;
+  border: 1px solid var(--reader-code-border);
+  border-radius: 8px;
+  background: var(--reader-block-bg);
+  color: var(--reader-code-text);
+}
+
+.writing-editor .body-input .ProseMirror .editor-code-block__language-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 4px 8px 4px 10px;
+  border-bottom: 1px solid var(--reader-code-caption-border);
+  background: color-mix(
+    in srgb,
+    var(--reader-block-bg) 72%,
+    var(--editor-control-bg-active, #ffffff)
+  );
+  color: var(--editor-page-muted, #657785);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.writing-editor .body-input .ProseMirror .editor-code-block__language-label {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.writing-editor .body-input .ProseMirror .editor-code-block__language-select {
+  min-height: 30px;
+  max-width: min(180px, 58%);
+  border: 1px solid var(--reader-code-border);
+  border-radius: 6px;
+  padding: 0 8px;
+  background: var(--editor-control-bg-active, #ffffff);
+  color: var(--editor-page-text, #17202a);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.writing-editor
+  .body-input
+  .ProseMirror
+  .editor-code-block__language-select:focus-visible {
+  outline: 2px solid var(--editor-page-accent, #1f7f74);
+  outline-offset: 2px;
+}
+
+.writing-editor .body-input .ProseMirror .editor-code-block pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.writing-editor .body-input .ProseMirror code:not(pre code) {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--reader-code-bg);
+  color: var(--reader-code-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+.writing-editor .body-input .ProseMirror table {
+  width: max(100%, 420px);
+  margin: 12px 0;
+  border: 1px solid var(--reader-code-border);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  background: var(--reader-block-bg);
+  color: var(--reader-text);
+  font-size: 14px;
+  line-height: 1.56;
+  overflow: hidden;
+}
+
+.writing-editor .body-input .ProseMirror th,
+.writing-editor .body-input .ProseMirror td {
+  min-width: 120px;
+  border-right: 1px solid var(--reader-code-caption-border);
+  border-bottom: 1px solid var(--reader-code-caption-border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.writing-editor .body-input .ProseMirror th {
+  color: var(--reader-strong);
+  font-weight: 760;
+}
+
+.writing-editor .body-input .ProseMirror th:last-child,
+.writing-editor .body-input .ProseMirror td:last-child {
+  border-right: 0;
+}
+
+.writing-editor .body-input .ProseMirror tr:last-child td {
+  border-bottom: 0;
+}

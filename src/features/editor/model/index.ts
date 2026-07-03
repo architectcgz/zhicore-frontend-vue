@@ -15,6 +15,31 @@ export type {
   EditorTextSelection,
   EditorToolbarAction,
 } from "./editorToolbarTypes";
+export {
+  editorCodeBlockLanguageOptions,
+  normalizeEditorCodeBlockLanguage,
+  serializeEditorCodeBlockLanguage,
+} from "./editorCodeBlockLanguages";
+export type { EditorCodeBlockLanguage } from "./editorCodeBlockLanguages";
+export {
+  createDefaultEditorDocumentJson,
+  EditorPostBodyMappingError,
+  editorPostBodyMaxContainerDepth,
+  getTiptapPlainText,
+  mapTiptapJsonToPostBodyWriteInput,
+  mapTiptapJsonToPreviewReaderBlocks,
+} from "./editorTiptapEngine";
+export type {
+  EditorTiptapDocumentJson,
+  EditorTiptapSelection,
+} from "./editorTiptapEngine";
+export {
+  createEditorTiptapContractGuardExtension,
+  createEditorTiptapExtensions,
+  EditorTiptapExternalEmbed,
+  EditorTiptapMathBlock,
+} from "./editorTiptapExtensions";
+export { applyTiptapToolbarAction } from "./editorTiptapToolbarCommands";
 export { useEditorPreviewScrollSync } from "./useEditorPreviewScrollSync";
 export type { UseEditorPreviewScrollSyncOptions } from "./useEditorPreviewScrollSync";
 export { useEditorDisplay } from "./useEditorDisplay";

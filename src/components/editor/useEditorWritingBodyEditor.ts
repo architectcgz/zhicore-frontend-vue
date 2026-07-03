@@ -1,24 +1,21 @@
+import { Editor } from "@tiptap/vue-3";
 import { ref, shallowRef } from "vue";
-import { baseKeymap } from "prosemirror-commands";
-import { keymap } from "prosemirror-keymap";
-import {
-  EditorState,
-  TextSelection,
-  type Transaction,
-} from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
 
 import type {
   EditorTextSelection,
   EditorToolbarAction,
 } from "@/features/editor/model";
 import {
-  createProseMirrorDocFromJson,
-  editorProseMirrorSchema,
-  serializeProseMirrorDocToJson,
-  type EditorProseMirrorDocumentJson,
-} from "@/features/editor/model/editorProseMirrorEngine";
-import { applyProseMirrorToolbarAction } from "@/features/editor/model/editorProseMirrorToolbarCommands";
+  normalizeEditorCodeBlockLanguage,
+  serializeEditorCodeBlockLanguage,
+} from "@/features/editor/model";
+import {
+  getTiptapPlainText,
+  mapTiptapJsonToPostBodyWriteInput,
+  type EditorTiptapDocumentJson,
+} from "@/features/editor/model/editorTiptapEngine";
+import { createEditorTiptapExtensions } from "@/features/editor/model/editorTiptapExtensions";
+import { applyTiptapToolbarAction } from "@/features/editor/model/editorTiptapToolbarCommands";
 
 interface ToolbarCommandScrollSnapshot {
   writingEditor: HTMLElement | null;
@@ -29,9 +26,9 @@ interface ToolbarCommandScrollSnapshot {
 }
 
 export interface UseEditorWritingBodyEditorOptions {
-  getBodyDocumentJson: () => EditorProseMirrorDocumentJson;
+  getBodyDocumentJson: () => EditorTiptapDocumentJson;
   getBodyMaxLength: () => number;
-  emitBodyDocumentInput: (value: EditorProseMirrorDocumentJson) => void;
+  emitBodyDocumentInput: (value: EditorTiptapDocumentJson) => void;
 }
 
 export function useEditorWritingBodyEditor(
@@ -39,7 +36,8 @@ export function useEditorWritingBodyEditor(
 ) {
   const bodyInputRef = ref<HTMLElement | null>(null);
   const writingEditorRef = ref<HTMLElement | null>(null);
-  const bodyEditorView = shallowRef<EditorView | null>(null);
+  const bodyEditor = shallowRef<Editor | null>(null);
+  const currentCodeBlockLanguage = ref<string | null>(null);
   const lastBodySelection = ref<EditorTextSelection>({
     start: 0,
     end: 0,
@@ -48,69 +46,37 @@ export function useEditorWritingBodyEditor(
     ref<ToolbarCommandScrollSnapshot | null>(null);
   const toolbarCommandScrollTimers: number[] = [];
 
-  function findAncestorDepth(
-    position: TextSelection["$from"],
-    nodeName: string,
-  ): number | null {
-    for (let depth = position.depth; depth > 0; depth -= 1) {
-      if (position.node(depth).type.name === nodeName) {
-        return depth;
-      }
-    }
-
-    return null;
-  }
-
-  function exitTableCellOnEnter(
-    state: EditorState,
-    dispatch?: (transaction: Transaction) => void,
-  ): boolean {
-    const tableCellDepth = findAncestorDepth(
-      state.selection.$from,
-      "table_cell",
-    );
-    const tableDepth = findAncestorDepth(state.selection.$from, "table");
-    const paragraphNode = editorProseMirrorSchema.nodes.paragraph;
-
-    if (tableCellDepth === null || tableDepth === null || !paragraphNode) {
-      return false;
-    }
-
-    if (dispatch) {
-      const insertPosition = state.selection.$from.after(tableDepth);
-      const paragraph = paragraphNode.create();
-      let transaction = state.tr.insert(insertPosition, paragraph);
-      transaction = transaction
-        .setSelection(TextSelection.create(transaction.doc, insertPosition + 1))
-        .scrollIntoView();
-
-      dispatch(transaction);
-    }
-
-    return true;
-  }
-
-  function createBodyEditorPlugins() {
-    return [
-      keymap({
-        Enter: exitTableCellOnEnter,
-      }),
-      // ProseMirror 的基础键盘行为不内置在 EditorView 中；Enter 换行、Backspace 合并段落等编辑语义由 keymap 提供。
-      keymap(baseKeymap),
-    ];
+  function refreshBodyInputElement(): void {
+    bodyInputRef.value = bodyEditor.value?.view.dom ?? null;
   }
 
   function readBodySelection(): EditorTextSelection | undefined {
-    const view = bodyEditorView.value;
+    const editor = bodyEditor.value;
 
-    if (!view) {
+    if (!editor) {
       return undefined;
     }
 
     return {
-      start: view.state.selection.from,
-      end: view.state.selection.to,
+      start: editor.state.selection.from,
+      end: editor.state.selection.to,
     };
+  }
+
+  function readCurrentCodeBlockLanguage(): string | null {
+    const editor = bodyEditor.value;
+
+    if (!editor?.isActive("codeBlock")) {
+      return null;
+    }
+
+    const language = editor.getAttributes("codeBlock").language;
+
+    return normalizeEditorCodeBlockLanguage(language);
+  }
+
+  function refreshCurrentCodeBlockLanguage(): void {
+    currentCodeBlockLanguage.value = readCurrentCodeBlockLanguage();
   }
 
   function rememberBodySelection(): void {
@@ -119,6 +85,8 @@ export function useEditorWritingBodyEditor(
     if (selection) {
       lastBodySelection.value = selection;
     }
+
+    refreshCurrentCodeBlockLanguage();
   }
 
   function captureToolbarCommandScroll(): ToolbarCommandScrollSnapshot {
@@ -203,7 +171,9 @@ export function useEditorWritingBodyEditor(
 
   function focusBody(): void {
     const restoreScroll = createToolbarCommandScrollRestorer();
+    const editor = bodyEditor.value;
 
+    editor?.commands.focus(undefined, { scrollIntoView: false });
     bodyInputRef.value?.focus({ preventScroll: true });
     // 部分移动端浏览器会在 preventScroll 后延迟把编辑器光标滚进视口；
     // 工具栏命令聚焦正文时应保持作者当前阅读位置。
@@ -212,9 +182,9 @@ export function useEditorWritingBodyEditor(
 
   function clampBodySelectionToDocument(
     selection: EditorTextSelection,
-    doc = bodyEditorView.value?.state.doc,
+    editor = bodyEditor.value,
   ): EditorTextSelection {
-    const maxPosition = Math.max(1, (doc?.content.size ?? 1) - 1);
+    const maxPosition = Math.max(1, (editor?.state.doc.content.size ?? 1) - 1);
     const start = Math.min(Math.max(selection.start, 0), maxPosition);
     const end = Math.min(Math.max(selection.end, 0), maxPosition);
 
@@ -223,140 +193,130 @@ export function useEditorWritingBodyEditor(
 
   function setBodySelection(selection: EditorTextSelection): void {
     const restoreScroll = createToolbarCommandScrollRestorer();
-    const view = bodyEditorView.value;
+    const editor = bodyEditor.value;
+    const tiptapSelection = clampBodySelectionToDocument(selection, editor);
 
-    if (view) {
-      const prosemirrorSelection = clampBodySelectionToDocument(
-        selection,
-        view.state.doc,
-      );
-
-      view.dispatch(
-        view.state.tr.setSelection(
-          TextSelection.create(
-            view.state.doc,
-            prosemirrorSelection.start,
-            prosemirrorSelection.end,
-          ),
-        ),
-      );
-    }
-
-    lastBodySelection.value = selection;
+    editor?.commands.setTextSelection({
+      from: tiptapSelection.start,
+      to: tiptapSelection.end,
+    });
+    lastBodySelection.value = tiptapSelection;
     // 移动端浏览器会在设置选区后主动把光标滚进视口；
     // 工具栏命令应保持作者当前阅读位置，只更新源码和选区。
     scheduleToolbarCommandScrollRestore(restoreScroll);
   }
 
-  function createBodyEditorState(): EditorState {
-    return EditorState.create({
-      schema: editorProseMirrorSchema,
-      doc: createProseMirrorDocFromJson(options.getBodyDocumentJson()),
-      plugins: createBodyEditorPlugins(),
-    });
-  }
-
   function syncBodyEditorFromDocumentJson(
-    documentJson: EditorProseMirrorDocumentJson,
+    documentJson: EditorTiptapDocumentJson,
   ): void {
-    const view = bodyEditorView.value;
-    const currentJson = serializeProseMirrorDocToJson(
-      view?.state.doc ?? createProseMirrorDocFromJson(documentJson),
-    );
+    const editor = bodyEditor.value;
 
-    if (!view || JSON.stringify(currentJson) === JSON.stringify(documentJson)) {
+    if (
+      !editor ||
+      JSON.stringify(editor.getJSON()) === JSON.stringify(documentJson)
+    ) {
       return;
     }
 
-    const doc = createProseMirrorDocFromJson(documentJson);
-    const selection = clampBodySelectionToDocument(
-      lastBodySelection.value,
-      doc,
-    );
-
-    view.updateState(
-      EditorState.create({
-        schema: editorProseMirrorSchema,
-        doc,
-        selection: TextSelection.create(doc, selection.start, selection.end),
-        plugins: createBodyEditorPlugins(),
-      }),
-    );
-    lastBodySelection.value = selection;
+    editor.commands.setContent(documentJson, {
+      emitUpdate: false,
+      errorOnInvalidContent: true,
+    });
+    setBodySelection(lastBodySelection.value);
   }
 
   function applyBodyToolbarAction(action: EditorToolbarAction): void {
-    applyProseMirrorToolbarAction(bodyEditorView.value, action);
+    applyTiptapToolbarAction(bodyEditor.value, action);
+    rememberBodySelection();
   }
 
-  function mountBodyEditor(): void {
-    const bodyEditorElement = bodyInputRef.value;
+  function setCodeBlockLanguage(language: string): void {
+    const editor = bodyEditor.value;
 
-    if (!bodyEditorElement) {
+    if (!editor?.isActive("codeBlock")) {
       return;
     }
 
-    // 正文事实是 ProseMirror JSON；dispatch 后向上同步 doc，由 draft model 负责保存映射。
-    bodyEditorView.value = new EditorView(
-      { mount: bodyEditorElement },
-      {
-        state: createBodyEditorState(),
-        dispatchTransaction(transaction) {
-          const view = bodyEditorView.value;
-
-          if (!view) {
-            return;
-          }
-
-          const nextState = view.state.apply(transaction);
-          const nextBodyDocumentJson = serializeProseMirrorDocToJson(
-            nextState.doc,
-          );
-          const nextBodyLength = nextState.doc.textBetween(
-            0,
-            nextState.doc.content.size,
-            "\n",
-          ).length;
-
-          if (
-            transaction.docChanged &&
-            nextBodyLength > options.getBodyMaxLength()
-          ) {
-            return;
-          }
-
-          view.updateState(nextState);
-          rememberBodySelection();
-
-          if (
-            transaction.docChanged &&
-            JSON.stringify(nextBodyDocumentJson) !==
-              JSON.stringify(options.getBodyDocumentJson())
-          ) {
-            options.emitBodyDocumentInput(nextBodyDocumentJson);
-          }
-        },
-      },
+    const nextLanguage = serializeEditorCodeBlockLanguage(
+      normalizeEditorCodeBlockLanguage(language),
     );
+
+    editor
+      .chain()
+      .focus(undefined, { scrollIntoView: false })
+      .updateAttributes("codeBlock", {
+        language: nextLanguage,
+      })
+      .run();
+    rememberBodySelection();
+  }
+
+  function mountBodyEditor(): void {
+    bodyEditor.value = new Editor({
+      content: options.getBodyDocumentJson(),
+      enableInputRules: false,
+      enablePasteRules: false,
+      extensions: createEditorTiptapExtensions({
+        getBodyMaxLength: options.getBodyMaxLength,
+      }),
+      onCreate() {
+        refreshBodyInputElement();
+        rememberBodySelection();
+      },
+      onUpdate({ editor }) {
+        const nextBodyDocumentJson = editor.getJSON();
+
+        if (
+          getTiptapPlainText(nextBodyDocumentJson).length >
+          options.getBodyMaxLength()
+        ) {
+          return;
+        }
+
+        try {
+          // draft owner 只接收可保存的 Content V1 文档树；guard extension 已拦截，保留此处作为安全网。
+          mapTiptapJsonToPostBodyWriteInput(nextBodyDocumentJson);
+        } catch {
+          return;
+        }
+
+        rememberBodySelection();
+
+        if (
+          JSON.stringify(nextBodyDocumentJson) !==
+          JSON.stringify(options.getBodyDocumentJson())
+        ) {
+          options.emitBodyDocumentInput(nextBodyDocumentJson);
+        }
+      },
+      onSelectionUpdate() {
+        rememberBodySelection();
+      },
+    });
+    refreshBodyInputElement();
     rememberBodySelection();
   }
 
   function destroyBodyEditor(): void {
     clearToolbarCommandScrollTimers();
-    bodyEditorView.value?.destroy();
-    bodyEditorView.value = null;
+    bodyEditor.value?.destroy();
+    bodyEditor.value = null;
+    bodyInputRef.value = null;
+    currentCodeBlockLanguage.value = null;
   }
 
   return {
     bodyInputRef,
     writingEditorRef,
-    bodyEditorView,
+    bodyEditor,
+    currentCodeBlockLanguage,
     focusBody,
     getBodySelection,
     setBodySelection,
     preserveBodySelectionBeforeToolbarCommand,
     syncBodyEditorFromDocumentJson,
     applyBodyToolbarAction,
+    setCodeBlockLanguage,
     mountBodyEditor,
     destroyBodyEditor,
   };

@@ -38,7 +38,7 @@ defineProps<{
 <style scoped>
 .reader-preview__table-wrap {
   overflow-x: auto;
-  margin: 14px 0;
+  margin: 12px 0;
   border: 1px solid var(--reader-code-border);
   border-radius: 8px;
   background: var(--reader-block-bg);
@@ -56,7 +56,7 @@ defineProps<{
 .reader-preview__table th,
 .reader-preview__table td {
   border-bottom: 1px solid var(--reader-code-caption-border);
-  padding: 9px 11px;
+  padding: 8px 10px;
   text-align: left;
   vertical-align: top;
 }

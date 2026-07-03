@@ -3,15 +3,17 @@ import { describe, expect, it } from "vitest";
 import documentViewerSource from "@/components/editor/EditorDocumentViewer.vue?raw";
 import previewPaneSource from "@/components/editor/EditorPreviewPane.vue?raw";
 import writingPaneSource from "@/components/editor/EditorWritingPane.vue?raw";
+import writingBodyEditorSource from "@/components/editor/useEditorWritingBodyEditor.ts?raw";
 import homeOverviewSource from "@/components/home/HomeOverviewWidget.vue?raw";
 import appLayoutSource from "@/layouts/AppLayout.vue?raw";
 import routePageSource from "@/pages/editor/EditorRoutePage.vue?raw";
 import editorRoutesSource from "@/router/routes/editorRoutes.ts?raw";
 
+import packageJsonSource from "../../../../../package.json?raw";
 import featureIndexSource from "../index.ts?raw";
 import controllerSource from "../useEditorWorkspaceController.ts?raw";
 import draftSource from "../useEditorDraft.ts?raw";
-import proseMirrorEngineSource from "../editorProseMirrorEngine.ts?raw";
+import tiptapEngineSource from "../editorTiptapEngine.ts?raw";
 import desktopWorkspaceSource from "../../ui/EditorDesktopWorkspace.vue?raw";
 import mobileWorkspaceSource from "../../ui/EditorMobileWorkspace.vue?raw";
 import workspaceSource from "../../ui/EditorWorkspace.vue?raw";
@@ -64,7 +66,7 @@ describe("editor architecture boundaries", () => {
     expect(draftSource).not.toContain("compiledHtml");
   });
 
-  it("keeps the formal editor runtime on ProseMirror instead of markdown-like source transforms", () => {
+  it("keeps the formal editor runtime on Tiptap instead of markdown-like source transforms", () => {
     expect(featureIndexSource).not.toContain("editorContentAdapter");
     expect(featureIndexSource).not.toContain("editorContentCompiler");
     expect(featureIndexSource).not.toContain("editorValidationPathMapper");
@@ -75,18 +77,29 @@ describe("editor architecture boundaries", () => {
     expect(draftSource).not.toContain("updateBody(nextBody");
     expect(draftSource).not.toContain("editorMarkdownMapper");
     expect(draftSource).not.toContain("mapMarkdownTextToPostBodyWriteInput");
-    expect(proseMirrorEngineSource).not.toContain(
-      "createProseMirrorDocFromSource",
-    );
-    expect(proseMirrorEngineSource).not.toContain(
-      "serializeProseMirrorDocToSource",
-    );
-    expect(proseMirrorEngineSource).not.toContain(
-      "mapSourceSelectionToProseMirrorSelection",
-    );
+    expect(tiptapEngineSource).not.toContain("createTiptapDocFromSource");
+    expect(tiptapEngineSource).not.toContain("serializeTiptapDocToSource");
+    expect(tiptapEngineSource).not.toContain("mapSourceSelectionToTiptap");
     expect(controllerSource).not.toContain("applyToolbarActionToBody");
     expect(writingPaneSource).not.toContain("applyToolbarActionToBody");
     expect(featureIndexSource).not.toContain("editorToolbarTransforms");
+  });
+
+  it("keeps the formal editor runtime on Tiptap without hand-written EditorView glue", () => {
+    expect(packageJsonSource).toContain('"@tiptap/vue-3"');
+    expect(packageJsonSource).toContain('"@tiptap/starter-kit"');
+    expect(writingPaneSource).toContain("@tiptap/vue-3");
+    expect(writingPaneSource).toContain("EditorContent");
+    expect(writingPaneSource).not.toContain('contenteditable="true"');
+    expect(writingPaneSource).not.toContain("prosemirror-view");
+    expect(writingBodyEditorSource).not.toContain("new EditorView");
+    expect(writingBodyEditorSource).toContain("enableInputRules: false");
+    expect(writingBodyEditorSource).toContain("enablePasteRules: false");
+    expect(writingBodyEditorSource).not.toContain("prosemirror-view");
+    expect(writingBodyEditorSource).not.toContain("prosemirror-state");
+    expect(writingBodyEditorSource).not.toContain("prosemirror-keymap");
+    expect(draftSource).not.toContain("createProseMirrorDocFromJson");
+    expect(featureIndexSource).not.toContain("editorProseMirrorEngine");
   });
 
   it("keeps the writing pane as a thin view over extracted editor behavior", () => {

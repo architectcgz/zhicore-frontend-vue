@@ -12,6 +12,7 @@ export type {
   PostBodyBlock,
   PostBodyInlineMark,
   PostBodyInlineNode,
+  PostBodyListItem,
   PostBodySchemaVersion,
   PostBodyTableCell,
   PostBodyWriteInput,

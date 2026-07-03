@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  createProseMirrorDocFromJson,
-  editorProseMirrorSchema,
-  getProseMirrorPlainText,
-  serializeProseMirrorDocToJson,
-  type EditorProseMirrorDocumentJson,
-} from "../editorProseMirrorEngine";
+  getTiptapPlainText,
+  type EditorTiptapDocumentJson,
+} from "../editorTiptapEngine";
 import {
   canRedoEditorDraftHistory,
   canUndoEditorDraftHistory,
@@ -16,19 +13,20 @@ import {
   undoEditorDraftHistory,
 } from "../editorDraftHistory";
 
-function bodyDoc(text: string): EditorProseMirrorDocumentJson {
-  return serializeProseMirrorDocToJson(
-    editorProseMirrorSchema.nodes.doc.create(null, [
-      editorProseMirrorSchema.nodes.paragraph.create(
-        null,
-        text ? editorProseMirrorSchema.text(text) : undefined,
-      ),
-    ]),
-  );
+function bodyDoc(text: string): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: text ? [{ type: "text", text }] : [],
+      },
+    ],
+  };
 }
 
-function bodyText(documentJson: EditorProseMirrorDocumentJson): string {
-  return getProseMirrorPlainText(createProseMirrorDocFromJson(documentJson));
+function bodyText(documentJson: EditorTiptapDocumentJson): string {
+  return getTiptapPlainText(documentJson);
 }
 
 describe("editorDraftHistory", () => {

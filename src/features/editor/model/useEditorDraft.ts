@@ -4,6 +4,7 @@ import {
   onScopeDispose,
   readonly,
   ref,
+  shallowReadonly,
   watch,
 } from "vue";
 
@@ -32,11 +33,11 @@ import {
   fallbackReaderBlock,
 } from "./editorFixtures";
 import {
-  createProseMirrorDocFromJson,
-  getProseMirrorPlainText,
-  mapProseMirrorDocToPostBodyWriteInput,
-  type EditorProseMirrorDocumentJson,
-} from "./editorProseMirrorEngine";
+  EditorPostBodyMappingError,
+  getTiptapPlainText,
+  mapTiptapJsonToPostBodyWriteInput,
+  type EditorTiptapDocumentJson,
+} from "./editorTiptapEngine";
 import {
   type EditorTextSelection,
   type EditorToolbarAction,
@@ -89,7 +90,7 @@ export const editorDraftBodyMaxLength = 20000;
 
 const defaultPreviewCompileDebounceMs = 160;
 const defaultHistoryMergeWindowMs = 500;
-const proseMirrorLogger = createEditorLogger("compiler");
+const tiptapLogger = createEditorLogger("compiler");
 
 function createContentHash(content: string): string {
   let hash = 2166136261;
@@ -148,7 +149,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const historyMergeWindowMs =
     options.historyMergeWindowMs ?? defaultHistoryMergeWindowMs;
   const title = ref(defaultEditorTitle);
-  const bodyDocumentJson = ref<EditorProseMirrorDocumentJson>(
+  const bodyDocumentJson = ref<EditorTiptapDocumentJson>(
     createDefaultEditorDocumentJson(),
   );
   let previewCompileTimer: number | undefined;
@@ -163,13 +164,10 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     return trimmedTitle || "未命名草稿";
   });
 
-  const bodyDocument = computed(() =>
-    createProseMirrorDocFromJson(bodyDocumentJson.value),
-  );
-  const body = computed(() => getProseMirrorPlainText(bodyDocument.value));
+  const body = computed(() => getTiptapPlainText(bodyDocumentJson.value));
 
   const postBodyWriteInput = computed(() =>
-    mapProseMirrorDocToPostBodyWriteInput(bodyDocument.value),
+    mapTiptapJsonToPostBodyWriteInput(bodyDocumentJson.value),
   );
   const currentSourceHash = computed(() =>
     createContentHash(
@@ -218,7 +216,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
     const previewBlocks = postBodyWriteInput.value.blocks.map(
       (block, blockIndex) => ({
-        stableKey: `prosemirror-preview-${blockIndex}-${block.type}-${JSON.stringify(block).length}`,
+        stableKey: `tiptap-preview-${blockIndex}-${block.type}-${JSON.stringify(block).length}`,
         block,
         readerBlockIndex: blockIndex,
       }),
@@ -306,8 +304,8 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   }
 
   function compilePreviewNow(): void {
-    proseMirrorLogger.debug(() => [
-      "mapped ProseMirror preview",
+    tiptapLogger.debug(() => [
+      "mapped Tiptap preview",
       {
         blockCount: postBodyWriteInput.value.blocks.length,
       },
@@ -329,19 +327,29 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   }
 
   function updateBodyDocument(
-    nextBodyDocumentJson: EditorProseMirrorDocumentJson,
+    nextBodyDocumentJson: EditorTiptapDocumentJson,
     selection?: EditorTextSelection,
   ): void {
-    const nextDoc = createProseMirrorDocFromJson(nextBodyDocumentJson);
-    const nextPlainText = getProseMirrorPlainText(nextDoc);
+    const nextPlainText = getTiptapPlainText(nextBodyDocumentJson);
 
     if (nextPlainText.length > editorDraftBodyMaxLength) {
       return;
     }
 
+    try {
+      // 保存契约在 mapper 层 enforce；草稿入口也先试映射，避免预览和保存状态接收超过 Content V1 边界的文档树。
+      mapTiptapJsonToPostBodyWriteInput(nextBodyDocumentJson);
+    } catch (error) {
+      if (error instanceof EditorPostBodyMappingError) {
+        return;
+      }
+
+      throw error;
+    }
+
     const limitedSelection = clampSelectionToBody(
       selection,
-      nextDoc.content.size,
+      nextPlainText.length + 1,
     );
 
     if (
@@ -402,7 +410,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     isSavingDraft.value = true;
 
     try {
-      // 保存快照必须基于当前 ProseMirror doc 重新映射，不能依赖可能仍在 debounce 中的预览日志。
+      // 保存快照必须基于当前 Tiptap JSON 重新映射，不能依赖可能仍在 debounce 中的预览日志。
       compilePreviewNow();
       const savedAt = now();
       const baseline = serverDraftBaseline.value;
@@ -455,7 +463,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   return {
     title: readonly(title),
     body: readonly(body),
-    bodyDocumentJson: readonly(bodyDocumentJson),
+    bodyDocumentJson: shallowReadonly(bodyDocumentJson),
     previewTitle,
     postBodyWriteInput,
     readerBlocks,

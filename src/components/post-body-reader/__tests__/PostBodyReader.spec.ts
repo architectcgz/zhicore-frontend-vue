@@ -242,6 +242,95 @@ describe("PostBodyReader", () => {
     expect(spacer.text()).toBe("");
   });
 
+  it("renders V1 quote and list items from nested block children", () => {
+    const postBody: PostBody = {
+      bodyId: "body-nested-blocks",
+      schemaVersion: 1,
+      format: "blocks",
+      contentHash: "sha256:nested",
+      plainText: "引用段落\n列表段落",
+      sizeBytes: 128,
+      createdAt: "2026-07-01T00:00:00Z",
+      blocks: [
+        {
+          type: "quote",
+          blocks: [
+            {
+              type: "paragraph",
+              children: [{ type: "text", text: "引用段落" }],
+            },
+            {
+              type: "code_block",
+              language: "ts",
+              code: "const nested = true",
+            },
+            {
+              type: "list",
+              ordered: false,
+              task: false,
+              items: [
+                {
+                  blocks: [
+                    {
+                      type: "paragraph",
+                      children: [{ type: "text", text: "引用内列表" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: "list",
+          ordered: false,
+          task: false,
+          items: [
+            {
+              checked: false,
+              blocks: [
+                {
+                  type: "paragraph",
+                  children: [{ type: "text", text: "列表段落" }],
+                },
+                {
+                  type: "code_block",
+                  language: "ts",
+                  code: "const listItemBlock = true",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const wrapper = mount(PostBodyReader, {
+      props: {
+        body: postBody,
+      },
+    });
+
+    expect(wrapper.find(".reader-preview__quote p").text()).toBe("引用段落");
+    expect(wrapper.find(".reader-preview__quote pre code").text()).toBe(
+      "const nested = true",
+    );
+    expect(
+      wrapper.find(".reader-preview__quote .reader-preview__list p").text(),
+    ).toBe("引用内列表");
+    expect(
+      wrapper
+        .findAll(".reader-preview__list li p")
+        .map((paragraph) => paragraph.text()),
+    ).toEqual(expect.arrayContaining(["引用内列表", "列表段落"]));
+    expect(wrapper.find(".reader-preview__list li pre code").text()).toBe(
+      "const listItemBlock = true",
+    );
+    expect(
+      wrapper.find(".reader-preview__list input[type='checkbox']").exists(),
+    ).toBe(false);
+  });
+
   it("renders math blocks as typeset KaTeX output", () => {
     const postBody: PostBody = {
       bodyId: "body-math",

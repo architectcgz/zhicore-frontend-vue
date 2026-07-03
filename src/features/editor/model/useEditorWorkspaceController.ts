@@ -4,7 +4,7 @@ import {
   type EditorTextSelection,
   type EditorToolbarAction,
 } from "./editorToolbarTypes";
-import type { EditorProseMirrorDocumentJson } from "./editorProseMirrorEngine";
+import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
 import { type EditorMode, useEditorDisplay } from "./useEditorDisplay";
 import { useEditorPreviewScrollSync } from "./useEditorPreviewScrollSync";
 import {
@@ -93,7 +93,7 @@ export function useEditorWorkspaceController() {
   }
 
   function handleBodyDocumentInput(
-    nextBodyDocumentJson: EditorProseMirrorDocumentJson,
+    nextBodyDocumentJson: EditorTiptapDocumentJson,
   ): void {
     draft.updateBodyDocument(
       nextBodyDocumentJson,

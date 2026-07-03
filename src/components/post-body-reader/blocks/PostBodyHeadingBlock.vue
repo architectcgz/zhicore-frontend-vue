@@ -22,9 +22,9 @@ const headingTag = computed(() => `h${props.block.level}` as ReaderHeadingTag);
 
 <style scoped>
 .reader-preview__heading {
-  margin: 18px 0 8px;
+  margin: 10px 0 4px;
   color: var(--reader-heading);
   font-size: 20px;
-  line-height: 1.32;
+  line-height: 1.28;
 }
 </style>

@@ -20,23 +20,6 @@
         <span>{{ bodyCharacterCount }} / {{ bodyMaxLength }} 字符</span>
       </div>
 
-      <div class="writing-editor__mode-switch" aria-label="编辑器视图">
-        <button
-          type="button"
-          :aria-pressed="activeMode === 'focus'"
-          @click="emit('selectMode', 'focus')"
-        >
-          专注写作
-        </button>
-        <button
-          type="button"
-          :aria-pressed="activeMode === 'preview'"
-          @click="emit('selectMode', 'preview')"
-        >
-          写作 + 预览
-        </button>
-      </div>
-
       <div class="writing-editor__background-picker" aria-label="背景候选">
         <button
           v-for="background in backgroundCandidates"
@@ -124,6 +107,22 @@
               </button>
             </div>
 
+            <select
+              v-if="currentCodeBlockLanguage"
+              class="selection-toolbar__code-language"
+              :value="currentCodeBlockLanguage"
+              aria-label="代码语言"
+              @change="handleCodeBlockLanguageChange"
+            >
+              <option
+                v-for="language in codeBlockLanguageOptions"
+                :key="language.value"
+                :value="language.value"
+              >
+                {{ language.label }}
+              </option>
+            </select>
+
             <button
               class="selection-toolbar__toggle"
               type="button"
@@ -145,13 +144,12 @@
           @input="handleTitleInput"
           @keydown="handleEditorKeydown"
         />
-        <div
-          ref="bodyInputRef"
-          class="body-input ProseMirror"
-          contenteditable="true"
+        <EditorContent
+          :editor="bodyEditor ?? undefined"
+          class="body-input"
           aria-label="文章正文"
           @keydown="handleEditorKeydown"
-        ></div>
+        />
 
         <footer class="document-structure">
           <span>{{ wordCount }} 字</span>
@@ -162,6 +160,7 @@
 </template>
 
 <script setup lang="ts">
+import { EditorContent } from "@tiptap/vue-3";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import type {
@@ -171,19 +170,21 @@ import type {
   EditorMode,
   EditorToolbarAction,
 } from "@/features/editor/model";
-import type { EditorProseMirrorDocumentJson } from "@/features/editor/model/editorProseMirrorEngine";
+import { editorCodeBlockLanguageOptions } from "@/features/editor/model";
+import type { EditorTiptapDocumentJson } from "@/features/editor/model/editorTiptapEngine";
 import { editorToolbarGroups } from "@/features/editor/model/editorToolbar";
 
 import { useEditorWritingBodyEditor } from "./useEditorWritingBodyEditor";
 
 const toolbarGroups = editorToolbarGroups;
+const codeBlockLanguageOptions = editorCodeBlockLanguageOptions;
 
 const props = defineProps<{
   activeMode: EditorMode;
   activeBackgroundId: EditorBackgroundId;
   backgroundCandidates: EditorBackground[];
   title: string;
-  bodyDocumentJson: EditorProseMirrorDocumentJson;
+  bodyDocumentJson: EditorTiptapDocumentJson;
   wordCount: number;
   bodyCharacterCount: number;
   bodyMaxLength: number;
@@ -198,7 +199,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   titleInput: [value: string];
-  bodyDocumentInput: [value: EditorProseMirrorDocumentJson];
+  bodyDocumentInput: [value: EditorTiptapDocumentJson];
   undo: [];
   redo: [];
   saveDraft: [];
@@ -212,13 +213,15 @@ const isToolbarExpanded = ref(false);
 const {
   bodyInputRef,
   writingEditorRef,
-  bodyEditorView,
+  bodyEditor,
+  currentCodeBlockLanguage,
   focusBody,
   getBodySelection,
   setBodySelection,
   preserveBodySelectionBeforeToolbarCommand,
   syncBodyEditorFromDocumentJson,
   applyBodyToolbarAction,
+  setCodeBlockLanguage,
   mountBodyEditor,
   destroyBodyEditor,
 } = useEditorWritingBodyEditor({
@@ -255,6 +258,10 @@ function handleToolbarButtonClick(action: EditorToolbarAction): void {
   emit("toolbarAction", action);
 }
 
+function handleCodeBlockLanguageChange(event: Event): void {
+  setCodeBlockLanguage((event.target as HTMLSelectElement).value);
+}
+
 onMounted(() => {
   mountBodyEditor();
 });
@@ -277,8 +284,8 @@ defineExpose({
   get bodyEditorElement() {
     return bodyInputRef.value;
   },
-  get bodyEditorView() {
-    return bodyEditorView.value;
+  get bodyEditor() {
+    return bodyEditor.value;
   },
   get writingEditorElement() {
     return writingEditorRef.value;
@@ -290,5 +297,5 @@ defineExpose({
 });
 </script>
 
-<style src="./EditorWritingPaneProseMirrorBase.css"></style>
+<style src="./EditorWritingPaneTiptapBase.css"></style>
 <style scoped src="./EditorWritingPane.css"></style>

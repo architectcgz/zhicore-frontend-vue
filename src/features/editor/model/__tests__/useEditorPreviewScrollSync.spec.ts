@@ -63,7 +63,7 @@ describe("useEditorPreviewScrollSync", () => {
     expect(writingEditor.scrollTop).toBe(80);
   });
 
-  it("resizes a ProseMirror body element without textarea-only caret assumptions", () => {
+  it("resizes a Tiptap body element without textarea-only caret assumptions", () => {
     const bodyInput = document.createElement("div");
     const writingEditor = document.createElement("main");
 

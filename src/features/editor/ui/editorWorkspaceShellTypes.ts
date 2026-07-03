@@ -6,14 +6,14 @@ import type {
   EditorReaderPreviewBlock,
   EditorToolbarAction,
 } from "@/features/editor/model";
-import type { EditorProseMirrorDocumentJson } from "@/features/editor/model/editorProseMirrorEngine";
+import type { EditorTiptapDocumentJson } from "@/features/editor/model/editorTiptapEngine";
 
 export interface EditorWorkspaceShellProps {
   activeMode: EditorMode;
   activeBackgroundId: EditorBackgroundId;
   backgroundCandidates: EditorBackground[];
   title: string;
-  bodyDocumentJson: EditorProseMirrorDocumentJson;
+  bodyDocumentJson: EditorTiptapDocumentJson;
   wordCount: number;
   bodyCharacterCount: number;
   bodyMaxLength: number;
@@ -30,7 +30,7 @@ export interface EditorWorkspaceShellProps {
 
 export type EditorWorkspaceShellEmits = {
   titleInput: [value: string];
-  bodyDocumentInput: [value: EditorProseMirrorDocumentJson];
+  bodyDocumentInput: [value: EditorTiptapDocumentJson];
   undo: [];
   redo: [];
   saveDraft: [];

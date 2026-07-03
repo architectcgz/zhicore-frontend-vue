@@ -1,10 +1,11 @@
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
-import EditorMobileWorkspace from "../EditorMobileWorkspace.vue";
+import desktopWorkspaceSource from "../EditorDesktopWorkspace.vue?raw";
+import EditorDesktopWorkspace from "../EditorDesktopWorkspace.vue";
 
-function mountMobileWorkspace(activeMode: "focus" | "preview") {
-  return mount(EditorMobileWorkspace, {
+function mountDesktopWorkspace(activeMode: "focus" | "preview") {
+  return mount(EditorDesktopWorkspace, {
     props: {
       activeMode,
       activeBackgroundId: "paper",
@@ -64,27 +65,16 @@ function mountMobileWorkspace(activeMode: "focus" | "preview") {
   });
 }
 
-describe("EditorMobileWorkspace", () => {
-  it("renders only the writing pane in focus mode", () => {
-    const wrapper = mountMobileWorkspace("focus");
+describe("EditorDesktopWorkspace", () => {
+  it("keeps the desktop workspace focused on writing while preview is retired", () => {
+    const wrapper = mountDesktopWorkspace("preview");
 
     expect(wrapper.find(".writing-editor").exists()).toBe(true);
     expect(wrapper.find(".reader-preview").exists()).toBe(false);
   });
 
-  it("keeps rendering the writing pane while preview is retired", () => {
-    const wrapper = mountMobileWorkspace("preview");
-
-    expect(wrapper.find(".writing-editor").exists()).toBe(true);
-    expect(wrapper.find(".reader-preview").exists()).toBe(false);
-  });
-
-  it("does not render the mobile preview mode switch while preview is retired", () => {
-    const wrapper = mountMobileWorkspace("preview");
-
-    expect(wrapper.find(".editor-mobile-workspace__mode-switch").exists()).toBe(
-      false,
-    );
-    expect(wrapper.text()).not.toContain("预览");
+  it("keeps the desktop editor stage centered and narrower than the page frame", () => {
+    expect(desktopWorkspaceSource).toContain("width: min(920px, 100%);");
+    expect(desktopWorkspaceSource).toContain("margin-inline: auto;");
   });
 });

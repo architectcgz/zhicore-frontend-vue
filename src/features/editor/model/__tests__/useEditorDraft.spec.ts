@@ -2,65 +2,103 @@ import { isReadonly } from "vue";
 import { describe, expect, it, vi } from "vitest";
 
 import { editorDraftBodyMaxLength, useEditorDraft } from "../useEditorDraft";
-import {
-  editorProseMirrorSchema,
-  serializeProseMirrorDocToJson,
-  type EditorProseMirrorDocumentJson,
-} from "../editorProseMirrorEngine";
+import type { EditorTiptapDocumentJson } from "../editorTiptapEngine";
 
-function bodyDoc(text: string): EditorProseMirrorDocumentJson {
-  return serializeProseMirrorDocToJson(
-    editorProseMirrorSchema.nodes.doc.create(null, [
-      editorProseMirrorSchema.nodes.paragraph.create(
-        null,
-        text ? editorProseMirrorSchema.text(text) : undefined,
-      ),
-    ]),
-  );
+function bodyDoc(text: string): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: text ? [{ type: "text", text }] : [],
+      },
+    ],
+  };
 }
 
-function richBodyDoc(): EditorProseMirrorDocumentJson {
-  return serializeProseMirrorDocToJson(
-    editorProseMirrorSchema.nodes.doc.create(null, [
-      editorProseMirrorSchema.nodes.heading.create({ level: 2 }, [
-        editorProseMirrorSchema.text("ProseMirror 标题"),
-      ]),
-      editorProseMirrorSchema.nodes.paragraph.create(null, [
-        editorProseMirrorSchema.text("真实加粗", [
-          editorProseMirrorSchema.marks.bold.create(),
-        ]),
-        editorProseMirrorSchema.text(" **普通星号**"),
-      ]),
-      editorProseMirrorSchema.nodes.list.create(
-        { ordered: false, task: true },
-        [
-          editorProseMirrorSchema.nodes.list_item.create({ checked: true }, [
-            editorProseMirrorSchema.text("任务"),
-          ]),
+function richBodyDoc(): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Tiptap 标题" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          { type: "text", text: "真实加粗", marks: [{ type: "bold" }] },
+          { type: "text", text: " **普通星号**" },
         ],
-      ),
-    ]),
-  );
+      },
+      {
+        type: "taskList",
+        content: [
+          {
+            type: "taskItem",
+            attrs: { checked: true },
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "任务" }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
 }
 
-function multiParagraphBodyDoc(
-  paragraphs: string[],
-): EditorProseMirrorDocumentJson {
-  return serializeProseMirrorDocToJson(
-    editorProseMirrorSchema.nodes.doc.create(
-      null,
-      paragraphs.map((paragraph) =>
-        editorProseMirrorSchema.nodes.paragraph.create(
-          null,
-          paragraph ? editorProseMirrorSchema.text(paragraph) : undefined,
-        ),
-      ),
-    ),
-  );
+function overNestedContainerBodyDoc(): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "blockquote",
+        content: [
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "列表项" }],
+                  },
+                  {
+                    type: "blockquote",
+                    content: [
+                      {
+                        type: "paragraph",
+                        content: [{ type: "text", text: "过深引用" }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function multiParagraphBodyDoc(paragraphs: string[]): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: paragraphs.map((paragraph) => ({
+      type: "paragraph",
+      content: paragraph ? [{ type: "text", text: paragraph }] : [],
+    })),
+  };
 }
 
 describe("useEditorDraft", () => {
-  it("starts with an editable title and ProseMirror body document", () => {
+  it("starts with an editable title and Tiptap body document", () => {
     const draft = useEditorDraft();
 
     expect(draft.title.value).toContain("把复杂系统讲成可以协作的结构");
@@ -68,7 +106,7 @@ describe("useEditorDraft", () => {
     expect(draft.bodyDocumentJson.value).toMatchObject({ type: "doc" });
   });
 
-  it("starts preview from native ProseMirror reader blocks and preserves spacer paragraphs", () => {
+  it("starts preview from native Tiptap reader blocks and preserves spacer paragraphs", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
     const inlineHeadingIndex = draft.readerBlocks.value.findIndex(
       (block) =>
@@ -80,7 +118,7 @@ describe("useEditorDraft", () => {
       {
         type: "heading",
         level: 1,
-        children: [{ type: "text", text: "ProseMirror 编辑器验收稿" }],
+        children: [{ type: "text", text: "Tiptap 编辑器验收稿" }],
       },
       expect.objectContaining({
         type: "paragraph",
@@ -132,7 +170,7 @@ describe("useEditorDraft", () => {
     expect(JSON.stringify(draft.readerBlocks.value)).not.toContain("```go");
   });
 
-  it("keeps raw markdown markers as plain ProseMirror text", () => {
+  it("keeps raw markdown markers as plain Tiptap text", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBodyDocument(bodyDoc("**不是加粗**"));
@@ -145,7 +183,7 @@ describe("useEditorDraft", () => {
     ]);
   });
 
-  it("maps ProseMirror marks and nodes into preview and save models", () => {
+  it("maps Tiptap marks and nodes into preview and save models", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBodyDocument(richBodyDoc(), { start: 1, end: 1 });
@@ -154,7 +192,7 @@ describe("useEditorDraft", () => {
       {
         type: "heading",
         level: 2,
-        children: [{ type: "text", text: "ProseMirror 标题" }],
+        children: [{ type: "text", text: "Tiptap 标题" }],
       },
       {
         type: "paragraph",
@@ -177,7 +215,12 @@ describe("useEditorDraft", () => {
         items: [
           {
             checked: true,
-            children: [{ type: "text", text: "任务" }],
+            blocks: [
+              {
+                type: "paragraph",
+                children: [{ type: "text", text: "任务" }],
+              },
+            ],
           },
         ],
       },
@@ -187,7 +230,7 @@ describe("useEditorDraft", () => {
     );
   });
 
-  it("preserves empty paragraphs entered between ProseMirror body blocks", () => {
+  it("preserves empty paragraphs entered between Tiptap body blocks", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBodyDocument(multiParagraphBodyDoc(["第一段", "", "第三段"]), {
@@ -214,7 +257,7 @@ describe("useEditorDraft", () => {
     );
   });
 
-  it("rejects oversized ProseMirror body documents", () => {
+  it("rejects oversized Tiptap body documents", () => {
     const draft = useEditorDraft();
     const previousBody = draft.body.value;
     const oversizedBody = "文".repeat(editorDraftBodyMaxLength + 20);
@@ -227,6 +270,18 @@ describe("useEditorDraft", () => {
     expect(draft.body.value).toBe(previousBody);
   });
 
+  it("rejects Tiptap body documents that exceed Content V1 container depth", () => {
+    const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
+    const previousBodyDocumentJson = draft.bodyDocumentJson.value;
+
+    draft.updateBodyDocument(overNestedContainerBodyDoc(), {
+      start: 1,
+      end: 1,
+    });
+
+    expect(draft.bodyDocumentJson.value).toBe(previousBodyDocumentJson);
+  });
+
   it("exposes title, body text and body document as readonly state", () => {
     const draft = useEditorDraft();
 
@@ -235,7 +290,7 @@ describe("useEditorDraft", () => {
     expect(isReadonly(draft.bodyDocumentJson)).toBe(true);
   });
 
-  it("undoes and redoes ProseMirror body document updates", () => {
+  it("undoes and redoes Tiptap body document updates", () => {
     const draft = useEditorDraft({ historyMergeWindowMs: 0 });
     const initialBody = draft.body.value;
 
@@ -257,7 +312,7 @@ describe("useEditorDraft", () => {
     expect(draft.body.value).toBe("撤销正文");
   });
 
-  it("tracks dirty state and saves a local PostBody snapshot from ProseMirror", async () => {
+  it("tracks dirty state and saves a local PostBody snapshot from Tiptap", async () => {
     const savedAt = new Date("2026-07-02T00:00:00.000Z");
     const draft = useEditorDraft({
       now: () => savedAt,
@@ -305,7 +360,7 @@ describe("useEditorDraft", () => {
     );
   });
 
-  it("saves through the server client and advances the server draft baseline", async () => {
+  it("saves through the server client without leaking Tiptap JSON", async () => {
     const savedAt = new Date("2026-07-02T00:00:00.000Z");
     const saveDraftBody = vi.fn().mockResolvedValue({
       postId: "post-1",
@@ -342,6 +397,9 @@ describe("useEditorDraft", () => {
         blocks: draft.postBodyWriteInput.value.blocks,
       }),
     );
+    expect(saveDraftBody.mock.calls[0][1]).not.toHaveProperty("type");
+    expect(saveDraftBody.mock.calls[0][1]).not.toHaveProperty("content");
+    expect(saveDraftBody.mock.calls[0][1]).not.toHaveProperty("selection");
     expect(draft.serverDraftBaseline.value).toEqual({
       postId: "post-1",
       basePostVersion: 8,
@@ -351,7 +409,7 @@ describe("useEditorDraft", () => {
     expect(draft.hasUnsavedChanges.value).toBe(false);
   });
 
-  it("keeps local ProseMirror input and dirty state when server save fails", async () => {
+  it("keeps local Tiptap input and dirty state when server save fails", async () => {
     const saveDraftBody = vi.fn().mockRejectedValue(new Error("save failed"));
     const draft = useEditorDraft({
       serverDraftBaseline: {

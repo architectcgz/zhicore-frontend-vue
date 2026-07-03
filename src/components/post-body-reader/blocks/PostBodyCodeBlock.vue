@@ -72,13 +72,13 @@ onBeforeUnmount(() => {
 <style scoped>
 .reader-preview__code-block {
   overflow: hidden;
-  margin: 16px 0;
+  margin: 12px 0;
   border: 1px solid var(--reader-code-border);
   border-radius: 8px;
   background: var(--reader-block-bg);
   color: var(--reader-text);
   font-size: 15px;
-  line-height: 1.68;
+  line-height: 1.56;
 }
 
 .reader-preview__code-header {
@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 7px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--reader-code-caption-border);
   color: var(--reader-code-caption);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -123,7 +123,7 @@ onBeforeUnmount(() => {
 .reader-preview__code-block pre {
   overflow-x: auto;
   margin: 0;
-  padding: 12px;
+  padding: 10px;
 }
 
 .reader-preview__code-block code {
