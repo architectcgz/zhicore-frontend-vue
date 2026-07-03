@@ -37,7 +37,6 @@ import {
   mapProseMirrorDocToPostBodyWriteInput,
   type EditorProseMirrorDocumentJson,
 } from "./editorProseMirrorEngine";
-import { mapMarkdownTextToPostBodyWriteInput } from "./editorMarkdownMapper";
 import {
   type EditorTextSelection,
   type EditorToolbarAction,
@@ -91,32 +90,6 @@ export const editorDraftBodyMaxLength = 20000;
 const defaultPreviewCompileDebounceMs = 160;
 const defaultHistoryMergeWindowMs = 500;
 const proseMirrorLogger = createEditorLogger("compiler");
-
-function isRawMarkdownEditingDocument(
-  doc: ReturnType<typeof createProseMirrorDocFromJson>,
-): boolean {
-  let isRawDocument = true;
-
-  doc.descendants((node) => {
-    if (node.isText) {
-      if (node.marks.length > 0) {
-        isRawDocument = false;
-        return false;
-      }
-
-      return true;
-    }
-
-    if (node.type.name !== "doc" && node.type.name !== "paragraph") {
-      isRawDocument = false;
-      return false;
-    }
-
-    return true;
-  });
-
-  return isRawDocument;
-}
 
 function createContentHash(content: string): string {
   let hash = 2166136261;
@@ -195,13 +168,9 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   );
   const body = computed(() => getProseMirrorPlainText(bodyDocument.value));
 
-  const postBodyWriteInput = computed(() => {
-    if (isRawMarkdownEditingDocument(bodyDocument.value)) {
-      return mapMarkdownTextToPostBodyWriteInput(body.value);
-    }
-
-    return mapProseMirrorDocToPostBodyWriteInput(bodyDocument.value);
-  });
+  const postBodyWriteInput = computed(() =>
+    mapProseMirrorDocToPostBodyWriteInput(bodyDocument.value),
+  );
   const currentSourceHash = computed(() =>
     createContentHash(
       `${title.value}\u0000${JSON.stringify(bodyDocumentJson.value)}`,
@@ -249,7 +218,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
     const previewBlocks = postBodyWriteInput.value.blocks.map(
       (block, blockIndex) => ({
-        stableKey: `markdown-preview-${blockIndex}-${block.type}-${JSON.stringify(block).length}`,
+        stableKey: `prosemirror-preview-${blockIndex}-${block.type}-${JSON.stringify(block).length}`,
         block,
         readerBlockIndex: blockIndex,
       }),

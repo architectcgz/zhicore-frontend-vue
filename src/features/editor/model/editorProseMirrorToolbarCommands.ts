@@ -92,25 +92,14 @@ function replaceSelectionWithBlock(
   }
 
   view.dispatch(
-    view.state.tr.replaceSelectionWith(
-      nodeType.create(attrs, text ? editorProseMirrorSchema.text(text) : null),
-    ),
-  );
-}
-
-function replaceSelectionWithRawText(view: EditorView, text: string): void {
-  view.dispatch(view.state.tr.insertText(text).scrollIntoView());
-}
-
-function wrapSelectionWithMarkdown(
-  view: EditorView,
-  before: string,
-  after: string,
-  placeholder: string,
-): void {
-  replaceSelectionWithRawText(
-    view,
-    `${before}${getSelectedTextOrPlaceholder(view, placeholder)}${after}`,
+    view.state.tr
+      .replaceSelectionWith(
+        nodeType.create(
+          attrs,
+          text ? editorProseMirrorSchema.text(text) : null,
+        ),
+      )
+      .scrollIntoView(),
   );
 }
 
@@ -174,83 +163,54 @@ function replaceSelectionWithExternalImageEmbed(view: EditorView): void {
 
 function createBodyToolbarCommands(view: EditorView): BodyToolbarCommandMap {
   return {
-    bold: () => wrapSelectionWithMarkdown(view, "**", "**", "加粗文本"),
-    italic: () => wrapSelectionWithMarkdown(view, "*", "*", "斜体文本"),
-    underline: () => wrapSelectionWithMarkdown(view, "++", "++", "下划线文本"),
-    strike: () => wrapSelectionWithMarkdown(view, "~~", "~~", "删除线文本"),
-    inlineCode: () => wrapSelectionWithMarkdown(view, "`", "`", "code"),
+    bold: () => applyInlineMark(view, "bold", "加粗文本"),
+    italic: () => applyInlineMark(view, "italic", "斜体文本"),
+    underline: () => applyInlineMark(view, "underline", "下划线文本"),
+    strike: () => applyInlineMark(view, "strike", "删除线文本"),
+    inlineCode: () => applyInlineMark(view, "inline_code", "code"),
     link: () =>
-      replaceSelectionWithRawText(
-        view,
-        `[${getSelectedTextOrPlaceholder(view, "链接文本")}](https://example.com)`,
-      ),
+      applyInlineMark(view, "link", "链接文本", {
+        href: "https://example.com",
+      }),
     heading1: () =>
-      replaceSelectionWithRawText(
-        view,
-        `# ${getSelectedTextOrPlaceholder(view, "一级标题")}`,
-      ),
+      setCurrentBlockType(view, "heading", {
+        level: headingToolbarLevels.heading1,
+      }),
     heading2: () =>
-      replaceSelectionWithRawText(
-        view,
-        `## ${getSelectedTextOrPlaceholder(view, "二级标题")}`,
-      ),
+      setCurrentBlockType(view, "heading", {
+        level: headingToolbarLevels.heading2,
+      }),
     heading3: () =>
-      replaceSelectionWithRawText(
-        view,
-        `### ${getSelectedTextOrPlaceholder(view, "三级标题")}`,
-      ),
+      setCurrentBlockType(view, "heading", {
+        level: headingToolbarLevels.heading3,
+      }),
     heading4: () =>
-      replaceSelectionWithRawText(
-        view,
-        `#### ${getSelectedTextOrPlaceholder(view, "四级标题")}`,
-      ),
+      setCurrentBlockType(view, "heading", {
+        level: headingToolbarLevels.heading4,
+      }),
     heading5: () =>
-      replaceSelectionWithRawText(
-        view,
-        `##### ${getSelectedTextOrPlaceholder(view, "五级标题")}`,
-      ),
+      setCurrentBlockType(view, "heading", {
+        level: headingToolbarLevels.heading5,
+      }),
     heading6: () =>
-      replaceSelectionWithRawText(
-        view,
-        `###### ${getSelectedTextOrPlaceholder(view, "六级标题")}`,
-      ),
-    quote: () =>
-      replaceSelectionWithRawText(
-        view,
-        `> ${getSelectedTextOrPlaceholder(view, "引用内容")}`,
-      ),
-    unorderedList: () =>
-      replaceSelectionWithRawText(
-        view,
-        `- ${getSelectedTextOrPlaceholder(view, "列表项")}`,
-      ),
-    orderedList: () =>
-      replaceSelectionWithRawText(
-        view,
-        `1. ${getSelectedTextOrPlaceholder(view, "列表项")}`,
-      ),
-    taskList: () =>
-      replaceSelectionWithRawText(
-        view,
-        `- [ ] ${getSelectedTextOrPlaceholder(view, "任务项")}`,
-      ),
-    image: () =>
-      replaceSelectionWithRawText(
-        view,
-        `![图片说明](https://example.com/image.png)`,
-      ),
-    table: () =>
-      replaceSelectionWithRawText(
-        view,
-        "| 表头1 | 表头2 |\n| --- | --- |\n| 内容1 | 内容2 |",
-      ),
+      setCurrentBlockType(view, "heading", {
+        level: headingToolbarLevels.heading6,
+      }),
+    quote: () => setCurrentBlockType(view, "quote"),
+    unorderedList: () => replaceSelectionWithList(view, false, false, null),
+    orderedList: () => replaceSelectionWithList(view, true, false, null),
+    taskList: () => replaceSelectionWithList(view, false, true, false),
+    image: () => replaceSelectionWithExternalImageEmbed(view),
+    table: () => replaceSelectionWithTable(view),
     code: () =>
-      replaceSelectionWithRawText(
+      replaceSelectionWithBlock(
         view,
-        `\`\`\` ts\n${getSelectedTextOrPlaceholder(view, "// 在这里输入代码")}\n\`\`\``,
+        "code_block",
+        getSelectedTextOrPlaceholder(view, "// 在这里输入代码"),
+        { language: "ts" },
       ),
     math: () =>
-      replaceSelectionWithRawText(view, `$$\n${getSelectedText(view)}\n$$`),
+      replaceSelectionWithBlock(view, "math_block", getSelectedText(view)),
   };
 }
 

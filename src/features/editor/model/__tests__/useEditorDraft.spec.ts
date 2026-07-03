@@ -43,6 +43,22 @@ function richBodyDoc(): EditorProseMirrorDocumentJson {
   );
 }
 
+function multiParagraphBodyDoc(
+  paragraphs: string[],
+): EditorProseMirrorDocumentJson {
+  return serializeProseMirrorDocToJson(
+    editorProseMirrorSchema.nodes.doc.create(
+      null,
+      paragraphs.map((paragraph) =>
+        editorProseMirrorSchema.nodes.paragraph.create(
+          null,
+          paragraph ? editorProseMirrorSchema.text(paragraph) : undefined,
+        ),
+      ),
+    ),
+  );
+}
+
 describe("useEditorDraft", () => {
   it("starts with an editable title and ProseMirror body document", () => {
     const draft = useEditorDraft();
@@ -52,10 +68,15 @@ describe("useEditorDraft", () => {
     expect(draft.bodyDocumentJson.value).toMatchObject({ type: "doc" });
   });
 
-  it("starts preview from compiled ProseMirror reader blocks instead of markdown-like source text", () => {
+  it("starts preview from native ProseMirror reader blocks and preserves spacer paragraphs", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
+    const inlineHeadingIndex = draft.readerBlocks.value.findIndex(
+      (block) =>
+        block.type === "heading" &&
+        block.children.some((child) => child.text === "Inline"),
+    );
 
-    expect(draft.readerBlocks.value.slice(0, 4)).toEqual([
+    expect(draft.readerBlocks.value.slice(0, 2)).toEqual([
       {
         type: "heading",
         level: 1,
@@ -64,10 +85,21 @@ describe("useEditorDraft", () => {
       expect.objectContaining({
         type: "paragraph",
       }),
+    ]);
+    expect(
+      draft.readerBlocks.value.slice(
+        inlineHeadingIndex,
+        inlineHeadingIndex + 5,
+      ),
+    ).toEqual([
       {
         type: "heading",
         level: 2,
         children: [{ type: "text", text: "Inline" }],
+      },
+      {
+        type: "paragraph",
+        children: [],
       },
       {
         type: "paragraph",
@@ -84,6 +116,15 @@ describe("useEditorDraft", () => {
           },
         ]),
       },
+      {
+        type: "paragraph",
+        children: [],
+      },
+      {
+        type: "heading",
+        level: 2,
+        children: [{ type: "text", text: "Quote" }],
+      },
     ]);
     expect(JSON.stringify(draft.readerBlocks.value)).not.toContain(
       "# Markdown",
@@ -91,7 +132,7 @@ describe("useEditorDraft", () => {
     expect(JSON.stringify(draft.readerBlocks.value)).not.toContain("```go");
   });
 
-  it("maps raw markdown markers into preview and save models", () => {
+  it("keeps raw markdown markers as plain ProseMirror text", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
 
     draft.updateBodyDocument(bodyDoc("**不是加粗**"));
@@ -99,9 +140,7 @@ describe("useEditorDraft", () => {
     expect(draft.postBodyWriteInput.value.blocks).toEqual([
       {
         type: "paragraph",
-        children: [
-          { type: "text", text: "不是加粗", marks: [{ type: "bold" }] },
-        ],
+        children: [{ type: "text", text: "**不是加粗**" }],
       },
     ]);
   });
@@ -145,6 +184,33 @@ describe("useEditorDraft", () => {
     ]);
     expect(draft.postBodyWriteInput.value.blocks).toEqual(
       draft.readerBlocks.value,
+    );
+  });
+
+  it("preserves empty paragraphs entered between ProseMirror body blocks", () => {
+    const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
+
+    draft.updateBodyDocument(multiParagraphBodyDoc(["第一段", "", "第三段"]), {
+      start: 5,
+      end: 5,
+    });
+
+    expect(draft.postBodyWriteInput.value.blocks).toEqual([
+      {
+        type: "paragraph",
+        children: [{ type: "text", text: "第一段" }],
+      },
+      {
+        type: "paragraph",
+        children: [],
+      },
+      {
+        type: "paragraph",
+        children: [{ type: "text", text: "第三段" }],
+      },
+    ]);
+    expect(draft.readerBlocks.value).toEqual(
+      draft.postBodyWriteInput.value.blocks,
     );
   });
 

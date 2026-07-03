@@ -73,6 +73,8 @@ describe("editor architecture boundaries", () => {
     expect(draftSource).not.toContain("compiledDocument");
     expect(draftSource).not.toContain("draftBlocks");
     expect(draftSource).not.toContain("updateBody(nextBody");
+    expect(draftSource).not.toContain("editorMarkdownMapper");
+    expect(draftSource).not.toContain("mapMarkdownTextToPostBodyWriteInput");
     expect(proseMirrorEngineSource).not.toContain(
       "createProseMirrorDocFromSource",
     );

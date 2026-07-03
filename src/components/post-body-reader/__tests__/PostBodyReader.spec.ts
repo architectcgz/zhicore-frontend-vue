@@ -203,6 +203,45 @@ describe("PostBodyReader", () => {
     expect(wrapper.text()).toContain("第三行");
   });
 
+  it("renders empty paragraph blocks as visible spacer lines", () => {
+    const postBody: PostBody = {
+      bodyId: "body-empty-paragraph",
+      schemaVersion: 1,
+      format: "blocks",
+      contentHash: "sha256:empty-paragraph",
+      plainText: "第一段\n\n第三段",
+      sizeBytes: 128,
+      createdAt: "2026-07-01T00:00:00Z",
+      blocks: [
+        {
+          type: "paragraph",
+          children: [{ type: "text", text: "第一段" }],
+        },
+        {
+          type: "paragraph",
+          children: [],
+        },
+        {
+          type: "paragraph",
+          children: [{ type: "text", text: "第三段" }],
+        },
+      ],
+    };
+
+    const wrapper = mount(PostBodyReader, {
+      props: {
+        body: postBody,
+      },
+    });
+    const paragraphBlocks = wrapper.findAll(".reader-preview__text-block");
+    const spacer = paragraphBlocks[1];
+
+    expect(paragraphBlocks).toHaveLength(3);
+    expect(spacer.classes()).toContain("reader-preview__text-block--empty");
+    expect(spacer.attributes("aria-hidden")).toBe("true");
+    expect(spacer.text()).toBe("");
+  });
+
   it("renders math blocks as typeset KaTeX output", () => {
     const postBody: PostBody = {
       bodyId: "body-math",
