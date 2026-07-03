@@ -1,5 +1,5 @@
 <template>
-  <section :class="['editor-workspace', activeBackgroundClass]">
+  <section class="editor-workspace">
     <header class="editor-workspace__header">
       <div class="editor-workspace__heading">
         <p>作者工作台</p>
@@ -7,7 +7,7 @@
       </div>
     </header>
 
-    <section class="editor-frame">
+    <section :class="['editor-frame', activeBackgroundClass]">
       <EditorMobileWorkspace
         v-if="isMobileWorkspace"
         ref="workspaceShellRef"
@@ -135,6 +135,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-disabled-text: #6b7b88;
   --editor-control-primary: #1f7f74;
   --editor-control-primary-hover: #176b62;
+  --editor-toolbar-bg: var(--editor-control-bg-active);
   --editor-body-text: #3f4f5d;
   --editor-reader-text: #485765;
   --editor-reader-muted: #647280;
@@ -205,6 +206,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-disabled-text: #9db8ca;
   --editor-control-primary: #2b7f9d;
   --editor-control-primary-hover: #216f8a;
+  --editor-toolbar-bg: #101823;
   --editor-body-text: #cbd6df;
   --editor-reader-text: #c1ccd6;
   --editor-reader-muted: #c1ccd6;

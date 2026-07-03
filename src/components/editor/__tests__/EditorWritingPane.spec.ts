@@ -168,6 +168,13 @@ describe("EditorWritingPane", () => {
     );
   });
 
+  it("uses a dedicated toolbar background variable instead of the active control surface", () => {
+    expect(writingPaneStyleSource).toContain("--editor-toolbar-bg");
+    expect(writingPaneStyleSource).toMatch(
+      /\.selection-toolbar\s*\{[\s\S]*background: var\(\s*--editor-toolbar-bg,/,
+    );
+  });
+
   it("defines the mobile toolbar as a bottom floating editor bar", () => {
     expect(writingPaneStyleSource).toContain("position: fixed;");
     expect(writingPaneStyleSource).toContain("top: auto;");

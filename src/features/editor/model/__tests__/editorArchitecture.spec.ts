@@ -115,4 +115,13 @@ describe("editor architecture boundaries", () => {
       expect(source).not.toContain("--editor-page-bg");
     });
   });
+
+  it("scopes editor background themes to the editor frame instead of the page heading", () => {
+    expect(workspaceSource).toContain(
+      "<section :class=\"['editor-frame', activeBackgroundClass]\">",
+    );
+    expect(workspaceSource).not.toContain(
+      "<section :class=\"['editor-workspace', activeBackgroundClass]\">",
+    );
+  });
 });

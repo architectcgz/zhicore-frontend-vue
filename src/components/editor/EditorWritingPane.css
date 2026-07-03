@@ -155,7 +155,10 @@
   padding: 4px;
   border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
   border-radius: 8px;
-  background: var(--editor-control-bg-active, rgba(255, 255, 255, 0.88));
+  background: var(
+    --editor-toolbar-bg,
+    var(--editor-control-bg-active, rgba(255, 255, 255, 0.88))
+  );
   transform: translateY(calc(-1 * var(--selection-toolbar-reserved-space)));
   transition:
     max-height 0.2s cubic-bezier(0.22, 1, 0.36, 1),
@@ -324,7 +327,10 @@
     margin: 0;
     padding: 7px 54px 7px 7px;
     border-color: var(--editor-page-border, rgba(49, 74, 91, 0.18));
-    background: var(--editor-control-bg-active, #ffffff);
+    background: var(
+      --editor-toolbar-bg,
+      var(--editor-control-bg-active, #ffffff)
+    );
     box-shadow: 0 8px 14px rgba(23, 32, 42, 0.14);
     transform: none;
   }
@@ -372,7 +378,10 @@
     display: inline-flex;
     align-items: center;
     min-width: 44px;
-    background: var(--editor-control-bg-active, #ffffff);
+    background: var(
+      --editor-toolbar-bg,
+      var(--editor-control-bg-active, #ffffff)
+    );
   }
 }
 
@@ -423,7 +432,10 @@
   .selection-toolbar__toggle {
     display: inline-flex;
     align-items: center;
-    background: var(--editor-control-bg-active, #ffffff);
+    background: var(
+      --editor-toolbar-bg,
+      var(--editor-control-bg-active, #ffffff)
+    );
   }
 
   .writing-editor__mode-switch button,
