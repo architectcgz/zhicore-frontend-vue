@@ -1,6 +1,6 @@
 # 编辑器内容编译性能优化
 
-> 历史归档：本文记录旧 Markdown-like compiler 的性能优化。正式 `/editor` 已切换为 ProseMirror doc 运行时，并删除旧 compiler / textarea adapter；本文不再描述当前编辑器运行链路。
+> 历史归档：本文记录旧 Markdown-like compiler 的性能优化。正式 `/editor` 已切换为 Tiptap doc 运行时，并删除旧 compiler / textarea adapter；本文不再描述当前编辑器运行链路。
 
 本文记录 ZhiCore 前端编辑器内容编译链路的性能优化事实，后续可用于项目复盘、简历描述和后端解析器对齐。
 

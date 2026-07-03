@@ -9,7 +9,7 @@
 - 默认进入专注写作模式，弱化工具栏和结构边框，让标题、段落和保存状态成为主要视觉。
 - 预览面板作为发布前检查能力出现，支持用户查看读者视图、封面、摘要、字数、保存版本和草稿指纹。
 - 后端正文模型仍然是 `schemaVersion + blocks`，但前端不把 blocks 直接做成重卡片或管理后台式 UI。
-- `/editor` 正文运行时事实是 ProseMirror doc / JSON；保存和读者预览由 ProseMirror mapper 直接映射为 `PostBodyWriteInput` / reader blocks。
+- `/editor` 正文运行时事实是 Tiptap doc / JSON；保存和读者预览由 Tiptap mapper 直接映射为 `PostBodyWriteInput` / reader blocks。
 - 编辑器背景保留多候选能力，当前候选为纸面、青绿、暖沙和墨蓝，用于比较写作场景下的阅读舒适度。
 
 ## 方案取舍
@@ -50,36 +50,36 @@
 - 正文区保持标题和段落连续排版，编辑行为优先接近普通文档写作。
 - 左侧 gutter 承担插入、拖拽、定位和 block path 暴露，不在正文里画出段落卡片。
 - 悬浮格式工具只服务当前选区，不能把编辑区拆成工具面板或配置表单。
-- 工具按钮必须有实际编辑行为：行内按钮给当前选区施加 ProseMirror mark，`Code` / `H2` 这类结构按钮生成对应 ProseMirror node 并回到正文焦点。
+- 工具按钮必须有实际编辑行为：行内按钮给当前选区施加 Tiptap mark，`Code` / `H2` 这类结构按钮通过 Tiptap command 生成对应 node 并回到正文焦点。
 - 校验错误和后端冲突应定位到具体文本位置或 gutter 标记，默认不打断整篇文章的阅读流。
 
-### ProseMirror 正文事实
+### Tiptap 正文事实
 
 `/editor` 不再把 Markdown-like source 当作正文事实：
 
-- 输入态以 ProseMirror doc / JSON 保存正文和选区事实。
+- 输入态以 Tiptap doc / JSON 保存正文和选区事实。
 - `**文本**`、`++文本++`、``` 等字符序列只作为普通文本存在，不触发行内格式或 block 结构。
-- 加粗、链接、标题、引用、列表、代码、公式、表格和外部图片嵌入通过 ProseMirror mark / node 表达。
-- 后端仍只接收 `PostBodyWriteInput`；ProseMirror JSON 只存在于编辑器运行时和前端草稿状态，不直接提交给 Content API。
+- 加粗、链接、标题、引用、列表、代码、公式、表格和外部图片嵌入通过 Tiptap mark / node 表达。
+- 后端仍只接收 `PostBodyWriteInput`；Tiptap JSON 只存在于编辑器运行时和前端草稿状态，不直接提交给 Content API。
 
 ### 预览渲染规则
 
 预览器渲染结构化模型，不直接把 markdown 源文本塞进 DOM：
 
-- code block 来自 ProseMirror `code_block` node，单独记录语言并用 `<pre><code>` 展示纯代码内容。
+- code block 来自 Tiptap `codeBlock` node，单独记录语言并用 `<pre><code>` 展示纯代码内容。
 - link 应解析成安全 inline 节点，用 `<a>` 渲染；不要用 `v-html` 渲染用户输入。
-- bold 等行内格式来自 ProseMirror mark，例如 `bold` mark 渲染为 `<strong>`；原始 `**text**` 字符串按普通文本展示。
+- bold 等行内格式来自 Tiptap mark，例如 `bold` mark 渲染为 `<strong>`；原始 `**text**` 字符串按普通文本展示。
 - 不支持的结构块可以临时降级为结构化块预览，但不能混进纯文本段落里展示为原始标记。
 
 ### Mapper 边界
 
-编辑器输入状态和后端保存模型通过 ProseMirror mapper 分离：
+编辑器输入状态和后端保存模型通过 Tiptap mapper 分离：
 
-- 编辑器 composable 负责标题、ProseMirror 正文 doc、选区、字数、保存状态和撤销/重做。
-- ProseMirror mapper 负责把 doc 映射为 `PostBodyWriteInput`、reader preview blocks 和纯文本统计。
+- 编辑器 feature model 负责标题、Tiptap 正文 JSON、选区、字数、保存状态和撤销/重做。
+- Tiptap mapper 负责把 doc 映射为 `PostBodyWriteInput`、reader preview blocks 和纯文本统计。
 - 预览组件消费 reader preview blocks 渲染，不自行解析 markdown、code fence 或链接。
 - 旧 Markdown-like compiler / textarea adapter 已删除；`/editor` runtime 不再存在 source string 编译入口。
-- mapper 遇到 Content V1 暂不支持的多段 quote、嵌套 list、list item 内 block 或缺少 Upload `fileId` 的系统媒体时，应阻止保存并定位提示，不能静默压平为 inline 文本。
+- mapper 遇到 Content V1 暂不支持的超深容器、复杂表格单元格或缺少 Upload `fileId` 的系统媒体时，应阻止保存并定位提示，不能静默压平为 inline 文本。
 
 ## 与后端契约的关系
 
