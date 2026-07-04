@@ -1,7 +1,6 @@
 import type { Editor } from "@tiptap/vue-3";
 import { isInTable } from "@tiptap/pm/tables";
 import { mount } from "@vue/test-utils";
-// @ts-expect-error Vitest runs this spec in Node; browser tsconfig does not expose Node ambient types.
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
