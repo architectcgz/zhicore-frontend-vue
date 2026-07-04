@@ -26,6 +26,11 @@ import {
   type EditorDraftHistoryField,
   type EditorDraftHistorySnapshot,
 } from "./editorDraftHistory";
+import {
+  loadEditorDraftLocalPersistence,
+  persistEditorDraftLocalPersistence,
+  type EditorDraftLocalSavedSnapshot,
+} from "./editorDraftLocalPersistence";
 import { createEditorLogger } from "./editorDebug";
 import {
   createDefaultEditorDocumentJson,
@@ -103,6 +108,13 @@ function createContentHash(content: string): string {
   return hash.toString(36);
 }
 
+function createSourceHash(
+  title: string,
+  bodyDocumentJson: EditorTiptapDocumentJson,
+): string {
+  return createContentHash(`${title}\u0000${JSON.stringify(bodyDocumentJson)}`);
+}
+
 function clampSelectionToBody(
   selection: EditorTextSelection | undefined,
   bodyLength: number,
@@ -142,15 +154,88 @@ function createSaveDraftBodyRequest(
   };
 }
 
+function createSavedDraftSnapshotFromState(
+  title: string,
+  bodyDocumentJson: EditorTiptapDocumentJson,
+  savedAt: Date,
+): EditorSavedDraftSnapshot {
+  const writeInput = mapTiptapJsonToPostBodyWriteInput(bodyDocumentJson);
+  const contentHash = createContentHash(JSON.stringify(writeInput));
+
+  return {
+    title: title.trim() || "未命名草稿",
+    sourceHash: createSourceHash(title, bodyDocumentJson),
+    localContentHash: `local:${contentHash}`,
+    savedAt,
+    schemaVersion: writeInput.schemaVersion,
+    blockCount: writeInput.blocks.length,
+    postBodyWriteInput: writeInput,
+  };
+}
+
+function restoreLocalSavedSnapshot(
+  snapshot: EditorDraftLocalSavedSnapshot | undefined,
+): EditorSavedDraftSnapshot | undefined {
+  if (!snapshot) {
+    return undefined;
+  }
+
+  const savedAt = new Date(snapshot.savedAt);
+
+  if (Number.isNaN(savedAt.getTime())) {
+    return undefined;
+  }
+
+  return {
+    ...snapshot,
+    savedAt,
+  };
+}
+
+function loadRestoredLocalDraft():
+  | {
+      title: string;
+      bodyDocumentJson: EditorTiptapDocumentJson;
+      savedSnapshot?: EditorSavedDraftSnapshot;
+    }
+  | undefined {
+  const localDraft = loadEditorDraftLocalPersistence();
+
+  if (!localDraft) {
+    return undefined;
+  }
+
+  if (
+    getTiptapPlainText(localDraft.bodyDocumentJson).length >
+    editorDraftBodyMaxLength
+  ) {
+    return undefined;
+  }
+
+  try {
+    mapTiptapJsonToPostBodyWriteInput(localDraft.bodyDocumentJson);
+  } catch {
+    return undefined;
+  }
+
+  return {
+    title: localDraft.title,
+    bodyDocumentJson: localDraft.bodyDocumentJson,
+    savedSnapshot: restoreLocalSavedSnapshot(localDraft.savedSnapshot),
+  };
+}
+
 export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const now = options.now ?? (() => new Date());
   const previewCompileDebounceMs =
     options.previewCompileDebounceMs ?? defaultPreviewCompileDebounceMs;
   const historyMergeWindowMs =
     options.historyMergeWindowMs ?? defaultHistoryMergeWindowMs;
-  const title = ref(defaultEditorTitle);
+  const defaultBodyDocumentJson = createDefaultEditorDocumentJson();
+  const restoredLocalDraft = loadRestoredLocalDraft();
+  const title = ref(restoredLocalDraft?.title ?? defaultEditorTitle);
   const bodyDocumentJson = ref<EditorTiptapDocumentJson>(
-    createDefaultEditorDocumentJson(),
+    restoredLocalDraft?.bodyDocumentJson ?? defaultBodyDocumentJson,
   );
   let previewCompileTimer: number | undefined;
   const history = ref(
@@ -170,28 +255,24 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     mapTiptapJsonToPostBodyWriteInput(bodyDocumentJson.value),
   );
   const currentSourceHash = computed(() =>
-    createContentHash(
-      `${title.value}\u0000${JSON.stringify(bodyDocumentJson.value)}`,
-    ),
+    createSourceHash(title.value, bodyDocumentJson.value),
   );
 
   function createSavedDraftSnapshot(savedAt: Date): EditorSavedDraftSnapshot {
-    const writeInput = postBodyWriteInput.value;
-    const contentHash = createContentHash(JSON.stringify(writeInput));
-
-    return {
-      title: previewTitle.value,
-      sourceHash: currentSourceHash.value,
-      localContentHash: `local:${contentHash}`,
+    return createSavedDraftSnapshotFromState(
+      title.value,
+      bodyDocumentJson.value,
       savedAt,
-      schemaVersion: writeInput.schemaVersion,
-      blockCount: writeInput.blocks.length,
-      postBodyWriteInput: writeInput,
-    };
+    );
   }
 
   const savedDraftSnapshot = ref<EditorSavedDraftSnapshot>(
-    createSavedDraftSnapshot(now()),
+    restoredLocalDraft?.savedSnapshot ??
+      createSavedDraftSnapshotFromState(
+        defaultEditorTitle,
+        defaultBodyDocumentJson,
+        now(),
+      ),
   );
   const serverDraftBaseline = ref<EditorServerDraftBaseline | undefined>(
     options.serverDraftBaseline,
@@ -212,6 +293,27 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   );
   const canUndo = computed(() => canUndoEditorDraftHistory(history.value));
   const canRedo = computed(() => canRedoEditorDraftHistory(history.value));
+
+  function createLocalSavedSnapshot(
+    snapshot: EditorSavedDraftSnapshot,
+  ): EditorDraftLocalSavedSnapshot {
+    return {
+      ...snapshot,
+      savedAt: snapshot.savedAt.toISOString(),
+    };
+  }
+
+  function persistCurrentDraftToLocal(
+    snapshot = savedDraftSnapshot.value,
+  ): void {
+    persistEditorDraftLocalPersistence({
+      version: 1,
+      title: title.value,
+      bodyDocumentJson: bodyDocumentJson.value,
+      updatedAt: now().toISOString(),
+      savedSnapshot: createLocalSavedSnapshot(snapshot),
+    });
+  }
 
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
     const previewBlocks = postBodyWriteInput.value.blocks.map(
@@ -269,6 +371,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   function applyHistorySnapshot(snapshot: EditorDraftHistorySnapshot): void {
     title.value = snapshot.title;
     bodyDocumentJson.value = snapshot.bodyDocumentJson;
+    persistCurrentDraftToLocal();
   }
 
   function createHistoryRestoreResult(
@@ -301,6 +404,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
       },
     );
     title.value = nextTitle;
+    persistCurrentDraftToLocal();
   }
 
   function compilePreviewNow(): void {
@@ -371,6 +475,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
       },
     );
     bodyDocumentJson.value = nextBodyDocumentJson;
+    persistCurrentDraftToLocal();
   }
 
   function undoDraft(): EditorDraftHistoryRestoreResult | undefined {
@@ -433,12 +538,18 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
           baseDraftBodyId: response.draftBodyId,
           baseDraftBodyHash: response.draftBodyHash,
         };
-        savedDraftSnapshot.value = createSavedDraftSnapshot(savedAt);
+        const nextSavedSnapshot = createSavedDraftSnapshot(savedAt);
+
+        savedDraftSnapshot.value = nextSavedSnapshot;
+        persistCurrentDraftToLocal(nextSavedSnapshot);
         return;
       }
 
       await Promise.resolve();
-      savedDraftSnapshot.value = createSavedDraftSnapshot(savedAt);
+      const nextSavedSnapshot = createSavedDraftSnapshot(savedAt);
+
+      savedDraftSnapshot.value = nextSavedSnapshot;
+      persistCurrentDraftToLocal(nextSavedSnapshot);
     } finally {
       isSavingDraft.value = false;
     }

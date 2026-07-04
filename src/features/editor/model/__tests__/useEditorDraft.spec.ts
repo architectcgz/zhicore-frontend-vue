@@ -1,6 +1,7 @@
 import { isReadonly } from "vue";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { editorDraftLocalStorageKey } from "../editorDraftLocalPersistence";
 import { editorDraftBodyMaxLength, useEditorDraft } from "../useEditorDraft";
 import type { EditorTiptapDocumentJson } from "../editorTiptapEngine";
 
@@ -98,6 +99,14 @@ function multiParagraphBodyDoc(paragraphs: string[]): EditorTiptapDocumentJson {
 }
 
 describe("useEditorDraft", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   it("starts with an editable title and Tiptap body document", () => {
     const draft = useEditorDraft();
 
@@ -356,6 +365,54 @@ describe("useEditorDraft", () => {
         ],
       },
     );
+  });
+
+  it("persists current edits locally before the explicit save action", () => {
+    const draft = useEditorDraft();
+
+    draft.updateTitle("关闭网页前的标题");
+    draft.updateBodyDocument(bodyDoc("关闭网页前的正文"), { start: 3, end: 3 });
+
+    const rawPersistedDraft = localStorage.getItem(editorDraftLocalStorageKey);
+
+    expect(rawPersistedDraft).not.toBeNull();
+    expect(JSON.parse(rawPersistedDraft ?? "{}")).toMatchObject({
+      version: 1,
+      title: "关闭网页前的标题",
+      bodyDocumentJson: bodyDoc("关闭网页前的正文"),
+    });
+  });
+
+  it("restores locally persisted edits as unsaved changes in a new editor scope", () => {
+    const draft = useEditorDraft();
+
+    draft.updateTitle("恢复标题");
+    draft.updateBodyDocument(bodyDoc("恢复正文"), { start: 2, end: 2 });
+
+    const restoredDraft = useEditorDraft();
+
+    expect(restoredDraft.title.value).toBe("恢复标题");
+    expect(restoredDraft.body.value).toBe("恢复正文");
+    expect(restoredDraft.hasUnsavedChanges.value).toBe(true);
+    expect(restoredDraft.draftSaveStatus.value).toBe("dirty");
+  });
+
+  it("restores an explicitly saved local draft without marking it dirty", async () => {
+    const savedAt = new Date("2026-07-02T00:00:00.000Z");
+    const draft = useEditorDraft({
+      now: () => savedAt,
+    });
+
+    draft.updateTitle("已保存标题");
+    draft.updateBodyDocument(bodyDoc("已保存正文"), { start: 2, end: 2 });
+    await draft.saveDraft();
+
+    const restoredDraft = useEditorDraft();
+
+    expect(restoredDraft.title.value).toBe("已保存标题");
+    expect(restoredDraft.body.value).toBe("已保存正文");
+    expect(restoredDraft.hasUnsavedChanges.value).toBe(false);
+    expect(restoredDraft.draftSaveStatus.value).toBe("saved");
   });
 
   it("saves through the server client without leaking Tiptap JSON", async () => {
