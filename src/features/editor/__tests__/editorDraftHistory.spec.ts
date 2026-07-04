@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getTiptapPlainText,
   type EditorTiptapDocumentJson,
-} from "../editorTiptapEngine";
+} from "../tiptap/editorTiptapEngine";
 import {
   canRedoEditorDraftHistory,
   canUndoEditorDraftHistory,
@@ -11,7 +11,7 @@ import {
   recordEditorDraftHistoryChange,
   redoEditorDraftHistory,
   undoEditorDraftHistory,
-} from "../editorDraftHistory";
+} from "../lib/editorDraftHistory";
 
 function bodyDoc(text: string): EditorTiptapDocumentJson {
   return {

@@ -50,7 +50,7 @@ pnpm format           # Prettier 格式化
 - Props / Emits 使用 `defineProps<Props>()` / `defineEmits<Emits>()` 类型声明
 - 服务端数据通过 API 模块获取，客户端状态放 Pinia store
 - 路由按命名空间拆分（`src/router/routes/*Routes.ts`），新增路由模块后在 `src/router/index.ts` 注册
-- 前端 route page、feature model、Pinia、API、组件、测试与 runtime 边界遵循 `docs/architecture/frontend-engineering-guidelines.md`
+- 前端 route page、feature workflow、Pinia、API、组件、测试与 runtime 边界遵循 `docs/architecture/frontend-engineering-guidelines.md`
 - CSS owner、命名、token、响应式与组件样式 contract 遵循 `docs/design/css-style-guide.md`
 - 依赖变更后不要格式化 `pnpm-lock.yaml`；如果 lockfile 出现大范围格式化噪音，先恢复 lockfile 原格式，再运行 `pnpm install --lockfile-only` 生成最小 lockfile 变更。
 
@@ -100,7 +100,7 @@ pnpm format           # Prettier 格式化
 ## 架构边界
 
 - `src/entities/`：稳定业务对象类型，纯函数，不依赖 Vue / API / store
-- `src/features/`：业务流程 owner，可调 API 和 store，不渲染 UI
+- `src/features/`：业务流程 owner，可调 API 和 store；feature 内用 `composables/`、`lib/`、`config/`、明确第三方适配目录和 `ui/` 区分职责，不使用泛化的 `model/` 桶
 - `src/components/`：UI 渲染，通过 props/emits 收发数据，不做业务决策
 - `src/pages/`：route composition surface，装配 components + features + layouts
 - `src/layouts/`：页面结构壳，包含 RouterView

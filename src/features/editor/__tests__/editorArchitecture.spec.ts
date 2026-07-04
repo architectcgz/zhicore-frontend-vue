@@ -9,16 +9,37 @@ import appLayoutSource from "@/layouts/AppLayout.vue?raw";
 import routePageSource from "@/pages/editor/EditorRoutePage.vue?raw";
 import editorRoutesSource from "@/router/routes/editorRoutes.ts?raw";
 
-import packageJsonSource from "../../../../../package.json?raw";
+import packageJsonSource from "../../../../package.json?raw";
 import featureIndexSource from "../index.ts?raw";
-import controllerSource from "../useEditorWorkspaceController.ts?raw";
-import draftSource from "../useEditorDraft.ts?raw";
-import tiptapEngineSource from "../editorTiptapEngine.ts?raw";
-import desktopWorkspaceSource from "../../ui/EditorDesktopWorkspace.vue?raw";
-import mobileWorkspaceSource from "../../ui/EditorMobileWorkspace.vue?raw";
-import workspaceSource from "../../ui/EditorWorkspace.vue?raw";
+import controllerSource from "../composables/useEditorWorkspaceController.ts?raw";
+import draftSource from "../composables/useEditorDraft.ts?raw";
+import tiptapEngineSource from "../tiptap/editorTiptapEngine.ts?raw";
+import desktopWorkspaceSource from "../ui/EditorDesktopWorkspace.vue?raw";
+import mobileWorkspaceSource from "../ui/EditorMobileWorkspace.vue?raw";
+import workspaceSource from "../ui/EditorWorkspace.vue?raw";
 
 describe("editor architecture boundaries", () => {
+  it("uses explicit feature folders instead of a generic model bucket", () => {
+    [
+      featureIndexSource,
+      controllerSource,
+      draftSource,
+      tiptapEngineSource,
+      desktopWorkspaceSource,
+      mobileWorkspaceSource,
+      workspaceSource,
+      writingPaneSource,
+      writingBodyEditorSource,
+    ].forEach((source) => {
+      expect(source).not.toContain("@/features/editor/model");
+    });
+
+    expect(featureIndexSource).toContain("./composables/useEditorDraft");
+    expect(featureIndexSource).toContain("./lib/editorScrollSync");
+    expect(featureIndexSource).toContain("./config/editorToolbar");
+    expect(featureIndexSource).toContain("./tiptap/editorTiptapEngine");
+  });
+
   it("uses the formal editor route as the public workspace entry", () => {
     expect(editorRoutesSource).toContain('path: "/editor"');
     expect(editorRoutesSource).toContain('name: "Editor"');

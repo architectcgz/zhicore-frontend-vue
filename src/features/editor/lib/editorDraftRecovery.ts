@@ -1,8 +1,8 @@
-import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 import {
   getTiptapPlainText,
   mapTiptapJsonToPostBodyWriteInput,
-} from "./editorTiptapEngine";
+} from "../tiptap/editorTiptapEngine";
 import {
   loadEditorDraftLocalPersistence,
   persistEditorDraftLocalPersistence,

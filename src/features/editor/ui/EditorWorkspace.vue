@@ -77,7 +77,7 @@
 <script setup lang="ts">
 import { useMediaQuery } from "@vueuse/core";
 
-import { useEditorWorkspaceController } from "@/features/editor/model";
+import { useEditorWorkspaceController } from "../composables/useEditorWorkspaceController";
 
 import EditorDesktopWorkspace from "./EditorDesktopWorkspace.vue";
 import EditorMobileWorkspace from "./EditorMobileWorkspace.vue";

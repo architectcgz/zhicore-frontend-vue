@@ -1,6 +1,6 @@
 import type { PostBodyWriteInput } from "@/entities/post-body";
 
-import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 
 export interface EditorDraftLocalSavedSnapshot {
   title: string;

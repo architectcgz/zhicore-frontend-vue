@@ -1,1 +1,1 @@
-export { useLayoutSessionActionsBridge } from './model/useLayoutSessionActionsBridge'
+export { useLayoutSessionActionsBridge } from "./composables/useLayoutSessionActionsBridge";

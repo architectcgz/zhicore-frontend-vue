@@ -5,7 +5,7 @@
 ## 总原则
 
 1. 页面入口保持薄，只装配，不承载业务流程。
-2. 用户动作、异步请求、路由参数解析和状态机优先进入 feature model。
+2. 用户动作、异步请求、路由参数解析和状态机优先进入 feature-local workflow；组合函数、纯函数、配置和第三方适配按目录分开。
 3. Pinia 只保存真正跨页面共享的状态。
 4. API 层只做请求、响应解包和数据归一化，不直接决定 UI 和导航。
 5. 组件按 owner 放置，跨 feature 组合时再引入更高层，不提前造复杂层级。
@@ -22,7 +22,7 @@ src/
 ├── components/    # 可复用 UI 组件，按业务领域或 common 分组
 ├── composables/   # 通用 Vue 组合逻辑，不绑定具体业务
 ├── entities/      # 稳定业务对象类型、纯函数和低耦合展示
-├── features/      # 用户动作、页面流程、状态机、业务 model
+├── features/      # 用户动作、页面流程、状态机和 feature-local workflow
 ├── layouts/       # 应用布局壳
 ├── pages/         # 路由入口，只做装配
 ├── router/        # 路由表和守卫
@@ -36,7 +36,7 @@ src/
 暂不新增 `widgets/` 或 `shared/` 层。只有当下面条件出现时再引入：
 
 - 同一个页面级工作区需要组合多个 feature，且它本身不拥有 API 或状态机，可以新增 `widgets/<name>/`。
-- 多个 feature 共享无业务语义的 UI 原语、model 或 lib，且 `components/`、`composables/`、`utils/` 已无法表达 owner，可以评估引入 `shared/`。
+- 多个 feature 共享无业务语义的 UI 原语、组合逻辑或 lib，且 `components/`、`composables/`、`utils/` 已无法表达 owner，可以评估引入 `shared/`。
 
 新增层级前必须同步更新本文、`AGENTS.md` 和对应测试边界。
 
@@ -47,7 +47,7 @@ src/
 页面可以做：
 
 - 组合 layout、component、feature UI。
-- 从 feature public API 读取 page model。
+- 从 feature public API 读取 page workflow。
 - 做很薄的事件转发。
 - 处理纯展示级本地状态，例如只影响当前页面布局的展开状态。
 
@@ -78,13 +78,13 @@ const page = usePostEditorPage();
 </template>
 ```
 
-当 route page 开始直接处理请求、query、权限、提交防重或错误恢复时，应拆到 `features/**/model`。
+当 route page 开始直接处理请求、query、权限、提交防重或错误恢复时，应拆到 `features/<feature>/composables`；配套纯函数、映射和配置分别放入该 feature 的 `lib/`、`config/` 或明确的第三方适配目录。
 
-## Feature Model 规范
+## Feature 内部目录规范
 
-`src/features/**/model` 是页面级行为 owner。
+`src/features/<feature>/composables` 是页面级行为 owner。它保存业务流程组合函数、表单状态、异步动作、路由参数解析和局部 loading / error / empty 状态。
 
-适合放入 feature model：
+适合放入 `composables/`：
 
 - 页面请求编排。
 - route params / query 解析与规范化。
@@ -94,17 +94,26 @@ const page = usePostEditorPage();
 - 业务状态机和派生数据。
 - 对 API DTO 到页面 view model 的适配。
 
-feature model 不做：
+`composables/` 不做：
 
 - 长期持有跨页面共享状态。
 - 直接渲染 UI。
 - 把多个无关流程塞进一个超大 composable。
 
+feature 内部非组合函数按职责拆分：
+
+- `lib/`：feature-local 纯函数、状态机、DTO/view model 映射、持久化 helper、滚动计算等非 Vue 逻辑。
+- `config/`：工具栏、选项、默认值、静态候选项等配置。
+- 明确第三方适配目录：例如 editor 的 `tiptap/` 放 Tiptap runtime、扩展和命令适配。
+- `ui/`：只服务单一 feature 的 page-sized UI。
+
+features 下不再使用泛化的 `model/` 目录；这个名称容易把组合函数、配置、第三方适配和领域模型混为一谈。
+
 拆分规则：
 
 - 一个 composable 超过 3 类责任时，拆成 loader、actions、bindings、validation 等小 owner。
 - 同一份 normalize / default / validate 只能有一个 owner，不在页面、API 和组件里各写一份。
-- 暴露给外部的 feature 能力通过 `features/<feature>/index.ts` 出口导出，外部不 deep import `model/useXxx`。
+- 暴露给外部的 feature 能力通过 `features/<feature>/index.ts` 出口导出；需要 feature 内部实现时，路径也应体现 `composables/`、`lib/`、`config/` 或第三方适配目录的职责。
 
 ## Pinia Store 规范
 
@@ -126,7 +135,7 @@ Pinia 只承载跨页面共享、多个模块需要同时读取或写入的状�
 
 store 约束：
 
-- store 不直接 `router.push()`，导航交给 route guard、runtime 或 feature model。
+- store 不直接 `router.push()`，导航交给 route guard、runtime 或 feature workflow。
 - store 不直接弹 toast，反馈交给 feature 或共享反馈 composable。
 - store 不直接互相循环 import；跨 store 清理应由上层流程或明确 action 协调。
 - 认证状态不持久化敏感 token；前端只保存用户快照，认证事实以服务端 session 为准。
@@ -157,7 +166,7 @@ store 约束：
 - 上传类接口在 API 边界构造 `FormData`。
 - 对页面更好处理的缺失语义，可以在 API 边界转为 `null`，不要让页面到处 try/catch。
 
-页面不直接 import `@/api/*`。业务请求从 feature model 进入 API 层。
+页面不直接 import `@/api/*`。业务请求从 feature workflow 进入 API 层。
 
 ## 请求并发与 Stale Response
 
@@ -172,7 +181,7 @@ store 约束：
 - 自动轮询应有停止条件，例如页面离开、状态完成、用户手动停止、连接错误。
 - 对同一个动作的重复提交，用 `submitting` guard，而不是依赖按钮禁用这一层 UI。
 
-推荐在 feature model 内封装：
+推荐在 feature workflow 内封装：
 
 ```ts
 let requestVersion = 0;
@@ -246,18 +255,18 @@ async function loadDetail(id: string): Promise<void> {
 
 ### 状态类型
 
-| 状态         | Owner                    | 展示要求                                           |
-| ------------ | ------------------------ | -------------------------------------------------- |
-| `idle`       | feature model            | 初始态，不提前展示错误                             |
-| `loading`    | feature model + UI       | 首屏加载用 skeleton 或稳定占位，不让布局跳动       |
-| `refreshing` | feature model + UI       | 保留旧内容，局部显示刷新状态，不清空整个页面       |
-| `empty`      | feature model + UI       | 空数据不是错误，展示空状态和下一步动作             |
-| `fail`       | feature model + UI       | 可恢复错误，展示错误原因、requestId 和重试入口     |
-| `submitting` | feature model + UI       | 禁用重复提交，按钮显示进行中状态                   |
-| `success`    | feature model + feedback | 成功后按语义选择 toast、inline success 或跳转      |
-| `disabled`   | UI + 权限/业务状态       | 禁用态必须说明不可操作原因，不能只有灰色按钮       |
-| `conflict`   | feature model + UI       | 草稿、版本、并发冲突必须保留本地输入，不能静默覆盖 |
-| `offline`    | runtime / feature model  | 网络不可用或实时断线时，降级为手动刷新或只读提示   |
+| 状态         | Owner                       | 展示要求                                           |
+| ------------ | --------------------------- | -------------------------------------------------- |
+| `idle`       | feature workflow            | 初始态，不提前展示错误                             |
+| `loading`    | feature workflow + UI       | 首屏加载用 skeleton 或稳定占位，不让布局跳动       |
+| `refreshing` | feature workflow + UI       | 保留旧内容，局部显示刷新状态，不清空整个页面       |
+| `empty`      | feature workflow + UI       | 空数据不是错误，展示空状态和下一步动作             |
+| `fail`       | feature workflow + UI       | 可恢复错误，展示错误原因、requestId 和重试入口     |
+| `submitting` | feature workflow + UI       | 禁用重复提交，按钮显示进行中状态                   |
+| `success`    | feature workflow + feedback | 成功后按语义选择 toast、inline success 或跳转      |
+| `disabled`   | UI + 权限/业务状态          | 禁用态必须说明不可操作原因，不能只有灰色按钮       |
+| `conflict`   | feature workflow + UI       | 草稿、版本、并发冲突必须保留本地输入，不能静默覆盖 |
+| `offline`    | runtime / feature workflow  | 网络不可用或实时断线时，降级为手动刷新或只读提示   |
 
 ### Loading
 
@@ -277,7 +286,7 @@ fail UI 至少包含：
 - 后端 `requestId`，如果 `ApiError` 提供。
 - 对输入型页面，必须保留用户已经输入的草稿。
 
-请求层只提供 `ApiError`，不直接弹 toast 或跳页。feature model 决定是展示 inline fail、toast、表单字段错误，还是降级到只读。
+请求层只提供 `ApiError`，不直接弹 toast 或跳页。feature workflow 决定是展示 inline fail、toast、表单字段错误，还是降级到只读。
 
 ### Empty
 
@@ -301,9 +310,9 @@ fail UI 至少包含：
 
 ## 表单规范
 
-表单的事实 owner 是 feature model，不是模板。
+表单的事实 owner 是 feature workflow，不是模板。
 
-feature model 负责：
+feature workflow 负责：
 
 - 表单初始值。
 - 字段级校验。
@@ -326,7 +335,7 @@ UI 负责：
 - 服务端返回字段级错误时，优先落到字段；无法归属字段时才展示全局 fail。
 - 有草稿风险的表单，离开页面、关闭弹窗或切换对象前必须处理 dirty 状态。
 - 上传表单必须限制文件类型、大小和数量，并把失败原因展示给用户。
-- 表单成功后是否清空草稿必须由 feature model 决定，组件不自行重置。
+- 表单成功后是否清空草稿必须由 feature workflow 决定，组件不自行重置。
 
 ## 可访问性与键盘规范
 
@@ -373,7 +382,7 @@ UI 负责：
 
 - 跨业务复用、无业务流程的 UI，放 `components/common/`。
 - 明确属于某个业务领域的展示组件，放 `components/<domain>/`。
-- 只服务单一 feature 且直接消费该 feature model 的 page-sized UI，可以放 `features/<feature>/ui/`。
+- 只服务单一 feature 且直接消费该 feature workflow 的 page-sized UI，可以放 `features/<feature>/ui/`。
 - 稳定业务对象展示且可被多个 feature 复用，考虑放 `entities/<entity>/ui/`。
 - 跨多个 feature 的完整工作区组合，等需求出现后再引入 `widgets/`。
 
@@ -388,7 +397,7 @@ UI 负责：
 
 - 父传子用 props。
 - 子通知父用 emits。
-- 跨远距离但仍是页面内流程的状态，优先由 feature model 持有。
+- 跨远距离但仍是页面内流程的状态，优先由 feature workflow 持有。
 - 真正跨页面共享才进入 Pinia。
 
 ## Overlay、Toast 和危险操作
@@ -398,7 +407,7 @@ UI 负责：
 建议：
 
 - Toast 渲染和队列状态做成共享 composable / common 组件，不由业务页面各写一套。
-- 删除、撤销、发布这类危险动作使用统一确认模型，但真实业务动作留在 feature model。
+- 删除、撤销、发布这类危险动作使用统一确认模型，但真实业务动作留在 feature workflow。
 - Overlay 行为层负责 Teleport、Escape、backdrop、scroll lock、aria；业务弹窗负责内容和动作。
 - 不把所有弹窗做成一个万能组件，也不让每个页面重复实现 overlay 行为。
 
@@ -406,7 +415,7 @@ UI 负责：
 
 测试贴近 owner 放置：
 
-- `src/features/**/__tests__`：feature model、状态机、请求编排、提交防重。
+- `src/features/**/__tests__`：feature workflow、状态机、请求编排、提交防重。
 - `src/components/**/__tests__`：组件 props、emits、关键交互。
 - `src/api/__tests__`：请求参数、响应归一化、错误对象。
 - `src/stores/__tests__`：跨页面状态和持久化策略。
@@ -468,7 +477,7 @@ UI 负责：
 ## 新功能检查清单
 
 - [ ] route page 只是组合器，没有直接 API 调用。
-- [ ] 页面流程 owner 在 `features/**/model`。
+- [ ] 页面流程 owner 在 `features/<feature>/composables`。
 - [ ] 只有跨页面共享状态进入 Pinia。
 - [ ] API 层完成 DTO 归一化，不弹 toast、不跳页。
 - [ ] 搜索、筛选、轮询、自动补全处理 stale response 和取消请求。
@@ -479,7 +488,7 @@ UI 负责：
 - [ ] 表单有字段校验、服务端错误映射、dirty 状态和提交防重。
 - [ ] tab、dialog、menu、icon button 有 ARIA 与键盘行为。
 - [ ] 重依赖按需加载，高频输入有 debounce / throttle。
-- [ ] UI 组件按 owner 放置，并通过 props/emits 或 feature model 通信。
+- [ ] UI 组件按 owner 放置，并通过 props/emits 或 feature workflow 通信。
 - [ ] CSS 遵循 `docs/design/css-style-guide.md`。
 - [ ] 测试贴近 owner，覆盖关键状态和错误路径。
 - [ ] 如果新增架构例外，已有 TODO 或 guardrail 记录。

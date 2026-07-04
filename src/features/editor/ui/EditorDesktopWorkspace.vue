@@ -38,7 +38,7 @@ import type {
   EditorWorkspaceWritingPaneRef,
   EditorTextSelection,
   EditorToolbarAction,
-} from "@/features/editor/model";
+} from "@/features/editor";
 
 import type {
   EditorWorkspaceShellEmits,

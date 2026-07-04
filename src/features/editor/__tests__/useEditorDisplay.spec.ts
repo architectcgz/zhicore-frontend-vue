@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { useEditorDisplay } from "../useEditorDisplay";
+import { useEditorDisplay } from "../composables/useEditorDisplay";
 
 describe("useEditorDisplay", () => {
   beforeEach(() => {

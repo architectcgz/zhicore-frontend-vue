@@ -1,10 +1,10 @@
 import { nextTick, type Ref } from "vue";
 
-import { createEditorLogger } from "./editorDebug";
+import { createEditorLogger } from "../lib/editorDebug";
 import {
   getPreviewToEditorScrollTarget,
   getSyncedScrollTop,
-} from "./editorScrollSync";
+} from "../lib/editorScrollSync";
 
 const scrollLogger = createEditorLogger("scroll");
 const editorBottomStickinessMinTolerancePx = 2;

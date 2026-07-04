@@ -4,7 +4,7 @@ import type { EditorDraftLocalSavedSnapshot } from "./editorDraftLocalPersistenc
 import {
   mapTiptapJsonToPostBodyWriteInput,
   type EditorTiptapDocumentJson,
-} from "./editorTiptapEngine";
+} from "../tiptap/editorTiptapEngine";
 
 export interface EditorSavedDraftSnapshot {
   title: string;

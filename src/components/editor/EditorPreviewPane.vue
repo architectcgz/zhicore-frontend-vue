@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-import type { EditorReaderPreviewBlock } from "@/features/editor/model";
+import type { EditorReaderPreviewBlock } from "@/features/editor";
 
 import { PostBodyReaderBlock } from "@/components/post-body-reader";
 

@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { Editor } from "@tiptap/vue-3";
 
-import type { EditorToolbarAction } from "./editorToolbarTypes";
+import type { EditorToolbarAction } from "../lib/editorToolbarTypes";
 
 type HeadingToolbarAction = Extract<
   EditorToolbarAction,

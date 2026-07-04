@@ -42,7 +42,7 @@ import type {
   EditorTextSelection,
   EditorToolbarAction,
   EditorWorkspaceWritingPaneRef,
-} from "@/features/editor/model";
+} from "@/features/editor";
 
 import type {
   EditorWorkspaceShellEmits,

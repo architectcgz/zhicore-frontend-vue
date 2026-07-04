@@ -1,5 +1,5 @@
 import type { EditorTextSelection } from "./editorToolbarTypes";
-import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 
 export type EditorDraftHistoryField = "title" | "body";
 export type EditorDraftHistoryChangeKind =

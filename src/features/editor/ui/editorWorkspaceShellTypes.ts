@@ -5,8 +5,8 @@ import type {
   EditorMode,
   EditorReaderPreviewBlock,
   EditorToolbarAction,
-} from "@/features/editor/model";
-import type { EditorTiptapDocumentJson } from "@/features/editor/model/editorTiptapEngine";
+  EditorTiptapDocumentJson,
+} from "@/features/editor";
 
 export interface EditorWorkspaceShellProps {
   activeMode: EditorMode;

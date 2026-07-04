@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getPreviewToEditorScrollTarget,
   getSyncedScrollTop,
-} from "../editorScrollSync";
+} from "../lib/editorScrollSync";
 
 describe("editorScrollSync", () => {
   it("maps the source scroll progress to target scroll top", () => {

@@ -27,7 +27,7 @@ import {
   editorCodeBlockLanguageOptions,
   normalizeEditorCodeBlockLanguage,
   serializeEditorCodeBlockLanguage,
-} from "./editorCodeBlockLanguages";
+} from "../config/editorCodeBlockLanguages";
 import {
   getTiptapPlainText,
   mapTiptapJsonToPostBodyWriteInput,

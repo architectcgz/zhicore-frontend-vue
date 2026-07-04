@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { PostBodyWriteInput } from "@/entities/post-body";
 
-import type { EditorSavedDraftSnapshot } from "../editorDraftSnapshot";
-import { useEditorDraftSaveWorkflow } from "../useEditorDraftSaveWorkflow";
+import type { EditorSavedDraftSnapshot } from "../lib/editorDraftSnapshot";
+import { useEditorDraftSaveWorkflow } from "../composables/useEditorDraftSaveWorkflow";
 
 const writeInput: PostBodyWriteInput = {
   schemaVersion: 1,

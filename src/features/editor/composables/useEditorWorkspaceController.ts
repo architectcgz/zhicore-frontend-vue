@@ -3,8 +3,8 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import {
   type EditorTextSelection,
   type EditorToolbarAction,
-} from "./editorToolbarTypes";
-import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
+} from "../lib/editorToolbarTypes";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 import { type EditorMode, useEditorDisplay } from "./useEditorDisplay";
 import { useEditorPreviewScrollSync } from "./useEditorPreviewScrollSync";
 import {

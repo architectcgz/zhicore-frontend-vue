@@ -1,9 +1,9 @@
 import { isReadonly } from "vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { editorDraftLocalStorageKey } from "../editorDraftLocalPersistence";
-import { editorDraftBodyMaxLength, useEditorDraft } from "../useEditorDraft";
-import type { EditorTiptapDocumentJson } from "../editorTiptapEngine";
+import { editorDraftLocalStorageKey } from "../lib/editorDraftLocalPersistence";
+import { editorDraftBodyMaxLength, useEditorDraft } from "../composables/useEditorDraft";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 
 function bodyDoc(text: string): EditorTiptapDocumentJson {
   return {

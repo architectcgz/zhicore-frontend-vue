@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { describe, expect, it } from "vitest";
 
-import { useEditorPreviewScrollSync } from "../useEditorPreviewScrollSync";
+import { useEditorPreviewScrollSync } from "../composables/useEditorPreviewScrollSync";
 
 function defineReadonlyNumberProperty(
   element: Element,

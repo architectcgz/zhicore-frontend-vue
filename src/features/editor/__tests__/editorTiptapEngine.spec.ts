@@ -4,7 +4,7 @@ import {
   EditorPostBodyMappingError,
   mapTiptapJsonToPostBodyWriteInput,
   type EditorTiptapDocumentJson,
-} from "../editorTiptapEngine";
+} from "../tiptap/editorTiptapEngine";
 
 describe("editorTiptapEngine", () => {
   it("maps Tiptap document nodes to Content V1 blocks", () => {

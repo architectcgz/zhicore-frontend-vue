@@ -12,7 +12,7 @@ import {
   sanitizePostBodyExternalUrl,
 } from "@/entities/post-body";
 
-import type { EditorPreviewReaderBlock } from "./editorPreviewTypes";
+import type { EditorPreviewReaderBlock } from "../lib/editorPreviewTypes";
 
 export interface EditorTiptapSelection {
   from: number;

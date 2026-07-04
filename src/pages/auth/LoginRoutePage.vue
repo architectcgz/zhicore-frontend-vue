@@ -7,10 +7,7 @@
         登录后即可发布文章、参与评论与收藏。
       </p>
 
-      <form
-        class="login-page__form"
-        @submit.prevent="submit"
-      >
+      <form class="login-page__form" @submit.prevent="submit">
         <label>
           <span>用户名</span>
           <input
@@ -30,18 +27,12 @@
           />
         </label>
 
-        <p
-          v-if="errorMessage"
-          class="login-page__error"
-        >
+        <p v-if="errorMessage" class="login-page__error">
           {{ errorMessage }}
         </p>
 
-        <button
-          type="submit"
-          :disabled="submitting"
-        >
-          {{ submitting ? '登录中...' : '登录' }}
+        <button type="submit" :disabled="submitting">
+          {{ submitting ? "登录中..." : "登录" }}
         </button>
       </form>
     </div>
@@ -49,9 +40,9 @@
 </template>
 
 <script setup lang="ts">
-import { useLoginForm } from '@/features/auth/model/useLoginForm'
+import { useLoginForm } from "@/features/auth";
 
-const { username, password, submitting, errorMessage, submit } = useLoginForm()
+const { username, password, submitting, errorMessage, submit } = useLoginForm();
 </script>
 
 <style scoped>
@@ -62,7 +53,11 @@ const { username, password, submitting, errorMessage, submit } = useLoginForm()
   padding: 24px;
   background:
     radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 30%),
-    linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-elevated-2) 100%);
+    linear-gradient(
+      180deg,
+      var(--color-bg-elevated) 0%,
+      var(--color-bg-elevated-2) 100%
+    );
 }
 
 .login-page__panel {
@@ -109,7 +104,11 @@ const { username, password, submitting, errorMessage, submit } = useLoginForm()
   padding: 12px 16px;
   border: 0;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-strong)
+  );
   color: white;
   cursor: pointer;
 }

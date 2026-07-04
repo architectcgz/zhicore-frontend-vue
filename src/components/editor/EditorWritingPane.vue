@@ -169,10 +169,10 @@ import type {
   EditorBackgroundId,
   EditorMode,
   EditorToolbarAction,
-} from "@/features/editor/model";
-import { editorCodeBlockLanguageOptions } from "@/features/editor/model";
-import type { EditorTiptapDocumentJson } from "@/features/editor/model/editorTiptapEngine";
-import { editorToolbarGroups } from "@/features/editor/model/editorToolbar";
+  EditorTiptapDocumentJson,
+} from "@/features/editor";
+import { editorCodeBlockLanguageOptions } from "@/features/editor/config/editorCodeBlockLanguages";
+import { editorToolbarGroups } from "@/features/editor/config/editorToolbar";
 
 import { useEditorWritingBodyEditor } from "./useEditorWritingBodyEditor";
 

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { EditorTiptapDocumentJson } from "../editorTiptapEngine";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 import {
   createEditorLocalSavedSnapshot,
   createEditorSavedDraftSnapshot,
   createEditorSourceHash,
   restoreEditorLocalSavedSnapshot,
-} from "../editorDraftSnapshot";
+} from "../lib/editorDraftSnapshot";
 
 function bodyDoc(text: string): EditorTiptapDocumentJson {
   return {

@@ -6,8 +6,8 @@ import {
   buildSaveDraftBodyPayload,
   type EditorDraftServerSaveClient,
   type EditorServerDraftBaseline,
-} from "./editorDraftSavePayload";
-import type { EditorSavedDraftSnapshot } from "./editorDraftSnapshot";
+} from "../lib/editorDraftSavePayload";
+import type { EditorSavedDraftSnapshot } from "../lib/editorDraftSnapshot";
 
 export type EditorDraftSaveStatus = "saved" | "dirty" | "saving";
 

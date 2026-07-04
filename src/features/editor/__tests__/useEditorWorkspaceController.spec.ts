@@ -2,8 +2,8 @@ import { mount } from "@vue/test-utils";
 import { defineComponent, nextTick } from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { EditorWorkspaceShellRef } from "../useEditorWorkspaceController";
-import { useEditorWorkspaceController } from "../useEditorWorkspaceController";
+import type { EditorWorkspaceShellRef } from "../composables/useEditorWorkspaceController";
+import { useEditorWorkspaceController } from "../composables/useEditorWorkspaceController";
 
 function defineReadonlyNumberProperty(
   element: Element,

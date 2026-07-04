@@ -5,7 +5,7 @@ import type { PostBodyWriteInput } from "@/entities/post-body";
 import {
   createEditorPreviewParagraphs,
   createEditorReaderPreviewBlocks,
-} from "../editorDraftPreview";
+} from "../lib/editorDraftPreview";
 
 describe("editorDraftPreview", () => {
   it("creates stable reader preview blocks from saved body input", () => {

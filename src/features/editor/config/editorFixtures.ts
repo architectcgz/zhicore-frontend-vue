@@ -1,6 +1,6 @@
 import type { PostBodyBlock } from "@/entities/post-body";
 
-import type { EditorTiptapDocumentJson } from "./editorTiptapEngine";
+import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
 
 export const defaultEditorTitle = "把复杂系统讲成可以协作的结构";
 

@@ -1,4 +1,4 @@
-import type { EditorToolbarAction } from "./editorToolbarTypes";
+import type { EditorToolbarAction } from "../lib/editorToolbarTypes";
 
 export interface EditorToolbarItem {
   action: EditorToolbarAction;

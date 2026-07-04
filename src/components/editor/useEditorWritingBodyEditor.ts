@@ -4,18 +4,18 @@ import { ref, shallowRef } from "vue";
 import type {
   EditorTextSelection,
   EditorToolbarAction,
-} from "@/features/editor/model";
+} from "@/features/editor";
 import {
   normalizeEditorCodeBlockLanguage,
   serializeEditorCodeBlockLanguage,
-} from "@/features/editor/model";
+} from "@/features/editor/config/editorCodeBlockLanguages";
 import {
   getTiptapPlainText,
   mapTiptapJsonToPostBodyWriteInput,
   type EditorTiptapDocumentJson,
-} from "@/features/editor/model/editorTiptapEngine";
-import { createEditorTiptapExtensions } from "@/features/editor/model/editorTiptapExtensions";
-import { applyTiptapToolbarAction } from "@/features/editor/model/editorTiptapToolbarCommands";
+} from "@/features/editor/tiptap/editorTiptapEngine";
+import { createEditorTiptapExtensions } from "@/features/editor/tiptap/editorTiptapExtensions";
+import { applyTiptapToolbarAction } from "@/features/editor/tiptap/editorTiptapToolbarCommands";
 
 interface ToolbarCommandScrollSnapshot {
   writingEditor: HTMLElement | null;

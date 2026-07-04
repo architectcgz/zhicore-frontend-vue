@@ -10,7 +10,7 @@ import {
 
 import type { PostBodyBlock, PostBodyInlineNode } from "@/entities/post-body";
 
-import type { EditorPreviewReaderBlock } from "./editorPreviewTypes";
+import type { EditorPreviewReaderBlock } from "../lib/editorPreviewTypes";
 import {
   canRedoEditorDraftHistory,
   canUndoEditorDraftHistory,
@@ -20,43 +20,43 @@ import {
   undoEditorDraftHistory,
   type EditorDraftHistoryField,
   type EditorDraftHistorySnapshot,
-} from "./editorDraftHistory";
+} from "../lib/editorDraftHistory";
 import {
   loadRestoredEditorLocalDraft,
   persistEditorCurrentDraftToLocal,
-} from "./editorDraftRecovery";
+} from "../lib/editorDraftRecovery";
 import {
   createEditorPreviewParagraphs,
   createEditorReaderPreviewBlocks,
-} from "./editorDraftPreview";
+} from "../lib/editorDraftPreview";
 import type {
   EditorDraftServerSaveClient,
   EditorServerDraftBaseline,
-} from "./editorDraftSavePayload";
+} from "../lib/editorDraftSavePayload";
 import {
   createEditorSavedDraftSnapshot,
   createEditorSourceHash,
   type EditorSavedDraftSnapshot,
-} from "./editorDraftSnapshot";
+} from "../lib/editorDraftSnapshot";
 import {
   useEditorDraftSaveWorkflow,
   type EditorDraftSaveStatus,
 } from "./useEditorDraftSaveWorkflow";
-import { createEditorLogger } from "./editorDebug";
+import { createEditorLogger } from "../lib/editorDebug";
 import {
   createDefaultEditorDocumentJson,
   defaultEditorTitle,
-} from "./editorFixtures";
+} from "../config/editorFixtures";
 import {
   EditorPostBodyMappingError,
   getTiptapPlainText,
   mapTiptapJsonToPostBodyWriteInput,
   type EditorTiptapDocumentJson,
-} from "./editorTiptapEngine";
+} from "../tiptap/editorTiptapEngine";
 import {
   type EditorTextSelection,
   type EditorToolbarAction,
-} from "./editorToolbarTypes";
+} from "../lib/editorToolbarTypes";
 
 export type EditorDraftBlockType = PostBodyBlock["type"];
 export type EditorDraftBlock = PostBodyBlock;

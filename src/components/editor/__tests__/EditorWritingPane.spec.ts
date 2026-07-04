@@ -5,13 +5,13 @@ import { mount } from "@vue/test-utils";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { editorDraftBodyMaxLength } from "@/features/editor/model";
-import type { EditorTextSelection } from "@/features/editor/model";
+import { editorDraftBodyMaxLength } from "@/features/editor";
+import type { EditorTextSelection } from "@/features/editor";
 import {
   getTiptapPlainText,
   mapTiptapJsonToPostBodyWriteInput,
   type EditorTiptapDocumentJson,
-} from "@/features/editor/model/editorTiptapEngine";
+} from "@/features/editor/tiptap/editorTiptapEngine";
 
 import writingPaneSource from "../EditorWritingPane.vue?raw";
 import EditorWritingPane from "../EditorWritingPane.vue";

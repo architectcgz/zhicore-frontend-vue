@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PostBodyWriteInput } from "@/entities/post-body";
 
-import { buildSaveDraftBodyPayload } from "../editorDraftSavePayload";
+import { buildSaveDraftBodyPayload } from "../lib/editorDraftSavePayload";
 
 const writeInput: PostBodyWriteInput = {
   schemaVersion: 1,

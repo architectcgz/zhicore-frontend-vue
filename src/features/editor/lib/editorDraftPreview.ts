@@ -1,7 +1,7 @@
 import type { PostBodyBlock, PostBodyWriteInput } from "@/entities/post-body";
 
 import type { EditorPreviewReaderBlock } from "./editorPreviewTypes";
-import { fallbackReaderBlock } from "./editorFixtures";
+import { fallbackReaderBlock } from "../config/editorFixtures";
 
 export function createEditorReaderPreviewBlocks(
   writeInput: PostBodyWriteInput,
