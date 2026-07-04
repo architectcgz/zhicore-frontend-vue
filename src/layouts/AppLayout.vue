@@ -29,7 +29,19 @@
       </nav>
 
       <div class="app-layout__actions">
-        <button class="app-layout__logout" type="button" @click="logout">
+        <RouterLink
+          v-if="!isLoggedIn"
+          class="app-layout__session-action app-layout__login"
+          to="/auth/login"
+        >
+          登录
+        </RouterLink>
+        <button
+          v-else
+          class="app-layout__session-action app-layout__logout"
+          type="button"
+          @click="logout"
+        >
           退出
         </button>
       </div>
@@ -50,6 +62,7 @@ import { computed } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 
 defineProps<{
+  isLoggedIn: boolean;
   logout: () => void | Promise<void>;
 }>();
 
@@ -157,7 +170,7 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   justify-content: flex-end;
 }
 
-.app-layout__logout {
+.app-layout__session-action {
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
@@ -166,12 +179,10 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-lg);
   text-decoration: none;
-}
-
-.app-layout__logout {
   border: 1px solid var(--color-border);
   background: var(--color-panel-soft);
   color: var(--color-text-soft);
+  font: inherit;
   cursor: pointer;
 }
 

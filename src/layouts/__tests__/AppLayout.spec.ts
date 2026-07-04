@@ -4,7 +4,12 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import AppLayout from "@/layouts/AppLayout.vue";
 
-async function mountAppLayout() {
+async function mountAppLayout(
+  options: {
+    isLoggedIn?: boolean;
+    logout?: () => void;
+  } = {},
+) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -32,7 +37,8 @@ async function mountAppLayout() {
 
   return mount(AppLayout, {
     props: {
-      logout: () => undefined,
+      isLoggedIn: options.isLoggedIn ?? true,
+      logout: options.logout ?? (() => undefined),
     },
     global: {
       plugins: [router],
@@ -46,5 +52,15 @@ describe("AppLayout", () => {
 
     expect(wrapper.find(".app-layout__nav").text()).toContain("写作");
     expect(wrapper.find(".app-layout__actions").text()).not.toContain("写文章");
+  });
+
+  it("shows the login action instead of logout for anonymous users", async () => {
+    const wrapper = await mountAppLayout({ isLoggedIn: false });
+
+    expect(wrapper.find(".app-layout__actions").text()).toContain("登录");
+    expect(wrapper.find(".app-layout__actions").text()).not.toContain("退出");
+    expect(wrapper.find(".app-layout__actions a").attributes("href")).toBe(
+      "/auth/login",
+    );
   });
 });

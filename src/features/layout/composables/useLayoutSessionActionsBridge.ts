@@ -1,21 +1,24 @@
-import { logout as requestLogout } from '@/api/auth'
-import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from "pinia";
+
+import { logout as requestLogout } from "@/api/auth";
+import { useAuthStore } from "@/stores/auth";
 
 /**
  * 桥接 Layout 壳与 auth feature：
- * 提供 logout 动作，登出后回调 onLoggedOut 跳转到登录页。
+ * 提供当前登录态和 logout 动作，保持 Layout 只渲染状态、不直接读取 auth store。
  */
 export function useLayoutSessionActionsBridge(onLoggedOut: () => void) {
-  const authStore = useAuthStore()
+  const authStore = useAuthStore();
+  const { isLoggedIn } = storeToRefs(authStore);
 
   async function logout() {
     try {
-      await requestLogout()
+      await requestLogout();
     } finally {
-      authStore.logout()
+      authStore.logout();
     }
-    onLoggedOut()
+    onLoggedOut();
   }
 
-  return { logout }
+  return { isLoggedIn, logout };
 }
