@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>运维页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Ops</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./admin.html">管理</a><a href="./gateway-id.html">网关</a
+          ><a class="active" href="./ops.html">运维</a>
+        </nav>
+        <div class="actions">
+          <a class="ghost" href="./index.html">总览</a
+          ><button class="button danger">执行修复</button>
+        </div>
+      </header>
+
+      <main class="table-layout">
+        <section class="panel">
+          <div class="section-head">
+            <h1 class="page-title">运维任务</h1>
+            <div class="tabs">
+              <button class="tab selected">待处理</button
+              ><button class="tab">运行中</button
+              ><button class="tab">已完成</button
+              ><button class="tab">失败</button>
+            </div>
+          </div>
+          <div class="table">
+            <div class="table-row">
+              <strong>outbox retry</strong><span>content</span
+              ><span class="status warn">待重试</span><span>14 条</span
+              ><button class="ghost">查看</button>
+            </div>
+            <div class="table-row">
+              <strong>ranking rebuild</strong><span>ranking</span
+              ><span class="status ok">完成</span><span>2 分钟前</span
+              ><button class="ghost">日志</button>
+            </div>
+            <div class="table-row">
+              <strong>notification delivery</strong><span>notification</span
+              ><span class="status danger">失败</span><span>3 条</span
+              ><button class="ghost">处理</button>
+            </div>
+          </div>
+          <h2 class="section-title" style="margin-top: 24px">对账摘要</h2>
+          <div class="cards" style="margin-top: 12px">
+            <div class="metric">
+              <strong>0</strong><span class="hint">严重差异</span>
+            </div>
+            <div class="metric">
+              <strong>7</strong><span class="hint">可自动修复</span>
+            </div>
+            <div class="metric">
+              <strong>3</strong><span class="hint">需人工确认</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="detail-pane">
+          <h2 class="section-title">危险操作确认</h2>
+          <p class="hint">执行修复前必须填写原因，展示影响范围和回退方式。</p>
+          <textarea class="textarea" aria-label="修复原因">
+重试 content outbox 中状态为 retryable 的事件，不修改主资源事实。</textarea>
+          <div class="actions" style="margin-top: 12px">
+            <button class="ghost">保存草稿</button
+            ><button class="button danger">确认执行</button>
+          </div>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

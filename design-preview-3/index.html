@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>知构 UI 风格候选 3 - 晶格控制台</title>
+    <link rel="stylesheet" href="../design-preview-common.css" />
+    <style>
+      :root {
+        --font-display: "IBM Plex Sans", "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+        --page: #f4f7fb;
+        --surface: #ffffff;
+        --surface-2: #e9eef5;
+        --text: #17202a;
+        --heading: #07111f;
+        --muted: #627083;
+        --line: rgba(7, 17, 31, 0.14);
+        --line-strong: rgba(7, 17, 31, 0.32);
+        --grid-line: rgba(7, 17, 31, 0.055);
+        --grid-size: 20px;
+        --primary: #005bd3;
+        --primary-text: #ffffff;
+        --accent: #de3f45;
+        --warning: #9a5a00;
+        --focus: #00a0b5;
+        --active: #dbe9ff;
+        --active-text: #07111f;
+        --mark: #07111f;
+        --mark-text: #ffffff;
+        --shadow:
+          0 1px 0 rgba(7, 17, 31, 0.08), 0 12px 34px rgba(7, 17, 31, 0.08);
+        --signature: linear-gradient(
+          90deg,
+          #005bd3 0 18%,
+          transparent 18% 26%,
+          #de3f45 26% 34%,
+          transparent 34% 42%,
+          #00a0b5 42% 56%,
+          transparent 56%
+        );
+        --signature-opacity: 0.24;
+        --node-a: #005bd3;
+        --node-b: #de3f45;
+        --node-c: #00a0b5;
+        --cover-a: rgba(0, 91, 211, 0.2);
+        --cover-b: rgba(222, 63, 69, 0.26);
+        --cover-bg: #e9eef5;
+        --avatar: #005bd3;
+        --avatar-text: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-shell">
+      <div class="style-note">
+        <div>
+          <strong>风格候选 3：晶格控制台。</strong
+          >偏工程、偏系统，适合把知构做成专业开发者平台和内容工作台。
+        </div>
+        <div class="palette">
+          <span class="swatch" style="--c: #f4f7fb"></span
+          ><span class="swatch" style="--c: #07111f"></span
+          ><span class="swatch" style="--c: #005bd3"></span
+          ><span class="swatch" style="--c: #de3f45"></span>
+        </div>
+      </div>
+      <header class="topbar">
+        <a class="brand" href="#"
+          ><span class="brand-mark">Z</span
+          ><span class="brand-copy"
+            ><strong>ZhiCore</strong><span>Knowledge OS</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a class="is-active" href="#">Feed</a><a href="#">Graph</a
+          ><a href="#">Editor</a><a href="#">Admin</a>
+        </nav>
+        <div class="top-actions">
+          <button class="icon-button" aria-label="命令面板">
+            <svg class="icon">
+              <path d="M4 7h16" />
+              <path d="M4 12h12" />
+              <path d="M4 17h8" />
+            </svg></button
+          ><a class="action" href="#"
+            ><svg class="icon">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" /></svg
+            >New post</a
+          >
+        </div>
+      </header>
+      <main>
+        <section class="hero">
+          <div class="hero-main">
+            <p class="eyebrow">Content workflow / Structured knowledge</p>
+            <h1>把内容平台做成清晰可控的系统。</h1>
+            <p class="hero-lede">
+              更强调筛选、状态、队列、审计和知识图谱。适合开发者用户，但对普通内容消费者会显得更冷。
+            </p>
+            <div class="hero-tools">
+              <label class="search"
+                ><svg class="icon">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" /></svg
+                ><input
+                  value="Command / Search posts"
+                  aria-label="搜索内容" /></label
+              ><a class="ghost-action" href="#">Open structure view</a>
+            </div>
+          </div>
+          <aside class="hero-side">
+            <div class="metric-row">
+              <div class="metric">
+                <strong>99.2%</strong><span class="meta">Feed OK</span>
+              </div>
+              <div class="metric">
+                <strong>7</strong><span class="meta">Degraded</span>
+              </div>
+              <div class="metric">
+                <strong>312</strong><span class="meta">Queue</span>
+              </div>
+            </div>
+            <div class="map-card">
+              <h2>Signal map</h2>
+              <p class="meta">清楚展示内容、互动、作者、审核和降级信号。</p>
+            </div>
+          </aside>
+        </section>
+        <section class="main-grid">
+          <div class="panel">
+            <div class="section-head">
+              <h2>Feed modules</h2>
+              <div class="tabs">
+                <button class="tab" aria-selected="true">Signal</button
+                ><button class="tab">Latest</button
+                ><button class="tab">Risk</button
+                ><button class="tab">Saved</button>
+              </div>
+            </div>
+            <div class="feed">
+              <article class="article-card motion-safe">
+                <div>
+                  <p class="label">POST / CONTENT / HEALTHY</p>
+                  <h3>二阶段加载让文章先可读，互动状态再确认</h3>
+                  <p>
+                    主资源失败才显示页面级错误；附加资源失败只在局部标记
+                    degraded。
+                  </p>
+                  <div class="chips">
+                    <span class="chip">main resource</span
+                    ><span class="chip">engagement</span
+                    ><span class="chip">fail open</span>
+                  </div>
+                  <div class="card-footer">
+                    <span class="meta">trace: zc-feed-2941</span>
+                    <div class="engagement">
+                      <span>18 like</span
+                      ><span class="unknown">state unknown</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="article-cover"></div>
+              </article>
+              <article class="article-card motion-safe">
+                <div>
+                  <p class="label">EDITOR / CONFLICT</p>
+                  <h3>草稿冲突必须定位到 block path，而不是覆盖正文</h3>
+                  <p>
+                    保存失败保留本地输入，发布检查显示封面、摘要、标签和后端校验结果。
+                  </p>
+                  <div class="chips">
+                    <span class="chip">draft hash</span
+                    ><span class="chip">block path</span>
+                  </div>
+                  <div class="card-footer">
+                    <span class="meta">owner: editor</span>
+                    <div class="engagement">
+                      <span>ready</span><span>2 warnings</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="article-cover"></div>
+              </article>
+            </div>
+          </div>
+          <aside class="rail">
+            <section class="rail-card">
+              <h2>Structure</h2>
+              <div class="structure-list">
+                <div class="structure-item">
+                  <div>
+                    <strong>主资源</strong
+                    ><span>标题、正文、作者、发布时间先展示。</span>
+                  </div>
+                </div>
+                <div class="structure-item">
+                  <div>
+                    <strong>附加资源</strong
+                    ><span>互动、presence、viewer 状态局部降级。</span>
+                  </div>
+                </div>
+                <div class="structure-item">
+                  <div>
+                    <strong>写路径</strong
+                    ><span>必须有确认、回滚或可恢复输入。</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="rail-card">
+              <h2>平台气质</h2>
+              <blockquote class="style-quote">
+                晶格控制台专业感最强，适合技术人群；如果面向泛知识社区，需要调软。
+              </blockquote>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>内容页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Content</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./home.html">发现</a
+          ><a class="active" href="./content.html">文章</a
+          ><a href="./search-ranking.html">热榜</a
+          ><a href="./editor.html">写作</a>
+        </nav>
+        <div class="actions">
+          <a class="ghost" href="./index.html">总览</a
+          ><a class="button" href="./editor.html">写文章</a>
+        </div>
+      </header>
+
+      <main class="split">
+        <aside class="side-nav" aria-label="文章导航">
+          <h2 class="toc-title">本文导航</h2>
+          <div class="toc-progress" aria-label="阅读进度 42%">
+            <span></span>
+          </div>
+          <a class="active" href="#">请求事实层</a>
+          <a href="#">主资源优先</a>
+          <a href="#">互动状态降级</a>
+          <a href="#">写路径确认</a>
+          <a href="#">相关阅读</a>
+        </aside>
+
+        <article
+          class="compose-surface"
+          style="padding: clamp(22px, 5vw, 52px)"
+        >
+          <p class="eyebrow">架构 / 12 分钟阅读</p>
+          <h1 class="reader-title">
+            从网关到内容服务：一次请求如何被拆成可靠的事实层
+          </h1>
+          <div class="article-meta-row">
+            <span class="avatar">陈</span>
+            <div>
+              <p class="hint">陈志峰 · 发布于 2026-07-04 · 已读 2,431 次</p>
+              <div class="status-row">
+                <span class="status ok">主资源正常</span>
+                <span class="status warn">收藏状态未知</span>
+              </div>
+            </div>
+          </div>
+          <div class="media-box" style="min-height: 260px"></div>
+          <div class="doc-body">
+            <p>
+              文章详情页遵循主资源优先原则。标题、正文、作者和发布时间必须先可读；点赞、收藏、presence
+              和 viewer 状态属于附加信息。
+            </p>
+            <p>
+              当互动服务不可用时，页面不把未知状态显示成“未点赞”，而是明确显示为中性状态。这样读者看到的是系统当前能确认的事实。
+            </p>
+            <blockquote class="quote">
+              设计重点：阅读路径不能被附加资源失败阻断；写路径必须等待服务确认后再更新事实状态。
+            </blockquote>
+            <p>
+              相关阅读和评论入口放在正文之后，避免主阅读区域被过多操作打断。
+            </p>
+          </div>
+
+          <section
+            id="comments"
+            class="article-comments"
+            aria-labelledby="comments-title"
+          >
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">讨论</p>
+                <h2 id="comments-title" class="section-title">评论区</h2>
+              </div>
+              <span class="status ok">6 条评论</span>
+            </div>
+            <div class="comment-toolbar">
+              <div class="tabs" aria-label="评论排序">
+                <button class="tab selected" type="button">最有价值</button>
+                <button class="tab" type="button">最新</button>
+                <button class="tab" type="button">只看作者</button>
+              </div>
+              <button class="ghost" type="button">关注讨论</button>
+            </div>
+            <div class="comment-composer">
+              <span class="avatar">我</span>
+              <div>
+                <textarea class="textarea" aria-label="写下评论">
+这篇文章对主资源和附加资源的区分很清楚，我想补充一个列表页 batch-status 的例子。</textarea>
+                <div class="comment-tools">
+                  <div class="comment-actions">
+                    <button class="comment-action" type="button">引用</button>
+                    <button class="comment-action" type="button">
+                      插入代码
+                    </button>
+                    <button class="comment-action" type="button">预览</button>
+                  </div>
+                  <div class="actions">
+                    <button class="ghost" type="button">保存草稿</button>
+                    <button class="button secondary" type="button">
+                      发布评论
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="comment-thread">
+              <article class="comment-card">
+                <span class="avatar">林</span>
+                <div>
+                  <div class="comment-header">
+                    <div>
+                      <strong>Lin</strong>
+                      <span class="hint">前端工程化 · 18 分钟前</span>
+                    </div>
+                    <span class="status ok">高质量讨论</span>
+                  </div>
+                  <p class="comment-body">
+                    如果 batch engagement 失败，列表继续展示统计，viewer
+                    高亮中性化。这里建议在列表卡片上保留一个很轻的 unknown
+                    标识，避免读者误解为未收藏。
+                  </p>
+                  <div class="comment-actions">
+                    <button class="comment-action" type="button">
+                      <svg viewBox="0 0 24 24">
+                        <path
+                          d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z"
+                        />
+                      </svg>
+                      12
+                    </button>
+                    <button class="comment-action" type="button">回复</button>
+                    <button class="comment-action" type="button">引用</button>
+                  </div>
+                  <details class="comment-replies">
+                    <summary>展开 1 条回复</summary>
+                    <article class="comment-card is-author">
+                      <span class="avatar">陈</span>
+                      <div>
+                        <div class="comment-header">
+                          <div>
+                            <strong>陈志峰</strong>
+                            <span class="hint">作者 · 12 分钟前</span>
+                          </div>
+                          <span class="status ok">作者</span>
+                        </div>
+                        <p class="comment-body">
+                          对，详情页进入后仍需要重新加载
+                          engagement，不能沿用列表状态。列表状态只作为轻量提示，不作为详情页最终事实。
+                        </p>
+                        <div class="comment-actions">
+                          <button class="comment-action" type="button">
+                            回复
+                          </button>
+                          <button class="comment-action" type="button">
+                            复制链接
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  </details>
+                </div>
+              </article>
+
+              <article class="comment-card">
+                <span class="avatar">周</span>
+                <div>
+                  <div class="comment-header">
+                    <div>
+                      <strong>周牧</strong>
+                      <span class="hint">Go 与服务治理 · 6 分钟前</span>
+                    </div>
+                  </div>
+                  <p class="comment-body">
+                    评论删除失败时不能在本地先移除，需要保留可恢复状态。普通读者侧只展示可见评论，异常状态留给管理端处理。
+                  </p>
+                  <div class="comment-actions">
+                    <button class="comment-action" type="button">赞同</button>
+                    <button class="comment-action" type="button">回复</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+        </article>
+
+        <aside class="rail">
+          <h3>阅读操作</h3>
+          <div class="engagement-panel">
+            <button
+              class="engagement-action"
+              type="button"
+              aria-pressed="false"
+              aria-label="喜欢，18 次"
+            >
+              <span class="engagement-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z"
+                  />
+                </svg>
+              </span>
+              <span class="engagement-count" aria-hidden="true">18</span>
+            </button>
+            <button
+              class="engagement-action is-unknown"
+              type="button"
+              aria-pressed="false"
+              aria-label="收藏状态暂不可用"
+            >
+              <span class="engagement-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4Z" /></svg>
+              </span>
+              <span class="engagement-count" aria-hidden="true">--</span>
+            </button>
+            <a
+              class="engagement-action"
+              href="#comments"
+              aria-label="查看评论，6 条"
+            >
+              <span class="engagement-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 6h14v10H8l-3 3Z" /></svg>
+              </span>
+              <span class="engagement-count" aria-hidden="true">6</span>
+            </a>
+            <button
+              class="engagement-action"
+              type="button"
+              aria-label="分享文章"
+            >
+              <span class="engagement-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 12v7h16v-7" />
+                  <path d="M12 3v12" />
+                  <path d="m7 8 5-5 5 5" />
+                </svg>
+              </span>
+              <span class="engagement-count" aria-hidden="true">分享</span>
+            </button>
+            <p class="engagement-note">
+              收藏状态来自附加资源。服务降级时显示 unknown，不伪装成未收藏。
+            </p>
+          </div>
+          <h3 style="margin-top: 18px">相关阅读</h3>
+          <div class="list">
+            <div class="list-item">
+              <strong>内容服务降级设计</strong
+              ><span class="hint">同一主题 · 8 分钟阅读</span>
+            </div>
+            <div class="list-item">
+              <strong>编辑器保存冲突处理</strong
+              ><span class="hint">写作工作流 · 11 分钟阅读</span>
+            </div>
+            <div class="list-item">
+              <strong>网关请求追踪实践</strong
+              ><span class="hint">平台工程 · 9 分钟阅读</span>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

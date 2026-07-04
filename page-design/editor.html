@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>编辑器页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+    <link
+      rel="stylesheet"
+      href="../src/components/editor/EditorWritingPane.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../src/components/editor/EditorWritingPaneTiptapBase.css"
+    />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Editor</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./home.html">发现</a><a href="./content.html">文章</a
+          ><a class="active" href="./editor.html">写作</a
+          ><a href="./file.html">附件</a>
+        </nav>
+        <div class="actions">
+          <span class="status ok">已保存 14:32</span
+          ><a class="ghost" href="./index.html">总览</a
+          ><button class="button">发布</button>
+        </div>
+      </header>
+
+      <main class="editor-workspace">
+        <header class="editor-workspace__header">
+          <div class="editor-workspace__heading">
+            <p>作者工作台</p>
+            <h1>草稿编辑</h1>
+          </div>
+        </header>
+
+        <section class="editor-frame editor--paper" aria-label="编辑器工作台">
+          <div class="editor-desktop-stage">
+            <main class="writing-editor" aria-label="可输入编辑区">
+              <div class="writing-editor__meta">
+                <div class="writing-editor__status" aria-live="polite">
+                  <span
+                    class="writing-editor__save-state writing-editor__save-state--saved"
+                  >
+                    已保存
+                  </span>
+                  <span>上次保存 14:32</span>
+                  <span>826 字</span>
+                  <span>1,742 / 20,000 字符</span>
+                </div>
+
+                <div
+                  class="writing-editor__background-picker"
+                  aria-label="背景候选"
+                >
+                  <button
+                    class="writing-editor__background-swatch"
+                    type="button"
+                    aria-label="切换到纸面背景"
+                    aria-pressed="true"
+                  >
+                    <span style="background: #f7f4ee"></span>
+                    纸面
+                  </button>
+                  <button
+                    class="writing-editor__background-swatch"
+                    type="button"
+                    aria-label="切换到青绿背景"
+                    aria-pressed="false"
+                  >
+                    <span style="background: #edf5f1"></span>
+                    青绿
+                  </button>
+                  <button
+                    class="writing-editor__background-swatch"
+                    type="button"
+                    aria-label="切换到暖沙背景"
+                    aria-pressed="false"
+                  >
+                    <span style="background: #f4efe8"></span>
+                    暖沙
+                  </button>
+                  <button
+                    class="writing-editor__background-swatch"
+                    type="button"
+                    aria-label="切换到墨蓝背景"
+                    aria-pressed="false"
+                  >
+                    <span style="background: #101823"></span>
+                    墨蓝
+                  </button>
+                </div>
+              </div>
+
+              <section class="writing-editor__canvas">
+                <article class="document-sheet">
+                  <div class="selection-toolbar-layer">
+                    <nav class="selection-toolbar" aria-label="格式工具">
+                      <div class="selection-toolbar__group">
+                        <button
+                          class="selection-toolbar__command selection-toolbar__mobile-primary"
+                          type="button"
+                          title="撤销"
+                        >
+                          撤销
+                        </button>
+                        <button
+                          class="selection-toolbar__command selection-toolbar__mobile-primary"
+                          type="button"
+                          title="重做"
+                        >
+                          重做
+                        </button>
+                        <button
+                          class="selection-toolbar__command selection-toolbar__command--save selection-toolbar__mobile-primary"
+                          type="button"
+                          title="保存草稿"
+                        >
+                          保存草稿
+                        </button>
+                      </div>
+
+                      <div class="selection-toolbar__group">
+                        <button type="button" title="加粗">B</button>
+                        <button type="button" title="斜体">I</button>
+                        <button type="button" title="下划线">U</button>
+                        <button type="button" title="删除线">S</button>
+                        <button type="button" title="行内代码">`</button>
+                        <button
+                          class="selection-toolbar__mobile-primary"
+                          type="button"
+                          title="插入链接"
+                        >
+                          Link
+                        </button>
+                      </div>
+
+                      <div class="selection-toolbar__group">
+                        <button type="button" title="一级标题">H1</button>
+                        <button type="button" title="二级标题">H2</button>
+                        <button type="button" title="三级标题">H3</button>
+                        <button type="button" title="四级标题">H4</button>
+                        <button type="button" title="五级标题">H5</button>
+                        <button type="button" title="六级标题">H6</button>
+                      </div>
+
+                      <div class="selection-toolbar__group">
+                        <button type="button" title="引用块">&gt;</button>
+                        <button type="button" title="无序列表">-</button>
+                        <button type="button" title="有序列表">1.</button>
+                        <button type="button" title="任务列表">[]</button>
+                        <button type="button" title="插入图片">Img</button>
+                        <button type="button" title="代码块">Code</button>
+                        <button type="button" title="表格">Tbl</button>
+                        <button type="button" title="数学公式">Math</button>
+                      </div>
+
+                      <button
+                        class="selection-toolbar__toggle"
+                        type="button"
+                        aria-expanded="false"
+                        aria-label="展开或收起全部格式工具"
+                      >
+                        更多
+                      </button>
+                    </nav>
+                  </div>
+
+                  <textarea
+                    class="title-input"
+                    rows="1"
+                    aria-label="文章标题"
+                    placeholder="输入文章标题"
+                  >
+把复杂系统讲成可以协作的结构</textarea>
+                  <div class="body-input" aria-label="文章正文">
+                    <div class="ProseMirror">
+                      <h1>Tiptap 编辑器验收稿</h1>
+                      <p>
+                        一篇文章的价值不只来自观点，也来自读者能否沿着清晰的段落进入上下文。
+                      </p>
+                      <h2>Inline</h2>
+                      <p>
+                        这行包含 <strong>加粗</strong>、<s>删除线</s>、<code
+                          >inline code</code
+                        >
+                        和 <a href="#">ZhiCore 链接</a>。
+                      </p>
+                      <h2>Quote</h2>
+                      <blockquote>
+                        <p>
+                          引用块支持 <code>inline code</code> 和
+                          <strong>加粗</strong>。
+                        </p>
+                      </blockquote>
+                      <h2>Code</h2>
+                      <div class="editor-code-block">
+                        <div class="editor-code-block__language-bar">
+                          <span class="editor-code-block__language-label"
+                            >Go</span
+                          >
+                          <select
+                            class="editor-code-block__language-select"
+                            aria-label="代码语言"
+                          >
+                            <option>Go</option>
+                          </select>
+                        </div>
+                        <pre><code>package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("hello zhicore")
+}</code></pre>
+                      </div>
+                    </div>
+                  </div>
+
+                  <footer class="document-structure">
+                    <span>826 字</span>
+                  </footer>
+                </article>
+              </section>
+            </main>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

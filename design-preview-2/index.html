@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>知构 UI 风格候选 2 - 矿物编辑部</title>
+    <link rel="stylesheet" href="../design-preview-common.css" />
+    <style>
+      :root {
+        --font-display: "LXGW WenKai", "Kaiti SC", "Noto Serif SC", serif;
+        --font-body: "Inter", "Noto Sans SC", "PingFang SC", sans-serif;
+        --page: #eef4f2;
+        --surface: #fbfffd;
+        --surface-2: #e3efeb;
+        --text: #1a2d2a;
+        --heading: #173b34;
+        --muted: #627872;
+        --line: rgba(23, 59, 52, 0.16);
+        --line-strong: rgba(23, 59, 52, 0.34);
+        --grid-line: rgba(23, 59, 52, 0.05);
+        --grid-size: 36px;
+        --primary: #bb4d2f;
+        --primary-text: #fffdf9;
+        --accent: #227c70;
+        --warning: #8d5a00;
+        --focus: #227c70;
+        --active: #d8ebe6;
+        --active-text: #12372f;
+        --mark: #bb4d2f;
+        --mark-text: #fffdf9;
+        --shadow: 0 10px 28px rgba(21, 76, 66, 0.1);
+        --signature:
+          radial-gradient(circle at 40% 18%, #bb4d2f 0 12%, transparent 13%),
+          radial-gradient(circle at 76% 70%, #227c70 0 10%, transparent 11%),
+          linear-gradient(135deg, #f2c078, transparent 68%);
+        --signature-opacity: 0.32;
+        --node-a: #bb4d2f;
+        --node-b: #227c70;
+        --node-c: #f2c078;
+        --cover-a: rgba(187, 77, 47, 0.22);
+        --cover-b: rgba(34, 124, 112, 0.32);
+        --cover-bg: #e3efeb;
+        --avatar: #227c70;
+        --avatar-text: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-shell">
+      <div class="style-note">
+        <div>
+          <strong>风格候选 2：矿物编辑部。</strong
+          >更有人味和社区感，适合强调作者、讨论和知识社群温度。
+        </div>
+        <div class="palette">
+          <span class="swatch" style="--c: #eef4f2"></span
+          ><span class="swatch" style="--c: #173b34"></span
+          ><span class="swatch" style="--c: #bb4d2f"></span
+          ><span class="swatch" style="--c: #227c70"></span>
+        </div>
+      </div>
+      <header class="topbar">
+        <a class="brand" href="#"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>ZhiCore</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a class="is-active" href="#">发现</a><a href="#">专题</a
+          ><a href="#">作者</a><a href="#">热议</a>
+        </nav>
+        <div class="top-actions">
+          <button class="icon-button" aria-label="搜索">
+            <svg class="icon">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg></button
+          ><a class="action" href="#"
+            ><svg class="icon">
+              <path d="M4 20h16" />
+              <path d="M7 16V8l5-4 5 4v8" /></svg
+            >进入创作</a
+          >
+        </div>
+      </header>
+      <main>
+        <section class="hero">
+          <div class="hero-main">
+            <p class="eyebrow">作者、读者和知识路径</p>
+            <h1>把好文章变成可继续讨论的主题。</h1>
+            <p class="hero-lede">
+              这套风格不追求冷静工具感，而是给作者主页、推荐作者、评论和专题聚合更多亲近感。
+            </p>
+            <div class="hero-tools">
+              <label class="search"
+                ><svg class="icon">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" /></svg
+                ><input
+                  value="查找作者、专题或标签"
+                  aria-label="搜索内容" /></label
+              ><a class="ghost-action" href="#">查看本周专题</a>
+            </div>
+          </div>
+          <aside class="hero-side">
+            <div class="metric-row">
+              <div class="metric">
+                <strong>36</strong><span class="meta">专题串联</span>
+              </div>
+              <div class="metric">
+                <strong>214</strong><span class="meta">讨论回复</span>
+              </div>
+              <div class="metric">
+                <strong>78%</strong><span class="meta">阅读完成</span>
+              </div>
+            </div>
+            <div class="map-card">
+              <h2>社区热区</h2>
+              <p class="meta">用作者、专题和标签建立更强的社区记忆。</p>
+            </div>
+          </aside>
+        </section>
+        <section class="main-grid">
+          <div class="panel">
+            <div class="section-head">
+              <h2>正在形成的专题</h2>
+              <div class="tabs">
+                <button class="tab" aria-selected="true">推荐</button
+                ><button class="tab">专题</button
+                ><button class="tab">讨论多</button>
+              </div>
+            </div>
+            <div class="feed">
+              <article class="article-card motion-safe">
+                <div>
+                  <p class="label">专题：内容平台工程</p>
+                  <h3>从草稿指纹到发布检查：写作者不该担心丢稿</h3>
+                  <p>
+                    保存状态、冲突、预览和发布设置被串成一条工作流，作者可以专注完成文章。
+                  </p>
+                  <div class="chips">
+                    <span class="chip">草稿</span
+                    ><span class="chip">冲突处理</span
+                    ><span class="chip">发布</span>
+                  </div>
+                  <div class="card-footer">
+                    <span class="meta">阿衡 · 30 分钟前</span>
+                    <div class="engagement">
+                      <span>41 喜欢</span><span>11 评论</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="article-cover"></div>
+              </article>
+              <article class="article-card motion-safe">
+                <div>
+                  <p class="label">讨论：页面降级</p>
+                  <h3>为什么 unknown 互动状态不能显示成未点赞</h3>
+                  <p>
+                    平台需要区分“确定没有”和“暂时不知道”，这会直接影响用户对系统事实的信任。
+                  </p>
+                  <div class="chips">
+                    <span class="chip">交互状态</span
+                    ><span class="chip">可靠性</span>
+                  </div>
+                  <div class="card-footer">
+                    <span class="meta">陈志峰 · 今天</span>
+                    <div class="engagement">
+                      <span>19 喜欢</span><span class="unknown">-- 收藏</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="article-cover"></div>
+              </article>
+            </div>
+          </div>
+          <aside class="rail">
+            <section class="rail-card">
+              <h2>作者关系</h2>
+              <div class="author">
+                <span class="avatar">陈</span>
+                <div>
+                  <strong>陈志峰</strong><span>构建知识，分享见解</span>
+                </div>
+                <button class="mini-button">私信</button>
+              </div>
+              <div class="author">
+                <span class="avatar">衡</span>
+                <div><strong>阿衡</strong><span>写作工作流观察</span></div>
+                <button class="mini-button">关注</button>
+              </div>
+            </section>
+            <section class="rail-card">
+              <h2>平台气质</h2>
+              <blockquote class="style-quote">
+                矿物编辑部更适合做“有温度的知识社区”，但工具感和高级感略弱。
+              </blockquote>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

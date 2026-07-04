@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>知构 UI 风格候选 4 - 清亮社区</title>
+    <link rel="stylesheet" href="../design-preview-common.css" />
+    <style>
+      :root {
+        --font-display: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+        --page: #f8fbff;
+        --surface: #ffffff;
+        --surface-2: #edf7f6;
+        --text: #17212b;
+        --heading: #13202c;
+        --muted: #657386;
+        --line: rgba(19, 32, 44, 0.13);
+        --line-strong: rgba(19, 32, 44, 0.28);
+        --grid-line: rgba(15, 107, 121, 0.05);
+        --grid-size: 32px;
+        --primary: #0f6b79;
+        --primary-text: #ffffff;
+        --accent: #e95f55;
+        --warning: #976000;
+        --focus: #e95f55;
+        --active: #dff4f1;
+        --active-text: #10242a;
+        --mark: #0f6b79;
+        --mark-text: #ffffff;
+        --shadow: 0 14px 38px rgba(30, 78, 96, 0.1);
+        --signature: conic-gradient(
+          from 180deg at 50% 50%,
+          #0f6b79,
+          #6fc7bd,
+          #f0b35d,
+          #e95f55,
+          #0f6b79
+        );
+        --signature-opacity: 0.16;
+        --node-a: #0f6b79;
+        --node-b: #e95f55;
+        --node-c: #f0b35d;
+        --cover-a: rgba(15, 107, 121, 0.18);
+        --cover-b: rgba(233, 95, 85, 0.24);
+        --cover-bg: #edf7f6;
+        --avatar: #e95f55;
+        --avatar-text: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-shell">
+      <div class="style-note">
+        <div>
+          <strong>风格候选 4：清亮社区。</strong
+          >更轻、更现代，适合想让平台看起来年轻、活跃、低学习成本。
+        </div>
+        <div class="palette">
+          <span class="swatch" style="--c: #f8fbff"></span
+          ><span class="swatch" style="--c: #17212b"></span
+          ><span class="swatch" style="--c: #0f6b79"></span
+          ><span class="swatch" style="--c: #e95f55"></span>
+        </div>
+      </div>
+      <header class="topbar">
+        <a class="brand" href="#"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>轻量知识社区</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a class="is-active" href="#">发现</a><a href="#">快读</a
+          ><a href="#">专栏</a><a href="#">我的</a>
+        </nav>
+        <div class="top-actions">
+          <button class="icon-button" aria-label="消息">
+            <svg class="icon"><path d="M5 6h14v10H8l-3 3Z" /></svg></button
+          ><a class="action" href="#"
+            ><svg class="icon">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" /></svg
+            >发布</a
+          >
+        </div>
+      </header>
+      <main>
+        <section class="hero">
+          <div class="hero-main">
+            <p class="eyebrow">读得快，也能沉淀下来</p>
+            <h1>每天发现一条更清楚的知识路径。</h1>
+            <p class="hero-lede">
+              降低新用户进入门槛，让推荐、关注、标签和作者关系更轻松。适合前期拉活跃，但需要避免变得太像普通资讯流。
+            </p>
+            <div class="hero-tools">
+              <label class="search"
+                ><svg class="icon">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" /></svg
+                ><input value="今天想学什么？" aria-label="搜索内容" /></label
+              ><a class="ghost-action" href="#">查看热门路径</a>
+            </div>
+          </div>
+          <aside class="hero-side">
+            <div class="metric-row">
+              <div class="metric">
+                <strong>5</strong><span class="meta">分钟快读</span>
+              </div>
+              <div class="metric">
+                <strong>23</strong><span class="meta">新讨论</span>
+              </div>
+              <div class="metric">
+                <strong>16</strong><span class="meta">可收藏路径</span>
+              </div>
+            </div>
+            <div class="map-card">
+              <h2>今日路径</h2>
+              <p class="meta">用更轻的卡片和更明确的行动入口推动浏览。</p>
+            </div>
+          </aside>
+        </section>
+        <section class="main-grid">
+          <div class="panel">
+            <div class="section-head">
+              <h2>今日推荐</h2>
+              <div class="tabs">
+                <button class="tab" aria-selected="true">适合我</button
+                ><button class="tab">新发布</button
+                ><button class="tab">被收藏</button>
+              </div>
+            </div>
+            <div class="feed">
+              <article class="article-card motion-safe">
+                <div>
+                  <p class="label">5 分钟快读</p>
+                  <h3>把“阅读中断”设计成可恢复状态</h3>
+                  <p>
+                    收藏、阅读进度、评论入口和相关推荐都可以帮助读者回到上次离开的知识路径。
+                  </p>
+                  <div class="chips">
+                    <span class="chip">阅读体验</span
+                    ><span class="chip">进度</span
+                    ><span class="chip">收藏</span>
+                  </div>
+                  <div class="card-footer">
+                    <span class="meta">Mia · 10 分钟前</span>
+                    <div class="engagement">
+                      <span>52 喜欢</span><span>21 收藏</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="article-cover"></div>
+              </article>
+              <article class="article-card motion-safe">
+                <div>
+                  <p class="label">创作建议</p>
+                  <h3>一个好摘要，应该告诉读者为什么现在要点开</h3>
+                  <p>
+                    页面文案不需要夸张，关键是准确说明文章解决的问题、适合的人和阅读收益。
+                  </p>
+                  <div class="chips">
+                    <span class="chip">写作</span><span class="chip">摘要</span>
+                  </div>
+                  <div class="card-footer">
+                    <span class="meta">陈志峰 · 今天</span>
+                    <div class="engagement">
+                      <span>29 喜欢</span><span class="unknown">-- 收藏</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="article-cover"></div>
+              </article>
+            </div>
+          </div>
+          <aside class="rail">
+            <section class="rail-card">
+              <h2>活跃作者</h2>
+              <div class="author">
+                <span class="avatar">M</span>
+                <div><strong>Mia</strong><span>产品与阅读体验</span></div>
+                <button class="mini-button">关注</button>
+              </div>
+              <div class="author">
+                <span class="avatar">陈</span>
+                <div><strong>陈志峰</strong><span>平台工程实践</span></div>
+                <button class="mini-button">主页</button>
+              </div>
+            </section>
+            <section class="rail-card">
+              <h2>平台气质</h2>
+              <blockquote class="style-quote">
+                清亮社区最容易亲近，适合增长；如果要突出深度内容，需要补更强的阅读页质感。
+              </blockquote>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

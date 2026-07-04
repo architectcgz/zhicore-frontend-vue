@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>首页设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Home</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a class="active" href="./home.html">发现</a
+          ><a href="./content.html">文章</a
+          ><a href="./search-ranking.html">热榜</a
+          ><a href="./editor.html">写作</a>
+        </nav>
+        <div class="actions">
+          <a class="ghost" href="./index.html">总览</a
+          ><a class="button" href="./editor.html">写文章</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-panel">
+            <p class="eyebrow">构建知识，分享见解</p>
+            <h1>发现清楚、有出处、能继续延展的中文技术内容。</h1>
+            <p class="lede">
+              首页不是营销页，而是平台的内容入口。第一屏直接给搜索、推荐流、热榜和作者关系，降低读者进入成本。
+            </p>
+            <div class="inline-row">
+              <input
+                class="field"
+                style="max-width: 420px"
+                value="搜索 Vue、Go、微服务、架构"
+                aria-label="搜索内容"
+              />
+              <a class="button secondary" href="./search-ranking.html">搜索</a>
+            </div>
+          </div>
+          <aside class="panel">
+            <div class="cards" style="grid-template-columns: 1fr">
+              <div class="metric">
+                <strong>128</strong><span class="hint">今日发布</span>
+              </div>
+              <div class="metric">
+                <strong>42</strong><span class="hint">活跃作者</span>
+              </div>
+              <div class="metric">
+                <strong>9.8k</strong><span class="hint">本周阅读</span>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="layout">
+          <div class="panel">
+            <div class="section-head">
+              <h2 class="section-title">推荐阅读</h2>
+              <div class="tabs">
+                <button class="tab selected">推荐</button
+                ><button class="tab">最新</button
+                ><button class="tab">热门</button
+                ><button class="tab">关注</button>
+              </div>
+            </div>
+            <article class="article">
+              <div>
+                <p class="label">架构 / 12 分钟阅读</p>
+                <h2>从网关到内容服务：一次请求如何被拆成可靠的事实层</h2>
+                <p>
+                  主资源先返回，互动状态再分层加载。阅读体验不会被点赞、收藏或在线读者摘要拖慢。
+                </p>
+                <div class="chips">
+                  <span class="chip">微服务</span><span class="chip">降级</span
+                  ><span class="chip">可观测性</span>
+                </div>
+                <div class="status-row">
+                  <span class="hint">陈志峰 · 2 小时前</span
+                  ><span class="status ok">18 喜欢</span
+                  ><span class="status warn">收藏状态未知</span>
+                </div>
+              </div>
+              <div class="cover" aria-hidden="true"></div>
+            </article>
+            <article class="article">
+              <div>
+                <p class="label">前端 / 8 分钟阅读</p>
+                <h2>编辑器为什么应该像一篇文章，而不是一组表单</h2>
+                <p>
+                  连续文档是默认体验，block
+                  结构只在插入、拖拽、校验和冲突定位时显露。
+                </p>
+                <div class="chips">
+                  <span class="chip">Tiptap</span
+                  ><span class="chip">写作体验</span>
+                </div>
+                <div class="status-row">
+                  <span class="hint">Lin · 昨天</span
+                  ><span class="status ok">32 喜欢</span
+                  ><span class="status ok">14 收藏</span>
+                </div>
+              </div>
+              <div class="cover" aria-hidden="true"></div>
+            </article>
+          </div>
+
+          <aside class="rail">
+            <h3>知识结构</h3>
+            <div class="graph" aria-label="知识结构示意图"></div>
+            <h3 style="margin-top: 18px">推荐作者</h3>
+            <div class="message-row">
+              <span class="avatar">林</span>
+              <div>
+                <strong>Lin</strong>
+                <p class="hint">前端工程化与编辑器</p>
+              </div>
+              <button class="ghost">关注</button>
+            </div>
+            <div class="message-row">
+              <span class="avatar">周</span>
+              <div>
+                <strong>周牧</strong>
+                <p class="hint">Go 与服务治理</p>
+              </div>
+              <button class="ghost">关注</button>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

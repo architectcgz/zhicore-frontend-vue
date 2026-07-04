@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>搜索与排行页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Search</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./home.html">发现</a
+          ><a class="active" href="./search-ranking.html">搜索</a
+          ><a href="./content.html">文章</a><a href="./admin.html">管理</a>
+        </nav>
+        <div class="actions">
+          <a class="ghost" href="./index.html">总览</a
+          ><a class="button" href="./editor.html">写文章</a>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel">
+          <div class="section-head">
+            <h1 class="page-title">搜索结果</h1>
+            <span class="status ok">找到 128 条</span>
+          </div>
+          <div class="toolbar">
+            <input class="field" value="内容服务降级" aria-label="搜索关键词" />
+            <select class="select" style="max-width: 180px" aria-label="排序">
+              <option>相关度</option>
+              <option>最新</option>
+              <option>收藏数</option>
+            </select>
+            <button class="button secondary">搜索</button>
+          </div>
+          <article class="article">
+            <div>
+              <p class="label">最佳匹配</p>
+              <h2>内容服务降级时，前端该如何表达 unknown 状态</h2>
+              <p>
+                搜索页需要清楚标出匹配字段、标签和发布时间，不用颜色作为唯一含义。
+              </p>
+              <div class="chips">
+                <span class="chip">降级</span><span class="chip">Content</span
+                ><span class="chip">UX</span>
+              </div>
+            </div>
+            <div class="cover"></div>
+          </article>
+          <article class="article">
+            <div>
+              <p class="label">作者匹配</p>
+              <h2>陈志峰的内容平台工程笔记</h2>
+              <p>作者结果和文章结果视觉层级不同，但共享同一纸面卡片语言。</p>
+              <div class="chips">
+                <span class="chip">作者</span><span class="chip">平台工程</span>
+              </div>
+            </div>
+            <div class="cover"></div>
+          </article>
+        </section>
+
+        <aside class="rail">
+          <h3>热榜</h3>
+          <div class="list">
+            <div class="list-item">
+              <strong>01 内容详情页分层加载</strong
+              ><span class="hint">热度 9,812 · 上升</span>
+            </div>
+            <div class="list-item">
+              <strong>02 Tiptap 编辑器保存策略</strong
+              ><span class="hint">热度 7,420 · 稳定</span>
+            </div>
+            <div class="list-item">
+              <strong>03 Go 网关请求追踪</strong
+              ><span class="hint">热度 6,188 · 新入榜</span>
+            </div>
+          </div>
+          <h3 style="margin-top: 18px">趋势说明</h3>
+          <blockquote class="quote">
+            排行页必须说明排序依据，避免让用户误以为热度就是质量。
+          </blockquote>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

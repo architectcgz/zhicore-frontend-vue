@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>知构页面设计总览</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html">
+          <span class="brand-mark">知</span>
+          <span class="brand-copy"
+            ><strong>知构</strong><span>Page design</span></span
+          >
+        </a>
+        <nav class="nav" aria-label="设计导航">
+          <a class="active" href="./index.html">总览</a>
+          <a href="./home.html">首页</a>
+          <a href="./content.html">内容</a>
+          <a href="./editor.html">编辑器</a>
+          <a href="./admin.html">管理</a>
+        </nav>
+        <div class="actions">
+          <a class="button" href="../design-preview-1/index.html">查看风格源</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-panel">
+            <p class="eyebrow">统一方向：纸面网格</p>
+            <h1>知构页面设计基线。</h1>
+            <p class="lede">
+              这一组页面预览把第一套风格应用到平台主要页面：发现、内容、编辑器、用户、搜索、排行、消息通知、文件、认证、网关、ID、运维和管理后台。评论作为文章详情页的一部分展示。
+            </p>
+          </div>
+          <aside class="panel">
+            <h2 class="section-title">风格原则</h2>
+            <div class="steps">
+              <div class="step">
+                <strong>中文阅读优先</strong
+                ><span class="hint"
+                  >标题用衬线气质，正文用清晰无衬线，行高偏松。</span
+                >
+              </div>
+              <div class="step">
+                <strong>主资源优先</strong
+                ><span class="hint"
+                  >文章、正文、作者先展示；互动、presence、审计等附加信息局部加载。</span
+                >
+              </div>
+              <div class="step">
+                <strong>任务页保持密度</strong
+                ><span class="hint"
+                  >后台、运维、文件页不做营销式
+                  hero，优先筛选、表格和详情面板。</span
+                >
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="panel" style="margin-top: 20px">
+          <div class="section-head">
+            <h2 class="section-title">页面清单</h2>
+            <span class="status ok">可直接打开</span>
+          </div>
+          <div class="cards">
+            <a class="card" href="./home.html"
+              ><h3>首页 / 发现流</h3>
+              <p class="hint">
+                推荐、最新、热门、关注、推荐作者和知识结构侧栏。
+              </p></a
+            >
+            <a class="card" href="./content.html"
+              ><h3>内容 / 文章详情</h3>
+              <p class="hint">
+                正文阅读、互动状态、相关阅读和文章下方评论区。
+              </p></a
+            >
+            <a class="card" href="./editor.html"
+              ><h3>编辑器</h3>
+              <p class="hint">
+                对齐现有
+                EditorWorkspace，展示连续文档、格式工具、背景候选和草稿保存状态。
+              </p></a
+            >
+            <a class="card" href="./user.html"
+              ><h3>用户</h3>
+              <p class="hint">公开主页、资料编辑、关系状态和隐私设置。</p></a
+            >
+            <a class="card" href="./search-ranking.html"
+              ><h3>搜索 / 排行</h3>
+              <p class="hint">搜索结果、筛选、热榜和趋势解释。</p></a
+            >
+            <a class="card" href="./message-notification.html"
+              ><h3>消息 / 通知</h3>
+              <p class="hint">会话列表、通知中心、未读和可恢复操作。</p></a
+            >
+            <a class="card" href="./file.html"
+              ><h3>文件</h3>
+              <p class="hint">上传、附件库、封面选择和失败重试。</p></a
+            >
+            <a class="card" href="./auth.html"
+              ><h3>认证</h3>
+              <p class="hint">登录、注册、错误恢复和游客引导。</p></a
+            >
+            <a class="card" href="./gateway-id.html"
+              ><h3>网关 / ID</h3>
+              <p class="hint">网关健康、请求追踪、ID 号段和服务状态。</p></a
+            >
+            <a class="card" href="./ops.html"
+              ><h3>运维</h3>
+              <p class="hint">任务队列、修复动作、对账和告警。</p></a
+            >
+            <a class="card" href="./admin.html"
+              ><h3>管理后台</h3>
+              <p class="hint">审核队列、用户管理、内容管理和审计日志。</p></a
+            >
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

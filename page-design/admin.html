@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理后台页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Admin</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./home.html">主站</a
+          ><a class="active" href="./admin.html">管理</a
+          ><a href="./ops.html">运维</a><a href="./gateway-id.html">网关</a>
+        </nav>
+        <div class="actions">
+          <a class="ghost" href="./index.html">总览</a
+          ><button class="button">导出审计</button>
+        </div>
+      </header>
+
+      <main class="table-layout">
+        <section class="panel">
+          <div class="section-head">
+            <h1 class="page-title">审核队列</h1>
+            <div class="tabs">
+              <button class="tab selected">举报</button
+              ><button class="tab">文章</button><button class="tab">评论</button
+              ><button class="tab">用户</button>
+            </div>
+          </div>
+          <div class="cards">
+            <div class="metric">
+              <strong>18</strong><span class="hint">待处理举报</span>
+            </div>
+            <div class="metric">
+              <strong>3</strong><span class="hint">失败委托</span>
+            </div>
+            <div class="metric">
+              <strong>92</strong><span class="hint">今日审计</span>
+            </div>
+          </div>
+          <div class="section-head" style="margin-top: 24px">
+            <h2 class="section-title">待处理项</h2>
+            <input
+              class="field"
+              style="max-width: 320px"
+              value="按作者、目标、原因搜索"
+              aria-label="审核搜索"
+            />
+          </div>
+          <div class="table">
+            <div class="table-row">
+              <strong>文章举报</strong><span>内容不可见争议</span
+              ><span class="status warn">待证据</span><span>10 分钟前</span
+              ><button class="ghost">处理</button>
+            </div>
+            <div class="table-row">
+              <strong>评论举报</strong><span>人身攻击</span
+              ><span class="status ok">证据完整</span><span>32 分钟前</span
+              ><button class="ghost">处理</button>
+            </div>
+            <div class="table-row">
+              <strong>用户禁用</strong><span>Auth 委托失败</span
+              ><span class="status danger">失败</span><span>1 小时前</span
+              ><button class="ghost">重试</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="detail-pane">
+          <h2 class="section-title">处理面板</h2>
+          <p class="hint">
+            危险动作必须填写原因，并显示下游委托结果。不能在归属服务失败时展示业务资源已成功变更。
+          </p>
+          <div class="list">
+            <div class="list-item">
+              <strong>目标摘要</strong
+              ><span class="hint">文章：一次请求如何被拆成可靠事实层</span>
+            </div>
+            <div class="list-item">
+              <strong>证据</strong
+              ><span class="hint">举报 3 条，评论引用 2 条。</span>
+            </div>
+            <div class="list-item">
+              <strong>审计状态</strong><span class="status ok">可写入</span>
+            </div>
+          </div>
+          <textarea
+            class="textarea"
+            style="margin-top: 12px"
+            aria-label="处理原因"
+          >
+违反社区规则：标题误导且正文不可验证。</textarea>
+          <div class="actions" style="margin-top: 12px">
+            <button class="ghost">忽略</button
+            ><button class="button danger">删除并记录</button>
+          </div>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

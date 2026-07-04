@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>消息通知页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Message</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./home.html">发现</a><a href="./user.html">用户</a
+          ><a class="active" href="./message-notification.html">消息</a>
+        </nav>
+        <div class="actions">
+          <a class="ghost" href="./index.html">总览</a
+          ><button class="button">全部已读</button>
+        </div>
+      </header>
+
+      <main class="table-layout">
+        <section class="panel">
+          <div class="section-head">
+            <h1 class="page-title">私信</h1>
+            <span class="status ok">3 条未读</span>
+          </div>
+          <div class="list">
+            <div class="message-row">
+              <span class="avatar">林</span>
+              <div>
+                <strong>Lin</strong>
+                <p class="hint">
+                  编辑器保存冲突那篇我看完了，有一个问题想请教。
+                </p>
+              </div>
+              <span class="pill">未读</span>
+            </div>
+            <div class="message-row">
+              <span class="avatar">周</span>
+              <div>
+                <strong>周牧</strong>
+                <p class="hint">网关 tracing 的例子可以放到下一篇文章。</p>
+              </div>
+              <span class="hint">昨天</span>
+            </div>
+            <div class="message-row">
+              <span class="avatar">M</span>
+              <div>
+                <strong>Mia</strong>
+                <p class="hint">你关注的专题有新回复。</p>
+              </div>
+              <span class="hint">周一</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="detail-pane">
+          <h2 class="section-title">通知中心</h2>
+          <div class="tabs" style="margin: 12px 0 16px">
+            <button class="tab selected">全部</button
+            ><button class="tab">互动</button><button class="tab">系统</button>
+          </div>
+          <div class="list">
+            <div class="list-item">
+              <strong>你的文章被收藏</strong
+              ><span class="hint">《编辑器应该像一篇文章》被 Lin 收藏。</span>
+            </div>
+            <div class="list-item">
+              <strong>发布检查通过</strong
+              ><span class="hint">草稿已满足封面、摘要和标签要求。</span>
+            </div>
+            <div class="list-item">
+              <strong>互动状态暂不可用</strong
+              ><span class="hint"
+                >部分收藏状态显示为 unknown，稍后可重试。</span
+              >
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

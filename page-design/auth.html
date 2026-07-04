@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>认证页面设计 - 知构</title>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark">知</span
+          ><span class="brand-copy"
+            ><strong>知构</strong><span>Auth</span></span
+          ></a
+        >
+        <nav class="nav">
+          <a href="./home.html">发现</a
+          ><a class="active" href="./auth.html">登录</a
+          ><a href="./content.html">文章</a>
+        </nav>
+        <div class="actions"><a class="ghost" href="./index.html">总览</a></div>
+      </header>
+
+      <main class="hero">
+        <section class="hero-panel">
+          <p class="eyebrow">继续阅读、收藏和写作</p>
+          <h1>登录后继续构建你的知识路径。</h1>
+          <p class="lede">
+            游客可以阅读公开文章。点赞、收藏、评论、私信和发布文章需要登录后操作。
+          </p>
+        </section>
+        <section class="panel">
+          <h2 class="section-title">登录</h2>
+          <div class="list" style="margin-top: 16px">
+            <label
+              ><span class="label">邮箱</span
+              ><input
+                class="field"
+                value="architect0x0@foxmail.com"
+                aria-label="邮箱"
+            /></label>
+            <label
+              ><span class="label">密码</span
+              ><input
+                class="field"
+                type="password"
+                value="password"
+                aria-label="密码"
+            /></label>
+            <div class="status-row">
+              <label class="inline-row"
+                ><input type="checkbox" checked /> 记住登录状态</label
+              ><a class="hint" href="#">忘记密码</a>
+            </div>
+            <button class="button">登录</button>
+            <p class="hint">
+              错误显示在对应字段附近；登录态失效时保留返回路由。
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
