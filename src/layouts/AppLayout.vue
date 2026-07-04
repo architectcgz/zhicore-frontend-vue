@@ -9,25 +9,26 @@
         </span>
       </RouterLink>
 
-      <nav class="app-layout__nav" aria-label="读写构导航">
+      <nav class="app-layout__nav" aria-label="知构主导航">
         <RouterLink to="/">
-          <strong>读</strong>
-          <span>发现内容</span>
+          <BookOpen class="app-layout__nav-icon" aria-hidden="true" />
+          <span>发现</span>
+        </RouterLink>
+        <RouterLink to="/posts/demo">
+          <FileText class="app-layout__nav-icon" aria-hidden="true" />
+          <span>文章</span>
+        </RouterLink>
+        <RouterLink to="/ranking">
+          <TrendingUp class="app-layout__nav-icon" aria-hidden="true" />
+          <span>热榜</span>
         </RouterLink>
         <RouterLink to="/editor">
-          <strong>写</strong>
-          <span>创建草稿</span>
-        </RouterLink>
-        <RouterLink to="/structure">
-          <strong>构</strong>
-          <span>组织知识</span>
+          <PenLine class="app-layout__nav-icon" aria-hidden="true" />
+          <span>写作</span>
         </RouterLink>
       </nav>
 
       <div class="app-layout__actions">
-        <RouterLink class="app-layout__compose" to="/editor">
-          开始写作
-        </RouterLink>
         <button class="app-layout__logout" type="button" @click="logout">
           退出
         </button>
@@ -44,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import { BookOpen, FileText, PenLine, TrendingUp } from "@lucide/vue";
 import { computed } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 
@@ -91,7 +93,7 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   width: 36px;
   height: 36px;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--color-text-strong);
   color: var(--color-bg-elevated);
   font-weight: 800;
@@ -117,31 +119,30 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   justify-content: center;
   padding: 4px;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: var(--color-bg-elevated-2);
 }
 
 .app-layout__nav a {
-  display: inline-grid;
-  grid-template-columns: auto auto;
+  display: inline-flex;
   gap: 8px;
-  align-items: baseline;
-  min-height: 38px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
   color: var(--color-text-soft);
   text-decoration: none;
 }
 
-.app-layout__nav strong {
-  color: inherit;
-  font-size: 18px;
-  line-height: 1;
+.app-layout__nav span {
+  font-size: 13px;
+  font-weight: 650;
 }
 
-.app-layout__nav span {
-  font-size: 12px;
-  font-weight: 650;
+.app-layout__nav-icon {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
 }
 
 .app-layout__nav a.router-link-active {
@@ -156,11 +157,14 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   justify-content: flex-end;
 }
 
-.app-layout__compose,
 .app-layout__logout {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
   min-height: 38px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
   text-decoration: none;
 }
 
@@ -169,12 +173,6 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   background: var(--color-panel-soft);
   color: var(--color-text-soft);
   cursor: pointer;
-}
-
-.app-layout__compose {
-  background: var(--color-primary);
-  color: white;
-  font-weight: 760;
 }
 
 .app-layout__main {

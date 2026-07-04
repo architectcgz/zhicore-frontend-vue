@@ -8,7 +8,7 @@ export const homeRoutes: RouteRecordRaw[] = [
   {
     path: "",
     name: "Home",
+    alias: "home",
     component: () => import("@/pages/home/HomeRoutePage.vue"),
-    meta: { requiresAuth: true },
   },
 ];
