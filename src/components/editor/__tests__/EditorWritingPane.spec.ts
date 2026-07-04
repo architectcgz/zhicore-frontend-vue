@@ -416,6 +416,22 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
   });
 
+  it("emits save from the editor save shortcut", () => {
+    const wrapper = mountWritingPane();
+    const titleInput = wrapper.find<HTMLTextAreaElement>(".title-input");
+    const event = new KeyboardEvent("keydown", {
+      key: "s",
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    titleInput.element.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(wrapper.emitted("saveDraft")).toEqual([[]]);
+  });
+
   it("applies inline toolbar commands as Tiptap marks", () => {
     const wrapper = mountWritingPane();
     const exposed = exposedEditor(wrapper);

@@ -251,6 +251,13 @@ function handleEditorKeydown(event: KeyboardEvent): void {
   if ((key === "z" && event.shiftKey) || key === "y") {
     event.preventDefault();
     emit("redo");
+    return;
+  }
+
+  if (key === "s") {
+    // 编辑器内的保存快捷键复用工具栏保存入口，避免浏览器默认保存页面打断草稿流程。
+    event.preventDefault();
+    emit("saveDraft");
   }
 }
 
