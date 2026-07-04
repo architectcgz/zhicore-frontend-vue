@@ -94,6 +94,7 @@ pnpm format           # Prettier 格式化
 - `docs/architecture/` — 前端代码组织、运行时边界和工程约束
 - `docs/contracts/` — 前后端 API / DTO / 错误处理协作契约
 - `docs/design/` — 前端视觉、交互和产品体验设计决策
+  - `docs/design/pages/` — 页面初设计、页面分区、加载状态、空态 / 错误态 / degraded 态和跨页面约定
 - `docs/reviews/` — 代码评审证据
 - `docs/todos/debt/` — 技术债追踪
 
