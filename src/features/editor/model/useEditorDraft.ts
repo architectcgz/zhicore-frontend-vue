@@ -8,12 +8,7 @@ import {
   watch,
 } from "vue";
 
-import type { SaveDraftBodyReq, SaveDraftBodyResp } from "@/api/post";
-import type {
-  PostBodyBlock,
-  PostBodyInlineNode,
-  PostBodyWriteInput,
-} from "@/entities/post-body";
+import type { PostBodyBlock, PostBodyInlineNode } from "@/entities/post-body";
 
 import type { EditorPreviewReaderBlock } from "./editorPreviewTypes";
 import {
@@ -27,15 +22,27 @@ import {
   type EditorDraftHistorySnapshot,
 } from "./editorDraftHistory";
 import {
-  loadEditorDraftLocalPersistence,
-  persistEditorDraftLocalPersistence,
-  type EditorDraftLocalSavedSnapshot,
-} from "./editorDraftLocalPersistence";
+  loadRestoredEditorLocalDraft,
+  persistEditorCurrentDraftToLocal,
+} from "./editorDraftRecovery";
+import {
+  createEditorPreviewParagraphs,
+  createEditorReaderPreviewBlocks,
+} from "./editorDraftPreview";
+import {
+  createEditorDraftSaveRequest,
+  type EditorDraftServerSaveClient,
+  type EditorServerDraftBaseline,
+} from "./editorDraftSaveRequest";
+import {
+  createEditorSavedDraftSnapshot,
+  createEditorSourceHash,
+  type EditorSavedDraftSnapshot,
+} from "./editorDraftSnapshot";
 import { createEditorLogger } from "./editorDebug";
 import {
   createDefaultEditorDocumentJson,
   defaultEditorTitle,
-  fallbackReaderBlock,
 } from "./editorFixtures";
 import {
   EditorPostBodyMappingError,
@@ -62,58 +69,22 @@ export interface UseEditorDraftOptions {
   serverSaveClient?: EditorDraftServerSaveClient;
 }
 
-export interface EditorSavedDraftSnapshot {
-  title: string;
-  sourceHash: string;
-  localContentHash: `local:${string}`;
-  savedAt: Date;
-  schemaVersion: PostBodyWriteInput["schemaVersion"];
-  blockCount: number;
-  postBodyWriteInput: PostBodyWriteInput;
-}
-
-export interface EditorServerDraftBaseline {
-  postId: string;
-  basePostVersion: number;
-  baseDraftBodyId?: string;
-  baseDraftBodyHash?: string;
-}
-
-export interface EditorDraftServerSaveClient {
-  saveDraftBody(
-    postId: string,
-    input: SaveDraftBodyReq,
-  ): Promise<SaveDraftBodyResp>;
-}
-
 export interface EditorDraftHistoryRestoreResult {
   activeField: EditorDraftHistoryField;
   selection?: EditorTextSelection;
 }
+
+export type {
+  EditorDraftServerSaveClient,
+  EditorSavedDraftSnapshot,
+  EditorServerDraftBaseline,
+};
 
 export const editorDraftBodyMaxLength = 20000;
 
 const defaultPreviewCompileDebounceMs = 160;
 const defaultHistoryMergeWindowMs = 500;
 const tiptapLogger = createEditorLogger("compiler");
-
-function createContentHash(content: string): string {
-  let hash = 2166136261;
-
-  for (let index = 0; index < content.length; index += 1) {
-    hash ^= content.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  return hash.toString(36);
-}
-
-function createSourceHash(
-  title: string,
-  bodyDocumentJson: EditorTiptapDocumentJson,
-): string {
-  return createContentHash(`${title}\u0000${JSON.stringify(bodyDocumentJson)}`);
-}
 
 function clampSelectionToBody(
   selection: EditorTextSelection | undefined,
@@ -132,99 +103,6 @@ function clampSelectionToBody(
   };
 }
 
-function isServerDraftBodyHash(hash: string | undefined): hash is string {
-  return Boolean(hash && !hash.startsWith("local:"));
-}
-
-function createSaveDraftBodyRequest(
-  baseline: EditorServerDraftBaseline,
-  writeInput: PostBodyWriteInput,
-  clientSavedAt: Date,
-): SaveDraftBodyReq {
-  return {
-    ...writeInput,
-    basePostVersion: baseline.basePostVersion,
-    ...(baseline.baseDraftBodyId
-      ? { baseDraftBodyId: baseline.baseDraftBodyId }
-      : {}),
-    ...(isServerDraftBodyHash(baseline.baseDraftBodyHash)
-      ? { baseDraftBodyHash: baseline.baseDraftBodyHash }
-      : {}),
-    clientSavedAt: clientSavedAt.toISOString(),
-  };
-}
-
-function createSavedDraftSnapshotFromState(
-  title: string,
-  bodyDocumentJson: EditorTiptapDocumentJson,
-  savedAt: Date,
-): EditorSavedDraftSnapshot {
-  const writeInput = mapTiptapJsonToPostBodyWriteInput(bodyDocumentJson);
-  const contentHash = createContentHash(JSON.stringify(writeInput));
-
-  return {
-    title: title.trim() || "未命名草稿",
-    sourceHash: createSourceHash(title, bodyDocumentJson),
-    localContentHash: `local:${contentHash}`,
-    savedAt,
-    schemaVersion: writeInput.schemaVersion,
-    blockCount: writeInput.blocks.length,
-    postBodyWriteInput: writeInput,
-  };
-}
-
-function restoreLocalSavedSnapshot(
-  snapshot: EditorDraftLocalSavedSnapshot | undefined,
-): EditorSavedDraftSnapshot | undefined {
-  if (!snapshot) {
-    return undefined;
-  }
-
-  const savedAt = new Date(snapshot.savedAt);
-
-  if (Number.isNaN(savedAt.getTime())) {
-    return undefined;
-  }
-
-  return {
-    ...snapshot,
-    savedAt,
-  };
-}
-
-function loadRestoredLocalDraft():
-  | {
-      title: string;
-      bodyDocumentJson: EditorTiptapDocumentJson;
-      savedSnapshot?: EditorSavedDraftSnapshot;
-    }
-  | undefined {
-  const localDraft = loadEditorDraftLocalPersistence();
-
-  if (!localDraft) {
-    return undefined;
-  }
-
-  if (
-    getTiptapPlainText(localDraft.bodyDocumentJson).length >
-    editorDraftBodyMaxLength
-  ) {
-    return undefined;
-  }
-
-  try {
-    mapTiptapJsonToPostBodyWriteInput(localDraft.bodyDocumentJson);
-  } catch {
-    return undefined;
-  }
-
-  return {
-    title: localDraft.title,
-    bodyDocumentJson: localDraft.bodyDocumentJson,
-    savedSnapshot: restoreLocalSavedSnapshot(localDraft.savedSnapshot),
-  };
-}
-
 export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const now = options.now ?? (() => new Date());
   const previewCompileDebounceMs =
@@ -232,7 +110,9 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const historyMergeWindowMs =
     options.historyMergeWindowMs ?? defaultHistoryMergeWindowMs;
   const defaultBodyDocumentJson = createDefaultEditorDocumentJson();
-  const restoredLocalDraft = loadRestoredLocalDraft();
+  const restoredLocalDraft = loadRestoredEditorLocalDraft(
+    editorDraftBodyMaxLength,
+  );
   const title = ref(restoredLocalDraft?.title ?? defaultEditorTitle);
   const bodyDocumentJson = ref<EditorTiptapDocumentJson>(
     restoredLocalDraft?.bodyDocumentJson ?? defaultBodyDocumentJson,
@@ -255,11 +135,11 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     mapTiptapJsonToPostBodyWriteInput(bodyDocumentJson.value),
   );
   const currentSourceHash = computed(() =>
-    createSourceHash(title.value, bodyDocumentJson.value),
+    createEditorSourceHash(title.value, bodyDocumentJson.value),
   );
 
   function createSavedDraftSnapshot(savedAt: Date): EditorSavedDraftSnapshot {
-    return createSavedDraftSnapshotFromState(
+    return createEditorSavedDraftSnapshot(
       title.value,
       bodyDocumentJson.value,
       savedAt,
@@ -268,7 +148,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
 
   const savedDraftSnapshot = ref<EditorSavedDraftSnapshot>(
     restoredLocalDraft?.savedSnapshot ??
-      createSavedDraftSnapshotFromState(
+      createEditorSavedDraftSnapshot(
         defaultEditorTitle,
         defaultBodyDocumentJson,
         now(),
@@ -294,45 +174,19 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const canUndo = computed(() => canUndoEditorDraftHistory(history.value));
   const canRedo = computed(() => canRedoEditorDraftHistory(history.value));
 
-  function createLocalSavedSnapshot(
-    snapshot: EditorSavedDraftSnapshot,
-  ): EditorDraftLocalSavedSnapshot {
-    return {
-      ...snapshot,
-      savedAt: snapshot.savedAt.toISOString(),
-    };
-  }
-
   function persistCurrentDraftToLocal(
     snapshot = savedDraftSnapshot.value,
   ): void {
-    persistEditorDraftLocalPersistence({
-      version: 1,
+    persistEditorCurrentDraftToLocal({
       title: title.value,
       bodyDocumentJson: bodyDocumentJson.value,
-      updatedAt: now().toISOString(),
-      savedSnapshot: createLocalSavedSnapshot(snapshot),
+      updatedAt: now(),
+      savedSnapshot: snapshot,
     });
   }
 
   const readerPreviewBlocks = computed<EditorPreviewReaderBlock[]>(() => {
-    const previewBlocks = postBodyWriteInput.value.blocks.map(
-      (block, blockIndex) => ({
-        stableKey: `tiptap-preview-${blockIndex}-${block.type}-${JSON.stringify(block).length}`,
-        block,
-        readerBlockIndex: blockIndex,
-      }),
-    );
-
-    return previewBlocks.length
-      ? previewBlocks
-      : [
-          {
-            stableKey: "editor-preview-fallback",
-            block: fallbackReaderBlock,
-            readerBlockIndex: 0,
-          },
-        ];
+    return createEditorReaderPreviewBlocks(postBodyWriteInput.value);
   });
 
   const readerBlocks = computed<PostBodyBlock[]>(() => {
@@ -340,13 +194,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   });
 
   const previewParagraphs = computed(() => {
-    const paragraphs = readerBlocks.value
-      .filter((block) => block.type === "paragraph")
-      .map((paragraph) =>
-        paragraph.children.map((child) => child.text).join(""),
-      );
-
-    return paragraphs.length ? paragraphs : ["正文预览会随输入同步更新。"];
+    return createEditorPreviewParagraphs(readerPreviewBlocks.value);
   });
 
   const wordCount = computed(() => {
@@ -523,7 +371,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
       if (baseline && options.serverSaveClient) {
         const response = await options.serverSaveClient.saveDraftBody(
           baseline.postId,
-          createSaveDraftBodyRequest(
+          createEditorDraftSaveRequest(
             baseline,
             postBodyWriteInput.value,
             savedAt,
