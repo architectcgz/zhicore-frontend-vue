@@ -1,6 +1,6 @@
 <template>
   <p
-    class="reader-preview__text-block"
+    class="reader-preview__text-block reading-typography__paragraph"
     :class="{
       'reader-preview__text-block--empty': isEmptyParagraph,
     }"
@@ -26,14 +26,10 @@ const isEmptyParagraph = computed(() => props.block.children.length === 0);
 
 <style scoped>
 .reader-preview__text-block {
-  margin: 8px 0;
-  color: var(--reader-text);
-  font-size: 15px;
-  line-height: 1.62;
-  white-space: pre-line;
+  margin: var(--space-2) 0;
 }
 
 .reader-preview__text-block--empty {
-  min-height: 1.62em;
+  min-height: 1lh;
 }
 </style>

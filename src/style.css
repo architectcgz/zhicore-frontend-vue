@@ -40,6 +40,12 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-pill: 999px;
+  --font-size-reading-body: 1rem;
+  --font-size-reading-heading: 1.375rem;
+  --font-size-reading-code: 0.9375rem;
+  --line-height-reading-body: 1.78;
+  --line-height-reading-heading: 1.35;
+  --line-height-reading-code: 1.56;
   line-height: 1.6;
   font-weight: 400;
   background-color: var(--color-bg);

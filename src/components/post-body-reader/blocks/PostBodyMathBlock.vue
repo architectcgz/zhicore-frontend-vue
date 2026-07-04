@@ -58,8 +58,8 @@ const renderedMathHtml = computed(() => {
   background: transparent;
   color: var(--reader-text);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 15px;
-  line-height: 1.56;
+  font-size: var(--font-size-reading-code);
+  line-height: var(--line-height-reading-code);
   white-space: pre-wrap;
 }
 </style>

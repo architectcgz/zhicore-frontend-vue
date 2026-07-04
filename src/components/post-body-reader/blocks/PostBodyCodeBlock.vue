@@ -77,8 +77,8 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: var(--reader-block-bg);
   color: var(--reader-text);
-  font-size: 15px;
-  line-height: 1.56;
+  font-size: var(--font-size-reading-code);
+  line-height: var(--line-height-reading-code);
 }
 
 .reader-preview__code-header {

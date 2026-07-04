@@ -1,5 +1,8 @@
 <template>
-  <component :is="headingTag" class="reader-preview__heading">
+  <component
+    :is="headingTag"
+    class="reader-preview__heading reading-typography__heading"
+  >
     <PostBodyInlineNodes :nodes="block.children" />
   </component>
 </template>
@@ -22,9 +25,6 @@ const headingTag = computed(() => `h${props.block.level}` as ReaderHeadingTag);
 
 <style scoped>
 .reader-preview__heading {
-  margin: 10px 0 4px;
-  color: var(--reader-heading);
-  font-size: 20px;
-  line-height: 1.28;
+  margin: var(--space-8) 0 var(--space-3);
 }
 </style>

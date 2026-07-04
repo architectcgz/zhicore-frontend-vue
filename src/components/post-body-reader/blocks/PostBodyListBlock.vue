@@ -1,7 +1,7 @@
 <template>
   <component
     :is="listTag"
-    class="reader-preview__list"
+    class="reader-preview__list reading-typography__list"
     :class="{ 'reader-preview__task-list': block.task }"
   >
     <li
@@ -43,11 +43,7 @@ const listTag = computed<ListTag>(() => (props.block.ordered ? "ol" : "ul"));
 
 <style scoped>
 .reader-preview__list {
-  margin: 10px 0;
   padding-left: 22px;
-  color: var(--reader-text);
-  font-size: 15px;
-  line-height: 1.62;
 }
 
 .reader-preview__list li + li {

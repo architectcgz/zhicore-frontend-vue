@@ -1,0 +1,52 @@
+.reading-typography {
+  color: var(--reading-text, var(--reader-text, var(--color-text)));
+  font-size: var(--font-size-reading-body);
+  line-height: var(--line-height-reading-body);
+  text-wrap: pretty;
+}
+
+.reading-typography__paragraph {
+  margin: var(--space-2) 0;
+  color: var(--reading-text, var(--reader-text, var(--color-text)));
+  font-size: var(--font-size-reading-body);
+  line-height: var(--line-height-reading-body);
+  white-space: pre-line;
+}
+
+.reading-typography__heading {
+  margin: var(--space-8) 0 var(--space-3);
+  color: var(
+    --reading-heading,
+    var(--reader-heading, var(--color-text-strong))
+  );
+  font-size: var(--font-size-reading-heading);
+  line-height: var(--line-height-reading-heading);
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.reading-typography > .reading-typography__heading:first-child {
+  margin-top: 0;
+}
+
+.reading-typography__quote {
+  margin: var(--space-5) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--reading-block-border, var(--color-border));
+  border-radius: var(--radius-lg);
+  background: var(
+    --reading-block-bg,
+    var(--reader-block-bg, var(--color-bg-hover))
+  );
+  color: var(--reading-text, var(--reader-text, var(--color-text)));
+  font-size: var(--font-size-reading-body);
+  line-height: var(--line-height-reading-body);
+  white-space: pre-line;
+}
+
+.reading-typography__list {
+  margin: var(--space-3) 0;
+  color: var(--reading-text, var(--reader-text, var(--color-text)));
+  font-size: var(--font-size-reading-body);
+  line-height: var(--line-height-reading-body);
+}

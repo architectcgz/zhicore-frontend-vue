@@ -41,19 +41,27 @@
 
       <div class="article-detail__cover" aria-hidden="true" />
 
-      <div class="article-detail__body">
+      <div class="article-detail__body reading-typography">
         <template v-for="(block, index) in detail.bodyBlocks" :key="index">
           <h2
             v-if="block.kind === 'heading'"
             :id="block.id"
-            class="article-detail__body-heading"
+            class="article-detail__body-heading reading-typography__heading"
           >
             {{ block.text }}
           </h2>
-          <p v-else-if="block.kind === 'paragraph'">
+          <p
+            v-else-if="block.kind === 'paragraph'"
+            class="article-detail__body-paragraph reading-typography__paragraph"
+          >
             {{ block.text }}
           </p>
-          <blockquote v-else>{{ block.text }}</blockquote>
+          <blockquote
+            v-else
+            class="article-detail__body-quote reading-typography__quote"
+          >
+            {{ block.text }}
+          </blockquote>
         </template>
       </div>
 
@@ -120,6 +128,8 @@ import { Bookmark, Heart, MessageCircle, Share2 } from "@lucide/vue";
 import { useTemplateRef } from "vue";
 
 import type { ArticleDetailData } from "@/features/content-detail";
+
+import "@/components/common/ReadingTypography.css";
 
 import ArticleComments from "./ArticleComments.vue";
 import { useArticleReadingProgress } from "./useArticleReadingProgress";
@@ -322,27 +332,18 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   padding-top: var(--space-5);
   border-top: 1px solid var(--color-border);
   color: var(--color-text);
-  font-size: 18px;
-  line-height: 1.9;
 }
 
 .article-detail__body-heading {
-  margin: var(--space-8) 0 var(--space-3);
   color: var(--color-text-strong);
-  font-size: 1.25rem;
-  line-height: 1.35;
-  letter-spacing: 0;
 }
 
-.article-detail__body-heading:first-child {
-  margin-top: 0;
-}
-
-.article-detail__body blockquote {
-  margin: var(--space-5) 0;
-  padding: var(--space-3) var(--space-4);
-  border-left: 4px solid var(--color-accent);
-  background: var(--color-bg-hover);
+.article-detail__body-quote {
+  --reading-block-border: color-mix(
+    in srgb,
+    var(--color-accent) 32%,
+    var(--color-border)
+  );
 }
 
 .article-detail__body-heading,

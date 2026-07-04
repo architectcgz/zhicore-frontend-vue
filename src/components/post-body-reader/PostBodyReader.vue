@@ -1,5 +1,5 @@
 <template>
-  <article class="post-body-reader" aria-label="文章正文">
+  <article class="post-body-reader reading-typography" aria-label="文章正文">
     <PostBodyReaderBlock
       v-for="(block, blockIndex) in body.blocks"
       :key="`${blockIndex}-${block.type}`"

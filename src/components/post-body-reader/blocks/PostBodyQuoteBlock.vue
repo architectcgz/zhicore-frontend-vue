@@ -1,5 +1,5 @@
 <template>
-  <blockquote class="reader-preview__quote">
+  <blockquote class="reader-preview__quote reading-typography__quote">
     <PostBodyReaderBlock
       v-for="(childBlock, childIndex) in block.blocks"
       :key="`${childIndex}-${childBlock.type}`"
@@ -20,12 +20,6 @@ defineProps<{
 
 <style scoped>
 .reader-preview__quote {
-  margin: 12px 0;
-  padding: 2px 0 2px 14px;
-  border-left: 3px solid var(--reader-quote-border);
-  color: var(--reader-text);
-  font-size: 15px;
-  line-height: 1.62;
-  white-space: pre-line;
+  border-color: var(--reader-quote-border);
 }
 </style>

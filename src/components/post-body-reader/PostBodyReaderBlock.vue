@@ -3,6 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import "@/components/common/ReadingTypography.css";
+
 import type { Component } from "vue";
 
 import type { PostBodyBlock } from "@/entities/post-body";
