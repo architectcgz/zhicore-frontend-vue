@@ -13,7 +13,6 @@ export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
         attrs: { level: 1 },
         content: [{ type: "text", text: "Tiptap 编辑器验收稿" }],
       },
-      { type: "paragraph", content: [] },
       {
         type: "paragraph",
         content: [
@@ -23,13 +22,11 @@ export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
           },
         ],
       },
-      { type: "paragraph", content: [] },
       {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "Inline" }],
       },
-      { type: "paragraph", content: [] },
       {
         type: "paragraph",
         content: [
@@ -50,13 +47,11 @@ export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
           { type: "text", text: "。" },
         ],
       },
-      { type: "paragraph", content: [] },
       {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "Quote" }],
       },
-      { type: "paragraph", content: [] },
       {
         type: "blockquote",
         content: [
@@ -76,13 +71,11 @@ export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
           },
         ],
       },
-      { type: "paragraph", content: [] },
       {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "Lists" }],
       },
-      { type: "paragraph", content: [] },
       {
         type: "bulletList",
         content: [
@@ -157,13 +150,11 @@ export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
           },
         ],
       },
-      { type: "paragraph", content: [] },
       {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "Code" }],
       },
-      { type: "paragraph", content: [] },
       {
         type: "codeBlock",
         attrs: { language: "go" },
@@ -182,13 +173,11 @@ export function createDefaultEditorDocumentJson(): EditorTiptapDocumentJson {
           },
         ],
       },
-      { type: "paragraph", content: [] },
       {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "Table" }],
       },
-      { type: "paragraph", content: [] },
       {
         type: "table",
         content: [

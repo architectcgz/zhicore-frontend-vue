@@ -106,7 +106,7 @@ describe("useEditorDraft", () => {
     expect(draft.bodyDocumentJson.value).toMatchObject({ type: "doc" });
   });
 
-  it("starts preview from native Tiptap reader blocks and preserves spacer paragraphs", () => {
+  it("starts preview from native Tiptap reader blocks without sample spacer paragraphs", () => {
     const draft = useEditorDraft({ previewCompileDebounceMs: 0 });
     const inlineHeadingIndex = draft.readerBlocks.value.findIndex(
       (block) =>
@@ -120,24 +120,26 @@ describe("useEditorDraft", () => {
         level: 1,
         children: [{ type: "text", text: "Tiptap 编辑器验收稿" }],
       },
-      expect.objectContaining({
+      {
         type: "paragraph",
-      }),
+        children: [
+          {
+            type: "text",
+            text: "一篇文章的价值不只来自观点，也来自读者能否沿着清晰的段落进入上下文。",
+          },
+        ],
+      },
     ]);
     expect(
       draft.readerBlocks.value.slice(
         inlineHeadingIndex,
-        inlineHeadingIndex + 5,
+        inlineHeadingIndex + 3,
       ),
     ).toEqual([
       {
         type: "heading",
         level: 2,
         children: [{ type: "text", text: "Inline" }],
-      },
-      {
-        type: "paragraph",
-        children: [],
       },
       {
         type: "paragraph",
@@ -153,10 +155,6 @@ describe("useEditorDraft", () => {
             marks: [{ type: "inline_code" }],
           },
         ]),
-      },
-      {
-        type: "paragraph",
-        children: [],
       },
       {
         type: "heading",
