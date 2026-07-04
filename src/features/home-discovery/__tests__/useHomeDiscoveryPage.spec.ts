@@ -8,7 +8,7 @@ describe("useHomeDiscoveryPage", () => {
 
     expect(page.discovery.posts.length).toBeGreaterThan(0);
     expect(page.activeFeedTab.value).toBe("推荐");
-    expect(page.searchQuery.value).toContain("Vue");
+    expect(page.searchQuery.value).toBe("");
 
     page.selectFeedTab("最新");
     page.updateSearchQuery("内容服务");

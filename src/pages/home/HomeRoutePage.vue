@@ -1,11 +1,13 @@
 <template>
-  <HomeDiscoveryFeed
-    :discovery="discovery"
-    :active-feed-tab="activeFeedTab"
-    :search-query="searchQuery"
-    @select-feed-tab="selectFeedTab"
-    @update:search-query="updateSearchQuery"
-  />
+  <section class="home-route" aria-label="知构首页">
+    <HomeDiscoveryFeed
+      :discovery="discovery"
+      :active-feed-tab="activeFeedTab"
+      :search-query="searchQuery"
+      @select-feed-tab="selectFeedTab"
+      @update:search-query="updateSearchQuery"
+    />
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -20,3 +22,9 @@ const {
   updateSearchQuery,
 } = useHomeDiscoveryPage();
 </script>
+
+<style scoped>
+.home-route {
+  min-width: 0;
+}
+</style>
