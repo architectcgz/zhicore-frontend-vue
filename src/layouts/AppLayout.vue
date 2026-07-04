@@ -25,6 +25,9 @@
       </nav>
 
       <div class="app-layout__actions">
+        <RouterLink class="app-layout__preview" to="/design-preview">
+          页面预览
+        </RouterLink>
         <RouterLink class="app-layout__compose" to="/editor">
           开始写作
         </RouterLink>
@@ -157,6 +160,7 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
 }
 
 .app-layout__compose,
+.app-layout__preview,
 .app-layout__logout {
   min-height: 38px;
   padding: 8px 12px;
@@ -175,6 +179,13 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   background: var(--color-primary);
   color: white;
   font-weight: 760;
+}
+
+.app-layout__preview {
+  border: 1px solid var(--color-border);
+  background: var(--color-panel-soft);
+  color: var(--color-text);
+  font-weight: 720;
 }
 
 .app-layout__main {

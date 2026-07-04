@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from "vue-router";
 
+import { designPreviewRoutes } from "./designPreviewRoutes";
 import { editorRoutes } from "./editorRoutes";
 import { homeRoutes } from "./homeRoutes";
 import { structureRoutes } from "./structureRoutes";
@@ -13,5 +14,10 @@ export const appShellRoute: RouteRecordRaw = {
   path: "/",
   component: () => import("@/pages/AppShellRoutePage.vue"),
   redirect: "/",
-  children: [...homeRoutes, ...structureRoutes, ...editorRoutes],
+  children: [
+    ...homeRoutes,
+    ...structureRoutes,
+    ...editorRoutes,
+    ...designPreviewRoutes,
+  ],
 };
