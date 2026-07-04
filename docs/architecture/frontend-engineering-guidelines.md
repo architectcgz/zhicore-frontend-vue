@@ -18,7 +18,7 @@ ZhiCore 目前采用简化版 Feature-Sliced Design：
 
 ```text
 src/
-├── api/           # HTTP 请求适配器和领域 API
+├── api/           # provider HTTP 适配器和可复用领域 API
 ├── components/    # 可复用 UI 组件，按业务领域或 common 分组
 ├── composables/   # 通用 Vue 组合逻辑，不绑定具体业务
 ├── entities/      # 稳定业务对象类型、纯函数和低耦合展示
@@ -104,6 +104,7 @@ feature 内部非组合函数按职责拆分：
 
 - `lib/`：feature-local 纯函数、状态机、DTO/view model 映射、持久化 helper、滚动计算等非 Vue 逻辑。
 - `config/`：工具栏、选项、默认值、静态候选项等配置。
+- `api/`：只允许放真正 feature-private 的 HTTP adapter。判断标准是该 endpoint 只服务当前用户流程，其他 feature 不应复用；一旦属于后端 provider 的稳定资源能力，应提升到 `src/api/<provider>.ts`。
 - 明确第三方适配目录：例如 editor 的 `tiptap/` 放 Tiptap runtime、扩展和命令适配。
 - `ui/`：只服务单一 feature 的 page-sized UI。
 
@@ -138,7 +139,7 @@ store 约束：
 - store 不直接 `router.push()`，导航交给 route guard、runtime 或 feature workflow。
 - store 不直接弹 toast，反馈交给 feature 或共享反馈 composable。
 - store 不直接互相循环 import；跨 store 清理应由上层流程或明确 action 协调。
-- 认证状态不持久化敏感 token；前端只保存用户快照，认证事实以服务端 session 为准。
+- 认证状态不持久化敏感 token；Pinia 只在当前运行时保存 `accessToken`、`csrfToken` 和用户快照，并同步给 request transport 注入 `Authorization` / `X-CSRF-Token`，认证事实仍以服务端 session 和 refresh cookie 为准。
 
 ## API 层规范
 
@@ -147,6 +148,7 @@ store 约束：
 请求层负责：
 
 - 统一 `baseURL`、`timeout`、`withCredentials`。
+- 基于 auth store 同步的运行时 token 注入 `Authorization` 和 `X-CSRF-Token`。
 - 解包后端响应 envelope。
 - 构造标准化 `ApiError`。
 - 处理取消请求和网络错误。
@@ -162,11 +164,18 @@ store 约束：
 领域 API 模块负责：
 
 - 封装 URL 和请求参数。
+- 定义后端 provider 可复用的请求 / 响应类型，具体 HTTP 接口使用 `Req` / `Resp` 后缀。
 - 在 API 边界完成 DTO 归一化，例如 ID 字符串化、可空字段默认值、时间字段规范化。
 - 上传类接口在 API 边界构造 `FormData`。
 - 对页面更好处理的缺失语义，可以在 API 边界转为 `null`，不要让页面到处 try/catch。
 
-页面不直接 import `@/api/*`。业务请求从 feature workflow 进入 API 层。
+归属规则：
+
+- `src/api/<provider>.ts` 表示后端 provider 的稳定 HTTP adapter，例如 Content/Post、Auth、User、File、Comment、Ranking。它不是某个页面或 feature 的私有实现。
+- `src/features/<feature>/api/` 只用于 feature-private endpoint；如果其他 feature 可能复用该 endpoint，或 endpoint 暴露的是 provider 的资源能力，应放回 `src/api`。
+- `src/types/api/` 放全局通用 envelope、分页、错误详情等跨 provider 类型；具体接口的 `Req` / `Resp` 默认贴近对应 API adapter。
+- feature workflow 可以 import `@/api/*`，并在 `composables/` 或 `lib/` 内完成请求编排、错误恢复、DTO/view model 映射和本 feature 的 port 抽象。
+- 页面、布局和组件不直接 import `@/api/*`。业务请求必须从 feature workflow 进入 API 层。
 
 ## 请求并发与 Stale Response
 

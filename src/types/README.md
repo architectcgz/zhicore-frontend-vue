@@ -5,7 +5,7 @@
 ## 职责
 
 - 存放不属于 entities/ 核心实体、但跨模块使用的类型：
-  - API 响应格式（`ApiResponse<T>`）
+  - API 响应 envelope、分页和错误详情（`api/`）
   - 通用 UI 类型（`MenuItem`、`SelectOption`）
   - 事件类型（路由事件、WebSocket 事件）
   - 配置类型
@@ -17,7 +17,7 @@
 |---|---|---|
 | 内容 | 核心业务实体类型 | 辅助/跨切面类型 |
 | 稳定性 | 变更少，是项目的"骨架" | 随业务迭代可能频繁调整 |
-| 例子 | `Post`、`User`、`Comment` | `ApiResponse<T>`、`BreadcrumbItem`、`WsEvent` |
+| 例子 | `Post`、`User`、`Comment` | `ApiEnvelope<T>`、`ApiPageResp<T>`、`BreadcrumbItem`、`WsEvent` |
 
 ## 约定
 

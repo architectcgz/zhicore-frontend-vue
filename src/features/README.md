@@ -39,8 +39,8 @@ export function useLoginForm() {
   const submitting = ref(false);
 
   async function submit() {
-    const user = await login({ username: username.value, password: "..." });
-    authStore.setAuth(user);
+    const session = await login({ username: username.value, password: "..." });
+    authStore.setAuth(session);
     await router.push("/");
   }
 

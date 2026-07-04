@@ -18,7 +18,7 @@
 
 ```
 src/
-├── api/           # API 适配器（axios 封装 + 业务接口）
+├── api/           # provider HTTP 适配器（axios 封装 + 可复用 Req/Resp）
 ├── components/    # UI 组件，按业务领域分组（post/, comment/, user/, common/）
 ├── composables/   # 通用可复用逻辑（useDebounce, useFocusTrap ...）
 ├── entities/      # 稳定业务实体类型与纯函数（user, post, comment ...）
@@ -48,7 +48,7 @@ pnpm format           # Prettier 格式化
 
 - 所有新页面使用 `<script setup lang="ts">` + Composition API
 - Props / Emits 使用 `defineProps<Props>()` / `defineEmits<Emits>()` 类型声明
-- 服务端数据通过 API 模块获取，客户端状态放 Pinia store
+- 服务端数据由 feature workflow 发起；feature 可调用 `src/api` 中的 provider HTTP adapter，页面、布局和组件不直接调用 `src/api`
 - 路由按命名空间拆分（`src/router/routes/*Routes.ts`），新增路由模块后在 `src/router/index.ts` 注册
 - 前端 route page、feature workflow、Pinia、API、组件、测试与 runtime 边界遵循 `docs/architecture/frontend-engineering-guidelines.md`
 - CSS owner、命名、token、响应式与组件样式 contract 遵循 `docs/design/css-style-guide.md`
@@ -100,7 +100,8 @@ pnpm format           # Prettier 格式化
 ## 架构边界
 
 - `src/entities/`：稳定业务对象类型，纯函数，不依赖 Vue / API / store
-- `src/features/`：业务流程 owner，可调 API 和 store；feature 内用 `composables/`、`lib/`、`config/`、明确第三方适配目录和 `ui/` 区分职责，不使用泛化的 `model/` 桶
+- `src/api/`：后端 provider 的 HTTP adapter 和可复用 `Req` / `Resp` owner；只做 URL、请求参数、envelope 解包和边界归一化，不做页面流程
+- `src/features/`：业务流程 owner，可调 API 和 store；feature 内用 `composables/`、`lib/`、`config/`、明确第三方适配目录和 `ui/` 区分职责，不使用泛化的 `model/` 桶；仅当 endpoint 明确只服务单一 feature 且不会复用时，才允许放入 `features/<feature>/api/`
 - `src/components/`：UI 渲染，通过 props/emits 收发数据，不做业务决策
 - `src/pages/`：route composition surface，装配 components + features + layouts
 - `src/layouts/`：页面结构壳，包含 RouterView
