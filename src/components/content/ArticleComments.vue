@@ -151,6 +151,13 @@ const emit = defineEmits<{
 
 <style scoped>
 .article-comments {
+  --article-comment-author-size: 0.875rem;
+  --article-comment-body-size: 0.9375rem;
+  --article-comment-meta-size: 0.8125rem;
+  --article-comment-body-line-height: 1.68;
+  --compact-editor-body-size: var(--article-comment-body-size);
+  --compact-editor-body-line-height: var(--article-comment-body-line-height);
+
   margin-top: var(--space-8);
   padding-top: var(--space-6);
   border-top: 1px solid var(--color-border);
@@ -229,7 +236,7 @@ const emit = defineEmits<{
   background: transparent;
   color: var(--color-text-soft);
   cursor: pointer;
-  font-size: 0.8125rem;
+  font-size: var(--article-comment-meta-size);
   font-weight: 750;
 }
 
@@ -313,14 +320,26 @@ const emit = defineEmits<{
 }
 
 .article-comments__role,
-.article-comments p,
 .article-comments__time {
   color: var(--color-text-soft);
 }
 
+.article-comments__author-line strong {
+  color: var(--color-text-strong);
+  font-size: var(--article-comment-author-size);
+  line-height: 1.4;
+}
+
+.article-comments__role {
+  font-size: var(--article-comment-meta-size);
+  font-weight: 650;
+}
+
 .article-comments p {
   margin: var(--space-2) 0 var(--space-3);
-  line-height: 1.75;
+  color: var(--color-text);
+  font-size: var(--article-comment-body-size);
+  line-height: var(--article-comment-body-line-height);
 }
 
 .article-comments__action-icon {
@@ -330,7 +349,7 @@ const emit = defineEmits<{
 
 .article-comments__time {
   margin-left: auto;
-  font-size: 0.8125rem;
+  font-size: var(--article-comment-meta-size);
   font-weight: 650;
 }
 

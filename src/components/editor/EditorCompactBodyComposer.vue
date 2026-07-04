@@ -201,8 +201,9 @@ defineExpose({
   min-height: 96px;
   padding: var(--space-3);
   color: var(--color-text);
-  font: inherit;
-  line-height: 1.75;
+  font-family: inherit;
+  font-size: var(--compact-editor-body-size, 1rem);
+  line-height: var(--compact-editor-body-line-height, 1.75);
   white-space: pre-wrap;
   word-break: break-word;
 }
