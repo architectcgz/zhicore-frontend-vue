@@ -5,6 +5,24 @@
         <p>作者工作台</p>
         <h1>草稿编辑</h1>
       </div>
+      <div class="editor-workspace__actions">
+        <p
+          v-if="publishErrorLabel"
+          class="editor-workspace__publish-error"
+          role="alert"
+        >
+          {{ publishErrorLabel }}
+        </p>
+        <button
+          class="editor-workspace__publish"
+          type="button"
+          :disabled="!canPublishDraft"
+          @click="handlePublishDraft"
+        >
+          <Send class="editor-workspace__publish-icon" aria-hidden="true" />
+          {{ publishButtonLabel }}
+        </button>
+      </div>
     </header>
 
     <section :class="['editor-frame', activeBackgroundClass]">
@@ -75,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+import { Send } from "@lucide/vue";
 import { useMediaQuery } from "@vueuse/core";
 
 import { useEditorWorkspaceController } from "../composables/useEditorWorkspaceController";
@@ -91,8 +110,10 @@ const {
   bodyCharacterCount,
   bodyMaxLength,
   canRedo,
+  canPublishDraft,
   handleBodyDocumentInput,
   handleModeSelect,
+  handlePublishDraft,
   handleRedoDraft,
   handleSaveDraft,
   handleTitleInput,
@@ -103,6 +124,8 @@ const {
   draftSaveStatus,
   lastSavedLabel,
   previewTitle,
+  publishButtonLabel,
+  publishErrorLabel,
   readerPreviewBlocks,
   saveButtonLabel,
   saveStatusLabel,
@@ -250,6 +273,52 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.editor-workspace__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.editor-workspace__publish-error {
+  margin: 0;
+  color: var(--editor-page-warning);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.editor-workspace__publish {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--editor-control-primary);
+  color: #fff;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.editor-workspace__publish:hover:not(:disabled),
+.editor-workspace__publish:focus-visible:not(:disabled) {
+  background: var(--editor-control-primary-hover);
+}
+
+.editor-workspace__publish:disabled {
+  background: var(--editor-control-disabled-bg);
+  color: var(--editor-control-disabled-text);
+  cursor: not-allowed;
+}
+
+.editor-workspace__publish-icon {
+  width: 17px;
+  height: 17px;
 }
 
 .editor-workspace h1 {

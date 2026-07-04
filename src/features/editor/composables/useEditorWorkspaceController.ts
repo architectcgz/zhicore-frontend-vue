@@ -47,6 +47,8 @@ export function useEditorWorkspaceController() {
   } = useEditorDisplay();
   const draft = useEditorDraft();
   const workspaceShellRef = ref<EditorWorkspaceShellRef | null>(null);
+  const isPublishingDraft = ref(false);
+  const publishErrorLabel = ref("");
 
   const bodyInputRef = computed(
     () => workspaceShellRef.value?.bodyInputElement ?? null,
@@ -73,6 +75,12 @@ export function useEditorWorkspaceController() {
   });
   const saveButtonLabel = computed(() =>
     draft.draftSaveStatus.value === "saving" ? "保存中" : "保存草稿",
+  );
+  const publishButtonLabel = computed(() =>
+    isPublishingDraft.value ? "处理中" : "发布",
+  );
+  const canPublishDraft = computed(
+    () => draft.draftSaveStatus.value !== "saving" && !isPublishingDraft.value,
   );
 
   const {
@@ -164,6 +172,25 @@ export function useEditorWorkspaceController() {
     await draft.saveDraft();
   }
 
+  async function handlePublishDraft(): Promise<void> {
+    if (!canPublishDraft.value) {
+      return;
+    }
+
+    publishErrorLabel.value = "";
+    isPublishingDraft.value = true;
+
+    try {
+      if (draft.canSaveDraft.value) {
+        await draft.saveDraft();
+      }
+    } catch {
+      publishErrorLabel.value = "发布前保存失败，请重试";
+    } finally {
+      isPublishingDraft.value = false;
+    }
+  }
+
   onMounted(() => {
     resizeBodyInput();
   });
@@ -205,16 +232,20 @@ export function useEditorWorkspaceController() {
     bodyMaxLength: draft.bodyMaxLength,
     draftSaveStatus: draft.draftSaveStatus,
     canSaveDraft: draft.canSaveDraft,
+    canPublishDraft,
     canUndo: draft.canUndo,
     canRedo: draft.canRedo,
     saveStatusLabel,
     saveButtonLabel,
+    publishButtonLabel,
+    publishErrorLabel,
     lastSavedLabel,
     workspaceShellRef,
     handleBodyDocumentInput,
     handleTitleInput,
     handleModeSelect,
     handleSaveDraft,
+    handlePublishDraft,
     handleToolbarAction,
     handleUndoDraft,
     handleRedoDraft,
