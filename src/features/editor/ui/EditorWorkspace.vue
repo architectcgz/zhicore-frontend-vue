@@ -135,7 +135,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-disabled-text: #6b7b88;
   --editor-control-primary: #1f7f74;
   --editor-control-primary-hover: #176b62;
-  --editor-toolbar-bg: var(--editor-control-bg-active);
+  --editor-toolbar-bg: var(--editor-control-bg);
   --editor-body-text: #3f4f5d;
   --editor-reader-text: #485765;
   --editor-reader-muted: #647280;
@@ -168,6 +168,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-bg: #f7f4ee;
   --editor-control-bg-muted: rgba(247, 244, 238, 0.72);
   --editor-control-bg-active: #fffdf8;
+  --editor-toolbar-bg: var(--editor-control-bg);
 }
 
 .editor--sage {
@@ -175,6 +176,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-bg: #edf5f1;
   --editor-control-bg-muted: rgba(224, 239, 232, 0.74);
   --editor-control-bg-active: #f7fbf8;
+  --editor-toolbar-bg: var(--editor-control-bg);
   --editor-control-hover-bg: rgba(31, 127, 116, 0.12);
   --editor-body-text: #365348;
   --editor-reader-text: #42584f;
@@ -185,6 +187,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-bg: #f4efe8;
   --editor-control-bg-muted: rgba(235, 223, 207, 0.72);
   --editor-control-bg-active: #fffaf2;
+  --editor-toolbar-bg: var(--editor-control-bg);
   --editor-control-hover-bg: rgba(183, 121, 31, 0.12);
   --editor-body-text: #5b4937;
   --editor-reader-text: #5f4e3e;

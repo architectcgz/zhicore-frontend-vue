@@ -24,6 +24,10 @@ const writingPaneTiptapBaseStyleSource = readFileSync(
   "src/components/editor/EditorWritingPaneTiptapBase.css",
   "utf8",
 );
+const editorWorkspaceSource = readFileSync(
+  "src/features/editor/ui/EditorWorkspace.vue",
+  "utf8",
+);
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -808,6 +812,31 @@ describe("EditorWritingPane", () => {
     expect(writingPaneTiptapBaseStyleSource).toContain(
       "var(--editor-reader-block-bg",
     );
+  });
+
+  it("keeps the floating toolbar background tied to the editor surface theme", () => {
+    const lightThemeBlocks: string[] =
+      editorWorkspaceSource.match(
+        /\.editor--(?:paper|sage|sand)\s*\{[\s\S]*?\n\}/g,
+      ) ?? [];
+    const toolbarFallbacks =
+      writingPaneStyleSource.match(
+        /--editor-toolbar-bg,\s*var\(\s*--editor-control-bg,/g,
+      ) ?? [];
+
+    expect(editorWorkspaceSource).toContain(
+      "--editor-toolbar-bg: var(--editor-control-bg);",
+    );
+    expect(lightThemeBlocks).toHaveLength(3);
+    lightThemeBlocks.forEach((source) => {
+      expect(source).toContain(
+        "--editor-toolbar-bg: var(--editor-control-bg);",
+      );
+    });
+    expect(writingPaneStyleSource).not.toMatch(
+      /--editor-toolbar-bg,\s*var\(\s*--editor-control-bg-active/,
+    );
+    expect(toolbarFallbacks).toHaveLength(4);
   });
 
   it("centers the document sheet in a narrower writing canvas", () => {
