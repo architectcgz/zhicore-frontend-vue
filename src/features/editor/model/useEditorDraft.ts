@@ -29,16 +29,19 @@ import {
   createEditorPreviewParagraphs,
   createEditorReaderPreviewBlocks,
 } from "./editorDraftPreview";
-import {
-  createEditorDraftSaveRequest,
-  type EditorDraftServerSaveClient,
-  type EditorServerDraftBaseline,
-} from "./editorDraftSaveRequest";
+import type {
+  EditorDraftServerSaveClient,
+  EditorServerDraftBaseline,
+} from "./editorDraftSavePayload";
 import {
   createEditorSavedDraftSnapshot,
   createEditorSourceHash,
   type EditorSavedDraftSnapshot,
 } from "./editorDraftSnapshot";
+import {
+  useEditorDraftSaveWorkflow,
+  type EditorDraftSaveStatus,
+} from "./useEditorDraftSaveWorkflow";
 import { createEditorLogger } from "./editorDebug";
 import {
   createDefaultEditorDocumentJson,
@@ -59,7 +62,6 @@ export type EditorDraftBlockType = PostBodyBlock["type"];
 export type EditorDraftBlock = PostBodyBlock;
 export type EditorInlineNode = PostBodyInlineNode;
 export type EditorReaderPreviewBlock = EditorPreviewReaderBlock;
-export type EditorDraftSaveStatus = "saved" | "dirty" | "saving";
 
 export interface UseEditorDraftOptions {
   previewCompileDebounceMs?: number;
@@ -76,6 +78,7 @@ export interface EditorDraftHistoryRestoreResult {
 
 export type {
   EditorDraftServerSaveClient,
+  EditorDraftSaveStatus,
   EditorSavedDraftSnapshot,
   EditorServerDraftBaseline,
 };
@@ -154,22 +157,8 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
         now(),
       ),
   );
-  const serverDraftBaseline = ref<EditorServerDraftBaseline | undefined>(
-    options.serverDraftBaseline,
-  );
-  const isSavingDraft = ref(false);
   const hasUnsavedChanges = computed(
     () => currentSourceHash.value !== savedDraftSnapshot.value.sourceHash,
-  );
-  const draftSaveStatus = computed<EditorDraftSaveStatus>(() => {
-    if (isSavingDraft.value) {
-      return "saving";
-    }
-
-    return hasUnsavedChanges.value ? "dirty" : "saved";
-  });
-  const canSaveDraft = computed(
-    () => !isSavingDraft.value && hasUnsavedChanges.value,
   );
   const canUndo = computed(() => canUndoEditorDraftHistory(history.value));
   const canRedo = computed(() => canRedoEditorDraftHistory(history.value));
@@ -264,6 +253,23 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     ]);
   }
 
+  const {
+    serverDraftBaseline,
+    draftSaveStatus,
+    canSaveDraft,
+    saveDraft,
+  } = useEditorDraftSaveWorkflow({
+    now,
+    hasUnsavedChanges,
+    getPostBodyWriteInput: () => postBodyWriteInput.value,
+    createSavedDraftSnapshot,
+    savedDraftSnapshot,
+    persistCurrentDraftToLocal,
+    compilePreviewNow,
+    serverDraftBaseline: options.serverDraftBaseline,
+    serverSaveClient: options.serverSaveClient,
+  });
+
   function schedulePreviewCompilation(): void {
     window.clearTimeout(previewCompileTimer);
 
@@ -355,54 +361,6 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     );
   }
 
-  async function saveDraft(): Promise<void> {
-    if (!canSaveDraft.value) {
-      return;
-    }
-
-    isSavingDraft.value = true;
-
-    try {
-      // 保存快照必须基于当前 Tiptap JSON 重新映射，不能依赖可能仍在 debounce 中的预览日志。
-      compilePreviewNow();
-      const savedAt = now();
-      const baseline = serverDraftBaseline.value;
-
-      if (baseline && options.serverSaveClient) {
-        const response = await options.serverSaveClient.saveDraftBody(
-          baseline.postId,
-          createEditorDraftSaveRequest(
-            baseline,
-            postBodyWriteInput.value,
-            savedAt,
-          ),
-        );
-
-        // 服务端返回的 draftBodyHash 才是下一次乐观保存基线；本地 hash
-        // 只用于前端 dirty 判断，不能混入 Content API 请求。
-        serverDraftBaseline.value = {
-          postId: response.postId,
-          basePostVersion: response.postVersion,
-          baseDraftBodyId: response.draftBodyId,
-          baseDraftBodyHash: response.draftBodyHash,
-        };
-        const nextSavedSnapshot = createSavedDraftSnapshot(savedAt);
-
-        savedDraftSnapshot.value = nextSavedSnapshot;
-        persistCurrentDraftToLocal(nextSavedSnapshot);
-        return;
-      }
-
-      await Promise.resolve();
-      const nextSavedSnapshot = createSavedDraftSnapshot(savedAt);
-
-      savedDraftSnapshot.value = nextSavedSnapshot;
-      persistCurrentDraftToLocal(nextSavedSnapshot);
-    } finally {
-      isSavingDraft.value = false;
-    }
-  }
-
   watch(
     body,
     () => {
@@ -432,7 +390,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     bodyCharacterCount,
     bodyMaxLength: editorDraftBodyMaxLength,
     savedDraftSnapshot,
-    serverDraftBaseline: readonly(serverDraftBaseline),
+    serverDraftBaseline,
     draftSaveStatus,
     canSaveDraft,
     hasUnsavedChanges,

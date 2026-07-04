@@ -19,7 +19,7 @@ function isServerDraftBodyHash(hash: string | undefined): hash is string {
   return Boolean(hash && !hash.startsWith("local:"));
 }
 
-export function createEditorDraftSaveRequest(
+export function buildSaveDraftBodyPayload(
   baseline: EditorServerDraftBaseline,
   writeInput: PostBodyWriteInput,
   clientSavedAt: Date,

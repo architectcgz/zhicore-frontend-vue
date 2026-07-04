@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PostBodyWriteInput } from "@/entities/post-body";
 
-import { createEditorDraftSaveRequest } from "../editorDraftSaveRequest";
+import { buildSaveDraftBodyPayload } from "../editorDraftSavePayload";
 
 const writeInput: PostBodyWriteInput = {
   schemaVersion: 1,
@@ -14,9 +14,9 @@ const writeInput: PostBodyWriteInput = {
   ],
 };
 
-describe("editorDraftSaveRequest", () => {
-  it("keeps server draft hash in the save request baseline", () => {
-    const request = createEditorDraftSaveRequest(
+describe("editorDraftSavePayload", () => {
+  it("keeps server draft hash in the save payload baseline", () => {
+    const payload = buildSaveDraftBodyPayload(
       {
         postId: "post-1",
         basePostVersion: 7,
@@ -27,7 +27,7 @@ describe("editorDraftSaveRequest", () => {
       new Date("2026-07-02T00:00:00.000Z"),
     );
 
-    expect(request).toMatchObject({
+    expect(payload).toMatchObject({
       schemaVersion: 1,
       blocks: writeInput.blocks,
       basePostVersion: 7,
@@ -38,7 +38,7 @@ describe("editorDraftSaveRequest", () => {
   });
 
   it("does not send local content hash as a server draft hash", () => {
-    const request = createEditorDraftSaveRequest(
+    const payload = buildSaveDraftBodyPayload(
       {
         postId: "post-1",
         basePostVersion: 7,
@@ -48,6 +48,6 @@ describe("editorDraftSaveRequest", () => {
       new Date("2026-07-02T00:00:00.000Z"),
     );
 
-    expect(request).not.toHaveProperty("baseDraftBodyHash");
+    expect(payload).not.toHaveProperty("baseDraftBodyHash");
   });
 });
