@@ -1,4 +1,5 @@
 import {
+  type Editor,
   Extension,
   mergeAttributes,
   Node as TiptapNode,
@@ -16,7 +17,8 @@ import TaskList from "@tiptap/extension-task-list";
 import Underline from "@tiptap/extension-underline";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import StarterKit from "@tiptap/starter-kit";
-import { Plugin } from "@tiptap/pm/state";
+import { Plugin, TextSelection } from "@tiptap/pm/state";
+import { isInTable, selectedRect } from "@tiptap/pm/tables";
 import type { NodeView, ViewMutationRecord } from "@tiptap/pm/view";
 
 import { sanitizePostBodyExternalUrl } from "@/entities/post-body";
@@ -243,6 +245,61 @@ export const EditorTiptapExternalEmbed = TiptapNode.create({
   },
 });
 
+function isCursorAtTextblockEnd(editor: Editor): boolean {
+  const { selection } = editor.state;
+
+  return (
+    selection.empty &&
+    selection.$head.parent.isTextblock &&
+    selection.$head.parentOffset === selection.$head.parent.content.size
+  );
+}
+
+function moveCursorToParagraphAfterLastTableCell(editor: Editor): boolean {
+  const { state, view } = editor;
+
+  if (!isCursorAtTextblockEnd(editor) || !isInTable(state)) {
+    return false;
+  }
+
+  const tableRect = selectedRect(state);
+  const isLastTableCell =
+    tableRect.right === tableRect.map.width &&
+    tableRect.bottom === tableRect.map.height;
+
+  if (!isLastTableCell) {
+    return false;
+  }
+
+  const paragraph = state.schema.nodes.paragraph?.createAndFill();
+
+  if (!paragraph) {
+    return false;
+  }
+
+  // 作者在表格末格继续向右/向下时，意图是续写表格后的正文，而不是新增表格行或停在 gap cursor。
+  const tableEndPosition = tableRect.tableStart + tableRect.table.nodeSize - 1;
+  const transaction = state.tr.insert(tableEndPosition, paragraph);
+
+  transaction
+    .setSelection(TextSelection.create(transaction.doc, tableEndPosition + 1))
+    .scrollIntoView();
+
+  view.dispatch(transaction);
+  return true;
+}
+
+const EditorTiptapTableExit = Extension.create({
+  name: "editorTableExit",
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowRight: () => moveCursorToParagraphAfterLastTableCell(this.editor),
+      ArrowDown: () => moveCursorToParagraphAfterLastTableCell(this.editor),
+    };
+  },
+});
+
 export function createEditorTiptapContractGuardExtension(
   options: EditorTiptapContractGuardOptions = {},
 ) {
@@ -313,6 +370,7 @@ export function createEditorTiptapExtensions(
     TableRow,
     TableHeader,
     TableCell,
+    EditorTiptapTableExit,
     TaskList,
     TaskItem.configure({
       nested: true,

@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/vue-3";
+import { isInTable } from "@tiptap/pm/tables";
 import { mount } from "@vue/test-utils";
 // @ts-expect-error Vitest runs this spec in Node; browser tsconfig does not expose Node ambient types.
 import { readFileSync } from "node:fs";
@@ -36,6 +37,65 @@ function bodyDoc(text: string): EditorTiptapDocumentJson {
       {
         type: "paragraph",
         content: text ? [{ type: "text", text }] : [],
+      },
+    ],
+  };
+}
+
+function tableDoc(): EditorTiptapDocumentJson {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "table",
+        content: [
+          {
+            type: "tableRow",
+            content: [
+              {
+                type: "tableHeader",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "表头一" }],
+                  },
+                ],
+              },
+              {
+                type: "tableHeader",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "表头二" }],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "tableRow",
+            content: [
+              {
+                type: "tableCell",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "内容一" }],
+                  },
+                ],
+              },
+              {
+                type: "tableCell",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "末格" }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     ],
   };
@@ -90,6 +150,43 @@ function exposedEditor(wrapper: ReturnType<typeof mountWritingPane>) {
 
 function blocksFromEditor(editor: Editor) {
   return mapTiptapJsonToPostBodyWriteInput(editor.getJSON()).blocks;
+}
+
+function setSelectionAfterText(editor: Editor, text: string): void {
+  let selectionPosition: number | null = null;
+
+  editor.state.doc.descendants((node, position) => {
+    if (node.isText && node.text === text) {
+      selectionPosition = position + node.nodeSize;
+      return false;
+    }
+
+    return true;
+  });
+
+  if (selectionPosition === null) {
+    throw new Error(`Could not find text node: ${text}`);
+  }
+
+  editor.commands.setTextSelection(selectionPosition);
+}
+
+function dispatchEditorKey(editor: Editor, key: string): boolean {
+  const event = new KeyboardEvent("keydown", {
+    key,
+    bubbles: true,
+    cancelable: true,
+  });
+  let handled = false;
+
+  editor.view.someProp("handleKeyDown", (handleKeyDown) => {
+    const didHandle = handleKeyDown(editor.view, event) === true;
+
+    handled = handled || didHandle;
+    return didHandle ? true : undefined;
+  });
+
+  return handled;
 }
 
 describe("EditorWritingPane", () => {
@@ -438,6 +535,42 @@ describe("EditorWritingPane", () => {
         rows: [[{ children: [] }, { children: [] }]],
       },
     ]);
+  });
+
+  it("moves out of the last table cell into a new paragraph with right or down arrow", () => {
+    (["ArrowRight", "ArrowDown"] as const).forEach((key) => {
+      const wrapper = mountWritingPane();
+      const exposed = exposedEditor(wrapper);
+
+      exposed.bodyEditor?.commands.setContent(tableDoc(), {
+        emitUpdate: false,
+        errorOnInvalidContent: true,
+      });
+      setSelectionAfterText(exposed.bodyEditor!, "末格");
+      const handled = dispatchEditorKey(exposed.bodyEditor!, key);
+
+      expect(handled).toBe(true);
+      expect(isInTable(exposed.bodyEditor!.state)).toBe(false);
+      expect(blocksFromEditor(exposed.bodyEditor!)).toEqual([
+        {
+          type: "table",
+          headers: [
+            { children: [{ type: "text", text: "表头一" }] },
+            { children: [{ type: "text", text: "表头二" }] },
+          ],
+          rows: [
+            [
+              { children: [{ type: "text", text: "内容一" }] },
+              { children: [{ type: "text", text: "末格" }] },
+            ],
+          ],
+        },
+        {
+          type: "paragraph",
+          children: [],
+        },
+      ]);
+    });
   });
 
   it("updates the selected code block language from the editor toolbar", async () => {
