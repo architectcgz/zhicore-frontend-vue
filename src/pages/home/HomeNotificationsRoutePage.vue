@@ -16,20 +16,42 @@
           <button
             class="notifications-route__nav-item"
             type="button"
-            aria-current="page"
+            aria-label="全部通知"
+            :aria-current="selectedCategory === 'all' ? 'page' : undefined"
+            @click="selectCategory('all')"
           >
             <Bell class="notifications-route__nav-icon" aria-hidden="true" />
             <span>全部</span>
           </button>
-          <button class="notifications-route__nav-item" type="button">
+          <button
+            class="notifications-route__nav-item"
+            type="button"
+            aria-label="提及通知"
+            :aria-current="selectedCategory === 'content' ? 'page' : undefined"
+            @click="selectCategory('content')"
+          >
             <AtSign class="notifications-route__nav-icon" aria-hidden="true" />
             <span>提及</span>
           </button>
-          <button class="notifications-route__nav-item" type="button">
+          <button
+            class="notifications-route__nav-item"
+            type="button"
+            aria-label="互动通知"
+            :aria-current="
+              selectedCategory === 'interaction' ? 'page' : undefined
+            "
+            @click="selectCategory('interaction')"
+          >
             <Heart class="notifications-route__nav-icon" aria-hidden="true" />
             <span>互动</span>
           </button>
-          <button class="notifications-route__nav-item" type="button">
+          <button
+            class="notifications-route__nav-item"
+            type="button"
+            aria-label="系统通知"
+            :aria-current="selectedCategory === 'system' ? 'page' : undefined"
+            @click="selectCategory('system')"
+          >
             <Sparkles
               class="notifications-route__nav-icon"
               aria-hidden="true"
@@ -59,7 +81,7 @@
 
         <div class="notifications-route__list">
           <article
-            v-for="notification in page.notifications"
+            v-for="notification in paginatedNotifications"
             :key="notification.id"
             class="notifications-route__item"
             :class="{
@@ -94,6 +116,30 @@
             </footer>
           </article>
         </div>
+
+        <footer
+          v-if="totalPages > 1"
+          class="notifications-route__pagination"
+          aria-label="通知分页"
+        >
+          <button
+            type="button"
+            aria-label="上一页通知"
+            :disabled="!canGoPrevious"
+            @click="goPreviousPage"
+          >
+            上一页
+          </button>
+          <span>第 {{ currentPage }} / {{ totalPages }} 页</span>
+          <button
+            type="button"
+            aria-label="下一页通知"
+            :disabled="!canGoNext"
+            @click="goNextPage"
+          >
+            下一页
+          </button>
+        </footer>
       </section>
     </section>
 
@@ -107,10 +153,58 @@
 
 <script setup lang="ts">
 import { AtSign, Bell, Heart, Search, Sparkles } from "@lucide/vue";
+import { computed, ref } from "vue";
 
 import { useNotificationCenterPage } from "@/features/notification";
+import type { NotificationCenterType } from "@/features/notification";
 
 const page = useNotificationCenterPage();
+const notificationsPerPage = 3;
+type NotificationCategory = "all" | NotificationCenterType;
+
+const selectedCategory = ref<NotificationCategory>("all");
+const currentPage = ref(1);
+
+const filteredNotifications = computed(() => {
+  if (selectedCategory.value === "all") {
+    return page.notifications;
+  }
+
+  return page.notifications.filter(
+    (notification) => notification.type === selectedCategory.value,
+  );
+});
+
+const totalPages = computed(() =>
+  Math.max(
+    1,
+    Math.ceil(filteredNotifications.value.length / notificationsPerPage),
+  ),
+);
+const canGoPrevious = computed(() => currentPage.value > 1);
+const canGoNext = computed(() => currentPage.value < totalPages.value);
+const paginatedNotifications = computed(() => {
+  const start = (currentPage.value - 1) * notificationsPerPage;
+
+  return filteredNotifications.value.slice(start, start + notificationsPerPage);
+});
+
+function selectCategory(category: NotificationCategory) {
+  selectedCategory.value = category;
+  currentPage.value = 1;
+}
+
+function goPreviousPage() {
+  if (canGoPrevious.value) {
+    currentPage.value -= 1;
+  }
+}
+
+function goNextPage() {
+  if (canGoNext.value) {
+    currentPage.value += 1;
+  }
+}
 </script>
 
 <style scoped>
@@ -118,10 +212,10 @@ const page = useNotificationCenterPage();
   --notifications-bg: #0f1115;
   --notifications-surface: rgba(255, 255, 255, 0.03);
   --notifications-surface-hover: rgba(255, 255, 255, 0.06);
-  --notifications-line: rgba(255, 255, 255, 0.08);
+  --notifications-line: rgba(255, 255, 255, 0.14);
   --notifications-line-strong: color-mix(
     in srgb,
-    var(--color-text-strong) 14%,
+    var(--color-text-strong) 24%,
     transparent
   );
   --notifications-text: #d7dce2;
@@ -221,7 +315,8 @@ const page = useNotificationCenterPage();
 
 .notifications-route__nav-item:focus-visible,
 .notifications-route__mark-button:focus-visible,
-.notifications-route__item-footer button:focus-visible {
+.notifications-route__item-footer button:focus-visible,
+.notifications-route__pagination button:focus-visible {
   outline: 2px solid var(--notifications-focus-ring);
   outline-offset: 2px;
 }
@@ -358,7 +453,7 @@ const page = useNotificationCenterPage();
 }
 
 .notifications-route__item--unread {
-  border-color: color-mix(in srgb, var(--color-primary) 34%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 46%, transparent);
   background: color-mix(
     in srgb,
     var(--color-primary) 4%,
@@ -456,6 +551,35 @@ const page = useNotificationCenterPage();
   );
 }
 
+.notifications-route__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  color: var(--notifications-muted);
+  font-size: 0.8125rem;
+}
+
+.notifications-route__pagination button {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--notifications-line);
+  border-radius: var(--radius-md);
+  background: var(--notifications-surface);
+  color: var(--notifications-text-strong);
+  cursor: pointer;
+}
+
+.notifications-route__pagination button:hover:not(:disabled) {
+  border-color: var(--notifications-line-strong);
+  background: var(--notifications-surface-hover);
+}
+
+.notifications-route__pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .notifications-route__empty {
   display: grid;
   gap: var(--space-3);
@@ -521,12 +645,21 @@ const page = useNotificationCenterPage();
   .notifications-route__item-footer button {
     min-height: 44px;
   }
+
+  .notifications-route__pagination {
+    justify-content: space-between;
+  }
+
+  .notifications-route__pagination button {
+    min-height: 44px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .notifications-route__nav-item,
   .notifications-route__item,
-  .notifications-route__mark-button {
+  .notifications-route__mark-button,
+  .notifications-route__pagination button {
     transition: none;
   }
 }

@@ -25,4 +25,20 @@ export const notificationCenterLocalMock: NotificationCenterItem[] = [
     occurredAt: "3 天前",
     unread: true,
   },
+  {
+    id: "notif-topic",
+    type: "content",
+    title: "专题收录提醒",
+    body: "你的文章已被收录到“前端工程实践”专题。",
+    occurredAt: "4 天前",
+    unread: false,
+  },
+  {
+    id: "notif-reply",
+    type: "interaction",
+    title: "新的回复",
+    body: "Li Lei 回复了你在《内容模型设计》下的评论。",
+    occurredAt: "5 天前",
+    unread: false,
+  },
 ];
