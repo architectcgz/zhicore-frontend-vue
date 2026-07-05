@@ -1,7 +1,7 @@
 <template>
   <div class="about-page">
     <div class="about-page__container">
-      <div class="glass-panel about-card">
+      <article class="about-card">
         <h1 class="about-card__title">关于知构 (ZhiCore)</h1>
         <p class="about-card__subtitle">
           下一代专注于结构化知识与沉浸式体验的内容协作平台。
@@ -10,7 +10,11 @@
         <div class="about-card__content">
           <h2>设计哲学</h2>
           <p>
-            知构 (ZhiCore) 以<strong>深色拟物玻璃态 (Dark Glassmorphism)</strong> 为核心视觉语言。我们相信，阅读和写作环境不应当是苍白耀眼的白纸，而是犹如星空般深邃、晶莹透彻的画布。我们大幅利用毛玻璃（Backdrop blur）与高级渐变背景，旨在降低用户认知负荷，提供真正的沉浸式创作体验。
+            知构 (ZhiCore) 以<strong
+              >深色拟物玻璃态 (Dark Glassmorphism)</strong
+            >
+            为核心视觉语言。我们相信，阅读和写作环境不应当是苍白耀眼的白纸，而是犹如星空般深邃、晶莹透彻的画布。我们大幅利用毛玻璃（Backdrop
+            blur）与高级渐变背景，旨在降低用户认知负荷，提供真正的沉浸式创作体验。
           </p>
 
           <h2>核心特性</h2>
@@ -21,7 +25,8 @@
             </li>
             <li>
               <strong>前沿技术与高可用架构：</strong>
-              采用 Vue 3 + TypeScript 生态，并全面集成 Vitest 保障平台的高覆盖率与稳定性。
+              采用 Vue 3 + TypeScript 生态，并全面集成 Vitest
+              保障平台的高覆盖率与稳定性。
             </li>
             <li>
               <strong>结构化知识流：</strong>
@@ -33,7 +38,7 @@
             <p>探索知识，重构思维。</p>
           </div>
         </div>
-      </div>
+      </article>
     </div>
   </div>
 </template>
@@ -149,11 +154,11 @@
   .about-page {
     padding: var(--space-6) var(--space-4);
   }
-  
+
   .about-card {
     padding: var(--space-8) var(--space-6);
   }
-  
+
   .about-card__title {
     font-size: 28px;
   }
