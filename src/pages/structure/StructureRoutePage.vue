@@ -124,4 +124,16 @@ const structureCapabilities = [
   color: var(--color-text-soft);
   font-size: 14px;
 }
+
+@media (max-width: 768px) {
+  .structure-page {
+    padding: 0 16px 24px;
+  }
+  .structure-page h1 {
+    font-size: 26px;
+  }
+  .structure-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

@@ -11,7 +11,7 @@
             <div class="auth-page__logo">Z</div>
             <p class="auth-page__eyebrow">知构 ZhiCore</p>
           </div>
-          
+
           <h2 class="auth-page__title">欢迎回来</h2>
           <p class="auth-page__description">
             登录以发布文章、参与评论与构建你的结构化知识库。
@@ -28,7 +28,7 @@
                 placeholder="请输入用户名"
               />
             </div>
-            
+
             <div class="auth-page__input-group">
               <label for="login-password">密码</label>
               <input
@@ -44,14 +44,21 @@
               {{ loginError }}
             </p>
 
-            <button type="submit" class="auth-page__submit-btn" :disabled="isLoginSubmitting">
+            <button
+              type="submit"
+              class="auth-page__submit-btn"
+              :disabled="isLoginSubmitting"
+            >
               {{ isLoginSubmitting ? "登录中..." : "登录" }}
             </button>
           </form>
 
           <div class="auth-page__toggle">
             <span>还没有账号？</span>
-            <button class="auth-page__toggle-btn" @click="toggleMode('Register')">
+            <button
+              class="auth-page__toggle-btn"
+              @click="toggleMode('Register')"
+            >
               立即注册
             </button>
           </div>
@@ -63,11 +70,9 @@
             <div class="auth-page__logo">Z</div>
             <p class="auth-page__eyebrow">知构 ZhiCore</p>
           </div>
-          
+
           <h2 class="auth-page__title">创建新账号</h2>
-          <p class="auth-page__description">
-            加入我们，构建你的结构化知识库。
-          </p>
+          <p class="auth-page__description">加入我们，构建你的结构化知识库。</p>
 
           <form class="auth-page__form" @submit.prevent="submitRegister">
             <div class="auth-page__input-group">
@@ -80,7 +85,7 @@
                 placeholder="请输入用户名"
               />
             </div>
-            
+
             <div class="auth-page__input-group">
               <label for="reg-password">密码</label>
               <input
@@ -107,7 +112,11 @@
               {{ regError }}
             </p>
 
-            <button type="submit" class="auth-page__submit-btn" :disabled="isRegSubmitting">
+            <button
+              type="submit"
+              class="auth-page__submit-btn"
+              :disabled="isRegSubmitting"
+            >
               {{ isRegSubmitting ? "注册中..." : "注册" }}
             </button>
           </form>
@@ -140,12 +149,12 @@ const toggleMode = (name: "Login" | "Register") => {
 };
 
 // Login Logic (re-using existing composable for consistency, but extracting its refs)
-const { 
-  username: loginUsername, 
-  password: loginPassword, 
-  submitting: isLoginSubmitting, 
-  errorMessage: loginError, 
-  submit: submitLogin 
+const {
+  username: loginUsername,
+  password: loginPassword,
+  submitting: isLoginSubmitting,
+  errorMessage: loginError,
+  submit: submitLogin,
 } = useLoginForm();
 
 // Register Logic (local state for now)
@@ -182,9 +191,17 @@ const submitRegister = async () => {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: 
-    radial-gradient(circle at top right, rgba(0, 229, 181, 0.15), transparent 40%),
-    radial-gradient(circle at bottom left, rgba(0, 168, 255, 0.1), transparent 40%),
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(0, 229, 181, 0.15),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(0, 168, 255, 0.1),
+      transparent 40%
+    ),
     linear-gradient(135deg, #0a0f14 0%, #111a22 100%);
   perspective: 1200px;
 }
@@ -380,8 +397,14 @@ const submitRegister = async () => {
 }
 
 @media (max-width: 600px) {
+  .auth-page {
+    padding: 16px;
+  }
   .auth-page__glass-panel {
-    padding: 32px 24px;
+    padding: 32px 20px;
+  }
+  .auth-page__title {
+    font-size: 1.5rem;
   }
 }
 </style>
