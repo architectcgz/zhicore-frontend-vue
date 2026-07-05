@@ -18,27 +18,27 @@ export interface EditorBackground {
 const backgroundCandidates: EditorBackground[] = [
   {
     id: "paper",
-    name: "纸面",
+    name: "默认",
     className: "editor--paper",
-    swatch: "linear-gradient(135deg, #f7f4ee, #edf1f6)",
+    swatch: "linear-gradient(135deg, #1e293b, #0f172a)",
   },
   {
     id: "sage",
     name: "青绿",
     className: "editor--sage",
-    swatch: "linear-gradient(135deg, #eaf3ef, #d9e8e1)",
+    swatch: "linear-gradient(135deg, #14532d, #052e16)",
   },
   {
     id: "sand",
     name: "暖沙",
     className: "editor--sand",
-    swatch: "linear-gradient(135deg, #f5f0e8, #ead7bd)",
+    swatch: "linear-gradient(135deg, #78350f, #451a03)",
   },
   {
     id: "ink",
-    name: "墨蓝",
+    name: "幽蓝",
     className: "editor--ink",
-    swatch: "linear-gradient(135deg, #141a24, #263341)",
+    swatch: "linear-gradient(135deg, #1e3a8a, #172554)",
   },
 ];
 

@@ -11,7 +11,7 @@ function mountMobileWorkspace(activeMode: "focus" | "preview") {
       backgroundCandidates: [
         {
           id: "paper",
-          name: "纸面",
+          name: "默认",
           className: "editor--paper",
           swatch: "linear-gradient(135deg, #f7f4ee, #edf1f6)",
         },
