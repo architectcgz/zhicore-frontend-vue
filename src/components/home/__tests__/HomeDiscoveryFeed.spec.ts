@@ -34,6 +34,32 @@ describe("HomeDiscoveryFeed", () => {
   it("mounts successfully with the new design", async () => {
     const wrapper = await mountHomeDiscoveryFeed();
     expect(wrapper.exists()).toBe(true);
-    expect(wrapper.find(".home-discovery__hero-title").text()).toContain("结构化知识");
+    expect(wrapper.find(".home-discovery__hero-title").text()).toContain(
+      "结构化知识",
+    );
+  });
+
+  it("renders article cards with the shared default presentation", async () => {
+    const wrapper = await mountHomeDiscoveryFeed();
+    const articles = wrapper.findAll(".home-discovery__article");
+
+    expect(articles).toHaveLength(homeDiscoveryMock.posts.length);
+
+    for (const [index, article] of articles.entries()) {
+      const post = homeDiscoveryMock.posts[index];
+
+      expect(article.find(".home-discovery__article-author-row").exists()).toBe(
+        false,
+      );
+      expect(
+        article.find(".home-discovery__author-info-bottom").text(),
+      ).toContain(post.author);
+      expect(
+        article.findAll(".home-discovery__author-name-small"),
+      ).toHaveLength(1);
+      expect(
+        article.find(".home-discovery__image-placeholder").classes(),
+      ).toContain("dark-bg");
+    }
   });
 });

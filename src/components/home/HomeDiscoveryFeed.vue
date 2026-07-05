@@ -2,18 +2,24 @@
   <section class="home-discovery" aria-labelledby="home-discovery-title">
     <header class="home-discovery__hero">
       <h1 id="home-discovery-title" class="home-discovery__hero-title">
-        结构化知识，<br/>
+        结构化知识，<br />
         无限洞察。
       </h1>
       <p class="home-discovery__hero-desc">
-        知构：致力于培育结构化知识、分享洞见，<br/>
+        知构：致力于培育结构化知识、分享洞见，<br />
         并通过优质内容共同成长的首选社区。
       </p>
       <div class="home-discovery__hero-actions">
-        <RouterLink class="home-discovery__btn home-discovery__btn--primary" to="/auth/login">
+        <RouterLink
+          class="home-discovery__btn home-discovery__btn--primary"
+          to="/auth/login"
+        >
           免费开始
         </RouterLink>
-        <RouterLink class="home-discovery__btn home-discovery__btn--secondary" to="/structure">
+        <RouterLink
+          class="home-discovery__btn home-discovery__btn--secondary"
+          to="/structure"
+        >
           探索社区
         </RouterLink>
       </div>
@@ -30,100 +36,84 @@
 
     <section class="home-discovery__content">
       <main class="home-discovery__main-feed">
-        <article class="home-discovery__article glass-panel">
+        <article
+          v-for="article in articleCards"
+          :key="`${article.href}-${article.title}`"
+          class="home-discovery__article glass-panel"
+        >
           <div class="home-discovery__article-content">
             <header class="home-discovery__article-header">
-              <span class="home-discovery__article-category">产品设计</span>
+              <span class="home-discovery__article-category">{{
+                article.category
+              }}</span>
               <div class="home-discovery__article-meta-right">
-                <span>10月28日</span>
-                <span class="home-discovery__icon-text"><MessageSquare class="icon-sm" /> 1.2K</span>
+                <span class="home-discovery__icon-text">
+                  <Clock class="icon-sm" />
+                  {{ article.publishedAt }}
+                </span>
+                <span class="home-discovery__icon-text">
+                  <MessageSquare class="icon-sm" />
+                  {{ article.comments }}
+                </span>
               </div>
             </header>
-            
-            <h2 class="home-discovery__article-title">掌握信息架构：全面指南</h2>
-            
-            <div class="home-discovery__article-author-row">
-              <div class="home-discovery__author-info">
-                <div class="home-discovery__avatar">
-                  <img src="https://i.pravatar.cc/150?u=liam" alt="Liam Chen" />
-                </div>
-                <span class="home-discovery__author-name">Liam Chen</span>
-                <span class="home-discovery__dot">·</span>
-                <span class="home-discovery__date">10月26日</span>
-                <span class="home-discovery__dot">·</span>
-                <span class="home-discovery__icon-text"><Heart class="icon-sm" /> 1.2K</span>
-              </div>
-            </div>
-            
+
+            <h2 class="home-discovery__article-title">{{ article.title }}</h2>
+
             <p class="home-discovery__article-excerpt">
-              在产品设计中，信息架构是构建可用性和用户体验的基石。本文将带你探索如何通过清晰的结构化思考来组织和展示复杂系统，帮助用户更高效地获取知识。
+              {{ article.summary }}
             </p>
-            
+
             <div class="home-discovery__article-tags">
-              <span class="home-discovery__tag">产品</span>
-              <span class="home-discovery__tag">设计</span>
-              <span class="home-discovery__tag">架构</span>
+              <span
+                v-for="tag in article.tags"
+                :key="tag"
+                class="home-discovery__tag"
+              >
+                {{ tag }}
+              </span>
             </div>
-            
+
             <footer class="home-discovery__article-footer">
               <div class="home-discovery__author-info-bottom">
                 <div class="home-discovery__avatar icon-sm-avatar">
-                  <img src="https://i.pravatar.cc/150?u=liam" alt="Liam Chen" />
+                  <img :src="article.authorAvatarUrl" :alt="article.author" />
                 </div>
-                <span class="home-discovery__author-name-small">Liam Chen</span>
+                <span class="home-discovery__author-name-small">{{
+                  article.author
+                }}</span>
               </div>
               <div class="home-discovery__article-actions">
-                <button class="home-discovery__action-btn" aria-label="Like"><Heart class="icon-md" /></button>
-                <button class="home-discovery__action-btn" aria-label="Comment"><MessageSquare class="icon-md" /></button>
-                <button class="home-discovery__action-btn" aria-label="Bookmark"><Bookmark class="icon-md" /></button>
+                <button
+                  type="button"
+                  class="home-discovery__action-btn"
+                  :aria-label="article.actionLabels.like"
+                >
+                  <Heart class="icon-md" />
+                </button>
+                <button
+                  type="button"
+                  class="home-discovery__action-btn"
+                  :aria-label="article.actionLabels.comment"
+                >
+                  <MessageSquare class="icon-md" />
+                </button>
+                <button
+                  type="button"
+                  class="home-discovery__action-btn"
+                  :aria-label="article.actionLabels.bookmark"
+                >
+                  <Bookmark class="icon-md" />
+                </button>
               </div>
             </footer>
           </div>
-          
+
           <div class="home-discovery__article-image">
-             <div class="home-discovery__image-placeholder ui-mockup-bg"></div>
-          </div>
-        </article>
-        
-        <article class="home-discovery__article glass-panel">
-          <div class="home-discovery__article-content">
-            <header class="home-discovery__article-header">
-              <span class="home-discovery__article-category">设计趋势</span>
-              <div class="home-discovery__article-meta-right">
-                <span class="home-discovery__icon-text"><Clock class="icon-sm" /> 10月26日</span>
-                <span class="home-discovery__icon-text"><MessageSquare class="icon-sm" /> 348</span>
-              </div>
-            </header>
-            
-            <h2 class="home-discovery__article-title">如何建立可扩展的组件库</h2>
-            
-            <p class="home-discovery__article-excerpt">
-              组件库是现代前端工程不可或缺的基础设施，从基础色彩体系到高级组件模式，本文深入解析其演进之路与常见架构设计挑战，助你打造优雅的代码体系。
-            </p>
-            
-            <div class="home-discovery__article-tags">
-              <span class="home-discovery__tag">设计</span>
-              <span class="home-discovery__tag">架构</span>
-              <span class="home-discovery__tag">排版</span>
-            </div>
-            
-            <footer class="home-discovery__article-footer">
-              <div class="home-discovery__author-info-bottom">
-                <div class="home-discovery__avatar icon-sm-avatar">
-                  <img src="https://i.pravatar.cc/150?u=liam" alt="Liam Chen" />
-                </div>
-                <span class="home-discovery__author-name-small">Liam Chen</span>
-              </div>
-              <div class="home-discovery__article-actions">
-                <button class="home-discovery__action-btn" aria-label="Like"><Heart class="icon-md" /></button>
-                <button class="home-discovery__action-btn" aria-label="Comment"><MessageSquare class="icon-md" /></button>
-                <button class="home-discovery__action-btn" aria-label="Bookmark"><Bookmark class="icon-md" /></button>
-              </div>
-            </footer>
-          </div>
-          
-          <div class="home-discovery__article-image">
-             <div class="home-discovery__image-placeholder dark-bg"></div>
+            <div
+              class="home-discovery__image-placeholder"
+              :class="article.imageClass"
+            ></div>
           </div>
         </article>
       </main>
@@ -132,14 +122,29 @@
         <div class="home-discovery__widget glass-panel">
           <h3 class="home-discovery__widget-title">热门话题</h3>
           <ul class="home-discovery__topic-list">
-            <li><span class="home-discovery__topic-num">1.</span> <span class="home-discovery__topic-name">前端架构</span></li>
-            <li><span class="home-discovery__topic-num">2.</span> <span class="home-discovery__topic-name">交互设计</span></li>
-            <li><span class="home-discovery__topic-num">3.</span> <span class="home-discovery__topic-name">状态管理</span></li>
-            <li><span class="home-discovery__topic-num">4.</span> <span class="home-discovery__topic-name">用户体验</span></li>
-            <li><span class="home-discovery__topic-num">5.</span> <span class="home-discovery__topic-name">性能优化</span></li>
+            <li>
+              <span class="home-discovery__topic-num">1.</span>
+              <span class="home-discovery__topic-name">前端架构</span>
+            </li>
+            <li>
+              <span class="home-discovery__topic-num">2.</span>
+              <span class="home-discovery__topic-name">交互设计</span>
+            </li>
+            <li>
+              <span class="home-discovery__topic-num">3.</span>
+              <span class="home-discovery__topic-name">状态管理</span>
+            </li>
+            <li>
+              <span class="home-discovery__topic-num">4.</span>
+              <span class="home-discovery__topic-name">用户体验</span>
+            </li>
+            <li>
+              <span class="home-discovery__topic-num">5.</span>
+              <span class="home-discovery__topic-name">性能优化</span>
+            </li>
           </ul>
         </div>
-        
+
         <div class="home-discovery__widget glass-panel">
           <h3 class="home-discovery__widget-title">热门社区</h3>
           <ul class="home-discovery__community-list">
@@ -179,6 +184,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { Heart, MessageSquare, Bookmark, Clock } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 import type { HomeDiscoveryData } from "@/features/home-discovery";
@@ -193,6 +199,24 @@ const emit = defineEmits<{
   selectContentCategory: [category: string];
   "update:searchQuery": [query: string];
 }>();
+
+// 卡片默认对象只承载第二张文章的展示参数；作者等发帖者信息从文章数据派生，避免同一卡片维护两套来源。
+const defaultArticleCardPresentation = {
+  imageClass: "dark-bg",
+  actionLabels: {
+    like: "Like",
+    comment: "Comment",
+    bookmark: "Bookmark",
+  },
+} as const;
+
+const articleCards = computed(() =>
+  (props.discovery?.posts ?? []).map((post) => ({
+    ...defaultArticleCardPresentation,
+    ...post,
+    authorAvatarUrl: `https://i.pravatar.cc/150?u=${encodeURIComponent(post.author)}`,
+  })),
+);
 </script>
 
 <style scoped>
@@ -325,7 +349,9 @@ const emit = defineEmits<{
   display: flex;
   padding: 24px;
   gap: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .home-discovery__article:hover {
@@ -379,18 +405,6 @@ const emit = defineEmits<{
   line-height: 1.4;
 }
 
-.home-discovery__article-author-row {
-  margin-bottom: 16px;
-}
-
-.home-discovery__author-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--color-text-soft);
-}
-
 .home-discovery__avatar {
   width: 20px;
   height: 20px;
@@ -408,15 +422,6 @@ const emit = defineEmits<{
 .icon-sm-avatar {
   width: 16px;
   height: 16px;
-}
-
-.home-discovery__author-name {
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.home-discovery__dot {
-  opacity: 0.5;
 }
 
 .home-discovery__article-excerpt {
@@ -496,15 +501,9 @@ const emit = defineEmits<{
   border-radius: 12px;
 }
 
-.ui-mockup-bg {
-  background: #eef2f6 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="10" y="20" width="80" height="10" rx="2" fill="%23d0d7e0"/><rect x="10" y="40" width="60" height="8" rx="2" fill="%23d0d7e0"/><rect x="10" y="55" width="40" height="8" rx="2" fill="%23d0d7e0"/><rect x="10" y="70" width="70" height="8" rx="2" fill="%23d0d7e0"/></svg>') no-repeat center center;
-  background-size: 60%;
-}
-
 .dark-bg {
-  background: linear-gradient(135deg, #16222A 0%, #3A6073 100%);
+  background: linear-gradient(135deg, #16222a 0%, #3a6073 100%);
 }
-
 
 .home-discovery__sidebar {
   display: flex;
@@ -574,10 +573,22 @@ const emit = defineEmits<{
   color: white;
 }
 
-.zhi-icon { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: var(--color-primary); }
-.community-icon { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
-.scientioc-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.zhi-icon-dark { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: var(--color-primary); }
+.zhi-icon {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-primary);
+}
+.community-icon {
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+.scientioc-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.zhi-icon-dark {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-primary);
+}
 
 .home-discovery__community-info h4 {
   margin: 0 0 2px 0;
@@ -592,8 +603,14 @@ const emit = defineEmits<{
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 1024px) {
