@@ -45,7 +45,7 @@ describe("auth routes", () => {
     });
 
     expect(wrapper.find(".auth-layout").exists()).toBe(true);
-    expect(wrapper.find(".login-page").exists()).toBe(true);
+    expect(wrapper.find(".auth-page").exists()).toBe(true);
     expect(wrapper.find(".app-layout__nav").exists()).toBe(false);
   });
 });
