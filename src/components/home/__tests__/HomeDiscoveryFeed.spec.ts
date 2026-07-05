@@ -34,7 +34,7 @@ async function mountHomeDiscoveryFeed() {
   return mount(HomeDiscoveryFeed, {
     props: {
       discovery: homeDiscoveryMock,
-      activeFeedTab: "推荐",
+      activeContentCategory: "全部",
       searchQuery: "",
     },
     global: {
@@ -72,6 +72,24 @@ describe("HomeDiscoveryFeed", () => {
     const wrapper = await mountHomeDiscoveryFeed();
 
     await wrapper.setProps({ searchQuery: "Tiptap" });
+
+    expect(wrapper.text()).toContain("编辑器为什么应该像一篇文章");
+    expect(wrapper.text()).not.toContain("从网关到内容服务");
+  });
+
+  it("renders content categories as the primary article filter", async () => {
+    const wrapper = await mountHomeDiscoveryFeed();
+
+    expect(wrapper.text()).toContain("内容分类");
+    expect(wrapper.text()).toContain("全部");
+    expect(wrapper.text()).toContain("前端");
+    expect(wrapper.text()).not.toContain("文章分类");
+  });
+
+  it("filters visible posts by the active content category", async () => {
+    const wrapper = await mountHomeDiscoveryFeed();
+
+    await wrapper.setProps({ activeContentCategory: "前端" });
 
     expect(wrapper.text()).toContain("编辑器为什么应该像一篇文章");
     expect(wrapper.text()).not.toContain("从网关到内容服务");

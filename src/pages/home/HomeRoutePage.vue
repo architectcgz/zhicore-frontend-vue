@@ -2,9 +2,9 @@
   <section class="home-route" aria-label="知构首页">
     <HomeDiscoveryFeed
       :discovery="discovery"
-      :active-feed-tab="activeFeedTab"
+      :active-content-category="activeContentCategory"
       :search-query="searchQuery"
-      @select-feed-tab="selectFeedTab"
+      @select-content-category="selectContentCategory"
       @update:search-query="updateSearchQuery"
     />
   </section>
@@ -16,9 +16,9 @@ import { useHomeDiscoveryPage } from "@/features/home-discovery";
 
 const {
   discovery,
-  activeFeedTab,
+  activeContentCategory,
   searchQuery,
-  selectFeedTab,
+  selectContentCategory,
   updateSearchQuery,
 } = useHomeDiscoveryPage();
 </script>

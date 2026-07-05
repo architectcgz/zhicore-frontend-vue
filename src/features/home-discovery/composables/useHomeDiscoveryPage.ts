@@ -3,16 +3,19 @@ import { readonly, ref } from "vue";
 import { homeDiscoveryMock } from "../config/homeDiscoveryMock";
 
 export function useHomeDiscoveryPage() {
-  const activeFeedTab = ref(homeDiscoveryMock.feedTabs[0] ?? "");
+  const activeContentCategory = ref(
+    homeDiscoveryMock.contentCategories[0] ?? "",
+  );
   // 搜索提示是占位文案，不进入状态，避免初始态被误判为已有查询。
   const searchQuery = ref("");
 
-  function selectFeedTab(tab: string): void {
-    if (!homeDiscoveryMock.feedTabs.includes(tab)) {
+  function selectContentCategory(category: string): void {
+    // 分类只能来自服务端/配置给出的候选，避免组件发出脏值后进入不可恢复筛选态。
+    if (!homeDiscoveryMock.contentCategories.includes(category)) {
       return;
     }
 
-    activeFeedTab.value = tab;
+    activeContentCategory.value = category;
   }
 
   function updateSearchQuery(nextQuery: string): void {
@@ -21,9 +24,9 @@ export function useHomeDiscoveryPage() {
 
   return {
     discovery: homeDiscoveryMock,
-    activeFeedTab: readonly(activeFeedTab),
+    activeContentCategory: readonly(activeContentCategory),
     searchQuery: readonly(searchQuery),
-    selectFeedTab,
+    selectContentCategory,
     updateSearchQuery,
   };
 }

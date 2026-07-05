@@ -6,6 +6,7 @@ export interface HomeMetric {
 export interface HomePost {
   href: string;
   category: string;
+  readingTime: string;
   title: string;
   summary: string;
   tags: readonly string[];
@@ -21,20 +22,14 @@ export interface HomeAuthor {
   bio: string;
 }
 
-export interface HomeKnowledgeStructure {
-  title: string;
-  description: string;
-}
-
 export interface HomeDiscoveryData {
   eyebrow: string;
   title: string;
   lede: string;
   searchInitialQuery: string;
   metrics: readonly HomeMetric[];
-  feedTabs: readonly string[];
+  contentCategories: readonly string[];
   posts: readonly HomePost[];
-  knowledgeStructure: HomeKnowledgeStructure;
   authorsTitle: string;
   authors: readonly HomeAuthor[];
 }

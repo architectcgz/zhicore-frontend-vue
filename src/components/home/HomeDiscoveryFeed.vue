@@ -33,30 +33,6 @@
           </RouterLink>
         </div>
       </div>
-
-      <aside class="home-discovery__mode-panel" aria-label="知构产品路径">
-        <div class="home-discovery__mode home-discovery__mode--active">
-          <BookOpen class="home-discovery__mode-icon" aria-hidden="true" />
-          <div>
-            <strong>读</strong>
-            <span>发现文章和专题</span>
-          </div>
-        </div>
-        <div class="home-discovery__mode">
-          <PenLine class="home-discovery__mode-icon" aria-hidden="true" />
-          <div>
-            <strong>写</strong>
-            <span>起草、预览、发布</span>
-          </div>
-        </div>
-        <div class="home-discovery__mode">
-          <Network class="home-discovery__mode-icon" aria-hidden="true" />
-          <div>
-            <strong>构</strong>
-            <span>维护知识脉络</span>
-          </div>
-        </div>
-      </aside>
     </header>
 
     <ul class="home-discovery__metrics" aria-label="平台概览">
@@ -71,53 +47,63 @@
     </ul>
 
     <section class="home-discovery__body">
-      <main class="home-discovery__feed" aria-label="推荐阅读">
+      <aside class="home-discovery__category-nav" aria-label="内容分类">
         <div class="home-discovery__section-head">
-          <h2>推荐阅读</h2>
-          <div
-            class="home-discovery__tabs"
-            role="tablist"
-            aria-label="信息流筛选"
+          <h2>内容分类</h2>
+        </div>
+        <div class="home-discovery__category-list">
+          <button
+            v-for="category in categorySummaries"
+            :key="category.name"
+            type="button"
+            class="home-discovery__category-button"
+            :aria-pressed="category.name === activeContentCategory"
+            @click="$emit('selectContentCategory', category.name)"
           >
-            <button
-              v-for="tab in discovery.feedTabs"
-              :key="tab"
-              type="button"
-              role="tab"
-              :aria-selected="tab === activeFeedTab"
-              @click="$emit('selectFeedTab', tab)"
-            >
-              {{ tab }}
-            </button>
-          </div>
+            <span>{{ category.name }}</span>
+            <small>{{ category.count }}</small>
+          </button>
+        </div>
+      </aside>
+
+      <main class="home-discovery__feed" aria-label="文章列表">
+        <div class="home-discovery__section-head">
+          <h2>文章列表</h2>
+          <span class="home-discovery__result-count">
+            {{ visiblePosts.length }} 篇
+          </span>
         </div>
 
-        <RouterLink
-          v-for="post in visiblePosts"
-          :key="post.title"
-          :to="post.href"
-          class="home-discovery__article"
-          :aria-label="`阅读文章：${post.title}`"
-        >
-          <div class="home-discovery__article-meta">
-            <p class="home-discovery__label">{{ post.category }}</p>
-            <span>{{ post.author }} · {{ post.publishedAt }}</span>
-          </div>
-          <h3>
-            <span>{{ post.title }}</span>
-            <ArrowRight
-              class="home-discovery__article-icon"
-              aria-hidden="true"
-            />
-          </h3>
-          <p>{{ post.summary }}</p>
-          <div class="home-discovery__chips">
-            <span v-for="tag in post.tags" :key="tag">{{ tag }}</span>
-          </div>
-          <footer class="home-discovery__article-footer">
-            <span>{{ post.likes }} 喜欢 · {{ post.comments }} 评论</span>
-          </footer>
-        </RouterLink>
+        <div class="home-discovery__article-list">
+          <RouterLink
+            v-for="post in visiblePosts"
+            :key="post.title"
+            :to="post.href"
+            class="home-discovery__article"
+            :aria-label="`阅读文章：${post.title}`"
+          >
+            <div class="home-discovery__article-meta">
+              <p class="home-discovery__label">
+                {{ post.category }} / {{ post.readingTime }}
+              </p>
+              <span>{{ post.author }} · {{ post.publishedAt }}</span>
+            </div>
+            <h3>
+              <span>{{ post.title }}</span>
+              <ArrowRight
+                class="home-discovery__article-icon"
+                aria-hidden="true"
+              />
+            </h3>
+            <p>{{ post.summary }}</p>
+            <div class="home-discovery__chips">
+              <span v-for="tag in post.tags" :key="tag">{{ tag }}</span>
+            </div>
+            <footer class="home-discovery__article-footer">
+              <span>{{ post.likes }} 喜欢 · {{ post.comments }} 评论</span>
+            </footer>
+          </RouterLink>
+        </div>
 
         <p v-if="visiblePosts.length === 0" class="home-discovery__empty">
           没有匹配的文章
@@ -125,16 +111,6 @@
       </main>
 
       <aside class="home-discovery__rail">
-        <section class="home-discovery__rail-card">
-          <h2>{{ discovery.knowledgeStructure.title }}</h2>
-          <div class="home-discovery__graph" aria-hidden="true">
-            <span>主题</span>
-            <span>文章</span>
-            <span>讨论</span>
-          </div>
-          <p>{{ discovery.knowledgeStructure.description }}</p>
-        </section>
-
         <section class="home-discovery__rail-card">
           <h2>{{ discovery.authorsTitle }}</h2>
           <div
@@ -156,33 +132,56 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BookOpen, Network, PenLine, Search } from "@lucide/vue";
+import { ArrowRight, Network, PenLine, Search } from "@lucide/vue";
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
 
 import type { HomeDiscoveryData } from "@/features/home-discovery";
 
+const ALL_CATEGORY = "全部";
+
 const props = defineProps<{
   discovery: HomeDiscoveryData;
-  activeFeedTab: string;
+  activeContentCategory: string;
   searchQuery: string;
 }>();
 
 const emit = defineEmits<{
-  selectFeedTab: [tab: string];
+  selectContentCategory: [category: string];
   "update:searchQuery": [query: string];
 }>();
+
+const categorySummaries = computed(() =>
+  props.discovery.contentCategories.map((category) => ({
+    name: category,
+    count:
+      category === ALL_CATEGORY
+        ? props.discovery.posts.length
+        : props.discovery.posts.filter((post) => post.category === category)
+            .length,
+  })),
+);
 
 const visiblePosts = computed(() => {
   const query = props.searchQuery.trim().toLocaleLowerCase();
 
-  if (query.length === 0) {
-    return props.discovery.posts;
-  }
-
   return props.discovery.posts.filter((post) => {
+    // 内容分类是读者的主筛选条件；搜索只在当前分类范围内继续收窄结果。
+    const matchesCategory =
+      props.activeContentCategory === ALL_CATEGORY ||
+      post.category === props.activeContentCategory;
+
+    if (!matchesCategory) {
+      return false;
+    }
+
+    if (query.length === 0) {
+      return true;
+    }
+
     const searchableText = [
       post.category,
+      post.readingTime,
       post.title,
       post.summary,
       post.author,
@@ -215,12 +214,12 @@ function handleSearchInput(event: Event): void {
 }
 
 .home-discovery__intro {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
 }
 
 .home-discovery__intro-main,
-.home-discovery__mode-panel,
+.home-discovery__category-nav,
 .home-discovery__feed,
 .home-discovery__rail-card,
 .home-discovery__article {
@@ -309,7 +308,7 @@ function handleSearchInput(event: Event): void {
 }
 
 .home-discovery__action,
-.home-discovery__tabs button,
+.home-discovery__category-button,
 .home-discovery__author button {
   min-height: calc(var(--space-10) + var(--space-1));
   border: 1px solid var(--color-border);
@@ -334,63 +333,9 @@ function handleSearchInput(event: Event): void {
   color: var(--color-bg-elevated);
 }
 
-.home-discovery__action-icon,
-.home-discovery__mode-icon {
+.home-discovery__action-icon {
   width: 1rem;
   height: 1rem;
-}
-
-.home-discovery__mode-panel {
-  display: grid;
-  gap: var(--space-3);
-  align-content: center;
-  padding: var(--space-4);
-}
-
-.home-discovery__mode {
-  display: grid;
-  grid-template-columns: calc(var(--space-10) + var(--space-1)) minmax(0, 1fr);
-  gap: var(--space-3);
-  align-items: center;
-  min-height: 72px;
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated-2);
-}
-
-.home-discovery__mode--active {
-  border-color: color-mix(
-    in srgb,
-    var(--color-accent) 42%,
-    var(--color-border)
-  );
-  background: color-mix(
-    in srgb,
-    var(--color-accent) 10%,
-    var(--color-bg-elevated-2)
-  );
-}
-
-.home-discovery__mode-icon {
-  justify-self: center;
-  color: var(--color-accent);
-}
-
-.home-discovery__mode strong,
-.home-discovery__mode span {
-  display: block;
-}
-
-.home-discovery__mode strong {
-  color: var(--color-text-strong);
-  font-size: 1rem;
-}
-
-.home-discovery__mode span {
-  color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  font-weight: 650;
 }
 
 .home-discovery__metrics {
@@ -426,9 +371,9 @@ function handleSearchInput(event: Event): void {
 }
 
 .home-discovery__metric span,
+.home-discovery__result-count,
 .home-discovery__article-footer,
 .home-discovery__article-meta span,
-.home-discovery__rail-card p,
 .home-discovery__author span {
   color: var(--color-text-soft);
   font-size: 0.8125rem;
@@ -436,9 +381,11 @@ function handleSearchInput(event: Event): void {
 }
 
 .home-discovery__body {
-  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-columns: 220px minmax(0, 1fr) 300px;
+  align-items: start;
 }
 
+.home-discovery__category-nav,
 .home-discovery__feed,
 .home-discovery__rail-card {
   padding: var(--space-4);
@@ -452,19 +399,35 @@ function handleSearchInput(event: Event): void {
   margin-bottom: var(--space-4);
 }
 
-.home-discovery__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+.home-discovery__category-list,
+.home-discovery__article-list {
+  display: grid;
+  gap: var(--space-3);
 }
 
-.home-discovery__tabs button {
+.home-discovery__category-button {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   padding: 0 var(--space-3);
   background: var(--color-bg-hover);
-  color: var(--color-text-soft);
+  color: var(--color-text);
 }
 
-.home-discovery__tabs button[aria-selected="true"] {
+.home-discovery__category-button small {
+  color: var(--color-text-soft);
+  font-size: 0.8125rem;
+  font-weight: 750;
+}
+
+.home-discovery__category-button[aria-pressed="true"] {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 42%,
+    var(--color-border)
+  );
   background: color-mix(
     in srgb,
     var(--color-accent) 12%,
@@ -497,10 +460,6 @@ function handleSearchInput(event: Event): void {
     var(--color-bg-elevated)
   );
   transform: translateY(-1px);
-}
-
-.home-discovery__article + .home-discovery__article {
-  margin-top: var(--space-3);
 }
 
 .home-discovery__article h3 {
@@ -573,40 +532,6 @@ function handleSearchInput(event: Event): void {
   align-content: start;
 }
 
-.home-discovery__graph {
-  display: grid;
-  gap: var(--space-3);
-  margin: var(--space-3) 0;
-  padding: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-hover);
-}
-
-.home-discovery__graph span {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: calc(var(--space-8) + var(--space-1));
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
-  color: var(--color-text);
-  font-size: 0.875rem;
-  font-weight: 750;
-}
-
-.home-discovery__graph span + span::before {
-  position: absolute;
-  top: calc(-1 * var(--space-3));
-  left: var(--space-5);
-  width: 1px;
-  height: var(--space-3);
-  background: var(--color-border-strong);
-  content: "";
-}
-
 .home-discovery__author {
   display: grid;
   grid-template-columns:
@@ -645,7 +570,7 @@ function handleSearchInput(event: Event): void {
 
 .home-discovery__search:focus-within,
 .home-discovery__action:focus-visible,
-.home-discovery__tabs button:focus-visible,
+.home-discovery__category-button:focus-visible,
 .home-discovery__author button:focus-visible,
 .home-discovery__article:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -653,7 +578,6 @@ function handleSearchInput(event: Event): void {
 }
 
 @media (max-width: 1080px) {
-  .home-discovery__intro,
   .home-discovery__body {
     grid-template-columns: 1fr;
   }
@@ -674,6 +598,10 @@ function handleSearchInput(event: Event): void {
   .home-discovery__article-meta {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .home-discovery__category-list {
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   }
 
   .home-discovery__metric {
