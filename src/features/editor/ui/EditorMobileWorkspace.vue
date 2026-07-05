@@ -94,8 +94,10 @@ defineExpose({
   gap: 6px;
   padding: 8px;
   border: 1px solid var(--editor-page-border, rgba(49, 74, 91, 0.14));
-  border-radius: 8px;
-  background: var(--editor-control-bg-active, #ffffff);
+  border-radius: 12px;
+  background: var(--editor-page-panel, rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .editor-mobile-workspace__bar p {

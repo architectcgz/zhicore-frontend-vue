@@ -142,45 +142,48 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 
 <style scoped>
 .editor-workspace {
-  --editor-page-bg: #f3f6f8;
-  --editor-page-text: #17202a;
-  --editor-page-muted: #5a6875;
-  --editor-page-panel: rgba(255, 255, 255, 0.74);
-  --editor-page-border: rgba(49, 74, 91, 0.14);
-  --editor-page-accent: #1f7f74;
-  --editor-page-warning: #b7791f;
-  --editor-page-saving: #2563eb;
-  --editor-control-bg: rgba(255, 255, 255, 0.78);
-  --editor-control-bg-muted: rgba(255, 255, 255, 0.56);
-  --editor-control-bg-active: #ffffff;
-  --editor-control-hover-bg: rgba(31, 127, 116, 0.1);
-  --editor-control-disabled-bg: rgba(49, 74, 91, 0.12);
-  --editor-control-disabled-text: #6b7b88;
-  --editor-control-primary: #1f7f74;
-  --editor-control-primary-hover: #176b62;
-  --editor-toolbar-bg: var(--editor-control-bg);
-  --editor-body-text: #3f4f5d;
-  --editor-reader-text: #485765;
-  --editor-reader-muted: #647280;
-  --editor-reader-heading: #17202a;
-  --editor-reader-strong: #17202a;
-  --editor-reader-emphasis: #2f4d58;
-  --editor-reader-strikethrough: #6f7f8b;
-  --editor-reader-link: #1f6f77;
-  --editor-reader-link-hover: #154f59;
-  --editor-reader-code-text: #23424d;
-  --editor-reader-code-bg: rgba(23, 32, 42, 0.08);
-  --editor-reader-code-border: rgba(23, 32, 42, 0.1);
-  --editor-reader-code-caption: #657785;
-  --editor-reader-code-caption-border: rgba(23, 32, 42, 0.08);
-  --editor-reader-quote-border: rgba(31, 111, 119, 0.32);
-  --editor-reader-block-bg: rgba(23, 32, 42, 0.07);
-  --editor-reader-image-border: rgba(23, 32, 42, 0.1);
-  --editor-reader-task-accent: #1f6f77;
+  --editor-page-bg: transparent;
+  --editor-page-text: var(--color-text-strong);
+  --editor-page-muted: var(--color-text-soft);
+  --editor-page-panel: rgba(255, 255, 255, 0.03);
+  --editor-page-border: rgba(255, 255, 255, 0.08);
+  --editor-page-accent: var(--color-primary);
+  --editor-page-warning: #ff6b6b;
+  --editor-page-saving: var(--color-primary-soft);
+  --editor-control-bg: rgba(0, 0, 0, 0.2);
+  --editor-control-bg-muted: rgba(255, 255, 255, 0.05);
+  --editor-control-bg-active: rgba(255, 255, 255, 0.1);
+  --editor-control-hover-bg: rgba(0, 229, 181, 0.1);
+  --editor-control-disabled-bg: rgba(255, 255, 255, 0.05);
+  --editor-control-disabled-text: rgba(255, 255, 255, 0.3);
+  --editor-control-primary: var(--color-primary);
+  --editor-control-primary-hover: var(--color-primary-soft);
+  --editor-toolbar-bg: rgba(255, 255, 255, 0.03);
+  --editor-body-text: var(--color-text);
+  --editor-reader-text: var(--color-text);
+  --editor-reader-muted: var(--color-text-soft);
+  --editor-reader-heading: var(--color-text-strong);
+  --editor-reader-strong: var(--color-text-strong);
+  --editor-reader-emphasis: var(--color-primary);
+  --editor-reader-strikethrough: var(--color-text-soft);
+  --editor-reader-link: var(--color-primary);
+  --editor-reader-link-hover: var(--color-primary-soft);
+  --editor-reader-code-text: var(--color-text-strong);
+  --editor-reader-code-bg: rgba(255, 255, 255, 0.09);
+  --editor-reader-code-border: rgba(255, 255, 255, 0.1);
+  --editor-reader-code-caption: var(--color-text-soft);
+  --editor-reader-code-caption-border: rgba(255, 255, 255, 0.09);
+  --editor-reader-quote-border: var(--color-primary-soft);
+  --editor-reader-block-bg: rgba(255, 255, 255, 0.05);
+  --editor-reader-image-border: rgba(255, 255, 255, 0.1);
+  --editor-reader-task-accent: var(--color-primary);
 
   min-height: 100vh;
   padding: 24px;
-  background: var(--editor-page-bg);
+  background: 
+    radial-gradient(circle at top right, rgba(0, 229, 181, 0.15), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(0, 168, 255, 0.1), transparent 40%),
+    linear-gradient(135deg, #0a0f14 0%, #111a22 100%);
   color: var(--editor-page-text);
   transition:
     background-color 0.2s ease,
