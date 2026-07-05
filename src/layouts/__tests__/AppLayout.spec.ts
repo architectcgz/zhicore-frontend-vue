@@ -2,7 +2,6 @@ import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { HOME_DISCOVERY_MOBILE_MENU_EVENT } from "@/features/home-discovery";
 import AppLayout from "@/layouts/AppLayout.vue";
 import appLayoutSource from "@/layouts/AppLayout.vue?raw";
 
@@ -26,6 +25,10 @@ async function mountAppLayout(
       },
       {
         path: "/posts/demo",
+        component: { template: "<div />" },
+      },
+      {
+        path: "/structure",
         component: { template: "<div />" },
       },
       {
@@ -90,7 +93,7 @@ describe("AppLayout", () => {
 
     expect(primaryLinks.map((link) => link.text())).toEqual([
       "发现",
-      "文章",
+      "分类",
       "热榜",
       "写作",
     ]);
@@ -101,14 +104,29 @@ describe("AppLayout", () => {
     expect(wrapper.find(".app-layout__more-summary").text()).toBe("...更多");
   });
 
-  it("does not keep discovery visually active after navigating to an article", async () => {
-    const wrapper = await mountAppLayout({ initialPath: "/posts/demo" });
+  it("links the category navigation item to structure instead of an article detail page", async () => {
+    const wrapper = await mountAppLayout();
+    const categoryLink = wrapper
+      .findAll(".app-layout__nav-link")
+      .find((link) => link.text() === "分类");
+
+    expect(categoryLink).toBeDefined();
+    expect(categoryLink!.attributes("href")).toBe("/structure");
+    expect(
+      wrapper
+        .findAll(".app-layout__nav-link")
+        .some((link) => link.attributes("href") === "/posts/demo"),
+    ).toBe(false);
+  });
+
+  it("does not keep discovery visually active after navigating to categories", async () => {
+    const wrapper = await mountAppLayout({ initialPath: "/structure" });
 
     expect(
       wrapper
         .findAll(".app-layout__nav-link.router-link-active")
         .map((link) => link.text()),
-    ).toEqual(["文章"]);
+    ).toEqual(["分类"]);
   });
 
   it("styles only exact active header navigation links", () => {
@@ -120,34 +138,15 @@ describe("AppLayout", () => {
     );
   });
 
-  it("shows a home support menu trigger only on the home route", async () => {
+  it("does not render a home side navigation trigger", async () => {
     const homeWrapper = await mountAppLayout();
     const articleWrapper = await mountAppLayout({ initialPath: "/posts/demo" });
 
     expect(
       homeWrapper.find('[data-testid="home-support-menu-toggle"]').exists(),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       articleWrapper.find('[data-testid="home-support-menu-toggle"]').exists(),
     ).toBe(false);
-  });
-
-  it("dispatches the home mobile support menu event from the header trigger", async () => {
-    const wrapper = await mountAppLayout();
-    let dispatched = false;
-    const markDispatched = () => {
-      dispatched = true;
-    };
-
-    window.addEventListener(HOME_DISCOVERY_MOBILE_MENU_EVENT, markDispatched);
-    await wrapper
-      .get('[data-testid="home-support-menu-toggle"]')
-      .trigger("click");
-    window.removeEventListener(
-      HOME_DISCOVERY_MOBILE_MENU_EVENT,
-      markDispatched,
-    );
-
-    expect(dispatched).toBe(true);
   });
 });

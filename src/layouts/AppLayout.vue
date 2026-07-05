@@ -2,17 +2,6 @@
   <div class="app-layout">
     <header class="app-layout__header">
       <div class="app-layout__brand-area">
-        <button
-          v-if="isHomeRoute"
-          type="button"
-          class="app-layout__support-menu-trigger"
-          data-testid="home-support-menu-toggle"
-          aria-label="打开首页辅助导航"
-          @click="openHomeSupportMenu"
-        >
-          <Menu class="app-layout__support-menu-icon" aria-hidden="true" />
-        </button>
-
         <RouterLink class="app-layout__brand" to="/">
           <span class="app-layout__brand-mark">知</span>
           <span>
@@ -29,11 +18,11 @@
         </RouterLink>
         <RouterLink
           class="app-layout__nav-link"
-          to="/posts/demo"
-          aria-label="文章"
+          to="/structure"
+          aria-label="分类"
         >
-          <FileText class="app-layout__nav-icon" aria-hidden="true" />
-          <span>文章</span>
+          <Network class="app-layout__nav-icon" aria-hidden="true" />
+          <span>分类</span>
         </RouterLink>
         <RouterLink
           class="app-layout__nav-link app-layout__nav-link--overflow-direct"
@@ -89,11 +78,9 @@
 </template>
 
 <script setup lang="ts">
-import { BookOpen, FileText, Menu, PenLine, TrendingUp } from "@lucide/vue";
+import { BookOpen, Network, PenLine, TrendingUp } from "@lucide/vue";
 import { computed } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
-
-import { HOME_DISCOVERY_MOBILE_MENU_EVENT } from "@/features/home-discovery";
 
 defineProps<{
   isLoggedIn: boolean;
@@ -103,11 +90,6 @@ defineProps<{
 const route = useRoute();
 
 const isShellFlush = computed(() => route.meta.appShellFlush === true);
-const isHomeRoute = computed(() => route.name === "Home" || route.path === "/");
-
-function openHomeSupportMenu(): void {
-  window.dispatchEvent(new CustomEvent(HOME_DISCOVERY_MOBILE_MENU_EVENT));
-}
 </script>
 
 <style scoped>
@@ -146,29 +128,6 @@ function openHomeSupportMenu(): void {
   font-weight: 760;
   color: var(--color-text-strong);
   text-decoration: none;
-}
-
-.app-layout__support-menu-trigger {
-  display: none;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-elevated);
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.app-layout__support-menu-trigger:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.app-layout__support-menu-icon {
-  width: 1rem;
-  height: 1rem;
 }
 
 .app-layout__brand-mark {
@@ -308,11 +267,6 @@ function openHomeSupportMenu(): void {
   .app-layout__brand {
     gap: var(--space-1);
     min-width: 0;
-  }
-
-  .app-layout__support-menu-trigger {
-    display: grid;
-    flex: 0 0 auto;
   }
 
   .app-layout__brand-mark {

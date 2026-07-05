@@ -3,10 +3,8 @@ import { describe, expect, it } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import HomeDiscoveryFeed from "@/components/home/HomeDiscoveryFeed.vue";
-import {
-  HOME_DISCOVERY_MOBILE_MENU_EVENT,
-  homeDiscoveryMock,
-} from "@/features/home-discovery";
+import homeDiscoverySource from "@/components/home/HomeDiscoveryFeed.vue?raw";
+import { homeDiscoveryMock } from "@/features/home-discovery";
 
 async function mountHomeDiscoveryFeed() {
   const router = createRouter({
@@ -98,13 +96,17 @@ describe("HomeDiscoveryFeed", () => {
     expect(wrapper.text()).not.toContain("从网关到内容服务");
   });
 
-  it("keeps the mobile support drawer collapsed while the article list remains available", async () => {
+  it("keeps the article list available without mobile support drawer state", async () => {
     const wrapper = await mountHomeDiscoveryFeed();
 
     expect(wrapper.find(".home-discovery__feed").exists()).toBe(true);
-    expect(
-      wrapper.get(".home-discovery__support-panel").classes(),
-    ).not.toContain("home-discovery__support-panel--mobile-open");
+    expect(homeDiscoverySource).not.toContain("mobileSupportOpen");
+    expect(homeDiscoverySource).not.toContain(
+      "HOME_DISCOVERY_MOBILE_MENU_EVENT",
+    );
+    expect(homeDiscoverySource).not.toContain(
+      "home-discovery__support-panel--mobile-open",
+    );
   });
 
   it("does not render content-area mobile panel controls", async () => {
@@ -121,50 +123,18 @@ describe("HomeDiscoveryFeed", () => {
     );
   });
 
-  it("opens the mobile support drawer from the app header event", async () => {
+  it("does not render mobile support drawer controls", async () => {
     const wrapper = await mountHomeDiscoveryFeed();
 
-    window.dispatchEvent(new CustomEvent(HOME_DISCOVERY_MOBILE_MENU_EVENT));
-    await wrapper.vm.$nextTick();
-
-    expect(wrapper.get(".home-discovery__support-panel").classes()).toContain(
-      "home-discovery__support-panel--mobile-open",
-    );
-    expect(wrapper.get(".home-discovery__support-panel").text()).toContain(
-      "内容分类",
-    );
-    expect(wrapper.get(".home-discovery__support-panel").text()).toContain(
-      homeDiscoveryMock.authorsTitle,
-    );
-  });
-
-  it("does not render a close button inside the mobile support drawer", async () => {
-    const wrapper = await mountHomeDiscoveryFeed();
-
-    expect(wrapper.find(".home-discovery__support-close").exists()).toBe(false);
+    expect(wrapper.find(".home-discovery__support-head").exists()).toBe(false);
     expect(wrapper.find('[aria-label="关闭首页辅助导航"]').exists()).toBe(
       false,
     );
   });
 
-  it("closes the mobile support drawer when clicking outside it", async () => {
+  it("emits the selected category from the desktop category filter", async () => {
     const wrapper = await mountHomeDiscoveryFeed();
 
-    window.dispatchEvent(new CustomEvent(HOME_DISCOVERY_MOBILE_MENU_EVENT));
-    await wrapper.vm.$nextTick();
-    document.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
-    await wrapper.vm.$nextTick();
-
-    expect(
-      wrapper.get(".home-discovery__support-panel").classes(),
-    ).not.toContain("home-discovery__support-panel--mobile-open");
-  });
-
-  it("closes the mobile support drawer after selecting a category", async () => {
-    const wrapper = await mountHomeDiscoveryFeed();
-
-    window.dispatchEvent(new CustomEvent(HOME_DISCOVERY_MOBILE_MENU_EVENT));
-    await wrapper.vm.$nextTick();
     const frontendCategoryButton = wrapper
       .findAll(".home-discovery__category-button")
       .find((button) => button.text().includes("前端"));
@@ -173,8 +143,5 @@ describe("HomeDiscoveryFeed", () => {
     await frontendCategoryButton!.trigger("click");
 
     expect(wrapper.emitted("selectContentCategory")).toEqual([["前端"]]);
-    expect(
-      wrapper.get(".home-discovery__support-panel").classes(),
-    ).not.toContain("home-discovery__support-panel--mobile-open");
   });
 });

@@ -49,17 +49,9 @@
     <section class="home-discovery__body">
       <aside
         id="home-discovery-support-panel"
-        ref="supportPanelRef"
         class="home-discovery__support-panel"
-        :class="{
-          'home-discovery__support-panel--mobile-open': mobileSupportOpen,
-        }"
         aria-label="首页辅助导航"
       >
-        <div class="home-discovery__support-head">
-          <h2>辅助导航</h2>
-        </div>
-
         <section
           id="home-discovery-category-panel"
           class="home-discovery__category-nav"
@@ -155,13 +147,10 @@
 
 <script setup lang="ts">
 import { ArrowRight, Network, PenLine, Search } from "@lucide/vue";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed } from "vue";
 import { RouterLink } from "vue-router";
 
-import {
-  HOME_DISCOVERY_MOBILE_MENU_EVENT,
-  type HomeDiscoveryData,
-} from "@/features/home-discovery";
+import type { HomeDiscoveryData } from "@/features/home-discovery";
 
 const ALL_CATEGORY = "全部";
 
@@ -175,9 +164,6 @@ const emit = defineEmits<{
   selectContentCategory: [category: string];
   "update:searchQuery": [query: string];
 }>();
-
-const mobileSupportOpen = ref(false);
-const supportPanelRef = ref<HTMLElement | null>(null);
 
 const categorySummaries = computed(() =>
   props.discovery.contentCategories.map((category) => ({
@@ -226,49 +212,9 @@ function handleSearchInput(event: Event): void {
   emit("update:searchQuery", (event.target as HTMLInputElement).value);
 }
 
-function toggleMobileSupportMenu(): void {
-  mobileSupportOpen.value = !mobileSupportOpen.value;
-}
-
-function closeMobileSupportMenu(): void {
-  mobileSupportOpen.value = false;
-}
-
 function handleContentCategorySelect(category: string): void {
   emit("selectContentCategory", category);
-  closeMobileSupportMenu();
 }
-
-function handleDocumentPointerDown(event: Event): void {
-  if (!mobileSupportOpen.value) {
-    return;
-  }
-
-  const target = event.target;
-  const supportPanel = supportPanelRef.value;
-
-  if (!(target instanceof Node) || supportPanel?.contains(target)) {
-    return;
-  }
-
-  closeMobileSupportMenu();
-}
-
-onMounted(() => {
-  window.addEventListener(
-    HOME_DISCOVERY_MOBILE_MENU_EVENT,
-    toggleMobileSupportMenu,
-  );
-  document.addEventListener("pointerdown", handleDocumentPointerDown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener(
-    HOME_DISCOVERY_MOBILE_MENU_EVENT,
-    toggleMobileSupportMenu,
-  );
-  document.removeEventListener("pointerdown", handleDocumentPointerDown);
-});
 </script>
 
 <style scoped>
@@ -459,10 +405,6 @@ onUnmounted(() => {
 
 .home-discovery__support-panel {
   display: contents;
-}
-
-.home-discovery__support-head {
-  display: none;
 }
 
 .home-discovery__category-nav {
@@ -675,38 +617,7 @@ onUnmounted(() => {
   }
 
   .home-discovery__support-panel {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 40;
-    display: grid;
-    align-content: start;
-    gap: var(--space-3);
-    width: min(84vw, 340px);
-    padding: var(--space-4);
-    overflow: auto;
-    border: 1px solid var(--color-border);
-    border-left: 0;
-    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-    background: var(--color-bg-elevated);
-    box-shadow: var(--shadow-panel);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-100%);
-    transition:
-      opacity 0.18s ease,
-      transform 0.18s ease;
-  }
-
-  .home-discovery__support-panel--mobile-open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateX(0);
-  }
-
-  .home-discovery__support-head {
-    display: block;
+    display: none;
   }
 
   .home-discovery__feed {
@@ -752,8 +663,7 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-discovery__article,
-  .home-discovery__support-panel {
+  .home-discovery__article {
     transition:
       border-color 0.18s ease,
       background-color 0.18s ease;
