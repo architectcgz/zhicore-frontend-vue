@@ -1,6 +1,8 @@
 import { storeToRefs } from "pinia";
+import { computed, readonly } from "vue";
 
 import { logout as requestLogout } from "@/api/auth";
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 import { useAuthStore } from "@/stores/auth";
 
 /**
@@ -10,8 +12,17 @@ import { useAuthStore } from "@/stores/auth";
 export function useLayoutSessionActionsBridge(onLoggedOut: () => void) {
   const authStore = useAuthStore();
   const { isLoggedIn } = storeToRefs(authStore);
+  const localDemoLoggedIn = computed(() => isLocalDemoModeEnabled());
+  const effectiveIsLoggedIn = computed(
+    () => localDemoLoggedIn.value || isLoggedIn.value,
+  );
 
   async function logout() {
+    if (localDemoLoggedIn.value) {
+      onLoggedOut();
+      return;
+    }
+
     try {
       await requestLogout();
     } finally {
@@ -20,5 +31,5 @@ export function useLayoutSessionActionsBridge(onLoggedOut: () => void) {
     onLoggedOut();
   }
 
-  return { isLoggedIn, logout };
+  return { isLoggedIn: readonly(effectiveIsLoggedIn), logout };
 }

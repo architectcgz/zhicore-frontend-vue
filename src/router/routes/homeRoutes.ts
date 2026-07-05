@@ -20,10 +20,12 @@ export const homeRoutes: RouteRecordRaw[] = [
     path: "notifications",
     name: "Notifications",
     component: () => import("@/pages/home/HomeNotificationsRoutePage.vue"),
+    meta: { requiresAuth: true },
   },
   {
     path: "messages",
     name: "Messages",
     component: () => import("@/pages/home/HomeMessagesRoutePage.vue"),
+    meta: { requiresAuth: true },
   },
 ];

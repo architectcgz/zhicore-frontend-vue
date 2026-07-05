@@ -26,4 +26,21 @@ describe("home routes", () => {
 
     expect(homeRoute?.meta.requiresAuth).toBeUndefined();
   });
+
+  it("requires login before opening private message and notification pages", () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [appShellRoute],
+    });
+
+    const notificationsRoute = router
+      .resolve("/notifications")
+      .matched.find((route) => route.name === "Notifications");
+    const messagesRoute = router
+      .resolve("/messages")
+      .matched.find((route) => route.name === "Messages");
+
+    expect(notificationsRoute?.meta.requiresAuth).toBe(true);
+    expect(messagesRoute?.meta.requiresAuth).toBe(true);
+  });
 });
