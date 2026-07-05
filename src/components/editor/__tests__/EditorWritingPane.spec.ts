@@ -829,8 +829,23 @@ describe("EditorWritingPane", () => {
     );
   });
 
-  it.skip("keeps the floating toolbar background tied to the editor surface theme", () => {
-    // This test is obsolete due to the new global glassmorphism theme
+  it("keeps the floating toolbar background tied to the global glassmorphism theme", () => {
+    const themeBlocks =
+      editorWorkspaceSource.match(
+        /\.editor--(?:paper|sage|sand|ink)\s*\{[\s\S]*?\n\}/g,
+      ) ?? [];
+
+    expect(editorWorkspaceSource).toContain(
+      "--editor-toolbar-bg: rgba(10, 15, 22, 0.95);",
+    );
+    expect(writingPaneStyleSource).toContain(
+      "var(--editor-control-bg, rgba(10, 15, 22, 0.95))",
+    );
+    expect(themeBlocks).toHaveLength(4);
+    themeBlocks.forEach((source) => {
+      expect(source).not.toContain("--editor-toolbar-bg");
+      expect(source).toContain("--editor-page-accent");
+    });
   });
 
   it("centers the document sheet in a narrower writing canvas", () => {
