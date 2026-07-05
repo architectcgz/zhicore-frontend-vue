@@ -66,6 +66,22 @@ describe("ArticleComments", () => {
     );
   });
 
+  it("keeps mobile comment avatars in the same row as author names", () => {
+    expect(articleCommentsSource).toContain("@media (max-width: 640px)");
+    expect(articleCommentsSource).toContain(
+      ".article-comments__composer {\n    grid-template-columns: 1fr;",
+    );
+    expect(articleCommentsSource).toContain(
+      ".article-comments__item {\n    grid-template-columns: 40px minmax(0, 1fr);",
+    );
+    expect(articleCommentsSource).toContain(
+      ".article-comments__reply {\n    grid-template-columns: 32px minmax(0, 1fr);",
+    );
+    expect(articleCommentsSource).not.toContain(
+      ".article-comments__composer,\n  .article-comments__item,\n  .article-comments__reply",
+    );
+  });
+
   it("does not render separate header badges in comment headers", () => {
     expect(articleCommentsSource).not.toContain("comment.badge");
     expect(articleCommentsSource).not.toContain("reply.badge");

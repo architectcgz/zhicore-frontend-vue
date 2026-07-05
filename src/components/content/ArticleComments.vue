@@ -373,10 +373,21 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 640px) {
-  .article-comments__composer,
-  .article-comments__item,
-  .article-comments__reply {
+  .article-comments__composer {
     grid-template-columns: 1fr;
+  }
+
+  .article-comments__item {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .article-comments__reply {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .article-comments__item > .article-comments__avatar {
+    width: 40px;
+    height: 40px;
   }
 }
 </style>
