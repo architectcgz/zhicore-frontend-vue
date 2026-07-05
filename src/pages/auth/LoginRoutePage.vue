@@ -47,10 +47,10 @@ const { username, password, submitting, errorMessage, submit } = useLoginForm();
 
 <style scoped>
 .login-page {
-  min-height: 100vh;
+  min-height: 100%;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: var(--space-6);
   background:
     radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 30%),
     linear-gradient(
@@ -61,17 +61,17 @@ const { username, password, submitting, errorMessage, submit } = useLoginForm();
 }
 
 .login-page__panel {
-  width: min(420px, 100%);
-  padding: 28px;
-  border-radius: 24px;
+  width: min(26.25rem, 100%);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-panel);
   box-shadow: var(--shadow-panel);
 }
 
 .login-page__eyebrow {
-  margin: 0 0 8px;
-  font-size: 12px;
+  margin: 0 0 var(--space-2);
+  font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-primary-soft);
@@ -83,27 +83,27 @@ const { username, password, submitting, errorMessage, submit } = useLoginForm();
 
 .login-page__form {
   display: grid;
-  gap: 16px;
-  margin-top: 24px;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
 }
 
 .login-page__form label {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .login-page__form input {
-  padding: 12px 14px;
-  border-radius: 14px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-panel-soft);
   color: var(--color-text);
 }
 
 .login-page__form button {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(
     135deg,
     var(--color-primary),
