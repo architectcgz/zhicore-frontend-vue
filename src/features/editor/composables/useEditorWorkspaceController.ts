@@ -11,6 +11,14 @@ import {
   type EditorDraftHistoryRestoreResult,
   useEditorDraft,
 } from "./useEditorDraft";
+import {
+  createEditorPostWorkflowClient,
+  type EditorPostWorkflowClient,
+} from "../lib/editorPostWorkflowClient";
+
+export interface UseEditorWorkspaceControllerOptions {
+  postWorkflowClient?: EditorPostWorkflowClient;
+}
 
 export interface EditorWorkspaceWritingPaneRef {
   bodyInputElement: HTMLElement | null;
@@ -35,7 +43,9 @@ function formatDraftSavedTime(savedAt: Date): string {
   }).format(savedAt);
 }
 
-export function useEditorWorkspaceController() {
+export function useEditorWorkspaceController(
+  options: UseEditorWorkspaceControllerOptions = {},
+) {
   const {
     activeMode,
     activeBackground,
@@ -45,10 +55,15 @@ export function useEditorWorkspaceController() {
     selectMode,
     selectBackground,
   } = useEditorDisplay();
-  const draft = useEditorDraft();
+  const postWorkflowClient =
+    options.postWorkflowClient ?? createEditorPostWorkflowClient();
+  const draft = useEditorDraft({
+    serverPostClient: postWorkflowClient,
+  });
   const workspaceShellRef = ref<EditorWorkspaceShellRef | null>(null);
   const isPublishingDraft = ref(false);
   const publishErrorLabel = ref("");
+  const publishSuccessLabel = ref("");
 
   const bodyInputRef = computed(
     () => workspaceShellRef.value?.bodyInputElement ?? null,
@@ -96,6 +111,7 @@ export function useEditorWorkspaceController() {
   });
 
   function handleTitleInput(nextTitle: string): void {
+    publishSuccessLabel.value = "";
     draft.updateTitle(nextTitle);
     void syncEditorLayoutOnNextFrame();
   }
@@ -103,6 +119,7 @@ export function useEditorWorkspaceController() {
   function handleBodyDocumentInput(
     nextBodyDocumentJson: EditorTiptapDocumentJson,
   ): void {
+    publishSuccessLabel.value = "";
     draft.updateBodyDocument(
       nextBodyDocumentJson,
       workspaceShellRef.value?.getBodySelection(),
@@ -169,7 +186,14 @@ export function useEditorWorkspaceController() {
   }
 
   async function handleSaveDraft(): Promise<void> {
-    await draft.saveDraft();
+    publishErrorLabel.value = "";
+    publishSuccessLabel.value = "";
+
+    try {
+      await draft.saveDraft();
+    } catch {
+      publishErrorLabel.value = "草稿保存失败，请重试";
+    }
   }
 
   async function handlePublishDraft(): Promise<void> {
@@ -178,14 +202,31 @@ export function useEditorWorkspaceController() {
     }
 
     publishErrorLabel.value = "";
+    publishSuccessLabel.value = "";
     isPublishingDraft.value = true;
 
     try {
-      if (draft.canSaveDraft.value) {
-        await draft.saveDraft();
+      let baseline: typeof draft.serverDraftBaseline.value;
+      try {
+        baseline = await draft.ensureServerDraft();
+      } catch {
+        publishErrorLabel.value = "发布前保存失败，请重试";
+        return;
       }
+
+      if (!baseline?.baseDraftBodyId || !baseline.baseDraftBodyHash) {
+        publishErrorLabel.value = "发布前保存失败，请重试";
+        return;
+      }
+
+      const published = await postWorkflowClient.publishDraft(baseline);
+      draft.replaceServerDraftBaseline({
+        postId: published.postId,
+        basePostVersion: published.postVersion,
+      });
+      publishSuccessLabel.value = "已发布";
     } catch {
-      publishErrorLabel.value = "发布前保存失败，请重试";
+      publishErrorLabel.value = "发布失败，请重试";
     } finally {
       isPublishingDraft.value = false;
     }
@@ -239,6 +280,7 @@ export function useEditorWorkspaceController() {
     saveButtonLabel,
     publishButtonLabel,
     publishErrorLabel,
+    publishSuccessLabel,
     lastSavedLabel,
     workspaceShellRef,
     handleBodyDocumentInput,

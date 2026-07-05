@@ -13,6 +13,13 @@
         >
           {{ publishErrorLabel }}
         </p>
+        <p
+          v-if="publishSuccessLabel"
+          class="editor-workspace__publish-success"
+          role="status"
+        >
+          {{ publishSuccessLabel }}
+        </p>
         <button
           class="editor-workspace__publish"
           type="button"
@@ -126,6 +133,7 @@ const {
   previewTitle,
   publishButtonLabel,
   publishErrorLabel,
+  publishSuccessLabel,
   readerPreviewBlocks,
   saveButtonLabel,
   saveStatusLabel,
@@ -252,6 +260,13 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 .editor-workspace__publish-error {
   margin: 0;
   color: var(--editor-page-warning);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.editor-workspace__publish-success {
+  margin: 0;
+  color: var(--editor-page-accent);
   font-size: 13px;
   font-weight: 700;
 }
