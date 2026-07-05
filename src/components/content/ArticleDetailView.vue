@@ -167,7 +167,6 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 .article-detail__toc,
-.article-detail__paper,
 .article-detail__rail {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -233,7 +232,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 .article-detail__paper {
-  padding: clamp(var(--space-6), 5vw, var(--space-12));
+  padding: var(--space-2) 0 0;
 }
 
 .article-detail__eyebrow {

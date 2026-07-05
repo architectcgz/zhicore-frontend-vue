@@ -212,12 +212,8 @@ function closeActionSheet(): void {
 }
 
 .article-detail-mobile__paper {
-  padding: var(--space-4) var(--space-4)
+  padding: var(--space-1) 0
     calc(var(--space-12) + env(safe-area-inset-bottom, 0px));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
-  box-shadow: var(--shadow-panel);
 }
 
 .article-detail-mobile__eyebrow {
