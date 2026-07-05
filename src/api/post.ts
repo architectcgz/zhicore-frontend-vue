@@ -86,6 +86,10 @@ export interface PostTagResp {
   slug: string;
 }
 
+export type ListTagsReq = ApiCursorReq;
+
+export type ListTagsResp = ApiCursorResp<PostTagResp>;
+
 export interface PostDetailResp {
   post: PostSummaryResp;
   body?: PostBodyResp;
@@ -174,6 +178,13 @@ export async function getPostDetail(postId: string): Promise<PostDetailResp> {
 
 export async function listPosts(input?: ListPostsReq): Promise<ListPostsResp> {
   const response = await getAxiosInstance().get<ListPostsResp>("/v1/posts", {
+    params: input,
+  });
+  return response.data;
+}
+
+export async function listTags(input?: ListTagsReq): Promise<ListTagsResp> {
+  const response = await getAxiosInstance().get<ListTagsResp>("/v1/tags", {
     params: input,
   });
   return response.data;

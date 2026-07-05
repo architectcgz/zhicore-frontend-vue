@@ -6,6 +6,7 @@ import {
   getPostEngagementBatchStatus,
   likePost,
   listPosts,
+  listTags,
 } from "@/api/post";
 
 import { useHomeDiscoveryPage } from "../composables/useHomeDiscoveryPage";
@@ -16,6 +17,7 @@ vi.mock("@/api/post", () => ({
   getPostEngagementBatchStatus: vi.fn(),
   likePost: vi.fn(),
   listPosts: vi.fn(),
+  listTags: vi.fn(),
 }));
 
 function postSummary(postId: string, title: string) {
@@ -40,9 +42,14 @@ function postSummary(postId: string, title: string) {
 
 beforeEach(() => {
   vi.mocked(listPosts).mockReset();
+  vi.mocked(listTags).mockReset();
   vi.mocked(getPostEngagementBatchStatus).mockReset();
   vi.mocked(likePost).mockReset();
   vi.mocked(favoritePost).mockReset();
+  vi.mocked(listTags).mockResolvedValue({
+    items: [],
+    hasMore: false,
+  });
 });
 
 describe("useHomeDiscoveryPage", () => {
@@ -83,6 +90,26 @@ describe("useHomeDiscoveryPage", () => {
     expect(page.discovery.posts[0]?.href).toBe("/posts/post-1");
     expect(listPosts).toHaveBeenCalledWith({ limit: 20, sort: "latest" });
     expect(getPostEngagementBatchStatus).toHaveBeenCalledWith(["post-1"]);
+  });
+
+  it("loads discovery categories from Content tags in non-demo mode", async () => {
+    vi.mocked(listTags).mockResolvedValue({
+      items: [
+        { tagId: "tag-1", name: "Vue", slug: "vue" },
+        { tagId: "tag-2", name: "Go", slug: "go" },
+      ],
+      hasMore: false,
+    });
+    vi.mocked(listPosts).mockResolvedValue({
+      items: [postSummary("post-1", "真实文章")],
+      hasMore: false,
+    });
+
+    const page = useHomeDiscoveryPage({ localDemoEnabled: false });
+    await flushPromises();
+
+    expect(listTags).toHaveBeenCalledWith({ limit: 20 });
+    expect(page.discovery.contentCategories).toEqual(["全部", "Vue", "Go"]);
   });
 
   it("does not request login-only engagement status for anonymous readers", async () => {
@@ -227,12 +254,19 @@ describe("useHomeDiscoveryPage", () => {
             resolveLatest = resolve;
           }),
       );
+    vi.mocked(listTags).mockResolvedValue({
+      items: [
+        { tagId: "tag-1", name: "Vue", slug: "vue" },
+        { tagId: "tag-2", name: "Go", slug: "go" },
+      ],
+      hasMore: false,
+    });
     vi.mocked(getPostEngagementBatchStatus).mockResolvedValue({ items: [] });
     const page = useHomeDiscoveryPage({ localDemoEnabled: false });
     await flushPromises();
 
-    page.selectContentCategory("前端");
-    page.selectContentCategory("架构");
+    page.selectContentCategory("Vue");
+    page.selectContentCategory("Go");
     resolveLatest?.({
       items: [postSummary("post-latest", "最终")],
       hasMore: false,
@@ -245,14 +279,14 @@ describe("useHomeDiscoveryPage", () => {
     await flushPromises();
 
     expect(listPosts).toHaveBeenNthCalledWith(2, {
-      categoryId: "frontend",
       limit: 20,
       sort: "latest",
+      tag: "vue",
     });
     expect(listPosts).toHaveBeenNthCalledWith(3, {
-      categoryId: "architecture",
       limit: 20,
       sort: "latest",
+      tag: "go",
     });
     expect(page.discovery.posts[0]?.title).toBe("最终");
   });
@@ -263,10 +297,12 @@ describe("useHomeDiscoveryPage", () => {
     expect(page.activeContentCategory.value).toBe("全部");
     expect(page.searchQuery.value).toBe("");
 
-    page.selectContentCategory("前端");
+    page.discovery.contentCategories = ["全部", "Vue"];
+
+    page.selectContentCategory("Vue");
     page.updateSearchQuery("内容服务");
 
-    expect(page.activeContentCategory.value).toBe("前端");
+    expect(page.activeContentCategory.value).toBe("Vue");
     expect(page.searchQuery.value).toBe("内容服务");
   });
 

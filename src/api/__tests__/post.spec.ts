@@ -8,6 +8,7 @@ import {
   getPostEngagementBatchStatus,
   getPostBody,
   listPosts,
+  listTags,
   likePost,
   publishPost,
   saveDraftBody,
@@ -201,6 +202,34 @@ describe("post api", () => {
         cursor: "cursor-1",
         limit: 20,
         sort: "latest",
+      },
+    });
+  });
+
+  it("lists content tags through the Content endpoint", async () => {
+    const response = {
+      items: [
+        {
+          tagId: "tag-1",
+          name: "Vue",
+          slug: "vue",
+        },
+      ],
+      nextCursor: "cursor-2",
+      hasMore: true,
+    };
+    const get = vi.fn().mockResolvedValue({ data: response });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      get,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    await expect(listTags({ cursor: "cursor-1", limit: 20 })).resolves.toEqual(
+      response,
+    );
+    expect(get).toHaveBeenCalledWith("/v1/tags", {
+      params: {
+        cursor: "cursor-1",
+        limit: 20,
       },
     });
   });

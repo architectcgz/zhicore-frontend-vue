@@ -5,6 +5,7 @@ import {
   getPostEngagementBatchStatus,
   likePost as requestLikePost,
   listPosts,
+  listTags,
 } from "@/api/post";
 import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 
@@ -19,13 +20,7 @@ export interface HomeDiscoveryPageOptions {
   restoreSession?: () => Promise<void>;
 }
 
-const categoryIdByLabel: Record<string, string | undefined> = {
-  全部: undefined,
-  前端: "frontend",
-  架构: "architecture",
-  后端: "backend",
-  写作体验: "writing-experience",
-};
+const allContentCategory = "全部";
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "公开内容加载失败";
@@ -33,9 +28,11 @@ function getErrorMessage(error: unknown): string {
 
 function createDiscoveryWithPosts(
   posts: HomeDiscoveryData["posts"],
+  contentCategories: readonly string[] = [allContentCategory],
 ): HomeDiscoveryData {
   return {
     ...homeDiscoveryMock,
+    contentCategories,
     posts,
   };
 }
@@ -51,10 +48,13 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
   const feedError = ref("");
   const engagementActionError = ref("");
   const activeContentCategory = ref(
-    homeDiscoveryMock.contentCategories[0] ?? "",
+    localDemoEnabled
+      ? (homeDiscoveryMock.contentCategories[0] ?? allContentCategory)
+      : allContentCategory,
   );
   // 搜索提示是占位文案，不进入状态，避免初始态被误判为已有查询。
   const searchQuery = ref("");
+  const tagSlugByLabel = new Map<string, string>();
   let requestId = 0;
   let restoreSessionPromise: Promise<void> | null = null;
   const submittingLikes = new Set<string>();
@@ -149,10 +149,10 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
     feedError.value = "";
 
     try {
-      const categoryId = categoryIdByLabel[activeContentCategory.value];
+      const activeTagSlug = tagSlugByLabel.get(activeContentCategory.value);
       const trimmedSearch = searchQuery.value.trim();
       const postsResp = await listPosts({
-        ...(categoryId ? { categoryId } : {}),
+        ...(activeTagSlug ? { tag: activeTagSlug } : {}),
         ...(trimmedSearch ? { tag: trimmedSearch } : {}),
         limit: 20,
         sort: "latest",
@@ -186,9 +186,28 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
     }
   }
 
+  async function loadContentCategories(): Promise<void> {
+    try {
+      const tagsResp = await listTags({ limit: 20 });
+      tagSlugByLabel.clear();
+      const tagLabels = tagsResp.items.map((tag) => {
+        tagSlugByLabel.set(tag.name, tag.slug);
+        return tag.name;
+      });
+      discovery.contentCategories = [allContentCategory, ...tagLabels];
+      if (!discovery.contentCategories.includes(activeContentCategory.value)) {
+        activeContentCategory.value = allContentCategory;
+      }
+    } catch {
+      discovery.contentCategories = [allContentCategory];
+      activeContentCategory.value = allContentCategory;
+      tagSlugByLabel.clear();
+    }
+  }
+
   function selectContentCategory(category: string): void {
-    // 分类只能来自服务端/配置给出的候选，避免组件发出脏值后进入不可恢复筛选态。
-    if (!homeDiscoveryMock.contentCategories.includes(category)) {
+    // 分类只能来自当前后端标签列表或 demo 配置，避免组件发出脏值后进入不可恢复筛选态。
+    if (!discovery.contentCategories.includes(category)) {
       return;
     }
 
@@ -267,6 +286,7 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
   }
 
   if (!localDemoEnabled) {
+    void loadContentCategories();
     void loadPublicPosts();
   }
 
