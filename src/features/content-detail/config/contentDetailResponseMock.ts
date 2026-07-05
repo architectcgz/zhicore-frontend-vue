@@ -202,7 +202,7 @@ export const contentDetailResponseMock: ContentDetailResponse = {
     title: "评论区",
     eyebrow: "讨论",
     totalLabel: "6 条评论",
-    sortTabs: ["最有价值", "最新", "只看作者"],
+    sortTabs: ["最有价值", "最新", "热门"],
     draftInitialBody:
       "这篇文章对主资源和附加资源的区分很清楚，我想补充一个列表页 batch-status 的例子。",
   },

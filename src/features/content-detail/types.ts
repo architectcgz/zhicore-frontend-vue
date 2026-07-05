@@ -65,11 +65,13 @@ export type ArticleBodyBlock =
     };
 
 export interface RelatedPost {
+  id: string;
   title: string;
   meta: string;
 }
 
 export interface ArticleReply {
+  id: string;
   initial: string;
   author: string;
   role: string;
@@ -78,6 +80,7 @@ export interface ArticleReply {
 }
 
 export interface ArticleComment {
+  id: string;
   initial: string;
   author: string;
   role: string;

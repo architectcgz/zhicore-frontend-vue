@@ -70,7 +70,9 @@ function getAuthorRole(
   authorRolesByPublicId: ContentDetailResponse["comments"]["authorRolesByPublicId"],
 ): string {
   const publicId = comment.author.publicId;
-  return publicId ? (authorRolesByPublicId[publicId] ?? "社区成员") : "社区成员";
+  return publicId
+    ? (authorRolesByPublicId[publicId] ?? "社区成员")
+    : "社区成员";
 }
 
 function formatCommentTime(createdAt: string): string {
@@ -83,6 +85,7 @@ function mapComment(
   authorRolesByPublicId: ContentDetailResponse["comments"]["authorRolesByPublicId"],
 ): ArticleComment {
   return {
+    id: comment.commentId,
     initial: getAuthorInitial(comment),
     author: getAuthorName(comment),
     role: getAuthorRole(comment, authorRolesByPublicId),
@@ -90,6 +93,7 @@ function mapComment(
     body: comment.content ?? "",
     likes: comment.stats.likeCount,
     replies: replies.map((reply) => ({
+      id: reply.commentId,
       initial: getAuthorInitial(reply),
       author: getAuthorName(reply),
       role: getAuthorRole(reply, authorRolesByPublicId),
@@ -147,7 +151,8 @@ export function mapContentDetailResponse(
       shareLabel: response.engagement.shareLabel,
       note: response.engagement.note,
     },
-    relatedPosts: response.relatedPosts.map(({ title, meta }) => ({
+    relatedPosts: response.relatedPosts.map(({ id, title, meta }) => ({
+      id,
       title,
       meta,
     })),
