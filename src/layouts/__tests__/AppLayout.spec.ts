@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import { HOME_DISCOVERY_MOBILE_MENU_EVENT } from "@/features/home-discovery";
 import AppLayout from "@/layouts/AppLayout.vue";
+import appLayoutSource from "@/layouts/AppLayout.vue?raw";
 
 async function mountAppLayout(
   options: {
@@ -98,6 +99,25 @@ describe("AppLayout", () => {
       "写作",
     ]);
     expect(wrapper.find(".app-layout__more-summary").text()).toBe("...更多");
+  });
+
+  it("does not keep discovery visually active after navigating to an article", async () => {
+    const wrapper = await mountAppLayout({ initialPath: "/posts/demo" });
+
+    expect(
+      wrapper
+        .findAll(".app-layout__nav-link.router-link-active")
+        .map((link) => link.text()),
+    ).toEqual(["文章"]);
+  });
+
+  it("styles only exact active header navigation links", () => {
+    expect(appLayoutSource).not.toContain(
+      ".app-layout__nav a.router-link-active",
+    );
+    expect(appLayoutSource).toContain(
+      ".app-layout__nav a.router-link-exact-active",
+    );
   });
 
   it("shows a home support menu trigger only on the home route", async () => {

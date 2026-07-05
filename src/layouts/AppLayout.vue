@@ -258,8 +258,8 @@ function openHomeSupportMenu(): void {
   stroke-width: 2;
 }
 
-.app-layout__nav a.router-link-active,
-.app-layout__more-menu a.router-link-active {
+.app-layout__nav a.router-link-exact-active,
+.app-layout__more-menu a.router-link-exact-active {
   color: var(--color-text-strong);
   background: var(--color-bg-elevated);
 }
@@ -367,7 +367,7 @@ function openHomeSupportMenu(): void {
     line-height: 1;
   }
 
-  .app-layout__nav a.router-link-active {
+  .app-layout__nav a.router-link-exact-active {
     width: auto;
     padding: 0 var(--space-1);
     background: transparent;
