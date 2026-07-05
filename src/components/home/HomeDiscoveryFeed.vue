@@ -26,99 +26,218 @@
     </header>
 
     <div class="home-discovery__feed-nav-wrapper">
-      <nav class="home-discovery__feed-nav">
-        <button class="home-discovery__nav-item active">推荐</button>
-        <button class="home-discovery__nav-item">热门</button>
-        <button class="home-discovery__nav-item">关注</button>
-        <button class="home-discovery__nav-item">话题</button>
+      <nav class="home-discovery__feed-nav" aria-label="内容分类">
+        <button
+          v-for="category in discovery?.contentCategories ?? []"
+          :key="category"
+          type="button"
+          class="home-discovery__nav-item"
+          :class="{
+            'home-discovery__nav-item--active':
+              category === activeContentCategory,
+          }"
+          :aria-selected="category === activeContentCategory"
+          @click="emit('selectContentCategory', category)"
+        >
+          {{ category }}
+        </button>
       </nav>
     </div>
 
     <section class="home-discovery__content">
       <main class="home-discovery__main-feed">
-        <article
-          v-for="article in articleCards"
-          :key="`${article.href}-${article.title}`"
-          class="home-discovery__article glass-panel"
+        <div
+          v-if="engagementActionError"
+          class="home-discovery__engagement-error"
+          role="alert"
+          data-testid="home-engagement-error"
         >
-          <div class="home-discovery__article-content">
-            <header class="home-discovery__article-header">
-              <span class="home-discovery__article-category">{{
-                article.category
-              }}</span>
-              <div class="home-discovery__article-meta-right">
-                <span class="home-discovery__icon-text">
-                  <Clock class="icon-sm" />
-                  {{ article.publishedAt }}
+          {{ engagementActionError }}
+        </div>
+
+        <div
+          v-if="feedState === 'loading'"
+          class="home-discovery__feed-state glass-panel"
+          data-testid="home-feed-loading"
+        >
+          正在加载公开内容
+        </div>
+
+        <div
+          v-else-if="feedState === 'error'"
+          class="home-discovery__feed-state glass-panel"
+          data-testid="home-feed-error"
+        >
+          <span>{{ feedError || "公开内容加载失败" }}</span>
+          <button
+            type="button"
+            class="home-discovery__state-action"
+            data-testid="home-feed-retry"
+            @click="emit('retry')"
+          >
+            重试
+          </button>
+        </div>
+
+        <div
+          v-else-if="feedState === 'empty'"
+          class="home-discovery__feed-state glass-panel"
+          data-testid="home-feed-empty"
+        >
+          暂无内容
+        </div>
+
+        <template v-else>
+          <article
+            v-for="article in articleCards"
+            :key="article.id ?? article.href ?? article.title"
+            class="home-discovery__article glass-panel"
+          >
+            <div class="home-discovery__article-content">
+              <header class="home-discovery__article-header">
+                <span class="home-discovery__article-category">{{
+                  article.category
+                }}</span>
+                <div class="home-discovery__article-meta-right">
+                  <span class="home-discovery__icon-text">
+                    <Clock class="icon-sm" />
+                    {{ article.publishedAt }}
+                  </span>
+                  <span class="home-discovery__icon-text">
+                    <MessageSquare class="icon-sm" />
+                    {{ article.comments }}
+                  </span>
+                </div>
+              </header>
+
+              <h2 class="home-discovery__article-title">
+                <RouterLink
+                  v-if="article.href"
+                  class="home-discovery__article-title-link"
+                  :to="article.href"
+                  data-testid="home-post-title-link"
+                >
+                  {{ article.title }}
+                </RouterLink>
+                <span v-else data-testid="home-post-title-static">
+                  {{ article.title }}
                 </span>
-                <span class="home-discovery__icon-text">
-                  <MessageSquare class="icon-sm" />
-                  {{ article.comments }}
+              </h2>
+
+              <p class="home-discovery__article-excerpt">
+                {{ article.summary }}
+              </p>
+
+              <div class="home-discovery__article-tags">
+                <span
+                  v-for="tag in article.tags"
+                  :key="tag"
+                  class="home-discovery__tag"
+                >
+                  {{ tag }}
                 </span>
               </div>
-            </header>
 
-            <h2 class="home-discovery__article-title">{{ article.title }}</h2>
-
-            <p class="home-discovery__article-excerpt">
-              {{ article.summary }}
-            </p>
-
-            <div class="home-discovery__article-tags">
-              <span
-                v-for="tag in article.tags"
-                :key="tag"
-                class="home-discovery__tag"
-              >
-                {{ tag }}
-              </span>
+              <footer class="home-discovery__article-footer">
+                <div class="home-discovery__author-info-bottom">
+                  <div class="home-discovery__avatar icon-sm-avatar">
+                    <img
+                      v-if="article.authorAvatarUrl"
+                      :src="article.authorAvatarUrl"
+                      :alt="article.author"
+                    />
+                    <span v-else class="home-discovery__avatar-fallback">
+                      {{ article.authorInitial }}
+                    </span>
+                  </div>
+                  <span class="home-discovery__author-name-small">{{
+                    article.author
+                  }}</span>
+                </div>
+                <div class="home-discovery__article-actions">
+                  <button
+                    v-if="article.id && !article.engagementUnavailable"
+                    type="button"
+                    class="home-discovery__action-btn"
+                    :class="{
+                      'home-discovery__action-btn--active':
+                        article.liked === true,
+                    }"
+                    :aria-label="article.actionLabels.like"
+                    :aria-pressed="article.liked === true"
+                    data-testid="home-post-like"
+                    @click="emit('likePost', article.id)"
+                  >
+                    <Heart class="icon-md" />
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="home-discovery__action-btn"
+                    :aria-label="article.actionLabels.like"
+                    data-testid="home-post-like-disabled"
+                    disabled
+                  >
+                    <Heart class="icon-md" />
+                  </button>
+                  <RouterLink
+                    v-if="article.href"
+                    class="home-discovery__action-btn"
+                    :to="`${article.href}#comments`"
+                    :aria-label="article.actionLabels.comment"
+                    data-testid="home-post-comments-link"
+                  >
+                    <MessageSquare class="icon-md" />
+                  </RouterLink>
+                  <button
+                    v-else
+                    type="button"
+                    class="home-discovery__action-btn"
+                    :aria-label="article.actionLabels.comment"
+                    disabled
+                  >
+                    <MessageSquare class="icon-md" />
+                  </button>
+                  <button
+                    v-if="article.id && !article.engagementUnavailable"
+                    type="button"
+                    class="home-discovery__action-btn"
+                    :class="{
+                      'home-discovery__action-btn--active':
+                        article.favorited === true,
+                    }"
+                    :aria-label="article.actionLabels.bookmark"
+                    :aria-pressed="article.favorited === true"
+                    data-testid="home-post-favorite"
+                    @click="emit('favoritePost', article.id)"
+                  >
+                    <Bookmark class="icon-md" />
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="home-discovery__action-btn"
+                    :aria-label="article.actionLabels.bookmark"
+                    data-testid="home-post-favorite-disabled"
+                    disabled
+                  >
+                    <Bookmark class="icon-md" />
+                  </button>
+                </div>
+              </footer>
             </div>
 
-            <footer class="home-discovery__article-footer">
-              <div class="home-discovery__author-info-bottom">
-                <div class="home-discovery__avatar icon-sm-avatar">
-                  <img :src="article.authorAvatarUrl" :alt="article.author" />
-                </div>
-                <span class="home-discovery__author-name-small">{{
-                  article.author
-                }}</span>
-              </div>
-              <div class="home-discovery__article-actions">
-                <button
-                  type="button"
-                  class="home-discovery__action-btn"
-                  :aria-label="article.actionLabels.like"
-                >
-                  <Heart class="icon-md" />
-                </button>
-                <button
-                  type="button"
-                  class="home-discovery__action-btn"
-                  :aria-label="article.actionLabels.comment"
-                >
-                  <MessageSquare class="icon-md" />
-                </button>
-                <button
-                  type="button"
-                  class="home-discovery__action-btn"
-                  :aria-label="article.actionLabels.bookmark"
-                >
-                  <Bookmark class="icon-md" />
-                </button>
-              </div>
-            </footer>
-          </div>
-
-          <div class="home-discovery__article-image">
-            <div
-              class="home-discovery__image-placeholder"
-              :class="article.imageClass"
-            ></div>
-          </div>
-        </article>
+            <div class="home-discovery__article-image">
+              <div
+                class="home-discovery__image-placeholder"
+                :class="article.imageClass"
+              ></div>
+            </div>
+          </article>
+        </template>
       </main>
 
-      <aside class="home-discovery__sidebar">
+      <aside v-if="showSupplementarySidebar" class="home-discovery__sidebar">
         <div class="home-discovery__widget glass-panel">
           <h3 class="home-discovery__widget-title">热门话题</h3>
           <ul class="home-discovery__topic-list">
@@ -193,11 +312,18 @@ const props = defineProps<{
   discovery?: HomeDiscoveryData;
   activeContentCategory?: string;
   searchQuery?: string;
+  feedState?: "loading" | "ready" | "empty" | "error";
+  feedError?: string;
+  engagementActionError?: string;
+  showSupplementarySidebar?: boolean;
 }>();
 
 const emit = defineEmits<{
   selectContentCategory: [category: string];
   "update:searchQuery": [query: string];
+  retry: [];
+  likePost: [postId: string];
+  favoritePost: [postId: string];
 }>();
 
 // 卡片默认对象只承载第二张文章的展示参数；作者等发帖者信息从文章数据派生，避免同一卡片维护两套来源。
@@ -214,7 +340,7 @@ const articleCards = computed(() =>
   (props.discovery?.posts ?? []).map((post) => ({
     ...defaultArticleCardPresentation,
     ...post,
-    authorAvatarUrl: `https://i.pravatar.cc/150?u=${encodeURIComponent(post.author)}`,
+    authorInitial: post.author.slice(0, 1) || "知",
   })),
 );
 </script>
@@ -327,7 +453,7 @@ const articleCards = computed(() =>
   color: var(--color-text-strong);
 }
 
-.home-discovery__nav-item.active {
+.home-discovery__nav-item--active {
   background: rgba(255, 255, 255, 0.1);
   color: var(--color-text-strong);
 }
@@ -343,6 +469,41 @@ const articleCards = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.home-discovery__feed-state {
+  min-height: 160px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--color-text-soft);
+  font-size: 14px;
+}
+
+.home-discovery__engagement-error {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-text-strong);
+  font-size: 14px;
+  padding: 12px 16px;
+}
+
+.home-discovery__state-action {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-strong);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.home-discovery__state-action:hover {
+  color: var(--color-primary);
 }
 
 .home-discovery__article {
@@ -405,6 +566,15 @@ const articleCards = computed(() =>
   line-height: 1.4;
 }
 
+.home-discovery__article-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-discovery__article-title-link:hover {
+  color: var(--color-primary);
+}
+
 .home-discovery__avatar {
   width: 20px;
   height: 20px;
@@ -417,6 +587,16 @@ const articleCards = computed(() =>
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.home-discovery__avatar-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--color-text-soft);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .icon-sm-avatar {
@@ -482,10 +662,20 @@ const articleCards = computed(() =>
   display: flex;
   align-items: center;
   transition: color 0.2s ease;
+  text-decoration: none;
 }
 
 .home-discovery__action-btn:hover {
   color: var(--color-primary);
+}
+
+.home-discovery__action-btn--active {
+  color: var(--color-primary);
+}
+
+.home-discovery__action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .home-discovery__article-image {
