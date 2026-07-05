@@ -6,10 +6,17 @@
           <h1 id="notifications-title">通知中心</h1>
         </div>
 
+        <section class="notifications-route__stats" aria-label="未读摘要">
+          <h2>未读通知</h2>
+          <p>{{ page.unreadCount }}</p>
+          <span>站内通知</span>
+        </section>
+
         <nav class="notifications-route__nav" aria-label="通知分类">
           <button
-            class="notifications-route__nav-item notifications-route__nav-item--active"
+            class="notifications-route__nav-item"
             type="button"
+            aria-current="page"
           >
             <Bell class="notifications-route__nav-icon" aria-hidden="true" />
             <span>全部</span>
@@ -30,12 +37,6 @@
             <span>系统</span>
           </button>
         </nav>
-
-        <section class="notifications-route__stats" aria-label="未读摘要">
-          <h2>未读通知</h2>
-          <p>{{ page.unreadCount }}</p>
-          <span>站内通知</span>
-        </section>
       </aside>
 
       <section class="notifications-route__main">
@@ -56,7 +57,7 @@
           </button>
         </header>
 
-        <div class="notifications-route__grid">
+        <div class="notifications-route__list">
           <article
             v-for="notification in page.notifications"
             :key="notification.id"
@@ -80,11 +81,11 @@
                 />
                 <Sparkles v-else aria-hidden="true" />
               </span>
+              <h2>{{ notification.title }}</h2>
               <time>{{ notification.occurredAt }}</time>
             </div>
 
             <div class="notifications-route__item-body">
-              <h2>{{ notification.title }}</h2>
               <p>{{ notification.body }}</p>
             </div>
 
@@ -118,28 +119,46 @@ const page = useNotificationCenterPage();
   --notifications-surface: rgba(255, 255, 255, 0.03);
   --notifications-surface-hover: rgba(255, 255, 255, 0.06);
   --notifications-line: rgba(255, 255, 255, 0.08);
+  --notifications-line-strong: color-mix(
+    in srgb,
+    var(--color-text-strong) 14%,
+    transparent
+  );
   --notifications-text: #d7dce2;
   --notifications-text-strong: #ffffff;
   --notifications-muted: #8b929c;
+  --notifications-sidebar-bg: color-mix(
+    in srgb,
+    var(--notifications-bg) 88%,
+    var(--color-text-strong) 4%
+  );
+  --notifications-icon-interaction: var(--color-danger);
+  --notifications-icon-content: var(--color-primary-soft);
+  --notifications-focus-ring: color-mix(
+    in srgb,
+    var(--color-primary) 42%,
+    transparent
+  );
 
   min-height: calc(100vh - 72px);
-  padding: 0 var(--space-10) var(--space-8) 0;
   background: var(--notifications-bg);
   color: var(--notifications-text);
 }
 
 .notifications-route__layout {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: var(--space-10);
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
   width: 100%;
+  min-height: calc(100vh - 72px);
 }
 
 .notifications-route__sidebar {
   display: flex;
-  min-height: calc(100vh - 136px);
   flex-direction: column;
   gap: var(--space-6);
+  padding: var(--space-6);
+  border-right: 1px solid var(--notifications-line);
+  background: var(--notifications-sidebar-bg);
 }
 
 .notifications-route__eyebrow {
@@ -186,10 +205,25 @@ const page = useNotificationCenterPage();
   color: var(--notifications-text-strong);
 }
 
-.notifications-route__nav-item--active {
+.notifications-route__nav-item:active {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 10%,
+    var(--notifications-surface-hover)
+  );
+}
+
+.notifications-route__nav-item[aria-current="page"] {
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
   font-weight: 800;
+}
+
+.notifications-route__nav-item:focus-visible,
+.notifications-route__mark-button:focus-visible,
+.notifications-route__item-footer button:focus-visible {
+  outline: 2px solid var(--notifications-focus-ring);
+  outline-offset: 2px;
 }
 
 .notifications-route__nav-icon {
@@ -198,27 +232,22 @@ const page = useNotificationCenterPage();
 }
 
 .notifications-route__stats {
-  margin-top: auto;
-  padding: var(--space-5);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--notifications-line);
   border-radius: var(--radius-lg);
-  background: linear-gradient(
-    135deg,
-    var(--notifications-surface-hover),
-    transparent
-  );
+  background: var(--notifications-surface);
 }
 
 .notifications-route__stats h2 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-1);
   color: var(--notifications-muted);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .notifications-route__stats p {
   margin: 0;
   color: var(--color-primary);
-  font-size: 2.25rem;
+  font-size: 1.75rem;
   font-weight: 900;
   line-height: 1;
 }
@@ -233,6 +262,7 @@ const page = useNotificationCenterPage();
   min-width: 0;
   flex-direction: column;
   gap: var(--space-6);
+  padding: var(--space-6) var(--space-8) var(--space-8);
 }
 
 .notifications-route__toolbar {
@@ -251,6 +281,13 @@ const page = useNotificationCenterPage();
   border: 1px solid var(--notifications-line);
   border-radius: var(--radius-pill);
   background: var(--notifications-surface);
+}
+
+.notifications-route__search:focus-within {
+  border-color: var(--notifications-focus-ring);
+  background: var(--notifications-surface-hover);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .notifications-route__search-icon {
@@ -273,7 +310,7 @@ const page = useNotificationCenterPage();
 }
 
 .notifications-route__mark-button {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-5);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-pill);
@@ -288,34 +325,36 @@ const page = useNotificationCenterPage();
   color: #000;
 }
 
-.notifications-route__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-5);
+.notifications-route__mark-button:active {
+  background: var(--color-primary-strong);
+}
+
+.notifications-route__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   overflow-y: auto;
   padding-bottom: var(--space-8);
 }
 
 .notifications-route__item {
-  display: flex;
-  min-height: 220px;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-6);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: var(--space-2);
+  row-gap: var(--space-1);
+  align-items: start;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--notifications-line);
   border-radius: var(--radius-lg);
   background: var(--notifications-surface);
   transition:
     background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color 0.2s ease;
 }
 
 .notifications-route__item:hover {
   background: var(--notifications-surface-hover);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-  transform: translateY(-4px);
+  border-color: var(--notifications-line-strong);
 }
 
 .notifications-route__item--unread {
@@ -328,16 +367,13 @@ const page = useNotificationCenterPage();
 }
 
 .notifications-route__item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  display: contents;
 }
 
 .notifications-route__item-icon {
   display: grid;
-  width: var(--space-9);
-  height: var(--space-9);
+  width: var(--space-8);
+  height: var(--space-8);
   border: 1px solid var(--notifications-line);
   border-radius: var(--radius-pill);
   place-items: center;
@@ -349,11 +385,11 @@ const page = useNotificationCenterPage();
 }
 
 .notifications-route__item-icon--interaction {
-  color: #ef4444;
+  color: var(--notifications-icon-interaction);
 }
 
 .notifications-route__item-icon--content {
-  color: #a855f7;
+  color: var(--notifications-icon-content);
 }
 
 .notifications-route__item-icon--system {
@@ -361,42 +397,61 @@ const page = useNotificationCenterPage();
 }
 
 .notifications-route__item-header time {
+  grid-column: 3;
   color: var(--notifications-muted);
   font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.notifications-route__item-header h2 {
+  margin: 0;
+  color: var(--notifications-text-strong);
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .notifications-route__item-body {
   display: grid;
-  flex: 1;
-  gap: var(--space-3);
-}
-
-.notifications-route__item-body h2 {
-  margin: 0;
-  color: var(--notifications-text-strong);
-  font-size: 1rem;
+  grid-column: 2;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .notifications-route__item-body p {
   margin: 0;
   color: var(--notifications-text);
-  line-height: 1.6;
+  line-height: 1.35;
+}
+
+.notifications-route__item-footer {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: start;
 }
 
 .notifications-route__item-footer button {
-  width: 100%;
-  min-height: 40px;
+  min-height: var(--space-8);
+  padding: 0 var(--space-2);
   border: 0;
   border-radius: var(--radius-md);
   background: var(--notifications-surface-hover);
   color: var(--notifications-text-strong);
   cursor: pointer;
+  font-size: 0.8125rem;
 }
 
 .notifications-route__item-footer button:hover {
   background: color-mix(
     in srgb,
     var(--color-primary) 12%,
+    var(--notifications-surface-hover)
+  );
+}
+
+.notifications-route__item-footer button:active {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 18%,
     var(--notifications-surface-hover)
   );
 }
@@ -421,20 +476,22 @@ const page = useNotificationCenterPage();
 }
 
 @media (max-width: 900px) {
-  .notifications-route {
-    padding: 0 var(--space-4) var(--space-6) 0;
-  }
-
   .notifications-route__layout {
     grid-template-columns: 1fr;
   }
 
   .notifications-route__sidebar {
     min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--notifications-line);
   }
 
   .notifications-route__stats {
     margin-top: 0;
+  }
+
+  .notifications-route__main {
+    padding: var(--space-5);
   }
 }
 
@@ -446,6 +503,31 @@ const page = useNotificationCenterPage();
 
   .notifications-route__search {
     width: 100%;
+  }
+
+  .notifications-route__item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .notifications-route__item-header time {
+    grid-column: 2;
+  }
+
+  .notifications-route__item-footer {
+    grid-column: 2;
+    grid-row: auto;
+  }
+
+  .notifications-route__item-footer button {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notifications-route__nav-item,
+  .notifications-route__item,
+  .notifications-route__mark-button {
+    transition: none;
   }
 }
 </style>
