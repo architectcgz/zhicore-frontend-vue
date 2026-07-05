@@ -11,4 +11,9 @@ export const homeRoutes: RouteRecordRaw[] = [
     alias: "home",
     component: () => import("@/pages/home/HomeRoutePage.vue"),
   },
+  {
+    path: "about",
+    name: "About",
+    component: () => import("@/pages/home/HomeAboutRoutePage.vue"),
+  },
 ];
