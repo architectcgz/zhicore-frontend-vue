@@ -1,6 +1,6 @@
 <template>
   <section class="article-detail-mobile">
-    <article ref="articleRef" class="article-detail-mobile__paper">
+    <article ref="articleRef" class="article-detail-mobile__content">
       <p class="article-detail-mobile__eyebrow">{{ detail.eyebrow }}</p>
       <h1>{{ detail.title }}</h1>
       <div class="article-detail-mobile__meta">
@@ -211,7 +211,7 @@ function closeActionSheet(): void {
   position: relative;
 }
 
-.article-detail-mobile__paper {
+.article-detail-mobile__content {
   padding: var(--space-1) 0
     calc(var(--space-12) + env(safe-area-inset-bottom, 0px));
 }
@@ -223,7 +223,7 @@ function closeActionSheet(): void {
   font-weight: 750;
 }
 
-.article-detail-mobile__paper h1 {
+.article-detail-mobile__content h1 {
   margin: var(--space-2) 0 0;
   color: var(--color-text-strong);
   font-size: 1.75rem;

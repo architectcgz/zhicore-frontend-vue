@@ -19,7 +19,7 @@
       </a>
     </aside>
 
-    <article ref="articleRef" class="article-detail__paper">
+    <article ref="articleRef" class="article-detail__content">
       <p class="article-detail__eyebrow">{{ detail.eyebrow }}</p>
       <h1>{{ detail.title }}</h1>
       <div class="article-detail__meta">
@@ -231,7 +231,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   color: var(--color-text-strong);
 }
 
-.article-detail__paper {
+.article-detail__content {
   padding: var(--space-2) 0 0;
 }
 
@@ -242,7 +242,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   font-weight: 750;
 }
 
-.article-detail__paper h1 {
+.article-detail__content h1 {
   max-width: 780px;
   margin: var(--space-2) 0 0;
   color: var(--color-text-strong);
@@ -445,7 +445,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 @media (max-width: 640px) {
-  .article-detail__paper h1 {
+  .article-detail__content h1 {
     font-size: 30px;
   }
 }
