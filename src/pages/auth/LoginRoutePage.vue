@@ -16,6 +16,13 @@
           <p class="auth-page__description">
             登录以发布文章、参与评论与构建你的结构化知识库。
           </p>
+          <p
+            v-if="registerSuccessMessage"
+            class="auth-page__success"
+            role="status"
+          >
+            {{ registerSuccessMessage }}
+          </p>
 
           <form class="auth-page__form" @submit.prevent="submitLogin">
             <div class="auth-page__input-group">
@@ -76,48 +83,135 @@
 
           <form class="auth-page__form" @submit.prevent="submitRegister">
             <div class="auth-page__input-group">
-              <label for="reg-username">用户名</label>
+              <label for="reg-email">邮箱</label>
               <input
-                id="reg-username"
-                v-model="regUsername"
-                type="text"
-                autocomplete="username"
-                placeholder="请输入用户名"
+                id="reg-email"
+                v-model="registerEmail"
+                type="email"
+                autocomplete="email"
+                placeholder="请输入邮箱"
+                :aria-invalid="Boolean(registerFieldErrors.email)"
+                :aria-describedby="
+                  registerFieldErrors.email ? 'reg-email-error' : undefined
+                "
               />
+              <p
+                v-if="registerFieldErrors.email"
+                id="reg-email-error"
+                class="auth-page__field-error"
+              >
+                {{ registerFieldErrors.email }}
+              </p>
+            </div>
+
+            <div class="auth-page__input-group">
+              <label for="reg-nickname">昵称</label>
+              <input
+                id="reg-nickname"
+                v-model="registerNickname"
+                type="text"
+                autocomplete="nickname"
+                placeholder="请输入昵称"
+                :aria-invalid="Boolean(registerFieldErrors.nickname)"
+                :aria-describedby="
+                  registerFieldErrors.nickname
+                    ? 'reg-nickname-error'
+                    : undefined
+                "
+              />
+              <p
+                v-if="registerFieldErrors.nickname"
+                id="reg-nickname-error"
+                class="auth-page__field-error"
+              >
+                {{ registerFieldErrors.nickname }}
+              </p>
             </div>
 
             <div class="auth-page__input-group">
               <label for="reg-password">密码</label>
               <input
                 id="reg-password"
-                v-model="regPassword"
+                v-model="registerPassword"
                 type="password"
                 autocomplete="new-password"
                 placeholder="请输入密码"
+                :aria-invalid="Boolean(registerFieldErrors.password)"
+                :aria-describedby="
+                  registerFieldErrors.password
+                    ? 'reg-password-error'
+                    : undefined
+                "
               />
+              <p
+                v-if="registerFieldErrors.password"
+                id="reg-password-error"
+                class="auth-page__field-error"
+              >
+                {{ registerFieldErrors.password }}
+              </p>
             </div>
 
             <div class="auth-page__input-group">
               <label for="reg-confirm">确认密码</label>
               <input
                 id="reg-confirm"
-                v-model="regConfirm"
+                v-model="registerConfirmPassword"
                 type="password"
                 autocomplete="new-password"
                 placeholder="请再次输入密码"
+                :aria-invalid="Boolean(registerFieldErrors.confirmPassword)"
+                :aria-describedby="
+                  registerFieldErrors.confirmPassword
+                    ? 'reg-confirm-error'
+                    : undefined
+                "
               />
+              <p
+                v-if="registerFieldErrors.confirmPassword"
+                id="reg-confirm-error"
+                class="auth-page__field-error"
+              >
+                {{ registerFieldErrors.confirmPassword }}
+              </p>
             </div>
 
-            <p v-if="regError" class="auth-page__error">
-              {{ regError }}
+            <div class="auth-page__input-group">
+              <label for="reg-email-token">邮箱验证码 token</label>
+              <input
+                id="reg-email-token"
+                v-model="registerEmailVerificationToken"
+                type="text"
+                autocomplete="one-time-code"
+                placeholder="请输入邮箱验证码 token"
+                :aria-invalid="
+                  Boolean(registerFieldErrors.emailVerificationToken)
+                "
+                :aria-describedby="
+                  registerFieldErrors.emailVerificationToken
+                    ? 'reg-email-token-error'
+                    : undefined
+                "
+              />
+              <p
+                v-if="registerFieldErrors.emailVerificationToken"
+                id="reg-email-token-error"
+                class="auth-page__field-error"
+              >
+                {{ registerFieldErrors.emailVerificationToken }}
+              </p>
+            </div>
+
+            <p v-if="registerFormError" class="auth-page__error" role="alert">
+              {{ registerFormError }}
             </p>
 
             <button
               type="submit"
               class="auth-page__submit-btn"
-              :disabled="isRegSubmitting"
+              :disabled="isRegisterSubmitting"
             >
-              {{ isRegSubmitting ? "注册中..." : "注册" }}
+              {{ isRegisterSubmitting ? "注册中..." : "注册" }}
             </button>
           </form>
 
@@ -134,9 +228,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useLoginForm } from "@/features/auth";
+import { useLoginForm, useRegisterForm } from "@/features/auth";
 
 const route = useRoute();
 const router = useRouter();
@@ -157,31 +251,24 @@ const {
   submit: submitLogin,
 } = useLoginForm();
 
-// Register Logic (local state for now)
-const regUsername = ref("");
-const regPassword = ref("");
-const regConfirm = ref("");
-const isRegSubmitting = ref(false);
-const regError = ref("");
+const {
+  email: registerEmail,
+  nickname: registerNickname,
+  password: registerPassword,
+  confirmPassword: registerConfirmPassword,
+  emailVerificationToken: registerEmailVerificationToken,
+  submitting: isRegisterSubmitting,
+  fieldErrors: registerFieldErrors,
+  formError: registerFormError,
+  successMessage: registerSuccessMessage,
+  submit: submitRegister,
+} = useRegisterForm();
 
-const submitRegister = async () => {
-  if (regPassword.value !== regConfirm.value) {
-    regError.value = "两次输入的密码不一致";
-    return;
+watch(registerSuccessMessage, (message) => {
+  if (message) {
+    loginUsername.value = registerEmail.value;
   }
-  if (!regUsername.value || !regPassword.value) {
-    regError.value = "用户名和密码不能为空";
-    return;
-  }
-  isRegSubmitting.value = true;
-  regError.value = "";
-  // Simulate network request
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  isRegSubmitting.value = false;
-  // Auto switch to login after registration
-  loginUsername.value = regUsername.value;
-  toggleMode("Login");
-};
+});
 </script>
 
 <style scoped>
@@ -370,6 +457,23 @@ const submitRegister = async () => {
   border-radius: 8px;
   border: 1px solid rgba(255, 107, 107, 0.2);
   text-align: center;
+}
+
+.auth-page__success {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  background: rgba(0, 229, 181, 0.1);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 229, 181, 0.2);
+  text-align: center;
+}
+
+.auth-page__field-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #ff8a8a;
 }
 
 .auth-page__toggle {

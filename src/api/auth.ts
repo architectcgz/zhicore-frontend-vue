@@ -160,6 +160,26 @@ export async function register(input: RegisterReq): Promise<RegisterResp> {
   return response.data;
 }
 
+export function authSessionFromRegisterResp(response: RegisterResp): AuthSession {
+  if (
+    !response.accessToken ||
+    response.tokenType !== "Bearer" ||
+    typeof response.expiresIn !== "number" ||
+    !response.csrfToken ||
+    !response.principal
+  ) {
+    throw new Error("注册响应缺少自动登录会话");
+  }
+
+  return {
+    user: authUserFromPrincipal(response.principal),
+    accessToken: response.accessToken,
+    tokenType: response.tokenType,
+    expiresIn: response.expiresIn,
+    csrfToken: response.csrfToken,
+  };
+}
+
 function authUserFromPrincipal(principal: AuthPrincipal): AuthUser {
   return {
     id: principal.userId,
