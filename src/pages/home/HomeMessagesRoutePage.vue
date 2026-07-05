@@ -1,485 +1,512 @@
 <template>
-  <div class="messages-page">
-    <div class="messages-page__container">
-      <div class="glass-panel messages-card">
-        <aside class="messages-sidebar">
-          <header class="messages-header">
-            <h1 class="messages-title">私信</h1>
-            <button class="new-message-btn" aria-label="新建私信">
-              <Plus class="new-icon" />
-            </button>
-          </header>
-          <div class="messages-list">
-            <div class="message-item active unread">
-              <div class="message-avatar gradient-ai">AI</div>
-              <div class="message-info">
-                <div class="message-info-top">
-                  <span class="message-name">Antigravity</span>
-                  <span class="message-time">刚刚</span>
-                </div>
-                <p class="message-preview">新版透明度已经调整好了，看看合适吗？</p>
-              </div>
-            </div>
-            
-            <div class="message-item">
-              <div class="message-avatar gradient-user">L</div>
-              <div class="message-info">
-                <div class="message-info-top">
-                  <span class="message-name">Li Lei</span>
-                  <span class="message-time">2小时前</span>
-                </div>
-                <p class="message-preview">期待你的下一篇架构分享。</p>
-              </div>
-            </div>
+  <main class="messages-route" aria-labelledby="messages-title">
+    <section v-if="page.isLocalDemo" class="messages-route__layout">
+      <aside class="messages-route__rail" aria-label="私信分组">
+        <button
+          class="messages-route__rail-item messages-route__rail-item--active"
+          type="button"
+        >
+          AI
+        </button>
+        <button
+          v-for="conversation in secondaryConversations"
+          :key="conversation.id"
+          class="messages-route__rail-item"
+          type="button"
+        >
+          {{ conversation.participantInitial }}
+        </button>
+      </aside>
+
+      <aside class="messages-route__contacts" aria-label="私信列表">
+        <header class="messages-route__contacts-header">
+          <div>
+            <p class="messages-route__eyebrow">消息</p>
+            <h1 id="messages-title">私信列表</h1>
           </div>
-        </aside>
-        
-        <main class="messages-chat">
-          <header class="chat-header">
-            <div class="chat-header-info">
-              <h2>Antigravity</h2>
-              <span class="chat-status"><span class="status-dot"></span> 在线</span>
-            </div>
-            <button class="chat-more-btn">
-              <MoreVertical class="more-icon" />
-            </button>
-          </header>
-          <div class="chat-body">
-            <div class="chat-bubble received">
-              <p>我已经进一步将工具栏的透明度大幅降低（增加了不透明度）了，看看效果如何？</p>
-              <span class="time">15:55</span>
-            </div>
-            <div class="chat-bubble sent">
-              <p>好多了！能不能再帮我把通知和私信功能也做一下？</p>
-              <span class="time">15:58</span>
-            </div>
-            <div class="chat-bubble received">
-              <p>没问题，马上为你安排独立页面和悬浮下拉菜单双端适配的完美体验。</p>
-              <span class="time">16:00</span>
-            </div>
+          <span v-if="page.unreadCount" class="messages-route__count">
+            {{ page.unreadCount }}
+          </span>
+        </header>
+
+        <div class="messages-route__contact-list">
+          <button
+            v-for="conversation in page.conversations"
+            :key="conversation.id"
+            class="messages-route__conversation"
+            :class="{
+              'messages-route__conversation--active':
+                conversation.id === page.activeConversation?.id,
+            }"
+            type="button"
+          >
+            <span class="messages-route__avatar">
+              {{ conversation.participantInitial }}
+              <span
+                v-if="conversation.online"
+                class="messages-route__online"
+                aria-label="在线"
+              />
+            </span>
+            <span class="messages-route__conversation-main">
+              <span class="messages-route__conversation-top">
+                <strong>{{ conversation.participantName }}</strong>
+                <span>{{ conversation.lastMessageAt }}</span>
+              </span>
+              <span class="messages-route__preview">
+                {{ conversation.lastMessage }}
+              </span>
+            </span>
+            <span
+              v-if="conversation.unreadCount > 0"
+              class="messages-route__conversation-badge"
+            >
+              {{ conversation.unreadCount }}
+            </span>
+          </button>
+        </div>
+      </aside>
+
+      <section
+        v-if="page.activeConversation"
+        class="messages-route__chat"
+        aria-label="当前会话"
+      >
+        <header class="messages-route__chat-header">
+          <div>
+            <span class="messages-route__channel-mark">#</span>
+            <h2>{{ page.activeConversation.participantName }}</h2>
           </div>
-          <footer class="chat-footer">
-            <button class="chat-action-btn">
-              <Image class="action-icon" />
-            </button>
-            <div class="chat-input-wrapper">
-              <input type="text" placeholder="输入消息..." class="chat-input" />
+          <p>
+            {{ page.activeConversation.online ? "在线" : "离线" }}
+          </p>
+        </header>
+
+        <div class="messages-route__history">
+          <article
+            v-for="message in page.activeConversation.messages"
+            :key="message.id"
+            class="messages-route__message"
+          >
+            <span
+              class="messages-route__message-avatar"
+              :class="{
+                'messages-route__message-avatar--mine': message.author === 'me',
+              }"
+            >
+              {{
+                message.author === "me"
+                  ? "我"
+                  : page.activeConversation.participantInitial
+              }}
+            </span>
+            <div class="messages-route__message-body">
+              <div class="messages-route__message-meta">
+                <strong>
+                  {{
+                    message.author === "me"
+                      ? "我"
+                      : page.activeConversation.participantName
+                  }}
+                </strong>
+                <time>{{ message.sentAt }}</time>
+              </div>
+              <p>{{ message.text }}</p>
             </div>
-            <button class="chat-send">
-              <Send class="send-icon" />
+          </article>
+        </div>
+
+        <footer class="messages-route__composer">
+          <div class="messages-route__input-shell">
+            <button class="messages-route__add-button" type="button" disabled>
+              +
             </button>
-          </footer>
-        </main>
-      </div>
-    </div>
-  </div>
+            <input
+              type="text"
+              :placeholder="`发送消息给 ${page.activeConversation.participantName}`"
+              aria-label="消息输入"
+            />
+          </div>
+        </footer>
+      </section>
+    </section>
+
+    <section v-else class="messages-route__empty">
+      <p class="messages-route__eyebrow">Message</p>
+      <h1 id="messages-title">私信暂不可用</h1>
+      <p>消息服务接入后会显示会话列表和历史消息。</p>
+    </section>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { Plus, MoreVertical, Image, Send } from "@lucide/vue";
+import { computed } from "vue";
+
+import { useMessageCenterPage } from "@/features/message";
+
+const page = useMessageCenterPage();
+const secondaryConversations = computed(() => page.conversations.slice(1, 3));
 </script>
 
 <style scoped>
-.messages-page {
-  padding: 24px 32px;
+.messages-route {
+  --messages-bg: #2b2d31;
+  --messages-bg-deep: #1e1f22;
+  --messages-bg-panel: #313338;
+  --messages-bg-hover: #35373c;
+  --messages-bg-active: #404249;
+  --messages-text: #dbdee1;
+  --messages-text-strong: #ffffff;
+  --messages-muted: #949ba4;
+  --messages-border: #1e1f22;
+
+  min-height: calc(100vh - 72px);
+  background: var(--messages-bg);
+  color: var(--messages-text);
+}
+
+.messages-route__layout {
+  display: grid;
+  grid-template-columns: 72px minmax(240px, 320px) minmax(0, 1fr);
+  min-height: calc(100vh - 72px);
+}
+
+.messages-route__rail {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px);
-  background: radial-gradient(circle at 100% 100%, rgba(0, 168, 255, 0.08), transparent 50%);
-}
-
-.messages-page__container {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  animation: fade-in-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-.messages-card {
-  display: flex;
-  flex: 1;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.messages-sidebar {
-  width: 380px;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  flex-direction: column;
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.messages-header {
-  padding: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  display: flex;
+  gap: var(--space-2);
   align-items: center;
-  justify-content: space-between;
+  padding: var(--space-3) 0;
+  background: var(--messages-bg-deep);
 }
 
-.messages-title {
-  margin: 0;
-  font-size: 22px;
+.messages-route__rail-item {
+  display: grid;
+  width: var(--space-12);
+  height: var(--space-12);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--messages-bg-panel);
+  color: var(--messages-text);
+  cursor: pointer;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff, #9ca3af);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
+  place-items: center;
+  transition:
+    background 0.2s ease,
+    border-radius 0.2s ease,
+    color 0.2s ease;
 }
 
-.new-message-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-text);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.new-message-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  transform: rotate(90deg);
-}
-
-.new-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.messages-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.message-item {
-  display: flex;
-  gap: 14px;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.message-item:hover {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.message-item.active {
-  background: linear-gradient(90deg, rgba(0, 229, 181, 0.08) 0%, transparent 100%);
-}
-
-.message-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
+.messages-route__rail-item:hover,
+.messages-route__rail-item--active {
+  border-radius: var(--radius-lg);
   background: var(--color-primary);
-  box-shadow: 0 0 12px var(--color-primary-soft);
+  color: #000;
 }
 
-.message-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+.messages-route__contacts {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-  flex-shrink: 0;
-  border: 1px solid;
-}
-
-.gradient-ai {
-  background: linear-gradient(135deg, rgba(0, 229, 181, 0.15), rgba(0, 168, 255, 0.15));
-  color: var(--color-primary);
-  border-color: rgba(0, 229, 181, 0.3);
-}
-
-.gradient-user {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.15));
-  color: #d8b4fe;
-  border-color: rgba(168, 85, 247, 0.3);
-}
-
-.message-info {
-  flex: 1;
   min-width: 0;
-  display: flex;
   flex-direction: column;
+  background: var(--messages-bg);
+  border-right: 1px solid var(--messages-border);
+}
+
+.messages-route__contacts-header {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--messages-border);
+}
+
+.messages-route__eyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--messages-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.messages-route__contacts-header h1,
+.messages-route__chat-header h2,
+.messages-route__empty h1 {
+  margin: 0;
+  color: var(--messages-text-strong);
+}
+
+.messages-route__contacts-header h1 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.messages-route__count,
+.messages-route__conversation-badge {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-}
-
-.message-info-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 6px;
-}
-
-.message-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-strong);
-}
-
-.message-time {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
-  font-weight: 500;
-}
-
-.message-preview {
-  margin: 0;
-  font-size: 14px;
-  color: var(--color-text-soft);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.message-item.unread .message-name {
-  color: var(--color-primary);
-}
-
-.message-item.unread .message-preview {
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.messages-chat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: rgba(255, 255, 255, 0.01);
-}
-
-.chat-header {
-  padding: 20px 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(255, 255, 255, 0.01);
-}
-
-.chat-header-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.chat-header h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-strong);
-}
-
-.chat-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  min-width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
-  box-shadow: 0 0 8px var(--color-primary-soft);
+  color: #000;
+  font-size: 0.8125rem;
+  font-weight: 800;
 }
 
-.chat-more-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-soft);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.chat-more-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-}
-
-.more-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.chat-body {
-  flex: 1;
-  padding: 32px;
+.messages-route__contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  padding: var(--space-2);
 }
 
-.chat-bubble {
-  max-width: 65%;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-bubble.received {
-  align-self: flex-start;
-}
-
-.chat-bubble.sent {
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.chat-bubble p {
-  margin: 0 0 6px;
-  padding: 14px 18px;
-  font-size: 15px;
-  line-height: 1.6;
-  border-radius: 18px;
-}
-
-.chat-bubble.received p {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom-left-radius: 4px;
-  color: var(--color-text-strong);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.chat-bubble.sent p {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
-  color: #000;
-  font-weight: 500;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 229, 181, 0.2);
-}
-
-.chat-bubble .time {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.3);
-  margin: 0 8px;
-}
-
-.chat-footer {
-  padding: 20px 32px;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  display: flex;
+.messages-route__conversation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
   align-items: center;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.01);
-}
-
-.chat-action-btn {
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
-  border: none;
-  color: var(--color-text-soft);
+  color: inherit;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  text-align: left;
 }
 
-.chat-action-btn:hover {
-  color: var(--color-primary);
-  background: rgba(0, 229, 181, 0.1);
+.messages-route__conversation:hover {
+  background: var(--messages-bg-hover);
 }
 
-.action-icon {
-  width: 22px;
-  height: 22px;
+.messages-route__conversation--active {
+  background: var(--messages-bg-active);
 }
 
-.chat-input-wrapper {
-  flex: 1;
+.messages-route__avatar {
   position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.chat-input {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 14px 20px;
-  color: var(--color-text-strong);
-  font-size: 15px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.chat-input:focus {
-  border-color: rgba(0, 229, 181, 0.4);
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 0 2px rgba(0, 229, 181, 0.1);
-}
-
-.chat-send {
+  display: grid;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: #000;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  font-weight: 800;
+  place-items: center;
+}
+
+.messages-route__online {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--messages-bg);
+  border-radius: var(--radius-pill);
+  background: #23a559;
+}
+
+.messages-route__conversation-main {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.messages-route__conversation-top {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+  font-size: 0.9375rem;
+}
+
+.messages-route__conversation-top strong {
+  color: var(--messages-text-strong);
+}
+
+.messages-route__conversation-top span,
+.messages-route__preview {
+  color: var(--messages-muted);
+}
+
+.messages-route__preview {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messages-route__chat {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--messages-bg-panel);
+}
+
+.messages-route__chat-header {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--messages-bg);
+}
+
+.messages-route__chat-header div {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 229, 181, 0.25);
+  gap: var(--space-2);
 }
 
-.chat-send:hover {
-  transform: translateY(-2px) scale(1.05);
-  background: var(--color-primary-soft);
+.messages-route__channel-mark {
+  color: #80848e;
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
-.send-icon {
-  width: 20px;
-  height: 20px;
-  margin-left: -2px; /* Visual center adjustment */
+.messages-route__chat-header h2 {
+  font-size: 1rem;
 }
 
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+.messages-route__chat-header p {
+  margin: 0;
+  color: var(--messages-muted);
+  font-size: 0.8125rem;
+}
+
+.messages-route__history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  overflow-y: auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+.messages-route__message {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.messages-route__message-avatar {
+  display: grid;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-pill);
+  background: #444850;
+  color: var(--messages-text-strong);
+  font-weight: 800;
+  place-items: center;
+}
+
+.messages-route__message-avatar--mine {
+  background: var(--color-primary);
+  color: #000;
+}
+
+.messages-route__message-body {
+  min-width: 0;
+}
+
+.messages-route__message-meta {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin-bottom: var(--space-1);
+}
+
+.messages-route__message-meta strong {
+  color: var(--messages-text-strong);
+}
+
+.messages-route__message-meta time {
+  color: var(--messages-muted);
+  font-size: 0.75rem;
+}
+
+.messages-route__message-body p {
+  margin: 0;
+  color: var(--messages-text);
+  line-height: 1.5;
+}
+
+.messages-route__composer {
+  padding: 0 var(--space-4) var(--space-6);
+}
+
+.messages-route__input-shell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: #383a40;
+}
+
+.messages-route__add-button {
+  width: var(--space-6);
+  height: var(--space-6);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: #b5bac1;
+  color: #383a40;
+  cursor: not-allowed;
+  font-weight: 800;
+}
+
+.messages-route__input-shell input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--messages-text);
+}
+
+.messages-route__input-shell input::placeholder {
+  color: var(--messages-muted);
+}
+
+.messages-route__empty {
+  display: grid;
+  gap: var(--space-3);
+  width: min(100%, 760px);
+  margin: var(--space-10) auto 0;
+  padding: var(--space-10);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+  place-items: center;
+  text-align: center;
+}
+
+.messages-route__empty p:last-child {
+  max-width: 560px;
+  margin: 0;
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 860px) {
+  .messages-route__layout {
+    grid-template-columns: 64px minmax(0, 1fr);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .messages-route__chat {
+    grid-column: 1 / -1;
+    min-height: 520px;
   }
 }
 
-@media (max-width: 768px) {
-  .messages-sidebar {
+@media (max-width: 640px) {
+  .messages-route__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .messages-route__rail {
     display: none;
-  }
-  .messages-page {
-    padding: 16px;
-  }
-  .messages-page__container {
-    height: calc(100vh - 96px);
   }
 }
 </style>
