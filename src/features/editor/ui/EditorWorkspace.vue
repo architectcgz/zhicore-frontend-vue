@@ -158,7 +158,7 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
   --editor-control-disabled-text: rgba(255, 255, 255, 0.3);
   --editor-control-primary: var(--color-primary);
   --editor-control-primary-hover: var(--color-primary-soft);
-  --editor-toolbar-bg: rgba(255, 255, 255, 0.03);
+  --editor-toolbar-bg: rgba(10, 15, 22, 0.95);
   --editor-body-text: var(--color-text);
   --editor-reader-text: var(--color-text);
   --editor-reader-muted: var(--color-text-soft);
