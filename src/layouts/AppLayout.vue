@@ -39,9 +39,14 @@
       </nav>
 
       <div class="app-layout__search-area">
-        <form class="app-layout__search" role="search" @submit.prevent>
+        <form
+          class="app-layout__search"
+          role="search"
+          @submit.prevent="submitGlobalSearch"
+        >
           <Search class="app-layout__search-icon" aria-hidden="true" />
           <input
+            v-model="globalSearchQuery"
             type="search"
             placeholder="搜索知识、社区、内容..."
             aria-label="搜索"
@@ -178,8 +183,8 @@ import {
   Home as HomeIcon,
   Compass,
 } from "@lucide/vue";
-import { computed } from "vue";
-import { RouterLink, RouterView, useRoute } from "vue-router";
+import { computed, ref } from "vue";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 
 import { useMessageCenterPage } from "@/features/message";
 import { useNotificationCenterPage } from "@/features/notification";
@@ -190,13 +195,28 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const router = useRouter();
 const isShellFlush = computed(() => route.meta.appShellFlush === true);
+const globalSearchQuery = ref("");
 const messageCenter = useMessageCenterPage();
 const notificationCenter = useNotificationCenterPage();
 const messageUnreadCount = computed(() => messageCenter.unreadCount ?? 0);
 const notificationUnreadCount = computed(
   () => notificationCenter.unreadCount ?? 0,
 );
+
+async function submitGlobalSearch(): Promise<void> {
+  const query = globalSearchQuery.value.trim();
+
+  if (!query) {
+    return;
+  }
+
+  await router.push({
+    path: "/search",
+    query: { q: query },
+  });
+}
 </script>
 
 <style scoped>
