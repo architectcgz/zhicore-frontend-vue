@@ -138,6 +138,18 @@ describe("AppLayout", () => {
     );
   });
 
+  it("keeps the desktop header navigation container unframed", () => {
+    const navRule = appLayoutSource.match(
+      /\.app-layout__nav \{[\s\S]*?\n\}/,
+    )?.[0];
+
+    expect(navRule).toBeDefined();
+    expect(navRule).not.toContain("border:");
+    expect(navRule).not.toContain("border-radius:");
+    expect(navRule).not.toContain("background:");
+    expect(navRule).not.toContain("padding:");
+  });
+
   it("does not render a home side navigation trigger", async () => {
     const homeWrapper = await mountAppLayout();
     const articleWrapper = await mountAppLayout({ initialPath: "/posts/demo" });

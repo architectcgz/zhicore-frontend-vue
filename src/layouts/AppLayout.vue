@@ -159,10 +159,6 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   flex-wrap: wrap;
   gap: 6px;
   justify-content: center;
-  padding: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated-2);
 }
 
 .app-layout__nav a,
