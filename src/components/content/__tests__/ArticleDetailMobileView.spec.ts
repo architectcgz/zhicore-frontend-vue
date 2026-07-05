@@ -13,6 +13,13 @@ function mountArticleDetailMobileView() {
       detail: mapContentDetailResponse(contentDetailResponseMock),
       activeCommentSort: "最有价值",
       commentDraftBody: "",
+      submittingComment: false,
+      commentSubmitError: "",
+      commentsState: "ready",
+      commentsError: "",
+      submittingLike: false,
+      submittingFavorite: false,
+      readingActionError: "",
     },
     global: {
       stubs: {
@@ -89,5 +96,18 @@ describe("ArticleDetailMobileView", () => {
     ).toMatchObject({
       "aria-expanded": "false",
     });
+  });
+
+  it("emits article action intents instead of owning API calls", () => {
+    expect(articleDetailMobileViewSource).toContain(
+      "@click=\"$emit('likePost')\"",
+    );
+    expect(articleDetailMobileViewSource).toContain(
+      "@click=\"$emit('favoritePost')\"",
+    );
+    expect(articleDetailMobileViewSource).toContain(
+      "@click=\"$emit('sharePost')\"",
+    );
+    expect(articleDetailMobileViewSource).not.toContain("@/api/post");
   });
 });

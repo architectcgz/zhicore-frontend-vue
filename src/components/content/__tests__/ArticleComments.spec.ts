@@ -1,6 +1,45 @@
+import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
+import type { ArticleComment } from "@/features/content-detail";
+
+import ArticleComments from "../ArticleComments.vue";
 import articleCommentsSource from "../ArticleComments.vue?raw";
+
+function mountArticleComments(
+  options: {
+    draftBody?: string;
+    submitting?: boolean;
+    submitError?: string;
+    commentsState?: "idle" | "loading" | "ready" | "error";
+    commentsError?: string;
+  } = {},
+) {
+  return mount(ArticleComments, {
+    props: {
+      title: "评论区",
+      countLabel: "1 条评论",
+      sortTabs: ["最有价值", "最新"],
+      activeSort: "最有价值",
+      draftBody: options.draftBody ?? "评论草稿",
+      comments: [] satisfies ArticleComment[],
+      submittingComment: options.submitting ?? false,
+      commentSubmitError: options.submitError ?? "",
+      commentsState: options.commentsState ?? "ready",
+      commentsError: options.commentsError ?? "",
+    },
+    global: {
+      stubs: {
+        EditorCompactBodyComposer: {
+          props: ["modelValue"],
+          emits: ["update:modelValue"],
+          template:
+            '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+        },
+      },
+    },
+  });
+}
 
 describe("ArticleComments", () => {
   it("keeps the comment count beside the title without an outlined badge", () => {
@@ -102,5 +141,51 @@ describe("ArticleComments", () => {
     expect(articleCommentsSource).not.toContain(
       ".article-comments__submit button,\n.article-comments__actions button",
     );
+  });
+
+  it("emits submit intent from the primary comment action", async () => {
+    const wrapper = mountArticleComments();
+
+    await wrapper.get('[data-testid="comment-submit"]').trigger("click");
+
+    expect(wrapper.emitted("submitComment")).toHaveLength(1);
+  });
+
+  it("disables duplicate comment submit while submitting", async () => {
+    const wrapper = mountArticleComments({ submitting: true });
+
+    const submitButton = wrapper.get('[data-testid="comment-submit"]');
+    expect(submitButton.attributes("disabled")).toBeDefined();
+    await submitButton.trigger("click");
+
+    expect(wrapper.emitted("submitComment")).toBeUndefined();
+  });
+
+  it("shows local submit errors from the workflow owner", () => {
+    const wrapper = mountArticleComments({ submitError: "评论内容不能为空" });
+
+    expect(wrapper.get('[data-testid="comment-submit-error"]').text()).toBe(
+      "评论内容不能为空",
+    );
+  });
+
+  it("shows comment list errors as a local degraded state", async () => {
+    const wrapper = mountArticleComments({
+      commentsState: "error",
+      commentsError: "comments failed",
+    });
+
+    expect(wrapper.get('[data-testid="comments-load-error"]').text()).toContain(
+      "comments failed",
+    );
+    await wrapper.get('[data-testid="comments-retry"]').trigger("click");
+    expect(wrapper.emitted("retryComments")).toHaveLength(1);
+  });
+
+  it("uses stable comment ids as rendered keys", () => {
+    expect(articleCommentsSource).toContain(':key="comment.id"');
+    expect(articleCommentsSource).toContain(':key="reply.id"');
+    expect(articleCommentsSource).not.toContain(':key="comment.author"');
+    expect(articleCommentsSource).not.toContain(':key="reply.author"');
   });
 });

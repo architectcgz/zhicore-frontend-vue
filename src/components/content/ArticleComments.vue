@@ -26,6 +26,22 @@
       <button class="article-comments__follow" type="button">关注讨论</button>
     </div>
 
+    <div
+      v-if="commentsState === 'error'"
+      class="article-comments__load-error"
+      data-testid="comments-load-error"
+      role="alert"
+    >
+      <span>{{ commentsError || "评论加载失败" }}</span>
+      <button
+        type="button"
+        data-testid="comments-retry"
+        @click="$emit('retryComments')"
+      >
+        重试
+      </button>
+    </div>
+
     <div class="article-comments__composer">
       <span class="article-comments__avatar">我</span>
       <div>
@@ -39,18 +55,32 @@
         <div class="article-comments__composer-actions">
           <div class="article-comments__submit">
             <button type="button">保存草稿</button>
-            <button class="article-comments__primary" type="button">
-              发布评论
+            <button
+              class="article-comments__primary"
+              type="button"
+              data-testid="comment-submit"
+              :disabled="submittingComment"
+              @click="$emit('submitComment')"
+            >
+              {{ submittingComment ? "发布中" : "发布评论" }}
             </button>
           </div>
         </div>
+        <p
+          v-if="commentSubmitError"
+          class="article-comments__submit-error"
+          data-testid="comment-submit-error"
+          role="alert"
+        >
+          {{ commentSubmitError }}
+        </p>
       </div>
     </div>
 
     <div class="article-comments__thread">
       <article
         v-for="comment in comments"
-        :key="comment.author"
+        :key="comment.id"
         class="article-comments__item"
       >
         <span class="article-comments__avatar">{{ comment.initial }}</span>
@@ -88,7 +118,7 @@
             <summary>展开 {{ comment.replies.length }} 条回复</summary>
             <article
               v-for="reply in comment.replies"
-              :key="reply.author"
+              :key="reply.id"
               class="article-comments__reply"
             >
               <span class="article-comments__avatar">{{ reply.initial }}</span>
@@ -141,11 +171,17 @@ defineProps<{
   activeSort: string;
   draftBody: string;
   comments: readonly ArticleComment[];
+  submittingComment: boolean;
+  commentSubmitError: string;
+  commentsState: "idle" | "loading" | "ready" | "error";
+  commentsError: string;
 }>();
 
 const emit = defineEmits<{
   selectSort: [sort: string];
   "update:draftBody": [body: string];
+  submitComment: [];
+  retryComments: [];
 }>();
 </script>
 
@@ -247,6 +283,49 @@ const emit = defineEmits<{
 .article-comments__actions button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: var(--space-1);
+}
+
+.article-comments__submit button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.article-comments__submit-error {
+  margin: var(--space-2) 0 0;
+  color: var(--color-danger);
+  font-size: var(--article-comment-meta-size);
+  font-weight: 750;
+}
+
+.article-comments__load-error {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(
+    in srgb,
+    var(--color-danger) 8%,
+    var(--color-bg-elevated)
+  );
+  color: var(--color-danger);
+  font-size: var(--article-comment-meta-size);
+  font-weight: 750;
+}
+
+.article-comments__load-error button {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 800;
 }
 
 .article-comments__tabs button[aria-selected="true"],

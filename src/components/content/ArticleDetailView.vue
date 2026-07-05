@@ -72,8 +72,14 @@
         :sort-tabs="detail.commentSortTabs"
         :active-sort="activeCommentSort"
         :draft-body="commentDraftBody"
+        :submitting-comment="submittingComment"
+        :comment-submit-error="commentSubmitError"
+        :comments-state="commentsState"
+        :comments-error="commentsError"
         @select-sort="$emit('selectCommentSort', $event)"
         @update:draft-body="$emit('update:commentDraftBody', $event)"
+        @submit-comment="$emit('submitComment')"
+        @retry-comments="$emit('retryComments')"
       />
     </article>
 
@@ -83,6 +89,8 @@
         <button
           type="button"
           :aria-label="`喜欢，${detail.readingActions.likeCountLabel} 次`"
+          :disabled="submittingLike"
+          @click="$emit('likePost')"
         >
           <span><Heart aria-hidden="true" /></span>
           <strong>{{ detail.readingActions.likeCountLabel }}</strong>
@@ -91,6 +99,8 @@
           :class="{ 'is-unknown': detail.readingActions.bookmarkUnavailable }"
           type="button"
           aria-label="收藏状态暂不可用"
+          :disabled="submittingFavorite"
+          @click="$emit('favoritePost')"
         >
           <span><Bookmark aria-hidden="true" /></span>
           <strong>{{ detail.readingActions.bookmarkCountLabel }}</strong>
@@ -102,19 +112,25 @@
           <span><MessageCircle aria-hidden="true" /></span>
           <strong>{{ detail.readingActions.commentCountLabel }}</strong>
         </a>
-        <button type="button" aria-label="分享文章">
+        <button type="button" aria-label="分享文章" @click="$emit('sharePost')">
           <span><Share2 aria-hidden="true" /></span>
           <strong>{{ detail.readingActions.shareLabel }}</strong>
         </button>
       </div>
 
-      <p class="article-detail__note">{{ detail.readingActions.note }}</p>
+      <p class="article-detail__note">
+        {{ readingActionError || detail.readingActions.note }}
+      </p>
 
       <h2 id="related-reading" class="article-detail__related-title">
         相关阅读
       </h2>
       <div class="article-detail__related-list">
-        <a v-for="item in detail.relatedPosts" :key="item.title" href="#">
+        <a
+          v-for="item in detail.relatedPosts"
+          :key="item.id"
+          :href="`/posts/${item.id}`"
+        >
           <strong>{{ item.title }}</strong>
           <span>{{ item.meta }}</span>
         </a>
@@ -138,11 +154,23 @@ const props = defineProps<{
   detail: ArticleDetailData;
   activeCommentSort: string;
   commentDraftBody: string;
+  submittingComment: boolean;
+  commentSubmitError: string;
+  commentsState: "idle" | "loading" | "ready" | "error";
+  commentsError: string;
+  submittingLike: boolean;
+  submittingFavorite: boolean;
+  readingActionError: string;
 }>();
 
 defineEmits<{
   selectCommentSort: [sort: string];
   "update:commentDraftBody": [body: string];
+  submitComment: [];
+  retryComments: [];
+  likePost: [];
+  favoritePost: [];
+  sharePost: [];
 }>();
 
 const articleRef = useTemplateRef<HTMLElement>("articleRef");

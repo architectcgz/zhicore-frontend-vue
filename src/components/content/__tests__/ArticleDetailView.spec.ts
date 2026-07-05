@@ -41,4 +41,23 @@ describe("ArticleDetailView", () => {
       "tocItem.label === detail.activeTocLabel",
     );
   });
+
+  it("emits article action intents instead of owning API calls", () => {
+    expect(articleDetailViewSource).toContain("@click=\"$emit('likePost')\"");
+    expect(articleDetailViewSource).toContain(
+      "@click=\"$emit('favoritePost')\"",
+    );
+    expect(articleDetailViewSource).toContain("@click=\"$emit('sharePost')\"");
+    expect(articleDetailViewSource).not.toContain("@/api/post");
+  });
+
+  it("links related posts with real post ids instead of placeholder anchors", () => {
+    expect(articleDetailViewSource).toContain(
+      'v-for="item in detail.relatedPosts"',
+    );
+    expect(articleDetailViewSource).toContain(':href="`/posts/${item.id}`"');
+    expect(articleDetailViewSource).not.toContain(
+      '<a v-for="item in detail.relatedPosts" :key="item.title" href="#">',
+    );
+  });
 });

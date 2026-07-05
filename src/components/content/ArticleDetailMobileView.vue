@@ -55,8 +55,14 @@
         :sort-tabs="detail.commentSortTabs"
         :active-sort="activeCommentSort"
         :draft-body="commentDraftBody"
+        :submitting-comment="submittingComment"
+        :comment-submit-error="commentSubmitError"
+        :comments-state="commentsState"
+        :comments-error="commentsError"
         @select-sort="$emit('selectCommentSort', $event)"
         @update:draft-body="$emit('update:commentDraftBody', $event)"
+        @submit-comment="$emit('submitComment')"
+        @retry-comments="$emit('retryComments')"
       />
     </article>
 
@@ -90,6 +96,8 @@
           <button
             type="button"
             :aria-label="`喜欢，${detail.readingActions.likeCountLabel} 次`"
+            :disabled="submittingLike"
+            @click="$emit('likePost')"
           >
             <Heart aria-hidden="true" />
             <strong>{{ detail.readingActions.likeCountLabel }}</strong>
@@ -99,6 +107,8 @@
             type="button"
             :class="{ 'is-unknown': detail.readingActions.bookmarkUnavailable }"
             aria-label="收藏状态暂不可用"
+            :disabled="submittingFavorite"
+            @click="$emit('favoritePost')"
           >
             <Bookmark aria-hidden="true" />
             <strong>{{ detail.readingActions.bookmarkCountLabel }}</strong>
@@ -113,7 +123,11 @@
             <strong>{{ detail.readingActions.commentCountLabel }}</strong>
             <span>评论</span>
           </a>
-          <button type="button" aria-label="分享文章">
+          <button
+            type="button"
+            aria-label="分享文章"
+            @click="$emit('sharePost')"
+          >
             <Share2 aria-hidden="true" />
             <strong>{{ detail.readingActions.shareLabel }}</strong>
             <span>转发</span>
@@ -121,10 +135,10 @@
         </div>
 
         <p
-          v-if="detail.readingActions.bookmarkUnavailable"
+          v-if="readingActionError || detail.readingActions.bookmarkUnavailable"
           class="article-detail-mobile__action-note"
         >
-          {{ detail.readingActions.note }}
+          {{ readingActionError || detail.readingActions.note }}
         </p>
 
         <nav class="article-detail-mobile__toc" aria-label="本文导航">
@@ -175,12 +189,24 @@ import { useArticleReadingProgress } from "./useArticleReadingProgress";
 defineEmits<{
   selectCommentSort: [sort: string];
   "update:commentDraftBody": [body: string];
+  submitComment: [];
+  retryComments: [];
+  likePost: [];
+  favoritePost: [];
+  sharePost: [];
 }>();
 
 const props = defineProps<{
   detail: ArticleDetailData;
   activeCommentSort: string;
   commentDraftBody: string;
+  submittingComment: boolean;
+  commentSubmitError: string;
+  commentsState: "idle" | "loading" | "ready" | "error";
+  commentsError: string;
+  submittingLike: boolean;
+  submittingFavorite: boolean;
+  readingActionError: string;
 }>();
 
 const articleRef = useTemplateRef<HTMLElement>("articleRef");
