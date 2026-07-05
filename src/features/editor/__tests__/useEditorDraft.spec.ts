@@ -415,6 +415,41 @@ describe("useEditorDraft", () => {
     expect(restoredDraft.draftSaveStatus.value).toBe("saved");
   });
 
+  it("restores the server draft baseline with a saved local draft", async () => {
+    const saveDraftBody = vi.fn().mockResolvedValue({
+      postId: "post-1",
+      postVersion: 8,
+      draftBodyId: "body-2",
+      draftBodyHash: "sha256:next",
+      savedAt: "2026-07-02T00:00:00Z",
+      wordCount: 6,
+    });
+    const draft = useEditorDraft({
+      serverDraftBaseline: {
+        postId: "post-1",
+        basePostVersion: 7,
+        baseDraftBodyId: "body-1",
+        baseDraftBodyHash: "sha256:base",
+      },
+      serverSaveClient: {
+        saveDraftBody,
+      },
+    });
+
+    draft.updateBodyDocument(bodyDoc("服务端草稿正文"), { start: 1, end: 1 });
+    await draft.saveDraft();
+
+    const restoredDraft = useEditorDraft();
+
+    expect(restoredDraft.serverDraftBaseline.value).toEqual({
+      postId: "post-1",
+      basePostVersion: 8,
+      baseDraftBodyId: "body-2",
+      baseDraftBodyHash: "sha256:next",
+    });
+    expect(restoredDraft.hasUnsavedChanges.value).toBe(false);
+  });
+
   it("saves through the server client without leaking Tiptap JSON", async () => {
     const savedAt = new Date("2026-07-02T00:00:00.000Z");
     const saveDraftBody = vi.fn().mockResolvedValue({

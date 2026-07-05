@@ -1,6 +1,7 @@
 import type { PostBodyWriteInput } from "@/entities/post-body";
 
 import type { EditorTiptapDocumentJson } from "../tiptap/editorTiptapEngine";
+import type { EditorServerDraftBaseline } from "./editorDraftSavePayload";
 
 export interface EditorDraftLocalSavedSnapshot {
   title: string;
@@ -18,6 +19,7 @@ export interface EditorDraftLocalPersistenceState {
   bodyDocumentJson: EditorTiptapDocumentJson;
   updatedAt: string;
   savedSnapshot?: EditorDraftLocalSavedSnapshot;
+  serverDraftBaseline?: EditorServerDraftBaseline;
 }
 
 export const editorDraftLocalStorageKey =
@@ -72,6 +74,36 @@ function normalizeSavedSnapshot(
   };
 }
 
+function normalizeServerDraftBaseline(
+  value: unknown,
+): EditorServerDraftBaseline | undefined {
+  if (!isPlainRecord(value)) {
+    return undefined;
+  }
+
+  if (
+    typeof value.postId !== "string" ||
+    typeof value.basePostVersion !== "number" ||
+    (value.baseDraftBodyId !== undefined &&
+      typeof value.baseDraftBodyId !== "string") ||
+    (value.baseDraftBodyHash !== undefined &&
+      typeof value.baseDraftBodyHash !== "string")
+  ) {
+    return undefined;
+  }
+
+  return {
+    postId: value.postId,
+    basePostVersion: value.basePostVersion,
+    ...(value.baseDraftBodyId
+      ? { baseDraftBodyId: value.baseDraftBodyId }
+      : {}),
+    ...(value.baseDraftBodyHash
+      ? { baseDraftBodyHash: value.baseDraftBodyHash }
+      : {}),
+  };
+}
+
 export function loadEditorDraftLocalPersistence():
   | EditorDraftLocalPersistenceState
   | undefined {
@@ -100,6 +132,9 @@ export function loadEditorDraftLocalPersistence():
       bodyDocumentJson: parsedState.bodyDocumentJson,
       updatedAt: parsedState.updatedAt,
       savedSnapshot: normalizeSavedSnapshot(parsedState.savedSnapshot),
+      serverDraftBaseline: normalizeServerDraftBaseline(
+        parsedState.serverDraftBaseline,
+      ),
     };
   } catch {
     return undefined;

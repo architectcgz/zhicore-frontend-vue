@@ -33,6 +33,7 @@ import type {
   EditorDraftServerSaveClient,
   EditorServerDraftBaseline,
 } from "../lib/editorDraftSavePayload";
+import type { EditorPostWorkflowClient } from "../lib/editorPostWorkflowClient";
 import {
   createEditorSavedDraftSnapshot,
   createEditorSourceHash,
@@ -69,6 +70,7 @@ export interface UseEditorDraftOptions {
   now?: () => Date;
   serverDraftBaseline?: EditorServerDraftBaseline;
   serverSaveClient?: EditorDraftServerSaveClient;
+  serverPostClient?: EditorPostWorkflowClient;
 }
 
 export interface EditorDraftHistoryRestoreResult {
@@ -120,6 +122,8 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
   const bodyDocumentJson = ref<EditorTiptapDocumentJson>(
     restoredLocalDraft?.bodyDocumentJson ?? defaultBodyDocumentJson,
   );
+  let latestServerDraftBaseline =
+    options.serverDraftBaseline ?? restoredLocalDraft?.serverDraftBaseline;
   let previewCompileTimer: number | undefined;
   const history = ref(
     createEditorDraftHistory(
@@ -165,12 +169,14 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
 
   function persistCurrentDraftToLocal(
     snapshot = savedDraftSnapshot.value,
+    serverDraftBaseline = latestServerDraftBaseline,
   ): void {
     persistEditorCurrentDraftToLocal({
       title: title.value,
       bodyDocumentJson: bodyDocumentJson.value,
       updatedAt: now(),
       savedSnapshot: snapshot,
+      serverDraftBaseline,
     });
   }
 
@@ -258,16 +264,27 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     draftSaveStatus,
     canSaveDraft,
     saveDraft,
+    ensureServerDraft,
+    replaceServerDraftBaseline,
   } = useEditorDraftSaveWorkflow({
     now,
     hasUnsavedChanges,
+    getDraftTitle: () => title.value,
     getPostBodyWriteInput: () => postBodyWriteInput.value,
     createSavedDraftSnapshot,
     savedDraftSnapshot,
     persistCurrentDraftToLocal,
     compilePreviewNow,
-    serverDraftBaseline: options.serverDraftBaseline,
+    serverDraftBaseline: latestServerDraftBaseline,
     serverSaveClient: options.serverSaveClient,
+    serverPostClient: options.serverPostClient,
+    onServerDraftBaselineChange: (nextServerDraftBaseline) => {
+      latestServerDraftBaseline = nextServerDraftBaseline;
+      persistCurrentDraftToLocal(
+        savedDraftSnapshot.value,
+        nextServerDraftBaseline,
+      );
+    },
   });
 
   function schedulePreviewCompilation(): void {
@@ -401,5 +418,7 @@ export function useEditorDraft(options: UseEditorDraftOptions = {}) {
     undoDraft,
     redoDraft,
     saveDraft,
+    ensureServerDraft,
+    replaceServerDraftBaseline,
   };
 }

@@ -12,17 +12,20 @@ import {
   restoreEditorLocalSavedSnapshot,
   type EditorSavedDraftSnapshot,
 } from "./editorDraftSnapshot";
+import type { EditorServerDraftBaseline } from "./editorDraftSavePayload";
 
 export interface EditorRestoredLocalDraft {
   title: string;
   bodyDocumentJson: EditorTiptapDocumentJson;
   savedSnapshot?: EditorSavedDraftSnapshot;
+  serverDraftBaseline?: EditorServerDraftBaseline;
 }
 
 export interface PersistEditorCurrentDraftInput {
   title: string;
   bodyDocumentJson: EditorTiptapDocumentJson;
   savedSnapshot: EditorSavedDraftSnapshot;
+  serverDraftBaseline?: EditorServerDraftBaseline;
   updatedAt: Date;
 }
 
@@ -49,6 +52,7 @@ export function loadRestoredEditorLocalDraft(
     title: localDraft.title,
     bodyDocumentJson: localDraft.bodyDocumentJson,
     savedSnapshot: restoreEditorLocalSavedSnapshot(localDraft.savedSnapshot),
+    serverDraftBaseline: localDraft.serverDraftBaseline,
   };
 }
 
@@ -61,5 +65,6 @@ export function persistEditorCurrentDraftToLocal(
     bodyDocumentJson: input.bodyDocumentJson,
     updatedAt: input.updatedAt.toISOString(),
     savedSnapshot: createEditorLocalSavedSnapshot(input.savedSnapshot),
+    serverDraftBaseline: input.serverDraftBaseline,
   });
 }
