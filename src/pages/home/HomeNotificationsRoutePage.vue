@@ -52,16 +52,18 @@ import { Bell, CheckCheck, Heart, Sparkles, AtSign } from "@lucide/vue";
 
 <style scoped>
 .notifications-page {
-  padding: var(--space-8) var(--space-6);
+  padding: 32px 48px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   min-height: calc(100vh - 72px);
   background: radial-gradient(circle at 50% 0%, rgba(0, 229, 181, 0.05), transparent 60%);
 }
 
 .notifications-page__container {
   width: 100%;
-  max-width: 720px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   animation: fade-in-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
@@ -70,6 +72,9 @@ import { Bell, CheckCheck, Heart, Sparkles, AtSign } from "@lucide/vue";
   overflow: hidden;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .notifications-header {

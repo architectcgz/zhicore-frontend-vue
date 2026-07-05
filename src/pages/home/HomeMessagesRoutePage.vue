@@ -81,24 +81,24 @@ import { Plus, MoreVertical, Image, Send } from "@lucide/vue";
 
 <style scoped>
 .messages-page {
-  padding: 32px 24px;
+  padding: 24px 32px;
   display: flex;
-  justify-content: center;
-  min-height: calc(100vh - 72px);
+  flex-direction: column;
+  height: calc(100vh - 64px);
   background: radial-gradient(circle at 100% 100%, rgba(0, 168, 255, 0.08), transparent 50%);
 }
 
 .messages-page__container {
   width: 100%;
-  max-width: 1100px;
-  height: calc(100vh - 130px);
-  min-height: 500px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   animation: fade-in-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .messages-card {
   display: flex;
-  height: 100%;
+  flex: 1;
   padding: 0;
   overflow: hidden;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
@@ -106,7 +106,7 @@ import { Plus, MoreVertical, Image, Send } from "@lucide/vue";
 }
 
 .messages-sidebar {
-  width: 340px;
+  width: 380px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
