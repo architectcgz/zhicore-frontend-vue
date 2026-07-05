@@ -16,4 +16,14 @@ export const homeRoutes: RouteRecordRaw[] = [
     name: "About",
     component: () => import("@/pages/home/HomeAboutRoutePage.vue"),
   },
+  {
+    path: "notifications",
+    name: "Notifications",
+    component: () => import("@/pages/home/HomeNotificationsRoutePage.vue"),
+  },
+  {
+    path: "messages",
+    name: "Messages",
+    component: () => import("@/pages/home/HomeMessagesRoutePage.vue"),
+  },
 ];
