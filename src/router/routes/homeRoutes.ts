@@ -28,4 +28,10 @@ export const homeRoutes: RouteRecordRaw[] = [
     component: () => import("@/pages/home/HomeMessagesRoutePage.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "messages/:conversationId",
+    name: "MessageDetail",
+    component: () => import("@/pages/home/HomeMessageDetailRoutePage.vue"),
+    meta: { requiresAuth: true, appShellFlush: true },
+  },
 ];

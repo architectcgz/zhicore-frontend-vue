@@ -1,36 +1,44 @@
 <template>
-  <main class="messages-route" aria-labelledby="messages-title">
+  <main class="messages-route" aria-labelledby="message-detail-title">
     <section
-      v-if="page.isLocalDemo"
-      class="messages-route__layout messages-route__layout--list"
+      v-if="page.isLocalDemo && conversation"
+      class="messages-route__layout messages-route__layout--detail"
     >
       <aside class="messages-route__rail" aria-label="私信分组">
         <RouterLink
-          class="messages-route__rail-item messages-route__rail-item--active"
+          class="messages-route__rail-item"
+          :class="{
+            'messages-route__rail-item--active':
+              conversation.id === page.conversations[0]?.id,
+          }"
           :to="firstConversationHref"
           aria-label="打开最近私信"
         >
           AI
         </RouterLink>
         <RouterLink
-          v-for="conversation in secondaryConversations"
-          :key="conversation.id"
+          v-for="secondaryConversation in secondaryConversations"
+          :key="secondaryConversation.id"
           class="messages-route__rail-item"
-          :to="`/messages/${conversation.id}`"
-          :aria-label="`打开与 ${conversation.participantName} 的私信`"
+          :class="{
+            'messages-route__rail-item--active':
+              secondaryConversation.id === conversation.id,
+          }"
+          :to="`/messages/${secondaryConversation.id}`"
+          :aria-label="`打开与 ${secondaryConversation.participantName} 的私信`"
         >
-          {{ conversation.participantInitial }}
+          {{ secondaryConversation.participantInitial }}
         </RouterLink>
       </aside>
 
       <aside
-        class="messages-route__contacts messages-route__contacts--mobile-list"
+        class="messages-route__contacts messages-route__contacts--desktop"
         aria-label="私信列表"
       >
         <header class="messages-route__contacts-header">
           <div>
             <p class="messages-route__eyebrow">消息</p>
-            <h1 id="messages-title">私信列表</h1>
+            <h2>私信列表</h2>
           </div>
           <span v-if="page.unreadCount" class="messages-route__count">
             {{ page.unreadCount }}
@@ -39,60 +47,68 @@
 
         <div class="messages-route__contact-list">
           <RouterLink
-            v-for="conversation in page.conversations"
-            :key="conversation.id"
+            v-for="item in page.conversations"
+            :key="item.id"
             class="messages-route__conversation"
             :class="{
               'messages-route__conversation--active':
-                conversation.id === page.activeConversation?.id,
+                item.id === conversation.id,
             }"
-            :to="`/messages/${conversation.id}`"
-            :aria-label="`打开与 ${conversation.participantName} 的私信`"
+            :to="`/messages/${item.id}`"
+            :aria-label="`打开与 ${item.participantName} 的私信`"
           >
             <span class="messages-route__avatar">
-              {{ conversation.participantInitial }}
+              {{ item.participantInitial }}
               <span
-                v-if="conversation.online"
+                v-if="item.online"
                 class="messages-route__online"
                 aria-label="在线"
               />
             </span>
             <span class="messages-route__conversation-main">
               <span class="messages-route__conversation-top">
-                <strong>{{ conversation.participantName }}</strong>
-                <span>{{ conversation.lastMessageAt }}</span>
+                <strong>{{ item.participantName }}</strong>
+                <span>{{ item.lastMessageAt }}</span>
               </span>
               <span class="messages-route__preview">
-                {{ conversation.lastMessage }}
+                {{ item.lastMessage }}
               </span>
             </span>
             <span
-              v-if="conversation.unreadCount > 0"
+              v-if="item.unreadCount > 0"
               class="messages-route__conversation-badge"
             >
-              {{ conversation.unreadCount }}
+              {{ item.unreadCount }}
             </span>
           </RouterLink>
         </div>
       </aside>
 
       <section
-        v-if="page.activeConversation"
-        class="messages-route__chat messages-route__chat--desktop"
+        class="messages-route__chat messages-route__chat--desktop messages-route__chat--mobile-detail"
         aria-label="当前会话"
       >
         <header class="messages-route__chat-header">
           <div>
-            <h2>{{ page.activeConversation.participantName }}</h2>
+            <RouterLink
+              class="messages-route__detail-back"
+              to="/messages"
+              aria-label="返回私信列表"
+            >
+              ←
+            </RouterLink>
+            <h1 id="message-detail-title">
+              {{ conversation.participantName }}
+            </h1>
           </div>
           <p>
-            {{ page.activeConversation.online ? "在线" : "离线" }}
+            {{ conversation.online ? "在线" : "离线" }}
           </p>
         </header>
 
         <div class="messages-route__history">
           <article
-            v-for="message in page.activeConversation.messages"
+            v-for="message in conversation.messages"
             :key="message.id"
             class="messages-route__message"
           >
@@ -103,9 +119,7 @@
               }"
             >
               {{
-                message.author === "me"
-                  ? "我"
-                  : page.activeConversation.participantInitial
+                message.author === "me" ? "我" : conversation.participantInitial
               }}
             </span>
             <div class="messages-route__message-body">
@@ -114,7 +128,7 @@
                   {{
                     message.author === "me"
                       ? "我"
-                      : page.activeConversation.participantName
+                      : conversation.participantName
                   }}
                 </strong>
                 <time>{{ message.sentAt }}</time>
@@ -131,7 +145,7 @@
             </button>
             <input
               type="text"
-              :placeholder="`发送消息给 ${page.activeConversation.participantName}`"
+              :placeholder="`发送消息给 ${conversation.participantName}`"
               aria-label="消息输入"
             />
           </div>
@@ -141,22 +155,39 @@
 
     <section v-else class="messages-route__empty">
       <p class="messages-route__eyebrow">Message</p>
-      <h1 id="messages-title">私信暂不可用</h1>
-      <p>消息服务接入后会显示会话列表和历史消息。</p>
+      <h1 id="message-detail-title">找不到私信会话</h1>
+      <p>这个会话不存在，或消息服务暂不可用。</p>
+      <RouterLink class="messages-route__empty-link" to="/messages">
+        返回私信列表
+      </RouterLink>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 
 import { useMessageCenterPage } from "@/features/message";
 import "./message-route.css";
 
-const page = useMessageCenterPage();
-const secondaryConversations = computed(() => page.conversations.slice(1, 3));
+const route = useRoute();
+const conversationId = computed(() => {
+  const param = route.params.conversationId;
+  return Array.isArray(param) ? param[0] : param;
+});
+
+// 路由 id 是详情页唯一会话来源；未知 id 不回退到默认会话，避免用户看到错误私信内容。
+const page = computed(() =>
+  useMessageCenterPage({ activeConversationId: conversationId.value }),
+);
+const conversation = computed(() => page.value.activeConversation);
+const secondaryConversations = computed(() =>
+  page.value.conversations.slice(1, 3),
+);
 const firstConversationHref = computed(() =>
-  page.conversations[0] ? `/messages/${page.conversations[0].id}` : "/messages",
+  page.value.conversations[0]
+    ? `/messages/${page.value.conversations[0].id}`
+    : "/messages",
 );
 </script>

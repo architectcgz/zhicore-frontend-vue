@@ -20,4 +20,23 @@ describe("useMessageCenterPage", () => {
     expect(page.conversations).toHaveLength(0);
     expect(page.activeConversation).toBeNull();
   });
+
+  it("selects the active conversation by route conversation id", () => {
+    const page = useMessageCenterPage({
+      localDemoEnabled: true,
+      activeConversationId: "conv-lin",
+    });
+
+    expect(page.activeConversation?.id).toBe("conv-lin");
+    expect(page.activeConversation?.participantName).toBe("Lin");
+  });
+
+  it("does not silently fall back when a routed conversation id is unknown", () => {
+    const page = useMessageCenterPage({
+      localDemoEnabled: true,
+      activeConversationId: "missing",
+    });
+
+    expect(page.activeConversation).toBeNull();
+  });
 });

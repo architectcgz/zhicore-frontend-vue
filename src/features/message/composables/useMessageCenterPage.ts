@@ -5,6 +5,7 @@ import type { MessageCenterPageState } from "../types";
 
 interface UseMessageCenterPageOptions {
   localDemoEnabled?: boolean;
+  activeConversationId?: string;
 }
 
 const unavailableMessageCenterState: MessageCenterPageState = {
@@ -28,10 +29,17 @@ export function useMessageCenterPage(
     0,
   );
 
+  const activeConversation =
+    options.activeConversationId === undefined
+      ? (messageCenterLocalMock[0] ?? null)
+      : (messageCenterLocalMock.find(
+          (conversation) => conversation.id === options.activeConversationId,
+        ) ?? null);
+
   return {
     isLocalDemo: true,
     unreadCount,
     conversations: messageCenterLocalMock,
-    activeConversation: messageCenterLocalMock[0] ?? null,
+    activeConversation,
   };
 }

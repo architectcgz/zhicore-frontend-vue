@@ -39,8 +39,13 @@ describe("home routes", () => {
     const messagesRoute = router
       .resolve("/messages")
       .matched.find((route) => route.name === "Messages");
+    const messageDetailRoute = router
+      .resolve("/messages/conv-lin")
+      .matched.find((route) => route.name === "MessageDetail");
 
     expect(notificationsRoute?.meta.requiresAuth).toBe(true);
     expect(messagesRoute?.meta.requiresAuth).toBe(true);
+    expect(messageDetailRoute?.meta.requiresAuth).toBe(true);
+    expect(messageDetailRoute?.meta.appShellFlush).toBe(true);
   });
 });

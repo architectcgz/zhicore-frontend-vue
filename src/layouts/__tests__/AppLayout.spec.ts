@@ -25,6 +25,11 @@ async function mountAppLayout(
       { path: "/resources", component: { template: "<div />" } },
       { path: "/about", component: { template: "<div />" } },
       { path: "/messages", component: { template: "<div />" } },
+      {
+        path: "/messages/:conversationId",
+        component: { template: "<div />" },
+        meta: { appShellFlush: true },
+      },
       { path: "/notifications", component: { template: "<div />" } },
       { path: "/auth/login", component: { template: "<div />" } },
     ],
@@ -104,6 +109,15 @@ describe("AppLayout", () => {
 
   it("does not render mobile bottom navigation on flush shell pages", async () => {
     const { wrapper } = await mountAppLayout({ initialPath: "/editor" });
+
+    expect(wrapper.find(".app-layout__main--flush").exists()).toBe(true);
+    expect(wrapper.find(".app-layout__mobile-nav").exists()).toBe(false);
+  });
+
+  it("does not render mobile bottom navigation on private message detail pages", async () => {
+    const { wrapper } = await mountAppLayout({
+      initialPath: "/messages/conv-lin",
+    });
 
     expect(wrapper.find(".app-layout__main--flush").exists()).toBe(true);
     expect(wrapper.find(".app-layout__mobile-nav").exists()).toBe(false);
