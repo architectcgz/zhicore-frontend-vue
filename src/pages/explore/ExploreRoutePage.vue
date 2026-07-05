@@ -5,8 +5,25 @@
         <div class="explore-header__titles">
           <p class="eyebrow">Explore</p>
           <h1 id="explore-route-title" class="title">发现内容</h1>
-          <p class="subtitle">按主题浏览公开文章，探索结构化知识与深度见解。</p>
+          <p class="subtitle">
+            按主题浏览公开文章，沿着分类进入可阅读的内容列表。
+          </p>
         </div>
+
+        <dl class="explore-header__summary" aria-label="发现页状态">
+          <div>
+            <dt>公开内容</dt>
+            <dd>{{ resultCountLabel }}</dd>
+          </div>
+          <div>
+            <dt>当前分类</dt>
+            <dd>{{ activeContentCategory }}</dd>
+          </div>
+          <div>
+            <dt>排序</dt>
+            <dd>最新发布</dd>
+          </div>
+        </dl>
 
         <nav class="explore-categories" aria-label="内容分类">
           <button
@@ -25,6 +42,14 @@
     </header>
 
     <div class="explore-main">
+      <section class="explore-context" aria-label="当前浏览内容">
+        <div>
+          <p class="explore-context__label">正在浏览</p>
+          <h2>{{ browsingTitle }}</h2>
+        </div>
+        <p>{{ browsingSummary }}</p>
+      </section>
+
       <div v-if="engagementActionError" class="alert-notice" role="alert">
         {{ engagementActionError }}
       </div>
@@ -57,7 +82,7 @@
       </div>
 
       <div v-else-if="feedState === 'empty'" class="feed-state empty">
-        <div class="empty-icon">📭</div>
+        <Inbox class="empty-icon" aria-hidden="true" />
         <p class="state-message">当前分类下暂无公开内容</p>
       </div>
 
@@ -101,22 +126,11 @@
                 :class="{ 'is-active': post.liked }"
                 :disabled="!post.id || post.engagementUnavailable"
                 :aria-pressed="post.liked === true"
+                :aria-label="likeActionLabel(post)"
                 @click="post.id && likePost(post.id)"
                 title="喜欢"
               >
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
-                  ></path>
-                </svg>
+                <ThumbsUp class="icon" aria-hidden="true" />
                 <span class="count">{{
                   post.likes > 0 ? post.likes : "喜欢"
                 }}</span>
@@ -126,21 +140,10 @@
                 v-if="post.href"
                 :to="`${post.href}#comments`"
                 class="action-btn"
+                :aria-label="commentActionLabel(post)"
                 title="评论"
               >
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                  ></path>
-                </svg>
+                <MessageSquare class="icon" aria-hidden="true" />
                 <span class="count">{{
                   post.comments > 0 ? post.comments : "评论"
                 }}</span>
@@ -156,19 +159,11 @@
               @click="post.id && favoritePost(post.id)"
               title="收藏"
             >
-              <svg
+              <Bookmark
                 class="icon"
-                viewBox="0 0 24 24"
                 :fill="post.favorited ? 'currentColor' : 'none'"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                ></polygon>
-              </svg>
+                aria-hidden="true"
+              />
               <span class="sr-only">{{
                 post.favorited ? "已收藏" : "收藏"
               }}</span>
@@ -181,7 +176,10 @@
 </template>
 
 <script setup lang="ts">
+import { Bookmark, Inbox, MessageSquare, ThumbsUp } from "@lucide/vue";
+import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
+
 import { useHomeDiscoveryPage } from "@/features/home-discovery";
 import { useAuthStore } from "@/stores/auth";
 
@@ -210,19 +208,59 @@ const {
     });
   },
 });
+
+const resultCountLabel = computed(() => {
+  if (feedState.value === "loading") {
+    return "加载中";
+  }
+  if (feedState.value === "error") {
+    return "--";
+  }
+  if (feedState.value === "empty") {
+    return "0";
+  }
+  return String(discovery.posts.length);
+});
+
+const browsingTitle = computed(() =>
+  activeContentCategory.value === "全部"
+    ? "全部公开内容"
+    : `${activeContentCategory.value}内容`,
+);
+
+const browsingSummary = computed(() => {
+  if (feedState.value === "loading") {
+    return "正在载入公开文章。";
+  }
+  if (feedState.value === "error") {
+    return "公开文章列表暂时不可用。";
+  }
+  if (feedState.value === "empty") {
+    return "这个分类还没有公开文章。";
+  }
+  return `共 ${discovery.posts.length} 篇内容，按最新发布展示。`;
+});
+
+function likeActionLabel(post: (typeof discovery.posts)[number]): string {
+  return post.likes > 0 ? `喜欢，${post.likes} 次` : "喜欢";
+}
+
+function commentActionLabel(post: (typeof discovery.posts)[number]): string {
+  return post.comments > 0 ? `查看评论，${post.comments} 条` : "查看评论";
+}
 </script>
 
 <style scoped>
 .explore-route {
   display: grid;
   gap: var(--space-8);
-  max-width: 760px;
+  max-width: 960px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-4) 120px;
 }
 
 .explore-header {
-  padding: 0 0 var(--space-6);
+  padding: 0 0 var(--space-5);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -260,6 +298,41 @@ const {
   color: var(--color-text-soft);
   font-size: 0.9375rem;
   line-height: 1.5;
+}
+
+.explore-header__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.explore-header__summary div {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-right: 1px solid var(--color-border);
+}
+
+.explore-header__summary div:first-child {
+  padding-left: 0;
+}
+
+.explore-header__summary div:last-child {
+  border-right: 0;
+}
+
+.explore-header__summary dt {
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+}
+
+.explore-header__summary dd {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 .explore-categories {
@@ -305,6 +378,37 @@ const {
   gap: var(--space-6);
 }
 
+.explore-context {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.explore-context__label {
+  margin: 0 0 var(--space-1);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.explore-context h2 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 1.125rem;
+}
+
+.explore-context p:last-child {
+  max-width: 360px;
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
 .alert-notice {
   background: color-mix(in srgb, var(--color-danger) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
@@ -334,7 +438,8 @@ const {
 }
 
 .empty-icon {
-  font-size: 2.5rem;
+  width: var(--space-8);
+  height: var(--space-8);
   opacity: 0.8;
 }
 
@@ -584,6 +689,31 @@ const {
 
   .explore-main {
     padding: var(--space-4);
+  }
+
+  .explore-header__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .explore-header__summary div,
+  .explore-header__summary div:first-child {
+    padding: var(--space-3) 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .explore-header__summary div:last-child {
+    border-bottom: 0;
+  }
+
+  .explore-context {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .explore-context p:last-child {
+    max-width: none;
+    text-align: left;
   }
 }
 </style>
