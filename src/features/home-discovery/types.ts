@@ -4,16 +4,21 @@ export interface HomeMetric {
 }
 
 export interface HomePost {
-  href: string;
+  id?: string;
+  href?: string;
   category: string;
   readingTime: string;
   title: string;
   summary: string;
   tags: readonly string[];
   author: string;
+  authorAvatarUrl?: string;
   publishedAt: string;
   likes: number;
   comments: number;
+  liked?: boolean | null;
+  favorited?: boolean | null;
+  engagementUnavailable?: boolean;
 }
 
 export interface HomeAuthor {
