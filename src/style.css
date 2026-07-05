@@ -1,32 +1,34 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
   font-family:
+    "Inter",
+    "Outfit",
     "Noto Sans SC",
     "Segoe UI",
     system-ui,
     -apple-system,
     sans-serif;
-  --color-bg: #f8fafc;
-  --color-bg-elevated: #ffffff;
-  --color-bg-elevated-2: #f1f5f9;
-  --color-bg-reading: #fffdf8;
-  --color-bg-hover: #f0f4f1;
-  --color-panel: rgba(255, 255, 255, 0.92);
-  --color-panel-soft: rgba(255, 255, 255, 0.72);
-  --color-panel-glass: rgba(255, 255, 255, 0.56);
-  --color-border: rgba(100, 116, 139, 0.16);
-  --color-border-strong: rgba(100, 116, 139, 0.24);
-  --color-text: #0f172a;
-  --color-text-soft: #64748b;
-  --color-text-strong: #020617;
-  --color-primary: #2563eb;
-  --color-primary-strong: #1d4ed8;
-  --color-primary-soft: #93c5fd;
-  --color-primary-soft-2: #bfdbfe;
-  --color-accent: #0f8a74;
-  --color-warning: #9c5b00;
-  --color-danger: #dc2626;
-  --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --color-bg: #0f151b;
+  --color-bg-elevated: #161e25;
+  --color-bg-elevated-2: #1e2933;
+  --color-bg-reading: #111823;
+  --color-bg-hover: #1f2a33;
+  --color-panel: rgba(22, 30, 37, 0.7);
+  --color-panel-soft: rgba(22, 30, 37, 0.4);
+  --color-panel-glass: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-text: #e0e5ea;
+  --color-text-soft: #8b99a6;
+  --color-text-strong: #ffffff;
+  --color-primary: #00e5b5;
+  --color-primary-strong: #00b38d;
+  --color-primary-soft: #4dffcf;
+  --color-primary-soft-2: #80ffd9;
+  --color-accent: #00e5b5;
+  --color-warning: #f6c36a;
+  --color-danger: #fca5a5;
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.4);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -36,9 +38,9 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --radius-pill: 999px;
   --font-size-reading-body: 1rem;
   --font-size-reading-heading: 1.375rem;
@@ -46,8 +48,18 @@
   --line-height-reading-body: 1.78;
   --line-height-reading-heading: 1.35;
   --line-height-reading-code: 1.56;
-  line-height: 1.6;
-  font-weight: 400;
+
+  /* Brand Typography Tokens */
+  --font-weight-h1: 850;
+  --font-weight-h3: 750;
+  --font-weight-body: 400;
+  --line-height-label: 1.1;
+  --line-height-desc: 1.65;
+  --letter-spacing-desc: -0.011em;
+
+  line-height: var(--line-height-desc);
+  letter-spacing: var(--letter-spacing-desc);
+  font-weight: var(--font-weight-body);
   background-color: var(--color-bg);
   color: var(--color-text);
   font-synthesis: none;
@@ -56,31 +68,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 暗色模式覆盖 */
+/* Dark mode overrides (now default, keeping for structure if needed) */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #020617;
-    --color-bg-elevated: #0f172a;
-    --color-bg-elevated-2: #111827;
-    --color-bg-reading: #101823;
-    --color-bg-hover: #172033;
-    --color-panel: rgba(15, 23, 42, 0.78);
-    --color-panel-soft: rgba(15, 23, 42, 0.56);
-    --color-panel-glass: rgba(15, 23, 42, 0.42);
-    --color-border: rgba(148, 163, 184, 0.2);
-    --color-border-strong: rgba(148, 163, 184, 0.24);
-    --color-text: #e2e8f0;
-    --color-text-soft: #94a3b8;
-    --color-text-strong: #f8fafc;
-    --color-primary: #38bdf8;
-    --color-primary-strong: #2563eb;
-    --color-primary-soft: #93c5fd;
-    --color-primary-soft-2: #7dd3fc;
-    --color-accent: #7dd3fc;
-    --color-warning: #f6c36a;
-    --color-danger: #fca5a5;
-    --shadow-panel: 0 24px 60px rgba(15, 23, 42, 0.35);
-  }
+  /* Variables are already dark */
 }
 
 * {
@@ -96,7 +86,12 @@ body,
 
 body {
   min-width: 320px;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image: 
+    radial-gradient(circle at 20% 0%, rgba(0, 229, 181, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 0%, rgba(0, 163, 255, 0.1), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(0, 229, 181, 0.05), transparent 60%);
+  background-attachment: fixed;
 }
 
 button,
@@ -106,4 +101,16 @@ input {
 
 a {
   color: inherit;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--color-panel);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--color-border);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
 }

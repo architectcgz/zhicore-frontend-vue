@@ -1,677 +1,615 @@
 <template>
   <section class="home-discovery" aria-labelledby="home-discovery-title">
-    <header class="home-discovery__intro">
-      <div class="home-discovery__intro-main">
-        <p class="home-discovery__eyebrow">{{ discovery.eyebrow }}</p>
-        <h1 id="home-discovery-title">{{ discovery.title }}</h1>
-        <p class="home-discovery__lede">
-          {{ discovery.lede }}
-        </p>
-
-        <form class="home-discovery__search" role="search" @submit.prevent>
-          <Search class="home-discovery__search-icon" aria-hidden="true" />
-          <input
-            type="search"
-            :value="searchQuery"
-            :placeholder="discovery.searchInitialQuery"
-            aria-label="搜索内容"
-            @input="handleSearchInput"
-          />
-        </form>
-
-        <div class="home-discovery__actions" aria-label="快捷入口">
-          <RouterLink
-            class="home-discovery__action home-discovery__action--primary"
-            to="/editor"
-          >
-            <PenLine class="home-discovery__action-icon" aria-hidden="true" />
-            <span>开始写作</span>
-          </RouterLink>
-          <RouterLink class="home-discovery__action" to="/structure">
-            <Network class="home-discovery__action-icon" aria-hidden="true" />
-            <span>整理结构</span>
-          </RouterLink>
-        </div>
+    <header class="home-discovery__hero">
+      <h1 id="home-discovery-title" class="home-discovery__hero-title">
+        结构化知识，<br/>
+        无限洞察。
+      </h1>
+      <p class="home-discovery__hero-desc">
+        知构：致力于培育结构化知识、分享洞见，<br/>
+        并通过优质内容共同成长的首选社区。
+      </p>
+      <div class="home-discovery__hero-actions">
+        <RouterLink class="home-discovery__btn home-discovery__btn--primary" to="/auth/login">
+          免费开始
+        </RouterLink>
+        <RouterLink class="home-discovery__btn home-discovery__btn--secondary" to="/structure">
+          探索社区
+        </RouterLink>
       </div>
     </header>
 
-    <ul class="home-discovery__metrics" aria-label="平台概览">
-      <li
-        v-for="metric in discovery.metrics"
-        :key="metric.label"
-        class="home-discovery__metric"
-      >
-        <span>{{ metric.label }}</span>
-        <strong>{{ metric.value }}</strong>
-      </li>
-    </ul>
+    <div class="home-discovery__feed-nav-wrapper">
+      <nav class="home-discovery__feed-nav">
+        <button class="home-discovery__nav-item active">推荐</button>
+        <button class="home-discovery__nav-item">热门</button>
+        <button class="home-discovery__nav-item">关注</button>
+        <button class="home-discovery__nav-item">话题</button>
+      </nav>
+    </div>
 
-    <section class="home-discovery__body">
-      <aside
-        id="home-discovery-support-panel"
-        class="home-discovery__support-panel"
-        aria-label="首页辅助导航"
-      >
-        <section
-          id="home-discovery-category-panel"
-          class="home-discovery__category-nav"
-          aria-label="内容分类"
-        >
-          <div class="home-discovery__section-head">
-            <h2>内容分类</h2>
-          </div>
-          <div class="home-discovery__category-list">
-            <button
-              v-for="category in categorySummaries"
-              :key="category.name"
-              type="button"
-              class="home-discovery__category-button"
-              :aria-pressed="category.name === activeContentCategory"
-              @click="handleContentCategorySelect(category.name)"
-            >
-              <span>{{ category.name }}</span>
-              <small>{{ category.count }}</small>
-            </button>
-          </div>
-        </section>
-
-        <aside
-          id="home-discovery-authors-panel"
-          class="home-discovery__rail"
-          aria-label="推荐作者"
-        >
-          <section class="home-discovery__rail-card">
-            <h2>{{ discovery.authorsTitle }}</h2>
-            <div
-              v-for="author in discovery.authors"
-              :key="author.name"
-              class="home-discovery__author"
-            >
-              <span class="home-discovery__avatar">{{ author.initial }}</span>
-              <div>
-                <strong>{{ author.name }}</strong>
-                <span>{{ author.bio }}</span>
+    <section class="home-discovery__content">
+      <main class="home-discovery__main-feed">
+        <article class="home-discovery__article glass-panel">
+          <div class="home-discovery__article-content">
+            <header class="home-discovery__article-header">
+              <span class="home-discovery__article-category">产品设计</span>
+              <div class="home-discovery__article-meta-right">
+                <span>10月28日</span>
+                <span class="home-discovery__icon-text"><MessageSquare class="icon-sm" /> 1.2K</span>
               </div>
-              <button type="button">关注</button>
+            </header>
+            
+            <h2 class="home-discovery__article-title">掌握信息架构：全面指南</h2>
+            
+            <div class="home-discovery__article-author-row">
+              <div class="home-discovery__author-info">
+                <div class="home-discovery__avatar">
+                  <img src="https://i.pravatar.cc/150?u=liam" alt="Liam Chen" />
+                </div>
+                <span class="home-discovery__author-name">Liam Chen</span>
+                <span class="home-discovery__dot">·</span>
+                <span class="home-discovery__date">10月26日</span>
+                <span class="home-discovery__dot">·</span>
+                <span class="home-discovery__icon-text"><Heart class="icon-sm" /> 1.2K</span>
+              </div>
             </div>
-          </section>
-        </aside>
-      </aside>
-
-      <main class="home-discovery__feed" aria-label="文章列表">
-        <div class="home-discovery__section-head">
-          <h2>文章列表</h2>
-          <span class="home-discovery__result-count">
-            {{ visiblePosts.length }} 篇
-          </span>
-        </div>
-
-        <div class="home-discovery__article-list">
-          <RouterLink
-            v-for="post in visiblePosts"
-            :key="post.title"
-            :to="post.href"
-            class="home-discovery__article"
-            :aria-label="`阅读文章：${post.title}`"
-          >
-            <div class="home-discovery__article-meta">
-              <p class="home-discovery__label">
-                {{ post.category }} / {{ post.readingTime }}
-              </p>
-              <span>{{ post.author }} · {{ post.publishedAt }}</span>
+            
+            <p class="home-discovery__article-excerpt">
+              在产品设计中，信息架构是构建可用性和用户体验的基石。本文将带你探索如何通过清晰的结构化思考来组织和展示复杂系统，帮助用户更高效地获取知识。
+            </p>
+            
+            <div class="home-discovery__article-tags">
+              <span class="home-discovery__tag">产品</span>
+              <span class="home-discovery__tag">设计</span>
+              <span class="home-discovery__tag">架构</span>
             </div>
-            <h3>
-              <span>{{ post.title }}</span>
-              <ArrowRight
-                class="home-discovery__article-icon"
-                aria-hidden="true"
-              />
-            </h3>
-            <p>{{ post.summary }}</p>
-            <div class="home-discovery__chips">
-              <span v-for="tag in post.tags" :key="tag">{{ tag }}</span>
-            </div>
+            
             <footer class="home-discovery__article-footer">
-              <span>{{ post.likes }} 喜欢 · {{ post.comments }} 评论</span>
+              <div class="home-discovery__author-info-bottom">
+                <div class="home-discovery__avatar icon-sm-avatar">
+                  <img src="https://i.pravatar.cc/150?u=liam" alt="Liam Chen" />
+                </div>
+                <span class="home-discovery__author-name-small">Liam Chen</span>
+              </div>
+              <div class="home-discovery__article-actions">
+                <button class="home-discovery__action-btn" aria-label="Like"><Heart class="icon-md" /></button>
+                <button class="home-discovery__action-btn" aria-label="Comment"><MessageSquare class="icon-md" /></button>
+                <button class="home-discovery__action-btn" aria-label="Bookmark"><Bookmark class="icon-md" /></button>
+              </div>
             </footer>
-          </RouterLink>
-        </div>
-
-        <p v-if="visiblePosts.length === 0" class="home-discovery__empty">
-          没有匹配的文章
-        </p>
+          </div>
+          
+          <div class="home-discovery__article-image">
+             <div class="home-discovery__image-placeholder ui-mockup-bg"></div>
+          </div>
+        </article>
+        
+        <article class="home-discovery__article glass-panel">
+          <div class="home-discovery__article-content">
+            <header class="home-discovery__article-header">
+              <span class="home-discovery__article-category">设计趋势</span>
+              <div class="home-discovery__article-meta-right">
+                <span class="home-discovery__icon-text"><Clock class="icon-sm" /> 10月26日</span>
+                <span class="home-discovery__icon-text"><MessageSquare class="icon-sm" /> 348</span>
+              </div>
+            </header>
+            
+            <h2 class="home-discovery__article-title">如何建立可扩展的组件库</h2>
+            
+            <p class="home-discovery__article-excerpt">
+              组件库是现代前端工程不可或缺的基础设施，从基础色彩体系到高级组件模式，本文深入解析其演进之路与常见架构设计挑战，助你打造优雅的代码体系。
+            </p>
+            
+            <div class="home-discovery__article-tags">
+              <span class="home-discovery__tag">设计</span>
+              <span class="home-discovery__tag">架构</span>
+              <span class="home-discovery__tag">排版</span>
+            </div>
+            
+            <footer class="home-discovery__article-footer">
+              <div class="home-discovery__author-info-bottom">
+                <div class="home-discovery__avatar icon-sm-avatar">
+                  <img src="https://i.pravatar.cc/150?u=liam" alt="Liam Chen" />
+                </div>
+                <span class="home-discovery__author-name-small">Liam Chen</span>
+              </div>
+              <div class="home-discovery__article-actions">
+                <button class="home-discovery__action-btn" aria-label="Like"><Heart class="icon-md" /></button>
+                <button class="home-discovery__action-btn" aria-label="Comment"><MessageSquare class="icon-md" /></button>
+                <button class="home-discovery__action-btn" aria-label="Bookmark"><Bookmark class="icon-md" /></button>
+              </div>
+            </footer>
+          </div>
+          
+          <div class="home-discovery__article-image">
+             <div class="home-discovery__image-placeholder dark-bg"></div>
+          </div>
+        </article>
       </main>
+
+      <aside class="home-discovery__sidebar">
+        <div class="home-discovery__widget glass-panel">
+          <h3 class="home-discovery__widget-title">热门话题</h3>
+          <ul class="home-discovery__topic-list">
+            <li><span class="home-discovery__topic-num">1.</span> <span class="home-discovery__topic-name">前端架构</span></li>
+            <li><span class="home-discovery__topic-num">2.</span> <span class="home-discovery__topic-name">交互设计</span></li>
+            <li><span class="home-discovery__topic-num">3.</span> <span class="home-discovery__topic-name">状态管理</span></li>
+            <li><span class="home-discovery__topic-num">4.</span> <span class="home-discovery__topic-name">用户体验</span></li>
+            <li><span class="home-discovery__topic-num">5.</span> <span class="home-discovery__topic-name">性能优化</span></li>
+          </ul>
+        </div>
+        
+        <div class="home-discovery__widget glass-panel">
+          <h3 class="home-discovery__widget-title">热门社区</h3>
+          <ul class="home-discovery__community-list">
+            <li class="home-discovery__community-item">
+              <div class="home-discovery__community-icon zhi-icon">Z</div>
+              <div class="home-discovery__community-info">
+                <h4>知构</h4>
+                <span>4.8万 成员</span>
+              </div>
+            </li>
+            <li class="home-discovery__community-item">
+              <div class="home-discovery__community-icon community-icon">C</div>
+              <div class="home-discovery__community-info">
+                <h4>设计</h4>
+                <span>563 成员</span>
+              </div>
+            </li>
+            <li class="home-discovery__community-item">
+              <div class="home-discovery__community-icon scientioc-icon">S</div>
+              <div class="home-discovery__community-info">
+                <h4>科学</h4>
+                <span>1.12万 成员</span>
+              </div>
+            </li>
+            <li class="home-discovery__community-item">
+              <div class="home-discovery__community-icon zhi-icon-dark">Z</div>
+              <div class="home-discovery__community-info">
+                <h4>知构</h4>
+                <span>3.3万 成员</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </aside>
     </section>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, Network, PenLine, Search } from "@lucide/vue";
-import { computed } from "vue";
+import { Heart, MessageSquare, Bookmark, Clock } from "@lucide/vue";
 import { RouterLink } from "vue-router";
-
 import type { HomeDiscoveryData } from "@/features/home-discovery";
 
-const ALL_CATEGORY = "全部";
-
 const props = defineProps<{
-  discovery: HomeDiscoveryData;
-  activeContentCategory: string;
-  searchQuery: string;
+  discovery?: HomeDiscoveryData;
+  activeContentCategory?: string;
+  searchQuery?: string;
 }>();
 
 const emit = defineEmits<{
   selectContentCategory: [category: string];
   "update:searchQuery": [query: string];
 }>();
-
-const categorySummaries = computed(() =>
-  props.discovery.contentCategories.map((category) => ({
-    name: category,
-    count:
-      category === ALL_CATEGORY
-        ? props.discovery.posts.length
-        : props.discovery.posts.filter((post) => post.category === category)
-            .length,
-  })),
-);
-
-const visiblePosts = computed(() => {
-  const query = props.searchQuery.trim().toLocaleLowerCase();
-
-  return props.discovery.posts.filter((post) => {
-    // 内容分类是读者的主筛选条件；搜索只在当前分类范围内继续收窄结果。
-    const matchesCategory =
-      props.activeContentCategory === ALL_CATEGORY ||
-      post.category === props.activeContentCategory;
-
-    if (!matchesCategory) {
-      return false;
-    }
-
-    if (query.length === 0) {
-      return true;
-    }
-
-    const searchableText = [
-      post.category,
-      post.readingTime,
-      post.title,
-      post.summary,
-      post.author,
-      ...post.tags,
-    ]
-      .join(" ")
-      .toLocaleLowerCase();
-
-    return searchableText.includes(query);
-  });
-});
-
-function handleSearchInput(event: Event): void {
-  emit("update:searchQuery", (event.target as HTMLInputElement).value);
-}
-
-function handleContentCategorySelect(category: string): void {
-  emit("selectContentCategory", category);
-}
 </script>
 
 <style scoped>
 .home-discovery {
-  display: grid;
-  gap: var(--space-6);
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-.home-discovery__intro,
-.home-discovery__body {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.home-discovery__intro {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: stretch;
-}
-
-.home-discovery__intro-main,
-.home-discovery__category-nav,
-.home-discovery__feed,
-.home-discovery__rail-card,
-.home-discovery__article {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
-}
-
-.home-discovery__intro-main {
-  display: grid;
-  align-content: center;
-  min-height: 320px;
-  padding: var(--space-10);
-}
-
-.home-discovery__eyebrow,
-.home-discovery__label {
-  margin: 0;
-  color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  font-weight: 750;
-}
-
-.home-discovery h1,
-.home-discovery h2,
-.home-discovery h3 {
-  margin: 0;
-  color: var(--color-text-strong);
-  letter-spacing: 0;
-}
-
-.home-discovery h1 {
-  max-width: 780px;
-  margin-top: var(--space-3);
-  font-size: 3rem;
-  line-height: 1.12;
-  text-wrap: balance;
-}
-
-.home-discovery__lede {
-  max-width: 660px;
-  color: var(--color-text);
-  font-size: 1.0625rem;
-  line-height: 1.8;
-  text-wrap: pretty;
-}
-
-.home-discovery__search {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-2);
-  align-items: center;
-  max-width: 560px;
-  min-height: calc(var(--space-10) + var(--space-2));
-  margin-top: var(--space-6);
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-hover);
-}
-
-.home-discovery__search-icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  color: var(--color-text-soft);
-}
-
-.home-discovery__search input {
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--color-text);
-}
-
-.home-discovery__search input::placeholder {
-  color: var(--color-text-soft);
-  opacity: 1;
-}
-
-.home-discovery__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-}
-
-.home-discovery__action,
-.home-discovery__category-button,
-.home-discovery__author button {
-  min-height: calc(var(--space-10) + var(--space-1));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.home-discovery__action {
-  display: inline-flex;
-  gap: var(--space-2);
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0 var(--space-4);
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.home-discovery__action--primary {
-  border-color: var(--color-text-strong);
-  background: var(--color-text-strong);
-  color: var(--color-bg-elevated);
-}
-
-.home-discovery__action-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.home-discovery__metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
-  list-style: none;
-}
-
-.home-discovery__metric {
-  display: inline-flex;
-  flex: 1 1 180px;
-  gap: var(--space-2);
-  align-items: baseline;
-  justify-content: center;
-  min-height: calc(var(--space-12) + var(--space-2));
-  padding: var(--space-3) var(--space-4);
-}
-
-.home-discovery__metric + .home-discovery__metric {
-  border-left: 1px solid var(--color-border);
-}
-
-.home-discovery__metric strong {
-  color: var(--color-text-strong);
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.home-discovery__metric span,
-.home-discovery__result-count,
-.home-discovery__article-footer,
-.home-discovery__article-meta span,
-.home-discovery__author span {
-  color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
-.home-discovery__body {
-  grid-template-columns: 240px minmax(0, 1fr) 320px;
-  align-items: start;
-}
-
-.home-discovery__support-panel {
-  display: contents;
-}
-
-.home-discovery__category-nav {
-  grid-column: 1;
-}
-
-.home-discovery__feed {
-  grid-column: 2;
-}
-
-.home-discovery__rail {
-  grid-column: 3;
-}
-
-.home-discovery__category-nav,
-.home-discovery__feed,
-.home-discovery__rail-card {
-  padding: var(--space-4);
-}
-
-.home-discovery__section-head {
-  display: flex;
-  gap: var(--space-4);
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-4);
-}
-
-.home-discovery__category-list,
-.home-discovery__article-list {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.home-discovery__category-button {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: space-between;
   width: 100%;
-  padding: 0 var(--space-3);
-  background: var(--color-bg-hover);
-  color: var(--color-text);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 24px 60px;
 }
 
-.home-discovery__category-button small {
+.home-discovery__hero {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: fadeUp 0.8s ease-out forwards;
+}
+
+.home-discovery__hero-title {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-strong);
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.home-discovery__hero-desc {
+  font-size: 1.125rem;
   color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  font-weight: 750;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 800px;
+  margin-inline: auto;
 }
 
-.home-discovery__category-button[aria-pressed="true"] {
-  border-color: color-mix(
-    in srgb,
-    var(--color-accent) 42%,
-    var(--color-border)
-  );
-  background: color-mix(
-    in srgb,
-    var(--color-accent) 12%,
-    var(--color-bg-hover)
-  );
+.home-discovery__hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.home-discovery__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.home-discovery__btn--primary {
+  background: var(--color-primary);
+  color: #000;
+  box-shadow: 0 4px 14px rgba(0, 229, 181, 0.3);
+}
+
+.home-discovery__btn--primary:hover {
+  background: var(--color-primary-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 229, 181, 0.4);
+}
+
+.home-discovery__btn--secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-strong);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home-discovery__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.home-discovery__feed-nav-wrapper {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  padding: 6px;
+  margin-bottom: 40px;
+  display: inline-flex;
+}
+
+.home-discovery__feed-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.home-discovery__nav-item {
+  background: transparent;
+  border: none;
+  color: var(--color-text-soft);
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.home-discovery__nav-item:hover {
   color: var(--color-text-strong);
 }
 
+.home-discovery__nav-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-strong);
+}
+
+.home-discovery__content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  width: 100%;
+}
+
+.home-discovery__main-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .home-discovery__article {
-  display: grid;
-  padding: var(--space-4);
-  color: inherit;
-  text-decoration: none;
-  transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.home-discovery__article:hover,
-.home-discovery__article:focus-visible {
-  border-color: color-mix(
-    in srgb,
-    var(--color-accent) 42%,
-    var(--color-border)
-  );
-  background: color-mix(
-    in srgb,
-    var(--color-accent) 5%,
-    var(--color-bg-elevated)
-  );
-  transform: translateY(-1px);
-}
-
-.home-discovery__article h3 {
   display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
+  padding: 24px;
+  gap: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-discovery__article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.home-discovery__article-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-discovery__article-header {
+  display: flex;
   justify-content: space-between;
-  margin-top: var(--space-2);
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.home-discovery__article-meta-right {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.home-discovery__icon-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-sm {
+  width: 14px;
+  height: 14px;
+}
+
+.icon-md {
+  width: 18px;
+  height: 18px;
+}
+
+.home-discovery__article-title {
   font-size: 1.25rem;
-  line-height: 1.35;
-  text-wrap: pretty;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
 }
 
-.home-discovery__article p {
-  color: var(--color-text);
-  line-height: 1.75;
+.home-discovery__article-author-row {
+  margin-bottom: 16px;
 }
 
-.home-discovery__article-meta {
+.home-discovery__author-info {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
   align-items: center;
-  justify-content: space-between;
-}
-
-.home-discovery__article-icon {
-  flex: 0 0 auto;
-  width: 1.125rem;
-  height: 1.125rem;
-  margin-top: 0.25rem;
+  gap: 8px;
+  font-size: 13px;
   color: var(--color-text-soft);
-}
-
-.home-discovery__chips,
-.home-discovery__article-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
-
-.home-discovery__chips span {
-  min-height: 28px;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-bg-hover);
-  color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  font-weight: 750;
-}
-
-.home-discovery__article-footer {
-  margin-top: var(--space-4);
-}
-
-.home-discovery__empty {
-  margin: var(--space-4) 0 0;
-  padding: var(--space-6);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  color: var(--color-text-soft);
-  text-align: center;
-}
-
-.home-discovery__rail {
-  display: grid;
-  gap: var(--space-3);
-  align-content: start;
-}
-
-.home-discovery__author {
-  display: grid;
-  grid-template-columns:
-    calc(var(--space-10) + var(--space-1)) minmax(0, 1fr)
-    auto;
-  gap: var(--space-3);
-  align-items: center;
-  min-height: 58px;
-}
-
-.home-discovery__author + .home-discovery__author {
-  margin-top: var(--space-3);
 }
 
 .home-discovery__avatar {
-  display: grid;
-  width: calc(var(--space-10) + var(--space-1));
-  height: calc(var(--space-10) + var(--space-1));
-  place-items: center;
-  border-radius: var(--radius-pill);
-  background: var(--color-text-strong);
-  color: var(--color-bg-elevated);
-  font-weight: 850;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
 }
 
-.home-discovery__author strong,
-.home-discovery__author span {
-  display: block;
+.home-discovery__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.home-discovery__author button {
-  padding: 0 var(--space-3);
-  background: var(--color-bg-hover);
+.icon-sm-avatar {
+  width: 16px;
+  height: 16px;
+}
+
+.home-discovery__author-name {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.home-discovery__dot {
+  opacity: 0.5;
+}
+
+.home-discovery__article-excerpt {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-soft);
+  margin: 0 0 16px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-discovery__article-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.home-discovery__tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  color: var(--color-text-soft);
+}
+
+.home-discovery__article-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.home-discovery__author-info-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-discovery__author-name-small {
+  font-size: 13px;
   color: var(--color-text);
 }
 
-.home-discovery__search:focus-within,
-.home-discovery__action:focus-visible,
-.home-discovery__category-button:focus-visible,
-.home-discovery__author button:focus-visible,
-.home-discovery__article:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.home-discovery__article-actions {
+  display: flex;
+  gap: 16px;
 }
 
-@media (max-width: 1080px) {
-  .home-discovery__body {
+.home-discovery__action-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.home-discovery__action-btn:hover {
+  color: var(--color-primary);
+}
+
+.home-discovery__article-image {
+  flex: 0 0 240px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.home-discovery__image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  border-radius: 12px;
+}
+
+.ui-mockup-bg {
+  background: #eef2f6 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="10" y="20" width="80" height="10" rx="2" fill="%23d0d7e0"/><rect x="10" y="40" width="60" height="8" rx="2" fill="%23d0d7e0"/><rect x="10" y="55" width="40" height="8" rx="2" fill="%23d0d7e0"/><rect x="10" y="70" width="70" height="8" rx="2" fill="%23d0d7e0"/></svg>') no-repeat center center;
+  background-size: 60%;
+}
+
+.dark-bg {
+  background: linear-gradient(135deg, #16222A 0%, #3A6073 100%);
+}
+
+
+.home-discovery__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-discovery__widget {
+  padding: 20px;
+}
+
+.home-discovery__widget-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  margin: 0 0 16px 0;
+}
+
+.home-discovery__topic-list,
+.home-discovery__community-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-discovery__topic-list li {
+  font-size: 14px;
+  color: var(--color-text-soft);
+  display: flex;
+  gap: 8px;
+}
+
+.home-discovery__topic-num {
+  color: var(--color-text-soft);
+  opacity: 0.7;
+}
+
+.home-discovery__topic-name {
+  color: var(--color-text);
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+
+.home-discovery__topic-name:hover {
+  color: var(--color-text-strong);
+}
+
+.home-discovery__community-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.home-discovery__community-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+}
+
+.zhi-icon { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: var(--color-primary); }
+.community-icon { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+.scientioc-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.zhi-icon-dark { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: var(--color-primary); }
+
+.home-discovery__community-info h4 {
+  margin: 0 0 2px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.home-discovery__community-info span {
+  font-size: 12px;
+  color: var(--color-text-soft);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+  .home-discovery__content {
     grid-template-columns: 1fr;
   }
-
-  .home-discovery__support-panel {
-    display: none;
-  }
-
-  .home-discovery__feed {
-    grid-column: 1;
-    order: 1;
-  }
-
-  .home-discovery__category-nav,
-  .home-discovery__rail {
-    grid-column: 1;
-  }
 }
 
-@media (max-width: 720px) {
-  .home-discovery__intro-main {
-    min-height: auto;
-    padding: var(--space-6);
-  }
-
-  .home-discovery h1 {
-    font-size: 2.25rem;
-  }
-
-  .home-discovery__section-head,
-  .home-discovery__article h3,
-  .home-discovery__article-meta {
-    align-items: flex-start;
+@media (max-width: 768px) {
+  .home-discovery__article {
     flex-direction: column;
   }
-
-  .home-discovery__category-list {
-    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  }
-
-  .home-discovery__metric {
-    justify-content: flex-start;
-  }
-
-  .home-discovery__metric + .home-discovery__metric {
-    border-top: 1px solid var(--color-border);
-    border-left: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-discovery__article {
-    transition:
-      border-color 0.18s ease,
-      background-color 0.18s ease;
-  }
-
-  .home-discovery__article:hover,
-  .home-discovery__article:focus-visible {
-    transform: none;
+  .home-discovery__article-image {
+    flex: none;
+    height: 200px;
+    width: 100%;
   }
 }
 </style>
