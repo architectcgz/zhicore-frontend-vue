@@ -47,23 +47,63 @@
     </ul>
 
     <section class="home-discovery__body">
-      <aside class="home-discovery__category-nav" aria-label="内容分类">
-        <div class="home-discovery__section-head">
-          <h2>内容分类</h2>
+      <aside
+        id="home-discovery-support-panel"
+        ref="supportPanelRef"
+        class="home-discovery__support-panel"
+        :class="{
+          'home-discovery__support-panel--mobile-open': mobileSupportOpen,
+        }"
+        aria-label="首页辅助导航"
+      >
+        <div class="home-discovery__support-head">
+          <h2>辅助导航</h2>
         </div>
-        <div class="home-discovery__category-list">
-          <button
-            v-for="category in categorySummaries"
-            :key="category.name"
-            type="button"
-            class="home-discovery__category-button"
-            :aria-pressed="category.name === activeContentCategory"
-            @click="$emit('selectContentCategory', category.name)"
-          >
-            <span>{{ category.name }}</span>
-            <small>{{ category.count }}</small>
-          </button>
-        </div>
+
+        <section
+          id="home-discovery-category-panel"
+          class="home-discovery__category-nav"
+          aria-label="内容分类"
+        >
+          <div class="home-discovery__section-head">
+            <h2>内容分类</h2>
+          </div>
+          <div class="home-discovery__category-list">
+            <button
+              v-for="category in categorySummaries"
+              :key="category.name"
+              type="button"
+              class="home-discovery__category-button"
+              :aria-pressed="category.name === activeContentCategory"
+              @click="handleContentCategorySelect(category.name)"
+            >
+              <span>{{ category.name }}</span>
+              <small>{{ category.count }}</small>
+            </button>
+          </div>
+        </section>
+
+        <aside
+          id="home-discovery-authors-panel"
+          class="home-discovery__rail"
+          aria-label="推荐作者"
+        >
+          <section class="home-discovery__rail-card">
+            <h2>{{ discovery.authorsTitle }}</h2>
+            <div
+              v-for="author in discovery.authors"
+              :key="author.name"
+              class="home-discovery__author"
+            >
+              <span class="home-discovery__avatar">{{ author.initial }}</span>
+              <div>
+                <strong>{{ author.name }}</strong>
+                <span>{{ author.bio }}</span>
+              </div>
+              <button type="button">关注</button>
+            </div>
+          </section>
+        </aside>
       </aside>
 
       <main class="home-discovery__feed" aria-label="文章列表">
@@ -109,34 +149,19 @@
           没有匹配的文章
         </p>
       </main>
-
-      <aside class="home-discovery__rail">
-        <section class="home-discovery__rail-card">
-          <h2>{{ discovery.authorsTitle }}</h2>
-          <div
-            v-for="author in discovery.authors"
-            :key="author.name"
-            class="home-discovery__author"
-          >
-            <span class="home-discovery__avatar">{{ author.initial }}</span>
-            <div>
-              <strong>{{ author.name }}</strong>
-              <span>{{ author.bio }}</span>
-            </div>
-            <button type="button">关注</button>
-          </div>
-        </section>
-      </aside>
     </section>
   </section>
 </template>
 
 <script setup lang="ts">
 import { ArrowRight, Network, PenLine, Search } from "@lucide/vue";
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 
-import type { HomeDiscoveryData } from "@/features/home-discovery";
+import {
+  HOME_DISCOVERY_MOBILE_MENU_EVENT,
+  type HomeDiscoveryData,
+} from "@/features/home-discovery";
 
 const ALL_CATEGORY = "全部";
 
@@ -150,6 +175,9 @@ const emit = defineEmits<{
   selectContentCategory: [category: string];
   "update:searchQuery": [query: string];
 }>();
+
+const mobileSupportOpen = ref(false);
+const supportPanelRef = ref<HTMLElement | null>(null);
 
 const categorySummaries = computed(() =>
   props.discovery.contentCategories.map((category) => ({
@@ -197,13 +225,57 @@ const visiblePosts = computed(() => {
 function handleSearchInput(event: Event): void {
   emit("update:searchQuery", (event.target as HTMLInputElement).value);
 }
+
+function toggleMobileSupportMenu(): void {
+  mobileSupportOpen.value = !mobileSupportOpen.value;
+}
+
+function closeMobileSupportMenu(): void {
+  mobileSupportOpen.value = false;
+}
+
+function handleContentCategorySelect(category: string): void {
+  emit("selectContentCategory", category);
+  closeMobileSupportMenu();
+}
+
+function handleDocumentPointerDown(event: Event): void {
+  if (!mobileSupportOpen.value) {
+    return;
+  }
+
+  const target = event.target;
+  const supportPanel = supportPanelRef.value;
+
+  if (!(target instanceof Node) || supportPanel?.contains(target)) {
+    return;
+  }
+
+  closeMobileSupportMenu();
+}
+
+onMounted(() => {
+  window.addEventListener(
+    HOME_DISCOVERY_MOBILE_MENU_EVENT,
+    toggleMobileSupportMenu,
+  );
+  document.addEventListener("pointerdown", handleDocumentPointerDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener(
+    HOME_DISCOVERY_MOBILE_MENU_EVENT,
+    toggleMobileSupportMenu,
+  );
+  document.removeEventListener("pointerdown", handleDocumentPointerDown);
+});
 </script>
 
 <style scoped>
 .home-discovery {
   display: grid;
   gap: var(--space-6);
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
@@ -381,8 +453,28 @@ function handleSearchInput(event: Event): void {
 }
 
 .home-discovery__body {
-  grid-template-columns: 220px minmax(0, 1fr) 300px;
+  grid-template-columns: 240px minmax(0, 1fr) 320px;
   align-items: start;
+}
+
+.home-discovery__support-panel {
+  display: contents;
+}
+
+.home-discovery__support-head {
+  display: none;
+}
+
+.home-discovery__category-nav {
+  grid-column: 1;
+}
+
+.home-discovery__feed {
+  grid-column: 2;
+}
+
+.home-discovery__rail {
+  grid-column: 3;
 }
 
 .home-discovery__category-nav,
@@ -581,6 +673,51 @@ function handleSearchInput(event: Event): void {
   .home-discovery__body {
     grid-template-columns: 1fr;
   }
+
+  .home-discovery__support-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    width: min(84vw, 340px);
+    padding: var(--space-4);
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-left: 0;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    background: var(--color-bg-elevated);
+    box-shadow: var(--shadow-panel);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-100%);
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .home-discovery__support-panel--mobile-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .home-discovery__support-head {
+    display: block;
+  }
+
+  .home-discovery__feed {
+    grid-column: 1;
+    order: 1;
+  }
+
+  .home-discovery__category-nav,
+  .home-discovery__rail {
+    grid-column: 1;
+  }
 }
 
 @media (max-width: 720px) {
@@ -615,7 +752,8 @@ function handleSearchInput(event: Event): void {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-discovery__article {
+  .home-discovery__article,
+  .home-discovery__support-panel {
     transition:
       border-color 0.18s ease,
       background-color 0.18s ease;

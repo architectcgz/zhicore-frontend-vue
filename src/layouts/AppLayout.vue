@@ -1,31 +1,63 @@
 <template>
   <div class="app-layout">
     <header class="app-layout__header">
-      <RouterLink class="app-layout__brand" to="/">
-        <span class="app-layout__brand-mark">知</span>
-        <span>
-          <strong>知构</strong>
-          <small>ZhiCore</small>
-        </span>
-      </RouterLink>
+      <div class="app-layout__brand-area">
+        <button
+          v-if="isHomeRoute"
+          type="button"
+          class="app-layout__support-menu-trigger"
+          data-testid="home-support-menu-toggle"
+          aria-label="打开首页辅助导航"
+          @click="openHomeSupportMenu"
+        >
+          <Menu class="app-layout__support-menu-icon" aria-hidden="true" />
+        </button>
+
+        <RouterLink class="app-layout__brand" to="/">
+          <span class="app-layout__brand-mark">知</span>
+          <span>
+            <strong>知构</strong>
+            <small>ZhiCore</small>
+          </span>
+        </RouterLink>
+      </div>
 
       <nav class="app-layout__nav" aria-label="知构主导航">
-        <RouterLink to="/">
+        <RouterLink class="app-layout__nav-link" to="/" aria-label="发现">
           <BookOpen class="app-layout__nav-icon" aria-hidden="true" />
           <span>发现</span>
         </RouterLink>
-        <RouterLink to="/posts/demo">
+        <RouterLink
+          class="app-layout__nav-link"
+          to="/posts/demo"
+          aria-label="文章"
+        >
           <FileText class="app-layout__nav-icon" aria-hidden="true" />
           <span>文章</span>
         </RouterLink>
-        <RouterLink to="/ranking">
+        <RouterLink
+          class="app-layout__nav-link app-layout__nav-link--overflow-direct"
+          to="/ranking"
+          aria-label="热榜"
+        >
           <TrendingUp class="app-layout__nav-icon" aria-hidden="true" />
           <span>热榜</span>
         </RouterLink>
-        <RouterLink to="/editor">
+        <RouterLink
+          class="app-layout__nav-link app-layout__nav-link--overflow-direct"
+          to="/editor"
+          aria-label="写作"
+        >
           <PenLine class="app-layout__nav-icon" aria-hidden="true" />
           <span>写作</span>
         </RouterLink>
+        <details class="app-layout__more">
+          <summary class="app-layout__more-summary">...更多</summary>
+          <div class="app-layout__more-menu">
+            <RouterLink to="/ranking">热榜</RouterLink>
+            <RouterLink to="/editor">写作</RouterLink>
+          </div>
+        </details>
       </nav>
 
       <div class="app-layout__actions">
@@ -57,9 +89,11 @@
 </template>
 
 <script setup lang="ts">
-import { BookOpen, FileText, PenLine, TrendingUp } from "@lucide/vue";
+import { BookOpen, FileText, Menu, PenLine, TrendingUp } from "@lucide/vue";
 import { computed } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
+
+import { HOME_DISCOVERY_MOBILE_MENU_EVENT } from "@/features/home-discovery";
 
 defineProps<{
   isLoggedIn: boolean;
@@ -69,6 +103,11 @@ defineProps<{
 const route = useRoute();
 
 const isShellFlush = computed(() => route.meta.appShellFlush === true);
+const isHomeRoute = computed(() => route.name === "Home" || route.path === "/");
+
+function openHomeSupportMenu(): void {
+  window.dispatchEvent(new CustomEvent(HOME_DISCOVERY_MOBILE_MENU_EVENT));
+}
 </script>
 
 <style scoped>
@@ -91,14 +130,45 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   backdrop-filter: blur(14px);
 }
 
+.app-layout__brand-area,
 .app-layout__brand {
   display: inline-flex;
-  gap: 10px;
   align-items: center;
+}
+
+.app-layout__brand-area {
+  gap: var(--space-2);
+}
+
+.app-layout__brand {
+  gap: 10px;
   font-size: 18px;
   font-weight: 760;
   color: var(--color-text-strong);
   text-decoration: none;
+}
+
+.app-layout__support-menu-trigger {
+  display: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.app-layout__support-menu-trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.app-layout__support-menu-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .app-layout__brand-mark {
@@ -136,7 +206,8 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   background: var(--color-bg-elevated-2);
 }
 
-.app-layout__nav a {
+.app-layout__nav a,
+.app-layout__more-summary {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -145,6 +216,35 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   border-radius: var(--radius-lg);
   color: var(--color-text-soft);
   text-decoration: none;
+}
+
+.app-layout__more {
+  position: relative;
+  display: none;
+}
+
+.app-layout__more-summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.app-layout__more-summary::-webkit-details-marker {
+  display: none;
+}
+
+.app-layout__more-menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: var(--space-1);
+  min-width: 108px;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-panel);
 }
 
 .app-layout__nav span {
@@ -158,7 +258,8 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
   stroke-width: 2;
 }
 
-.app-layout__nav a.router-link-active {
+.app-layout__nav a.router-link-active,
+.app-layout__more-menu a.router-link-active {
   color: var(--color-text-strong);
   background: var(--color-bg-elevated);
 }
@@ -196,27 +297,133 @@ const isShellFlush = computed(() => route.meta.appShellFlush === true);
 
 @media (max-width: 720px) {
   .app-layout__header {
-    grid-template-columns: 1fr auto;
-    align-items: start;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    gap: var(--space-2);
+    align-items: center;
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .app-layout__brand-area,
+  .app-layout__brand {
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .app-layout__support-menu-trigger {
+    display: grid;
+    flex: 0 0 auto;
+  }
+
+  .app-layout__brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+  }
+
+  .app-layout__brand span:last-child {
+    display: block;
+  }
+
+  .app-layout__brand strong {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .app-layout__brand small {
+    display: none;
   }
 
   .app-layout__nav {
-    grid-column: 1 / -1;
+    flex-wrap: nowrap;
+    gap: var(--space-1);
+    justify-content: space-between;
+    min-width: 0;
+    width: auto;
+    max-width: min(54vw, 176px);
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .app-layout__nav a,
+  .app-layout__more-summary {
+    flex: 0 0 auto;
+    min-height: 30px;
+    min-width: 0;
+    padding: 0 var(--space-1);
+    border-radius: 0;
+    color: var(--color-text-soft);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .app-layout__nav span {
+    font-size: 0.6875rem;
+    line-height: 1;
+  }
+
+  .app-layout__nav a.router-link-active {
+    width: auto;
+    padding: 0 var(--space-1);
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+    color: var(--color-text-strong);
+  }
+
+  .app-layout__nav-icon {
+    display: none;
+  }
+
+  .app-layout__more-menu {
+    right: auto;
+    left: 50%;
+    min-width: 96px;
+    transform: translateX(-50%);
+  }
+
+  .app-layout__more-menu a {
     justify-content: flex-start;
+    min-height: 32px;
+    padding: 0 var(--space-2);
   }
 
   .app-layout__actions {
+    flex-wrap: nowrap;
     justify-content: flex-end;
+    justify-self: end;
+    min-width: 0;
+  }
+
+  .app-layout__session-action {
+    min-height: 30px;
+    padding: 0 var(--space-2);
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.6875rem;
+    font-weight: 700;
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 360px) {
   .app-layout__header {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto minmax(112px, 132px) minmax(0, 1fr);
   }
 
-  .app-layout__actions {
-    justify-content: flex-start;
+  .app-layout__nav {
+    width: 100%;
+  }
+
+  .app-layout__nav-link--overflow-direct {
+    display: none;
+  }
+
+  .app-layout__more {
+    display: block;
   }
 }
 </style>
