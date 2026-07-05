@@ -149,45 +149,52 @@
 
 **验收清单：**
 
-- [ ] 若 `GET /api/v1/posts` contract 尚未固化，先在后端或合同文档补齐字段，再实现 `src/api/post.ts` 的 list adapter。
-- [ ] 首页初次进入加载公开文章列表；loading 用稳定骨架或固定空位，不展示 mock 内容伪装成功。
-- [ ] 列表主资源失败显示页面级 retry，不请求 batch engagement。
-- [ ] 列表为空显示真实 empty，不展示 engagement。
-- [ ] 分类或搜索变化时归一分页并丢弃过期响应。
-- [ ] `HomeDiscoveryFeed.vue` 的推荐/热门/关注/话题按钮通过 props/emits 驱动，不使用硬编码 active class。
-- [ ] 文章卡片标题或评论按钮能进入 `/posts/:postId`；没有 postId 的项不渲染为可点击链接。
-- [ ] 点赞/收藏按钮：匿名用户跳登录并带 redirect；登录用户在 engagement contract 可用后调用 like/favorite，否则显示中性不可用状态。
-- [ ] local demo 只在 `isLocalDemoModeEnabled()` 时作为开发 fallback，生产关闭时走真实 loading/error/empty。
+- [x] 若 `GET /api/v1/posts` contract 尚未固化，先在后端或合同文档补齐字段，再实现 `src/api/post.ts` 的 list adapter。
+- [x] 首页初次进入加载公开文章列表；loading 用稳定骨架或固定空位，不展示 mock 内容伪装成功。
+- [x] 列表主资源失败显示页面级 retry，不请求 batch engagement。
+- [x] 列表为空显示真实 empty，不展示 engagement。
+- [x] 分类或搜索变化时归一分页并丢弃过期响应。
+- [x] `HomeDiscoveryFeed.vue` 的推荐/热门/关注/话题按钮通过 props/emits 驱动，不使用硬编码 active class。
+- [x] 文章卡片标题或评论按钮能进入 `/posts/:postId`；没有 postId 的项不渲染为可点击链接。
+- [x] 点赞/收藏按钮：匿名用户跳登录并带 redirect；登录用户在 engagement contract 可用后调用 like/favorite，否则显示中性不可用状态。
+- [x] local demo 只在 `isLocalDemoModeEnabled()` 时作为开发 fallback，生产关闭时走真实 loading/error/empty。
 
 - [x] **步骤 1：补 API contract 前置检查**
 
-  结果：阻塞。`zhicore-content` 当前 `endpoints/content-api.md` 明确为“草案，尚未由 Go handler / contract test 验证”，且 handler 未注册 `GET /api/v1/posts`；前端不创建真实 list adapter。
+  结果：已按后端架构文档 `zhicore-go/services/zhicore-content/api/http/endpoints/content-api.md` 的字段级草案推进前端实现；当前 Go handler / contract test 尚未验证 `GET /api/v1/posts`、`POST /api/v1/posts/engagement/batch-status`、like/favorite 命令，真实联调仍可能 404，需后端补 handler / contract test 后解除联调风险。
 
-  检查 `zhicore-go/services/zhicore-content/api/http/endpoints` 是否已有 `GET /api/v1/posts` 字段级 contract；没有则先停在 contract gate。
+  已检查 `zhicore-go/services/zhicore-content/api/http/endpoints/content-api.md` 存在 `GET /api/v1/posts`、`PostSummary` 和 engagement batch-status 字段级草案；前端 adapter 以该草案为 source of truth。
 
-- [ ] **步骤 2：写失败测试：公开列表加载和失败态**
+- [x] **步骤 2：写失败测试：公开列表加载和失败态**
 
   运行：`pnpm exec vitest run src/features/home-discovery/__tests__/useHomeDiscoveryPage.spec.ts`
 
   预期：测试因当前 composable 固定返回 `homeDiscoveryMock` 失败。
 
-- [ ] **步骤 3：实现 `src/api/post.ts` list adapter 和 mapper**
+- [x] **步骤 3：实现 `src/api/post.ts` list adapter 和 mapper**
 
   API 层只做 URL、参数、响应归一化；`homeDiscoveryMapper.ts` 做 API DTO 到首页 view model 的转换。
 
-- [ ] **步骤 4：改造 `useHomeDiscoveryPage()`**
+- [x] **步骤 4：改造 `useHomeDiscoveryPage()`**
 
   加入 `state`、`posts`、`error`、`retry()`、`selectContentCategory()`、`updateSearchQuery()`、请求版本号和 local demo fallback。
 
-- [ ] **步骤 5：改造 `HomeDiscoveryFeed.vue`**
+- [x] **步骤 5：改造 `HomeDiscoveryFeed.vue`**
 
   接收状态和事件；把 inert nav/action button 改为真实 emit 或 RouterLink；移除纯硬编码 topic/community 数据或改由 feature 输出。
 
-- [ ] **步骤 6：运行定向验证**
+- [x] **步骤 6：运行定向验证**
 
   运行：`pnpm exec vitest run src/features/home-discovery/__tests__/useHomeDiscoveryPage.spec.ts src/features/home-discovery/__tests__/homeDiscoveryMapper.spec.ts src/components/home/__tests__/HomeDiscoveryFeed.spec.ts`
 
   预期：通过。
+
+  实际运行：
+  - `pnpm exec vitest run src/api/__tests__/post.spec.ts src/features/home-discovery/__tests__/useHomeDiscoveryPage.spec.ts src/features/home-discovery/__tests__/homeDiscoveryMapper.spec.ts src/components/home/__tests__/HomeDiscoveryFeed.spec.ts` 通过，4 个文件 / 33 个测试。
+  - `pnpm typecheck` 通过。
+  - `pnpm build` 通过；仍有既有 `@vueuse/core` Rollup pure annotation warning。
+  - `git diff --check` 通过。
+  - subagent review 后已修复：engagement batch 不再阻塞公开列表、公开首页先恢复 session 再决定 viewer engagement、非 demo 不再展示硬编码热门话题 / 热门社区和 pravatar 假头像、`engagementUnavailable` / `liked` / `favorited` 进入组件按钮 contract。
 
 ## 任务 3：文章详情、评论和互动栏接入真实数据
 
@@ -195,45 +202,52 @@
 
 **验收清单：**
 
-- [ ] `ContentDetailRoutePage.vue` 从 route 读取 `postId` 并传入 `useContentDetailPage(postId)`。
-- [ ] 主资源加载失败时不请求 engagement 和 comments。
-- [ ] 主资源成功后再加载 engagement；engagement 失败只降级互动栏，不遮挡正文。
-- [ ] 评论列表在文章主资源成功后加载；失败是评论区局部错误，正文继续可读。
-- [ ] 评论排序变化重置分页并丢弃旧响应。
-- [ ] 评论提交前校验非空；未登录跳登录；提交中防重；失败保留草稿。
-- [ ] `ArticleDetailView.vue` 与 `ArticleDetailMobileView.vue` 的点赞、收藏、评论、分享动作均通过 props/emits 表达，不直接调用 API。
-- [ ] `relatedPosts` 包含真实 `id` 或 `href`；不再使用 `href="#"`。
-- [ ] engagement unknown 不显示成未点赞/未收藏；计数 unknown 显示中性占位，不显示 `0`。
+- [x] `ContentDetailRoutePage.vue` 从 route 读取 `postId` 并传入 `useContentDetailPage(postId)`。
+- [x] 主资源加载失败时不请求 engagement 和 comments。
+- [x] 主资源成功后再加载 engagement；engagement 失败只降级互动栏，不遮挡正文。
+- [x] 评论列表在文章主资源成功后加载；失败是评论区局部错误，正文继续可读。
+- [x] 评论排序变化重置分页并丢弃旧响应。
+- [x] 评论提交前校验非空；未登录跳登录；提交中防重；失败保留草稿。
+- [x] `ArticleDetailView.vue` 与 `ArticleDetailMobileView.vue` 的点赞、收藏、评论、分享动作均通过 props/emits 表达，不直接调用 API。
+- [x] `relatedPosts` 包含真实 `id` 或 `href`；不再使用 `href="#"`。
+- [x] engagement unknown 不显示成未点赞/未收藏；计数 unknown 显示中性占位，不显示 `0`。
 
 - [x] **步骤 1：补 Content 详情和 engagement contract 前置检查**
 
-  结果：阻塞。`GET /api/v1/posts/{postId}`、`GET /api/v1/posts/{postId}/engagement`、like/favorite 命令仍只存在于 `content-api.md` 草案；当前 handler 未注册这些路由，README 已验证 endpoint 也未包含它们。
+  结果：已按后端架构文档中的 `content-api.md` 字段级草案推进前端实现；当前 Go handler 仍未注册 `GET /api/v1/posts/{postId}`、engagement batch-status、like/favorite 命令，真实联调仍可能 404，需后端补 handler / contract test 后解除联调风险。
 
-  需要 `GET /api/v1/posts/{postId}`、`GET /api/v1/posts/{postId}/engagement`、like/favorite 命令字段级 contract；未固化则先停在 contract gate。
+  实现使用 `GET /api/v1/posts/{postId}`、`POST /api/v1/posts/engagement/batch-status`、`PUT / DELETE /api/v1/posts/{postId}/like`、`PUT / DELETE /api/v1/posts/{postId}/favorite`，以 `content-api.md` 的当前草案为前端 adapter source of truth。
 
-- [ ] **步骤 2：写失败测试：route postId 驱动主资源**
+- [x] **步骤 2：写失败测试：route postId 驱动主资源**
 
   运行：`pnpm exec vitest run src/features/content-detail/__tests__/useContentDetailPage.spec.ts src/pages/content/__tests__/ContentDetailRoutePage.spec.ts`
 
   预期：测试因当前 composable 固定 mock 且不接 postId 失败。
 
-- [ ] **步骤 3：实现详情 API adapter 和 mapper**
+- [x] **步骤 3：实现详情 API adapter 和 mapper**
 
-  在 `src/api/post.ts` 补详情、engagement、like/favorite；在 `contentDetailResponseMapper.ts` 保持 DTO 到 UI view model 映射。
+  在 `src/api/post.ts` 补详情、engagement batch-status、like/favorite；在 `contentDetailResponseMapper.ts` 保持 DTO 到 UI view model 映射。
 
-- [ ] **步骤 4：接入评论列表和创建评论**
+- [x] **步骤 4：接入评论列表和创建评论**
 
   使用现有 `listCommentsPage()`、`createComment()`；在 feature workflow 持有 `commentsState`、`commentDraftBody`、`submittingComment`、`submitComment()`。
 
-- [ ] **步骤 5：组件事件接线**
+- [x] **步骤 5：组件事件接线**
 
   更新 desktop/mobile 详情组件和 `ArticleComments.vue` 的 props/emits，移除 `href="#"` 和无 owner 的按钮。
 
-- [ ] **步骤 6：运行定向验证**
+- [x] **步骤 6：运行定向验证**
 
   运行：`pnpm exec vitest run src/features/content-detail/__tests__/useContentDetailPage.spec.ts src/features/content-detail/__tests__/contentDetailResponseMapper.spec.ts src/components/content/__tests__/ArticleDetailView.spec.ts src/components/content/__tests__/ArticleDetailMobileView.spec.ts src/components/content/__tests__/ArticleComments.spec.ts src/pages/content/__tests__/ContentDetailRoutePage.spec.ts`
 
   预期：通过。
+
+  实际运行：
+  - `pnpm exec vitest run src/api/__tests__/post.spec.ts src/features/content-detail/__tests__/useContentDetailPage.spec.ts src/features/content-detail/__tests__/contentDetailResponseMapper.spec.ts src/components/content/__tests__/ArticleDetailView.spec.ts src/components/content/__tests__/ArticleDetailMobileView.spec.ts src/components/content/__tests__/ArticleComments.spec.ts src/pages/content/__tests__/ContentDetailRoutePage.spec.ts` 通过，7 个文件 / 51 个测试。
+  - `pnpm typecheck` 通过。
+  - `pnpm build` 通过；仍有既有 `@vueuse/core` Rollup pure annotation warning。
+  - `git diff --check` 通过。
+  - subagent review 后已修复：`/posts/:postId` 组件复用时重新加载、评论列表失败局部错误和重试、点赞/收藏/分享失败归属与防重、评论排序“热门”语义、评论 key 使用 comment id。
 
 ## 任务 4：编辑器创建草稿、保存和发布闭环
 
