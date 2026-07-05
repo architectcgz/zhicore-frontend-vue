@@ -75,11 +75,22 @@
         </RouterLink>
 
         <button
+          v-if="props.isLoggedIn"
           class="app-layout__icon-btn app-layout__profile-btn"
-          aria-label="个人主页"
+          type="button"
+          aria-label="退出登录"
+          @click="props.logout"
         >
           <User class="app-layout__icon" aria-hidden="true" />
         </button>
+        <RouterLink
+          v-else
+          class="app-layout__icon-btn app-layout__profile-btn"
+          to="/auth/login"
+          aria-label="登录"
+        >
+          <User class="app-layout__icon" aria-hidden="true" />
+        </RouterLink>
         <RouterLink class="app-layout__post-btn" to="/editor">
           <Plus class="app-layout__post-icon" aria-hidden="true" />
           <span>写作</span>
@@ -93,11 +104,80 @@
     >
       <RouterView />
     </main>
+
+    <nav
+      v-if="!isShellFlush"
+      class="app-layout__mobile-nav"
+      aria-label="移动端主导航"
+    >
+      <RouterLink class="app-layout__mobile-nav-link" to="/" aria-label="首页">
+        <HomeIcon class="app-layout__icon" aria-hidden="true" />
+        <span>首页</span>
+      </RouterLink>
+      <RouterLink
+        class="app-layout__mobile-nav-link"
+        to="/explore"
+        aria-label="发现"
+      >
+        <Compass class="app-layout__icon" aria-hidden="true" />
+        <span>发现</span>
+      </RouterLink>
+      <div class="app-layout__mobile-nav-center">
+        <RouterLink
+          class="app-layout__post-btn-mobile"
+          to="/editor"
+          aria-label="写作"
+        >
+          <Plus class="app-layout__post-icon-mobile" aria-hidden="true" />
+        </RouterLink>
+      </div>
+      <RouterLink
+        v-if="props.isLoggedIn"
+        class="app-layout__mobile-nav-link"
+        to="/messages"
+        aria-label="消息"
+      >
+        <div class="app-layout__mobile-nav-icon-wrapper">
+          <Mail class="app-layout__icon" aria-hidden="true" />
+          <span v-if="messageUnreadCount > 0" class="app-layout__badge">
+            {{ messageUnreadCount }}
+          </span>
+        </div>
+        <span>消息</span>
+      </RouterLink>
+      <button
+        v-if="props.isLoggedIn"
+        class="app-layout__mobile-nav-link"
+        type="button"
+        aria-label="退出登录"
+        @click="props.logout"
+      >
+        <User class="app-layout__icon" aria-hidden="true" />
+        <span>退出</span>
+      </button>
+      <RouterLink
+        v-else
+        class="app-layout__mobile-nav-link"
+        to="/auth/login"
+        aria-label="登录"
+      >
+        <User class="app-layout__icon" aria-hidden="true" />
+        <span>登录</span>
+      </RouterLink>
+    </nav>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Search, Mail, Bell, User, Plus } from "@lucide/vue";
+import {
+  Search,
+  Mail,
+  Bell,
+  User,
+  Plus,
+  Home as HomeIcon,
+  Compass,
+} from "@lucide/vue";
 import { computed } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 
@@ -337,6 +417,10 @@ const notificationUnreadCount = computed(
   padding: 0;
 }
 
+.app-layout__mobile-nav {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .app-layout__header {
     padding: 16px 20px;
@@ -352,8 +436,93 @@ const notificationUnreadCount = computed(
 
 @media (max-width: 768px) {
   .app-layout__nav,
-  .app-layout__search-area {
+  .app-layout__search-area,
+  .app-layout__actions {
     display: none;
+  }
+
+  .app-layout__header {
+    padding: 12px 16px;
+    justify-content: center;
+  }
+
+  .app-layout__main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-layout__main--flush {
+    padding-bottom: 0;
+  }
+
+  .app-layout__mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-border);
+    z-index: 50;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .app-layout__mobile-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--color-text-soft);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+
+  .app-layout__mobile-nav-link.router-link-exact-active {
+    color: var(--color-primary);
+  }
+
+  .app-layout__mobile-nav-link:focus-visible,
+  .app-layout__post-btn-mobile:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  .app-layout__mobile-nav-icon-wrapper {
+    position: relative;
+  }
+
+  .app-layout__mobile-nav-center {
+    position: relative;
+    top: -16px;
+  }
+
+  .app-layout__post-btn-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--color-primary);
+    color: #000;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(0, 229, 181, 0.4);
+    text-decoration: none;
+  }
+
+  .app-layout__post-icon-mobile {
+    width: 24px;
+    height: 24px;
   }
 }
 </style>
