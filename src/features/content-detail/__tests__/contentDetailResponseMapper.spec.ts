@@ -27,7 +27,9 @@ describe("mapContentDetailResponse", () => {
       kind: "quote",
       text: "设计重点：阅读路径不能被附加资源失败阻断；写路径必须等待服务确认后再更新事实状态。",
     });
-    expect(detail.authorMeta).toBe("陈志峰 · 发布于 2026-07-04 · 已读 2,431 次");
+    expect(detail.authorMeta).toBe(
+      "陈志峰 · 发布于 2026-07-04 · 已读 2,431 次",
+    );
     expect(detail.readingActions.bookmarkCountLabel).toBe("--");
     expect(detail.comments[0]?.author).toBe("Lin");
     expect(detail.comments[0]?.role).toBe("前端工程化");

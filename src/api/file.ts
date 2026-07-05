@@ -27,7 +27,9 @@ export interface UploadImagesBatchReq {
   accessLevel?: FileAccessLevel;
 }
 
-export async function uploadImage(input: UploadImageReq): Promise<UploadFileResp> {
+export async function uploadImage(
+  input: UploadImageReq,
+): Promise<UploadFileResp> {
   const response = await getAxiosInstance().post<UploadFileResp>(
     "/v1/files/image",
     formDataWithFile("file", input.file),
@@ -36,7 +38,9 @@ export async function uploadImage(input: UploadImageReq): Promise<UploadFileResp
   return response.data;
 }
 
-export async function uploadAudio(input: UploadAudioReq): Promise<UploadFileResp> {
+export async function uploadAudio(
+  input: UploadAudioReq,
+): Promise<UploadFileResp> {
   const response = await getAxiosInstance().post<UploadFileResp>(
     "/v1/files/audio",
     formDataWithFile("file", input.file),
@@ -45,7 +49,9 @@ export async function uploadAudio(input: UploadAudioReq): Promise<UploadFileResp
   return response.data;
 }
 
-export async function uploadImagesBatch(input: UploadImagesBatchReq): Promise<UploadFileResp[]> {
+export async function uploadImagesBatch(
+  input: UploadImagesBatchReq,
+): Promise<UploadFileResp[]> {
   const formData = new FormData();
   for (const file of input.files) {
     formData.append("files", file);
@@ -54,12 +60,17 @@ export async function uploadImagesBatch(input: UploadImagesBatchReq): Promise<Up
     formData.append("accessLevel", input.accessLevel);
   }
 
-  const response = await getAxiosInstance().post<UploadFileResp[]>("/v1/files/images/batch", formData);
+  const response = await getAxiosInstance().post<UploadFileResp[]>(
+    "/v1/files/images/batch",
+    formData,
+  );
   return response.data;
 }
 
 export async function getFileUrl(fileId: string): Promise<string> {
-  const response = await getAxiosInstance().get<string>(`/v1/files/${fileId}/url`);
+  const response = await getAxiosInstance().get<string>(
+    `/v1/files/${fileId}/url`,
+  );
   return response.data;
 }
 

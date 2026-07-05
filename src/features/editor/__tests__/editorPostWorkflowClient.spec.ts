@@ -44,14 +44,18 @@ describe("editorPostWorkflowClient", () => {
 
     await client.saveDraftBody("post-1", {
       schemaVersion: 1,
-      blocks: [{ type: "paragraph", children: [{ type: "text", text: "正文" }] }],
+      blocks: [
+        { type: "paragraph", children: [{ type: "text", text: "正文" }] },
+      ],
       basePostVersion: 1,
       clientSavedAt: "2026-07-05T00:00:00.000Z",
     });
 
     expect(saveDraftBody).toHaveBeenCalledWith("post-1", {
       schemaVersion: 1,
-      blocks: [{ type: "paragraph", children: [{ type: "text", text: "正文" }] }],
+      blocks: [
+        { type: "paragraph", children: [{ type: "text", text: "正文" }] },
+      ],
       basePostVersion: 1,
       clientSavedAt: "2026-07-05T00:00:00.000Z",
     });

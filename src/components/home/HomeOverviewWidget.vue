@@ -4,17 +4,14 @@
       <p class="home-overview__label">内容工作台</p>
       <h3>草稿、发布和阅读数据会在这里汇总。</h3>
     </div>
-    <RouterLink
-      class="home-overview__link"
-      to="/editor"
-    >
+    <RouterLink class="home-overview__link" to="/editor">
       打开编辑器
     </RouterLink>
   </section>
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink } from "vue-router";
 </script>
 
 <style scoped>

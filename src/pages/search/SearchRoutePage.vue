@@ -5,7 +5,8 @@
       <h1 id="search-route-title">搜索服务暂未接入</h1>
       <p v-if="query" class="search-route__query">当前搜索：{{ query }}</p>
       <p class="search-route__message">
-        搜索 HTTP contract 仍停在 API 族识别阶段，当前页面只保留导航入口和降级状态，不展示假结果。
+        搜索 HTTP contract 仍停在 API
+        族识别阶段，当前页面只保留导航入口和降级状态，不展示假结果。
       </p>
     </div>
   </section>

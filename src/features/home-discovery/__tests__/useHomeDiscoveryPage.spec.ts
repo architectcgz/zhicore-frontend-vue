@@ -199,13 +199,22 @@ describe("useHomeDiscoveryPage", () => {
 
   it("resets list params and discards stale responses after category changes", async () => {
     let resolveOld:
-      | ((value: { items: ReturnType<typeof postSummary>[]; hasMore: boolean }) => void)
+      | ((value: {
+          items: ReturnType<typeof postSummary>[];
+          hasMore: boolean;
+        }) => void)
       | undefined;
     let resolveLatest:
-      | ((value: { items: ReturnType<typeof postSummary>[]; hasMore: boolean }) => void)
+      | ((value: {
+          items: ReturnType<typeof postSummary>[];
+          hasMore: boolean;
+        }) => void)
       | undefined;
     vi.mocked(listPosts)
-      .mockResolvedValueOnce({ items: [postSummary("post-a", "初始")], hasMore: false })
+      .mockResolvedValueOnce({
+        items: [postSummary("post-a", "初始")],
+        hasMore: false,
+      })
       .mockImplementationOnce(
         () =>
           new Promise((resolve) => {
@@ -224,9 +233,15 @@ describe("useHomeDiscoveryPage", () => {
 
     page.selectContentCategory("前端");
     page.selectContentCategory("架构");
-    resolveLatest?.({ items: [postSummary("post-latest", "最终")], hasMore: false });
+    resolveLatest?.({
+      items: [postSummary("post-latest", "最终")],
+      hasMore: false,
+    });
     await flushPromises();
-    resolveOld?.({ items: [postSummary("post-old", "旧响应")], hasMore: false });
+    resolveOld?.({
+      items: [postSummary("post-old", "旧响应")],
+      hasMore: false,
+    });
     await flushPromises();
 
     expect(listPosts).toHaveBeenNthCalledWith(2, {

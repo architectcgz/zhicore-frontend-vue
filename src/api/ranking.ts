@@ -32,7 +32,9 @@ export interface PeriodRankingPageResp<T> extends RankingPageResp<T> {
   periodKey: string;
 }
 
-export async function listHotPosts(input?: RankingPageReq): Promise<RankingPageResp<string>> {
+export async function listHotPosts(
+  input?: RankingPageReq,
+): Promise<RankingPageResp<string>> {
   const response = await getAxiosInstance().get<RankingPageResp<string>>(
     "/v1/ranking/posts/hot",
     { params: input },
@@ -43,19 +45,17 @@ export async function listHotPosts(input?: RankingPageReq): Promise<RankingPageR
 export async function listHotPostScores(
   input?: RankingPageReq,
 ): Promise<RankingPageResp<RankingScoreItem>> {
-  const response = await getAxiosInstance().get<RankingPageResp<RankingScoreItem>>(
-    "/v1/ranking/posts/hot/scores",
-    { params: input },
-  );
+  const response = await getAxiosInstance().get<
+    RankingPageResp<RankingScoreItem>
+  >("/v1/ranking/posts/hot/scores", { params: input });
   return response.data;
 }
 
 export async function listDailyPostScores(
   input?: DailyRankingPageReq,
 ): Promise<PeriodRankingPageResp<RankingScoreItem>> {
-  const response = await getAxiosInstance().get<PeriodRankingPageResp<RankingScoreItem>>(
-    "/v1/ranking/posts/daily/scores",
-    { params: input },
-  );
+  const response = await getAxiosInstance().get<
+    PeriodRankingPageResp<RankingScoreItem>
+  >("/v1/ranking/posts/daily/scores", { params: input });
   return response.data;
 }

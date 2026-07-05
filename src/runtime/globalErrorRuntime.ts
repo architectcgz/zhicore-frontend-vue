@@ -1,104 +1,123 @@
-import type { App, ComponentPublicInstance } from 'vue'
-import type { Pinia } from 'pinia'
-import type { Router } from 'vue-router'
+import type { App, ComponentPublicInstance } from "vue";
+import type { Pinia } from "pinia";
+import type { Router } from "vue-router";
 
-import { ApiError, getAxiosInstance } from '@/api/request'
-import { useAuthStore } from '@/stores/auth'
+import { ApiError, getAxiosInstance } from "@/api/request";
+import { useAuthStore } from "@/stores/auth";
 
-let httpErrorHandlingInstalled = false
+let httpErrorHandlingInstalled = false;
 
 export interface ErrorRuntimeOptions {
-  loginPath?: string
-  errorStatusPath?: (status: number) => string
+  loginPath?: string;
+  errorStatusPath?: (status: number) => string;
   handleUnauthorized?: (context: {
-    router: Router
-    pinia: Pinia
-    error: ApiError
-  }) => void | Promise<void>
+    router: Router;
+    pinia: Pinia;
+    error: ApiError;
+  }) => void | Promise<void>;
   handleVueError?: (context: {
-    router: Router
-    error: unknown
-    info: string
-  }) => void | Promise<void>
+    router: Router;
+    error: unknown;
+    info: string;
+  }) => void | Promise<void>;
   handleRouteError?: (context: {
-    router: Router
-    error: unknown
-  }) => void | Promise<void>
+    router: Router;
+    error: unknown;
+  }) => void | Promise<void>;
 }
 
 function resolveAuthStore(pinia?: Pinia) {
-  return pinia ? useAuthStore(pinia) : useAuthStore()
+  return pinia ? useAuthStore(pinia) : useAuthStore();
 }
 
-function withDefaultErrorRuntimeOptions(options: ErrorRuntimeOptions = {}): Required<ErrorRuntimeOptions> {
-  const loginPath = options.loginPath || '/auth/login'
-  const errorStatusPath = options.errorStatusPath || ((status: number) => `/error/${status}`)
+function withDefaultErrorRuntimeOptions(
+  options: ErrorRuntimeOptions = {},
+): Required<ErrorRuntimeOptions> {
+  const loginPath = options.loginPath || "/auth/login";
+  const errorStatusPath =
+    options.errorStatusPath || ((status: number) => `/error/${status}`);
 
   return {
     loginPath,
     errorStatusPath,
-    handleUnauthorized: options.handleUnauthorized || (async ({ router, pinia }) => {
-      const authStore = resolveAuthStore(pinia)
-      authStore.logout()
-      await router.push(loginPath)
-    }),
-    handleVueError: options.handleVueError || (async ({ router }) => {
-      await router.push(errorStatusPath(500))
-    }),
-    handleRouteError: options.handleRouteError || (async ({ router }) => {
-      await router.push(errorStatusPath(500))
-    }),
-  }
+    handleUnauthorized:
+      options.handleUnauthorized ||
+      (async ({ router, pinia }) => {
+        const authStore = resolveAuthStore(pinia);
+        authStore.logout();
+        await router.push(loginPath);
+      }),
+    handleVueError:
+      options.handleVueError ||
+      (async ({ router }) => {
+        await router.push(errorStatusPath(500));
+      }),
+    handleRouteError:
+      options.handleRouteError ||
+      (async ({ router }) => {
+        await router.push(errorStatusPath(500));
+      }),
+  };
 }
 
 export function createDefaultErrorRuntimeOptions(): ErrorRuntimeOptions {
-  return withDefaultErrorRuntimeOptions()
+  return withDefaultErrorRuntimeOptions();
 }
 
 export function installGlobalHttpErrorHandling(
   router: Router,
   pinia: Pinia,
-  options: ErrorRuntimeOptions
+  options: ErrorRuntimeOptions,
 ): void {
   if (httpErrorHandlingInstalled) {
-    return
+    return;
   }
 
   getAxiosInstance().interceptors.response.use(
     (response) => response,
     (error: unknown) => {
       if (error instanceof ApiError && error.status === 401) {
-        const normalized = withDefaultErrorRuntimeOptions(options)
-        void Promise.resolve(normalized.handleUnauthorized({ router, pinia, error }))
+        const normalized = withDefaultErrorRuntimeOptions(options);
+        void Promise.resolve(
+          normalized.handleUnauthorized({ router, pinia, error }),
+        );
       }
-      return Promise.reject(error)
-    }
-  )
+      return Promise.reject(error);
+    },
+  );
 
-  httpErrorHandlingInstalled = true
+  httpErrorHandlingInstalled = true;
 }
 
-export function createGlobalVueErrorHandler(router: Router, options: ErrorRuntimeOptions) {
+export function createGlobalVueErrorHandler(
+  router: Router,
+  options: ErrorRuntimeOptions,
+) {
   return (
     err: unknown,
     _instance: ComponentPublicInstance | null,
-    info: string
+    info: string,
   ): void => {
-    console.error('Vue error:', err, info)
+    console.error("Vue error:", err, info);
     if (err instanceof ApiError) {
-      return
+      return;
     }
-    const normalized = withDefaultErrorRuntimeOptions(options)
-    void Promise.resolve(normalized.handleVueError({ router, error: err, info }))
-  }
+    const normalized = withDefaultErrorRuntimeOptions(options);
+    void Promise.resolve(
+      normalized.handleVueError({ router, error: err, info }),
+    );
+  };
 }
 
-export function createGlobalRouterErrorHandler(router: Router, options: ErrorRuntimeOptions) {
+export function createGlobalRouterErrorHandler(
+  router: Router,
+  options: ErrorRuntimeOptions,
+) {
   return (error: unknown): void => {
-    console.error('Router error:', error)
-    const normalized = withDefaultErrorRuntimeOptions(options)
-    void Promise.resolve(normalized.handleRouteError({ router, error }))
-  }
+    console.error("Router error:", error);
+    const normalized = withDefaultErrorRuntimeOptions(options);
+    void Promise.resolve(normalized.handleRouteError({ router, error }));
+  };
 }
 
 /**
@@ -109,9 +128,9 @@ export function setupGlobalErrorRuntime(
   app: App,
   router: Router,
   pinia: Pinia,
-  options: ErrorRuntimeOptions = createDefaultErrorRuntimeOptions()
+  options: ErrorRuntimeOptions = createDefaultErrorRuntimeOptions(),
 ): void {
-  installGlobalHttpErrorHandling(router, pinia, options)
-  app.config.errorHandler = createGlobalVueErrorHandler(router, options)
-  router.onError(createGlobalRouterErrorHandler(router, options))
+  installGlobalHttpErrorHandling(router, pinia, options);
+  app.config.errorHandler = createGlobalVueErrorHandler(router, options);
+  router.onError(createGlobalRouterErrorHandler(router, options));
 }

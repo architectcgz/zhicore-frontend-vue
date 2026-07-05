@@ -31,7 +31,9 @@ describe("ranking api", () => {
     const input: RankingPageReq = { page: 0, size: 20 };
 
     await expect(listHotPosts(input)).resolves.toEqual(response);
-    expect(get).toHaveBeenCalledWith("/v1/ranking/posts/hot", { params: input });
+    expect(get).toHaveBeenCalledWith("/v1/ranking/posts/hot", {
+      params: input,
+    });
   });
 
   it("lists public hot post score items", async () => {
@@ -78,7 +80,11 @@ describe("ranking api", () => {
     vi.mocked(getAxiosInstance).mockReturnValue({
       get,
     } as unknown as ReturnType<typeof getAxiosInstance>);
-    const input: DailyRankingPageReq = { page: 0, size: 20, date: "2026-07-02" };
+    const input: DailyRankingPageReq = {
+      page: 0,
+      size: 20,
+      date: "2026-07-02",
+    };
 
     await expect(listDailyPostScores(input)).resolves.toEqual(response);
     expect(get).toHaveBeenCalledWith("/v1/ranking/posts/daily/scores", {

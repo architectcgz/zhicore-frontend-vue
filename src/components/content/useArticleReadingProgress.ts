@@ -65,7 +65,9 @@ export function calculateActiveHeadingHref(input: ActiveHeadingInput): string {
   return activeHeading.href;
 }
 
-function collectHeadingPositions(article: HTMLElement): ReadingHeadingPosition[] {
+function collectHeadingPositions(
+  article: HTMLElement,
+): ReadingHeadingPosition[] {
   return Array.from(
     article.querySelectorAll<HTMLElement>(".article-detail__body-heading[id]"),
   ).map((heading) => ({

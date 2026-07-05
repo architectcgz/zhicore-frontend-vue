@@ -160,7 +160,9 @@ export async function register(input: RegisterReq): Promise<RegisterResp> {
   return response.data;
 }
 
-export function authSessionFromRegisterResp(response: RegisterResp): AuthSession {
+export function authSessionFromRegisterResp(
+  response: RegisterResp,
+): AuthSession {
   if (
     !response.accessToken ||
     response.tokenType !== "Bearer" ||

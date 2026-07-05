@@ -146,7 +146,8 @@ describe("useRegisterForm", () => {
   });
 
   it("blocks repeated submits inside the submit handler while a request is in flight", async () => {
-    let resolveRegister: ((value: Awaited<ReturnType<typeof register>>) => void) | undefined;
+    let resolveRegister:
+      ((value: Awaited<ReturnType<typeof register>>) => void) | undefined;
     vi.mocked(register).mockImplementation(
       () =>
         new Promise((resolve) => {

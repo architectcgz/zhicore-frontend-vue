@@ -18,16 +18,24 @@ export interface UpdateProfileReq {
 }
 
 export async function getMe(): Promise<UserProfileResp> {
-  const response = await getAxiosInstance().get<UserProfileResp>("/v1/users/me");
+  const response =
+    await getAxiosInstance().get<UserProfileResp>("/v1/users/me");
   return response.data;
 }
 
 export async function getProfile(publicId: string): Promise<UserProfileResp> {
-  const response = await getAxiosInstance().get<UserProfileResp>(`/v1/users/${publicId}`);
+  const response = await getAxiosInstance().get<UserProfileResp>(
+    `/v1/users/${publicId}`,
+  );
   return response.data;
 }
 
-export async function updateProfile(input: UpdateProfileReq): Promise<UserProfileResp> {
-  const response = await getAxiosInstance().patch<UserProfileResp>("/v1/users/me/profile", input);
+export async function updateProfile(
+  input: UpdateProfileReq,
+): Promise<UserProfileResp> {
+  const response = await getAxiosInstance().patch<UserProfileResp>(
+    "/v1/users/me/profile",
+    input,
+  );
   return response.data;
 }

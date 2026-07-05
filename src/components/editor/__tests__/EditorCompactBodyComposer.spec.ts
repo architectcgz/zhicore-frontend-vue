@@ -31,15 +31,16 @@ function exposedEditor(wrapper: ReturnType<typeof mount>) {
 
 function hasCodeBlock(editor: Editor): boolean {
   return (
-    editor.getJSON().content?.some((node) => node.type === "codeBlock") ??
-    false
+    editor.getJSON().content?.some((node) => node.type === "codeBlock") ?? false
   );
 }
 
 describe("EditorCompactBodyComposer", () => {
   it("reuses the existing Tiptap body editor instead of a textarea", () => {
     expect(editorCompactBodyComposerSource).toContain("EditorContent");
-    expect(editorCompactBodyComposerSource).toContain("useEditorWritingBodyEditor");
+    expect(editorCompactBodyComposerSource).toContain(
+      "useEditorWritingBodyEditor",
+    );
     expect(editorCompactBodyComposerSource).not.toContain("<textarea");
     expect(editorCompactBodyComposerSource).not.toContain("预览");
     expect(editorCompactBodyComposerSource).not.toContain("<select");

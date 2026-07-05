@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { getAxiosInstance } from "../request";
-import { getMe, getProfile, updateProfile, type UpdateProfileReq } from "../user";
+import {
+  getMe,
+  getProfile,
+  updateProfile,
+  type UpdateProfileReq,
+} from "../user";
 
 vi.mock("../request", () => ({
   getAxiosInstance: vi.fn(),

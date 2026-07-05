@@ -14,7 +14,9 @@ export interface CreateEditorDraftInput {
 }
 
 export interface EditorPostWorkflowClient {
-  createDraft(input: CreateEditorDraftInput): Promise<EditorServerDraftBaseline>;
+  createDraft(
+    input: CreateEditorDraftInput,
+  ): Promise<EditorServerDraftBaseline>;
   saveDraftBody(
     postId: string,
     input: SaveDraftBodyReq,
@@ -22,9 +24,10 @@ export interface EditorPostWorkflowClient {
   publishDraft(baseline: EditorServerDraftBaseline): Promise<PublishPostResp>;
 }
 
-function requirePublishBaseline(
-  baseline: EditorServerDraftBaseline,
-): { draftBodyId: string; draftBodyHash: string } {
+function requirePublishBaseline(baseline: EditorServerDraftBaseline): {
+  draftBodyId: string;
+  draftBodyHash: string;
+} {
   if (!baseline.baseDraftBodyId || !baseline.baseDraftBodyHash) {
     throw new Error("发布前需要先保存服务端草稿正文");
   }

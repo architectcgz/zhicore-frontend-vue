@@ -41,8 +41,7 @@ function createDiscoveryWithPosts(
 }
 
 export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
-  const localDemoEnabled =
-    options.localDemoEnabled ?? isLocalDemoModeEnabled();
+  const localDemoEnabled = options.localDemoEnabled ?? isLocalDemoModeEnabled();
   const discovery = reactive<HomeDiscoveryData>(
     localDemoEnabled ? homeDiscoveryMock : createDiscoveryWithPosts([]),
   );

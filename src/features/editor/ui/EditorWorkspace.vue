@@ -193,9 +193,13 @@ const isMobileWorkspace = useMediaQuery("(max-width: 980px)");
 
   min-height: 100vh;
   padding: 24px;
-  background: 
+  background:
     radial-gradient(circle at top right, var(--theme-grad-1), transparent 40%),
-    radial-gradient(circle at bottom left, var(--theme-grad-2), transparent 40%),
+    radial-gradient(
+      circle at bottom left,
+      var(--theme-grad-2),
+      transparent 40%
+    ),
     linear-gradient(135deg, var(--theme-bg-1) 0%, var(--theme-bg-2) 100%);
   color: var(--editor-page-text);
   transition:

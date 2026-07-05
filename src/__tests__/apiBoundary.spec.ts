@@ -24,7 +24,9 @@ describe("api boundary", () => {
         const source = readFileSync(filePath, "utf8");
         for (const specifier of importSpecifiers(source)) {
           if (isProviderApiImport(specifier, filePath, apiRoot)) {
-            violations.push(`${relativeToSrc(filePath, srcRoot)} -> ${specifier}`);
+            violations.push(
+              `${relativeToSrc(filePath, srcRoot)} -> ${specifier}`,
+            );
           }
         }
       }
@@ -54,7 +56,11 @@ function importSpecifiers(source: string): string[] {
   return [...source.matchAll(importPattern)].map((match) => match[1]);
 }
 
-function isProviderApiImport(specifier: string, fromFile: string, apiRoot: string): boolean {
+function isProviderApiImport(
+  specifier: string,
+  fromFile: string,
+  apiRoot: string,
+): boolean {
   if (specifier === "@/api" || specifier.startsWith("@/api/")) {
     return true;
   }

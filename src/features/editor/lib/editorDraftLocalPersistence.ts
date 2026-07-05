@@ -22,8 +22,7 @@ export interface EditorDraftLocalPersistenceState {
   serverDraftBaseline?: EditorServerDraftBaseline;
 }
 
-export const editorDraftLocalStorageKey =
-  "zhicore:editor:draft-recovery:v1";
+export const editorDraftLocalStorageKey = "zhicore:editor:draft-recovery:v1";
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -33,7 +32,9 @@ function isLocalContentHash(value: unknown): value is `local:${string}` {
   return typeof value === "string" && value.startsWith("local:");
 }
 
-function isTiptapDocumentJson(value: unknown): value is EditorTiptapDocumentJson {
+function isTiptapDocumentJson(
+  value: unknown,
+): value is EditorTiptapDocumentJson {
   return isPlainRecord(value) && value.type === "doc";
 }
 
@@ -105,8 +106,7 @@ function normalizeServerDraftBaseline(
 }
 
 export function loadEditorDraftLocalPersistence():
-  | EditorDraftLocalPersistenceState
-  | undefined {
+  EditorDraftLocalPersistenceState | undefined {
   try {
     const rawState = window.localStorage.getItem(editorDraftLocalStorageKey);
 
