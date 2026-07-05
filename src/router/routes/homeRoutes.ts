@@ -12,6 +12,11 @@ export const homeRoutes: RouteRecordRaw[] = [
     component: () => import("@/pages/home/HomeRoutePage.vue"),
   },
   {
+    path: "explore",
+    name: "Explore",
+    component: () => import("@/pages/explore/ExploreRoutePage.vue"),
+  },
+  {
     path: "about",
     name: "About",
     component: () => import("@/pages/home/HomeAboutRoutePage.vue"),

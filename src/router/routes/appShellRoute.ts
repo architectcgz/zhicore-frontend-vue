@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 import { contentRoutes } from "./contentRoutes";
 import { editorRoutes } from "./editorRoutes";
 import { homeRoutes } from "./homeRoutes";
+import { resourcesRoutes } from "./resourcesRoutes";
 import { searchRoutes } from "./searchRoutes";
 import { structureRoutes } from "./structureRoutes";
 
@@ -19,6 +20,7 @@ export const appShellRoute: RouteRecordRaw = {
     ...homeRoutes,
     ...contentRoutes,
     ...structureRoutes,
+    ...resourcesRoutes,
     ...searchRoutes,
     ...editorRoutes,
   ],

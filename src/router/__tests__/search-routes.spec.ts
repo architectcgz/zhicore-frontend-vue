@@ -21,16 +21,25 @@ describe("search routes", () => {
     expect(router.currentRoute.value.query.q).toBe("vue");
   });
 
-  it("navigates explore and resources links to the search fallback route", async () => {
+  it("keeps explore and resources out of the search fallback route", async () => {
     const router = createTestRouter();
 
     await router.push("/explore");
     await router.isReady();
-    expect(router.currentRoute.value.name).toBe("Search");
-    expect(router.currentRoute.value.query.source).toBe("explore");
+    expect(router.currentRoute.value.name).toBe("Explore");
 
     await router.push("/resources");
-    expect(router.currentRoute.value.name).toBe("Search");
-    expect(router.currentRoute.value.query.source).toBe("resources");
+    expect(router.currentRoute.value.name).toBe("Resources");
+  });
+
+  it("uses a dedicated explore page instead of reusing the home page", () => {
+    const router = createTestRouter();
+    const exploreRecord = router
+      .getRoutes()
+      .find((record) => record.name === "Explore");
+    const componentLoader = String(exploreRecord?.components?.default);
+
+    expect(componentLoader).toContain("ExploreRoutePage.vue");
+    expect(componentLoader).not.toContain("HomeRoutePage.vue");
   });
 });

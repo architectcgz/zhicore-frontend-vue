@@ -6,14 +6,4 @@ export const searchRoutes: RouteRecordRaw[] = [
     name: "Search",
     component: () => import("@/pages/search/SearchRoutePage.vue"),
   },
-  {
-    path: "explore",
-    name: "Explore",
-    redirect: { name: "Search", query: { source: "explore" } },
-  },
-  {
-    path: "resources",
-    name: "Resources",
-    redirect: { name: "Search", query: { source: "resources" } },
-  },
 ];
