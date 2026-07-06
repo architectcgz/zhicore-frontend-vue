@@ -5,7 +5,7 @@
         <h2 class="community-route__sidebar-title">All Topics</h2>
 
         <div v-if="topicState === 'loading'" class="community-route__state">
-          正在加载主题...
+          Loading topics...
         </div>
         <div
           v-else-if="topicState === 'error'"
@@ -18,11 +18,11 @@
             class="community-route__btn"
             @click="retryTopics"
           >
-            重试
+            Retry
           </button>
         </div>
         <div v-else-if="topicState === 'empty'" class="community-route__state">
-          暂无主题
+          No public topics yet.
         </div>
         <div v-else class="community-route__topic-list">
           <button
@@ -35,7 +35,7 @@
             @click="selectTopic('')"
           >
             <LayoutGrid class="community-route__topic-icon" />
-            <span>全部主题</span>
+            <span>All Topics</span>
           </button>
           <button
             v-for="topic in topics"
@@ -55,7 +55,26 @@
             />
             <span>{{ topic.label }}</span>
           </button>
+          <button
+            type="button"
+            class="community-route__topic-btn"
+            disabled
+            title="Additional topic discovery is not connected."
+          >
+            <Rows3 class="community-route__topic-icon" />
+            <span>More Topics</span>
+          </button>
         </div>
+
+        <button
+          type="button"
+          class="community-route__browse-btn"
+          disabled
+          title="Full community browsing is not connected."
+        >
+          <LayoutGrid class="community-route__browse-icon" aria-hidden="true" />
+          <span>Browse Communities</span>
+        </button>
       </aside>
 
       <main class="community-route__main" aria-label="社区内容">
@@ -69,7 +88,7 @@
               type="button"
               class="community-route__btn community-route__btn--primary"
               disabled
-              title="社区关注能力暂未接入"
+              title="Follow is not connected."
             >
               Follow
             </button>
@@ -77,7 +96,7 @@
               type="button"
               class="community-route__btn-icon"
               disabled
-              aria-label="更多社区操作暂未接入"
+              aria-label="More community actions are not connected"
             >
               <MoreHorizontal aria-hidden="true" />
             </button>
@@ -85,19 +104,34 @@
         </header>
 
         <div class="community-route__tabs" role="list" aria-label="内容排序">
-          <span class="community-route__tab community-route__tab--active">
+          <span
+            class="community-route__tab community-route__tab--active"
+            role="listitem"
+          >
             Latest
           </span>
-          <span class="community-route__tab community-route__tab--disabled">
+          <span
+            class="community-route__tab community-route__tab--disabled"
+            role="listitem"
+            aria-disabled="true"
+          >
             Top
           </span>
-          <span class="community-route__tab community-route__tab--disabled">
+          <span
+            class="community-route__tab community-route__tab--disabled"
+            role="listitem"
+            aria-disabled="true"
+          >
             Unanswered
           </span>
         </div>
+        <p class="community-route__data-note">
+          Connected public posts only. Likes, saves, counts, and replies are
+          degraded.
+        </p>
 
         <div v-if="feedState === 'loading'" class="community-route__state">
-          正在加载社区内容...
+          Loading public posts...
         </div>
         <div
           v-else-if="feedState === 'error'"
@@ -110,11 +144,11 @@
             class="community-route__btn"
             @click="retryPosts"
           >
-            重试
+            Retry
           </button>
         </div>
         <div v-else-if="feedState === 'empty'" class="community-route__state">
-          当前主题下暂无公开内容
+          No public posts for this topic yet.
         </div>
         <div v-else class="community-route__feed">
           <article
@@ -122,45 +156,72 @@
             :key="post.id"
             class="community-route__post-card"
           >
-            <div class="community-route__post-header">
-              <div class="community-route__post-author">
-                <CircleUserRound class="community-route__post-avatar" />
-                <span>{{ post.author }}</span>
+            <CircleUserRound class="community-route__post-avatar" />
+            <div class="community-route__post-body">
+              <div class="community-route__post-header">
+                <span class="community-route__post-author">{{
+                  post.author
+                }}</span>
+                <time class="community-route__post-time">{{
+                  post.publishedAt
+                }}</time>
               </div>
-              <time class="community-route__post-time">{{
-                post.publishedAt
-              }}</time>
-            </div>
-            <div class="community-route__post-content">
-              <h3>
-                <RouterLink :to="post.href">{{ post.title }}</RouterLink>
-              </h3>
-              <p>{{ post.summary }}</p>
-            </div>
-            <div class="community-route__post-footer">
-              <div class="community-route__post-tags">
-                <span v-if="activeTopic" class="community-route__post-tag">
-                  {{ activeTopic.label }}
-                </span>
-                <span
-                  v-else-if="post.commentCount > 10"
-                  class="community-route__post-tag"
-                >
-                  Hot
-                </span>
+              <div class="community-route__post-content">
+                <h3>
+                  <RouterLink :to="post.href">{{ post.title }}</RouterLink>
+                </h3>
+                <p>{{ post.summary }}</p>
               </div>
-              <div class="community-route__post-stats">
-                <RouterLink
-                  :to="`${post.href}#comments`"
-                  class="community-route__post-stat-btn"
-                  :aria-label="`查看 ${post.title} 的评论`"
-                >
-                  <MessageSquare
-                    class="community-route__post-stat-icon"
-                    aria-hidden="true"
-                  />
-                  <span>{{ post.commentCount }}</span>
-                </RouterLink>
+              <div class="community-route__post-footer">
+                <div class="community-route__post-tags">
+                  <span v-if="activeTopic" class="community-route__post-tag">
+                    {{ activeTopic.label }}
+                  </span>
+                  <span v-else class="community-route__post-tag">
+                    Public Post
+                  </span>
+                </div>
+                <div class="community-route__post-stats">
+                  <button
+                    type="button"
+                    class="community-route__post-stat-btn"
+                    disabled
+                    title="Like data is not connected."
+                  >
+                    <Heart
+                      class="community-route__post-stat-icon"
+                      aria-hidden="true"
+                    />
+                    <span class="community-route__sr-only">
+                      Like data unavailable
+                    </span>
+                  </button>
+                  <RouterLink
+                    :to="`${post.href}#comments`"
+                    class="community-route__post-stat-btn"
+                    :aria-label="`查看 ${post.title} 的评论`"
+                  >
+                    <MessageCircle
+                      class="community-route__post-stat-icon"
+                      aria-hidden="true"
+                    />
+                    <span>{{ post.commentCount }}</span>
+                  </RouterLink>
+                  <button
+                    type="button"
+                    class="community-route__post-stat-btn"
+                    disabled
+                    title="Save is not connected."
+                  >
+                    <Bookmark
+                      class="community-route__post-stat-icon"
+                      aria-hidden="true"
+                    />
+                    <span class="community-route__sr-only">
+                      Save is unavailable
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
           </article>
@@ -172,11 +233,13 @@
           v-if="topicState === 'ready' && trendingTopics.length > 0"
           class="community-route__extra-section"
         >
-          <h3>热门主题</h3>
+          <h3>Trending Categories</h3>
+          <p class="community-route__extra-note">Live counts unavailable.</p>
           <div class="community-route__trending-list">
             <button
               v-for="topic in trendingTopics"
               :key="topic.id"
+              type="button"
               class="community-route__trending-item"
               @click="selectTopic(topic.slug)"
             >
@@ -187,6 +250,9 @@
                 />
                 <span>{{ topic.label }}</span>
               </div>
+              <span class="community-route__trending-unavailable"
+                >No count</span
+              >
             </button>
           </div>
         </section>
@@ -195,7 +261,10 @@
           v-if="feedState === 'ready' && latestPosts.length > 0"
           class="community-route__extra-section"
         >
-          <h3>最新内容</h3>
+          <h3>Latest Public Posts</h3>
+          <p class="community-route__extra-note">
+            Reply feed is not connected.
+          </p>
           <div class="community-route__reply-list">
             <div
               v-for="post in latestPosts"
@@ -234,17 +303,22 @@
 import type { Component } from "vue";
 
 import {
-  Brain,
+  Bookmark,
   CircleUserRound,
+  Code2,
+  Cpu,
   Hash,
+  Heart,
   LayoutGrid,
-  MessageSquare,
-  Monitor,
+  MessageCircle,
   MoreHorizontal,
+  PackageCheck,
   PenTool,
+  Rows3,
   Server,
   Settings,
   TrendingUp,
+  Users,
 } from "@lucide/vue";
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
@@ -269,27 +343,30 @@ const activeTopic = computed(() =>
 );
 
 const activeTopicTitle = computed(() =>
-  activeTopic.value ? `${activeTopic.value.label}社区` : "全部社区内容",
+  activeTopic.value ? activeTopic.value.label : "All Communities",
 );
 
 const activeTopicSummary = computed(() =>
   activeTopic.value
-    ? "展示这个主题下的最新公开文章。"
-    : "展示所有主题下的最新公开文章。",
+    ? "Latest public posts for this connected topic."
+    : "Latest public posts across connected topics.",
 );
 
+// Community counts, likes, saves, and reply feeds are not exposed by the current
+// data owner, so the page marks those areas as degraded instead of fabricating activity.
 const trendingTopics = computed(() => topics.slice(0, 5));
-const latestPosts = computed(() => posts.slice(0, 4));
+const latestPosts = computed(() => posts.slice(0, 5));
 
 function getTopicIcon(slug: string): Component {
   const iconMap: Record<string, Component> = {
     "product-design": PenTool,
     "system-design": Settings,
-    frontend: Monitor,
+    frontend: Code2,
     backend: Server,
-    "ai-ml": Brain,
-    devops: Settings,
+    "ai-ml": Cpu,
+    devops: PackageCheck,
     "career-growth": TrendingUp,
+    community: Users,
   };
   return iconMap[slug] || Hash;
 }
@@ -297,30 +374,77 @@ function getTopicIcon(slug: string): Component {
 
 <style scoped>
 .community-route {
-  padding: var(--space-8) var(--space-4);
-  max-width: 1280px;
+  --community-shell: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 48%,
+    transparent
+  );
+  --community-shell-strong: color-mix(
+    in srgb,
+    var(--color-bg-elevated-2) 44%,
+    transparent
+  );
+  --community-line: color-mix(
+    in srgb,
+    var(--color-border-strong) 82%,
+    transparent
+  );
+  --community-muted-line: color-mix(
+    in srgb,
+    var(--color-border) 70%,
+    transparent
+  );
+
+  max-width: 95rem;
   margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-6);
   color: var(--color-text);
+  letter-spacing: 0;
 }
 
 .community-route__layout {
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr) 17.5rem;
-  gap: var(--space-10);
+  grid-template-columns: minmax(13.5rem, 16rem) minmax(0, 1fr) minmax(
+      17rem,
+      21rem
+    );
+  gap: var(--space-4);
   align-items: start;
+  min-width: 0;
+}
+
+.community-route__sidebar,
+.community-route__main,
+.community-route__extra-section {
+  border: 1px solid var(--community-line);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-bg-elevated) 66%, transparent),
+      color-mix(in srgb, var(--color-bg) 72%, transparent)
+    ),
+    var(--community-shell);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(1.5rem);
+}
+
+.community-route__sidebar,
+.community-route__extra {
+  position: sticky;
+  top: calc(var(--space-6) + var(--space-5));
 }
 
 .community-route__sidebar {
-  position: sticky;
-  top: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  min-height: min(48rem, calc(100vh - var(--space-12) * 2));
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
 }
 
 .community-route__sidebar-title {
   margin: 0;
-  font-size: var(--font-size-18);
+  font-size: var(--font-size-18, 1.125rem);
   font-weight: var(--font-weight-h3);
   color: var(--color-text-strong);
 }
@@ -328,44 +452,53 @@ function getTopicIcon(slug: string): Component {
 .community-route__topic-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
 
-.community-route__topic-btn {
+.community-route__topic-btn,
+.community-route__browse-btn {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
+  min-height: 2.75rem;
   padding: var(--space-3) var(--space-4);
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--color-text-soft);
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
-.community-route__topic-icon {
+.community-route__topic-icon,
+.community-route__browse-icon {
+  flex: 0 0 auto;
   width: 1.125rem;
   height: 1.125rem;
 }
 
-.community-route__topic-btn:hover {
+.community-route__topic-btn:hover:not(:disabled),
+.community-route__browse-btn:hover:not(:disabled) {
   color: var(--color-text-strong);
-  background: color-mix(in srgb, var(--color-text-soft) 10%, transparent);
+  background: color-mix(in srgb, var(--color-text-soft) 9%, transparent);
 }
 
 .community-route__topic-btn:focus-visible,
 .community-route__btn:focus-visible,
 .community-route__btn-icon:focus-visible,
-.community-route__tab:focus-visible,
 .community-route__post-content a:focus-visible,
 .community-route__post-stat-btn:focus-visible,
 .community-route__trending-item:focus-visible,
+.community-route__browse-btn:focus-visible,
 .community-route__reply-title:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: 0.125rem solid var(--color-primary);
+  outline-offset: var(--space-1);
 }
 
 .community-route__topic-btn--active {
@@ -378,43 +511,65 @@ function getTopicIcon(slug: string): Component {
   color: var(--color-primary);
 }
 
-.community-route__topic-btn--active:hover {
+.community-route__topic-btn--active:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--color-primary);
 }
 
+.community-route__topic-btn:disabled,
+.community-route__browse-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.community-route__browse-btn {
+  margin-top: auto;
+  justify-content: center;
+  border-color: var(--community-muted-line);
+  background: var(--community-shell-strong);
+  color: var(--color-text);
+}
+
 .community-route__main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.community-route__main-header,
+.community-route__tabs,
+.community-route__data-note,
+.community-route__feed,
+.community-route__state {
+  margin-inline: var(--space-3);
 }
 
 .community-route__main-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-6);
-  background: color-mix(in srgb, var(--color-bg-elevated) 50%, transparent);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  gap: var(--space-5);
+  margin-top: var(--space-6);
 }
 
 .community-route__main-header-info h1 {
   margin: 0 0 var(--space-2);
-  font-size: var(--font-size-24);
+  font-size: var(--font-size-32, 2rem);
   font-weight: var(--font-weight-h1);
+  line-height: var(--line-height-label);
   color: var(--color-text-strong);
 }
 
 .community-route__main-header-info p {
   margin: 0;
   color: var(--color-text-soft);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-15, 0.9375rem);
+  line-height: 1.5;
 }
 
 .community-route__main-header-actions {
   display: flex;
+  flex: 0 0 auto;
   gap: var(--space-2);
 }
 
@@ -426,7 +581,7 @@ function getTopicIcon(slug: string): Component {
   background: transparent;
   color: var(--color-text-strong);
   font-weight: var(--font-weight-h3);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-14, 0.875rem);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -438,7 +593,7 @@ function getTopicIcon(slug: string): Component {
 .community-route__btn:disabled,
 .community-route__btn-icon:disabled {
   cursor: not-allowed;
-  opacity: 0.48;
+  opacity: 0.66;
 }
 
 .community-route__btn--primary {
@@ -457,7 +612,7 @@ function getTopicIcon(slug: string): Component {
   width: 2.25rem;
   height: 2.25rem;
   border: 1px solid var(--color-border);
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text-soft);
   cursor: pointer;
@@ -470,26 +625,42 @@ function getTopicIcon(slug: string): Component {
 }
 
 .community-route__tabs {
+  width: fit-content;
   display: flex;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-4);
+  gap: 0;
+  margin-top: var(--space-6);
+  padding: var(--space-1);
+  border: 1px solid var(--community-muted-line);
+  border-radius: var(--radius-pill);
+  background: var(--community-shell-strong);
 }
 
 .community-route__tab {
+  min-width: 5.5rem;
   padding: var(--space-2) var(--space-4);
   border: none;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text-soft);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-14, 0.875rem);
   font-weight: var(--font-weight-h3);
   cursor: default;
+  text-align: center;
 }
 
 .community-route__tab--active {
-  background: var(--color-bg-elevated);
-  color: var(--color-text-strong);
+  background: color-mix(in srgb, var(--color-text-strong) 88%, transparent);
+  color: var(--color-bg);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-text-strong) 30%, transparent);
+}
+
+.community-route__data-note {
+  margin-top: var(--space-3);
+  margin-bottom: 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-12, 0.75rem);
+  line-height: 1.5;
 }
 
 .community-route__tab--disabled {
@@ -500,18 +671,22 @@ function getTopicIcon(slug: string): Component {
 .community-route__feed {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-3);
 }
 
 .community-route__post-card {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-bg-reading) 62%, transparent);
+  border: 1px solid var(--community-muted-line);
   border-radius: var(--radius-lg);
-  transition: border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .community-route__post-card:hover {
@@ -520,39 +695,46 @@ function getTopicIcon(slug: string): Component {
     var(--color-primary) 30%,
     var(--color-border-strong)
   );
+  background: color-mix(in srgb, var(--color-bg-reading) 82%, transparent);
+}
+
+.community-route__post-body {
+  min-width: 0;
+  flex: 1;
 }
 
 .community-route__post-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-1);
 }
 
 .community-route__post-author {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   color: var(--color-text-strong);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-13, 0.8125rem);
   font-weight: var(--font-weight-h3);
 }
 
 .community-route__post-avatar {
-  width: 1.25rem;
-  height: 1.25rem;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
   color: var(--color-text-soft);
 }
 
 .community-route__post-time {
+  flex: 0 0 auto;
   color: var(--color-text-soft);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-12, 0.75rem);
 }
 
 .community-route__post-content h3 {
-  margin: 0 0 var(--space-2);
-  font-size: var(--font-size-18);
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-18, 1.125rem);
   font-weight: var(--font-weight-h1);
-  line-height: 1.4;
+  line-height: 1.32;
 }
 
 .community-route__post-content h3 a {
@@ -567,8 +749,8 @@ function getTopicIcon(slug: string): Component {
 .community-route__post-content p {
   margin: 0;
   color: var(--color-text-soft);
-  font-size: var(--font-size-14);
-  line-height: 1.6;
+  font-size: var(--font-size-13, 0.8125rem);
+  line-height: 1.45;
 }
 
 .community-route__post-footer {
@@ -576,41 +758,58 @@ function getTopicIcon(slug: string): Component {
   align-items: center;
   justify-content: space-between;
   margin-top: var(--space-2);
+  gap: var(--space-4);
 }
 
 .community-route__post-tags {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .community-route__post-tag {
+  max-width: 100%;
   padding: calc(var(--space-1) / 2) var(--space-2);
   background: var(--color-bg-elevated-2);
   color: var(--color-text-soft);
-  font-size: var(--font-size-12);
-  border-radius: var(--radius-sm);
+  font-size: var(--font-size-12, 0.75rem);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .community-route__post-stats {
   display: flex;
   align-items: center;
+  gap: var(--space-5);
   margin-left: auto;
 }
 
 .community-route__post-stat-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   background: transparent;
   border: none;
   color: var(--color-text-soft);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-13, 0.8125rem);
   padding: 0;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.community-route__post-stat-btn[href]:hover {
+.community-route__post-stat-btn:not(:disabled) {
+  cursor: pointer;
+}
+
+.community-route__post-stat-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.community-route__post-stat-btn:not(:disabled):hover {
   color: var(--color-text-strong);
 }
 
@@ -622,34 +821,46 @@ function getTopicIcon(slug: string): Component {
 .community-route__extra {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
-  position: sticky;
-  top: var(--space-6);
+  gap: var(--space-4);
+}
+
+.community-route__extra-section {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
 }
 
 .community-route__extra-section h3 {
-  margin: 0 0 var(--space-4);
-  font-size: var(--font-size-16);
+  margin: 0;
+  font-size: var(--font-size-18, 1.125rem);
   font-weight: var(--font-weight-h3);
   color: var(--color-text-strong);
+}
+
+.community-route__extra-note {
+  margin: var(--space-1) 0 var(--space-4);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-12, 0.75rem);
+  line-height: 1.5;
 }
 
 .community-route__trending-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }
 
 .community-route__trending-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   background: transparent;
   border: none;
-  padding: 0;
+  border-top: 1px solid var(--community-muted-line);
+  padding: var(--space-3) 0;
   cursor: pointer;
   color: var(--color-text-soft);
   transition: color 0.2s ease;
+  text-align: left;
 }
 
 .community-route__trending-item:hover {
@@ -660,24 +871,39 @@ function getTopicIcon(slug: string): Component {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  font-size: var(--font-size-14);
+  min-width: 0;
+  font-size: var(--font-size-14, 0.875rem);
+}
+
+.community-route__trending-item-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .community-route__trending-icon {
+  flex: 0 0 auto;
   width: 1rem;
   height: 1rem;
+}
+
+.community-route__trending-unavailable {
+  flex: 0 0 auto;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-12, 0.75rem);
 }
 
 .community-route__reply-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
 }
 
 .community-route__reply-item {
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
+  border-top: 1px solid var(--community-muted-line);
+  padding: var(--space-3) 0;
 }
 
 .community-route__reply-avatar {
@@ -691,6 +917,8 @@ function getTopicIcon(slug: string): Component {
   display: flex;
   flex-direction: column;
   gap: calc(var(--space-1) / 2);
+  min-width: 0;
+  flex: 1;
 }
 
 .community-route__reply-header {
@@ -701,18 +929,23 @@ function getTopicIcon(slug: string): Component {
 }
 
 .community-route__reply-author {
-  font-size: var(--font-size-14);
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--font-size-13, 0.8125rem);
   font-weight: var(--font-weight-h3);
-  color: var(--color-text-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .community-route__reply-time {
-  font-size: var(--font-size-12);
+  flex: 0 0 auto;
+  font-size: var(--font-size-12, 0.75rem);
   color: var(--color-text-soft);
 }
 
 .community-route__reply-title {
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-13, 0.8125rem);
   color: var(--color-text-soft);
   text-decoration: none;
   line-height: 1.4;
@@ -732,7 +965,10 @@ function getTopicIcon(slug: string): Component {
   align-items: center;
   justify-content: center;
   gap: var(--space-4);
+  min-height: 11rem;
   padding: var(--space-8);
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-5);
   color: var(--color-text-soft);
   text-align: center;
   border: 1px dashed var(--color-border);
@@ -744,9 +980,21 @@ function getTopicIcon(slug: string): Component {
   border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
 }
 
-@media (max-width: 1024px) {
+.community-route__sr-only {
+  position: absolute;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  padding: 0;
+  margin: -0.0625rem;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1180px) {
   .community-route__layout {
-    grid-template-columns: 13.75rem minmax(0, 1fr);
+    grid-template-columns: minmax(12.5rem, 15rem) minmax(0, 1fr);
   }
 
   .community-route__extra {
@@ -754,12 +1002,69 @@ function getTopicIcon(slug: string): Component {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 820px) {
+  .community-route {
+    padding: var(--space-4);
+  }
+
   .community-route__layout {
     grid-template-columns: 1fr;
   }
+
   .community-route__sidebar {
     position: static;
+    min-height: auto;
+  }
+
+  .community-route__main-header {
+    flex-direction: column;
+  }
+
+  .community-route__tabs {
+    width: auto;
+  }
+
+  .community-route__tab {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .community-route {
+    padding: var(--space-3);
+  }
+
+  .community-route__sidebar,
+  .community-route__extra-section {
+    padding: var(--space-4);
+  }
+
+  .community-route__main-header,
+  .community-route__tabs,
+  .community-route__data-note,
+  .community-route__feed,
+  .community-route__state {
+    margin-inline: var(--space-2);
+  }
+
+  .community-route__post-card {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .community-route__post-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .community-route__post-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .community-route__post-stats {
+    margin-left: 0;
   }
 }
 </style>
