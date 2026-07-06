@@ -173,6 +173,14 @@ describe("ArticleComments", () => {
     expect(wrapper.text()).not.toContain("关注讨论");
   });
 
+  it("keeps dock comments in document flow instead of overlaying article body", () => {
+    expect(articleCommentsSource).toContain(".article-comments--dock {");
+    expect(articleCommentsSource).toContain("margin-top: var(--space-8);");
+    expect(articleCommentsSource).toContain("padding: var(--space-5) 0 0;");
+    expect(articleCommentsSource).not.toContain("position: absolute;");
+    expect(articleCommentsSource).not.toContain("backdrop-filter: blur(18px);");
+  });
+
   it("keeps the readable comment thread in dock mode", () => {
     const wrapper = mountArticleComments({
       variant: "dock",

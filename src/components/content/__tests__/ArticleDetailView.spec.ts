@@ -25,11 +25,26 @@ describe("ArticleDetailView", () => {
       ':aria-label="`阅读进度 ${progressPercent}%`"',
     );
     expect(articleDetailViewSource).toContain(
-      ":style=\"{ '--article-progress': `${progressPercent}%` }\"",
+      "'--article-progress': `${progressPercent}%`",
+    );
+    expect(articleDetailViewSource).toContain(
+      "'--article-progress-scale': tocProgressScale",
     );
     expect(articleDetailViewSource).toContain("useArticleReadingProgress");
+    expect(articleDetailViewSource).toContain("tocProgressScale");
     expect(articleDetailViewSource).not.toContain(
       "--article-progress': `${detail.progressPercent}%",
+    );
+  });
+
+  it("scales desktop toc progress within the track height", () => {
+    expect(articleDetailViewSource).toContain("bottom: 0.5rem;");
+    expect(articleDetailViewSource).toContain(
+      "transform: scaleY(var(--article-progress-scale, 0));",
+    );
+    expect(articleDetailViewSource).toContain("transform-origin: top;");
+    expect(articleDetailViewSource).not.toContain(
+      "height: var(--article-progress);",
     );
   });
 

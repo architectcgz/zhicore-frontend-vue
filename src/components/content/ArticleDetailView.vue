@@ -4,7 +4,10 @@
       <h2>本文导航</h2>
       <div
         class="article-detail__toc-list"
-        :style="{ '--article-progress': `${progressPercent}%` }"
+        :style="{
+          '--article-progress': `${progressPercent}%`,
+          '--article-progress-scale': tocProgressScale,
+        }"
       >
         <div
           class="article-detail__progress"
@@ -239,11 +242,12 @@ const initialActiveHeadingHref =
   )?.href ??
   props.detail.tocItems[0]?.href ??
   "";
-const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
-  articleRef,
-  props.detail.progressPercent,
-  initialActiveHeadingHref,
-);
+const { activeHeadingHref, progressPercent, tocProgressScale } =
+  useArticleReadingProgress(
+    articleRef,
+    props.detail.progressPercent,
+    initialActiveHeadingHref,
+  );
 </script>
 
 <style scoped>
@@ -310,10 +314,12 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   position: absolute;
   left: 0.25rem;
   top: 0.5rem;
+  bottom: 0.5rem;
   width: 0.125rem;
-  height: var(--article-progress);
   background: var(--color-accent);
   border-radius: var(--radius-pill);
+  transform: scaleY(var(--article-progress-scale, 0));
+  transform-origin: top;
   z-index: 1;
 }
 
@@ -357,7 +363,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   position: relative;
   min-height: min(44rem, calc(100vh - 8rem));
   overflow: hidden;
-  padding: var(--space-6) var(--space-8) calc(var(--space-12) + var(--space-5));
+  padding: var(--space-6) var(--space-8) var(--space-8);
   border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
   border-radius: var(--radius-lg);
   background:

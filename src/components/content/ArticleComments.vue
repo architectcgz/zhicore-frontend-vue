@@ -265,15 +265,11 @@ function handleDockInput(event: Event): void {
 }
 
 .article-comments--dock {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  margin-top: 0;
-  padding: var(--space-3) var(--space-6);
+  margin-top: var(--space-8);
+  padding: var(--space-5) 0 0;
   border-top: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
-  backdrop-filter: blur(18px);
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .article-comments__head,

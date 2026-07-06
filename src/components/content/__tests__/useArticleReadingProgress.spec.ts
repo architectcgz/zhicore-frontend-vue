@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  calculateActiveHeadingHref,
+  calculateTocActiveHeadingHref,
   calculateReadingProgress,
 } from "../useArticleReadingProgress";
 
@@ -63,30 +63,38 @@ describe("calculateReadingProgress", () => {
   });
 });
 
-describe("calculateActiveHeadingHref", () => {
+describe("calculateTocActiveHeadingHref", () => {
   const headings = [
     { href: "#heading-1", top: 260 },
     { href: "#heading-2", top: 640 },
     { href: "#heading-3", top: 960 },
+    { href: "#heading-4", top: 1280 },
   ];
 
-  it("uses the first heading before the article section is reached", () => {
+  it("activates the node crossed by the visual progress line", () => {
     expect(
-      calculateActiveHeadingHref({
+      calculateTocActiveHeadingHref({
         headings,
-        scrollY: 0,
-        topOffset: 96,
-      }),
-    ).toBe("#heading-1");
-  });
-
-  it("uses the latest heading that has passed the reading offset", () => {
-    expect(
-      calculateActiveHeadingHref({
-        headings,
-        scrollY: 560,
-        topOffset: 96,
+        progressScale: 0.34,
       }),
     ).toBe("#heading-2");
+  });
+
+  it("does not jump from the second node directly to the last node", () => {
+    expect(
+      calculateTocActiveHeadingHref({
+        headings,
+        progressScale: 0.72,
+      }),
+    ).toBe("#heading-3");
+  });
+
+  it("activates the last node only when the visual progress reaches the end", () => {
+    expect(
+      calculateTocActiveHeadingHref({
+        headings,
+        progressScale: 1,
+      }),
+    ).toBe("#heading-4");
   });
 });

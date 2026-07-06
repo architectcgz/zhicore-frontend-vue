@@ -16,14 +16,17 @@ export interface ReadingHeadingPosition {
   top: number;
 }
 
-export interface ActiveHeadingInput {
+export interface TocActiveHeadingInput {
   headings: readonly ReadingHeadingPosition[];
-  scrollY: number;
-  topOffset: number;
+  progressScale: number;
 }
 
 function clampPercent(value: number): number {
   return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function clampScale(value: number): number {
+  return Math.min(1, Math.max(0, value));
 }
 
 export function calculateReadingProgress(input: ReadingProgressInput): number {
@@ -46,23 +49,24 @@ export function calculateReadingProgress(input: ReadingProgressInput): number {
   return clampPercent(((input.scrollY - start) / (end - start)) * 100);
 }
 
-export function calculateActiveHeadingHref(input: ActiveHeadingInput): string {
+export function calculateTocActiveHeadingHref(
+  input: TocActiveHeadingInput,
+): string {
   if (input.headings.length === 0) {
     return "";
   }
 
-  const readingLine = input.scrollY + input.topOffset;
-  let activeHeading = input.headings[0];
-
-  for (const heading of input.headings) {
-    if (heading.top > readingLine) {
-      break;
-    }
-
-    activeHeading = heading;
+  if (input.headings.length === 1) {
+    return input.headings[0].href;
   }
 
-  return activeHeading.href;
+  const lastHeadingIndex = input.headings.length - 1;
+  const activeIndex = Math.min(
+    lastHeadingIndex,
+    Math.floor(clampScale(input.progressScale) * lastHeadingIndex),
+  );
+
+  return input.headings[activeIndex].href;
 }
 
 function collectHeadingPositions(
@@ -82,6 +86,7 @@ export function useArticleReadingProgress(
   initialActiveHeadingHref = "",
 ) {
   const progressPercent = ref(clampPercent(initialProgress));
+  const tocProgressScale = ref(clampPercent(initialProgress) / 100);
   const activeHeadingHref = ref(initialActiveHeadingHref);
   let frameId: number | null = null;
 
@@ -94,18 +99,23 @@ export function useArticleReadingProgress(
 
     const rect = article.getBoundingClientRect();
 
-    progressPercent.value = calculateReadingProgress({
+    const headings = collectHeadingPositions(article);
+
+    const measuredProgressPercent = calculateReadingProgress({
       articleTop: rect.top + window.scrollY,
       articleHeight: article.scrollHeight,
       viewportHeight: window.innerHeight,
       scrollY: window.scrollY,
       topOffset: readingProgressTopOffset,
     });
-    activeHeadingHref.value = calculateActiveHeadingHref({
-      headings: collectHeadingPositions(article),
-      scrollY: window.scrollY,
-      topOffset: readingProgressTopOffset,
+    const measuredTocProgressScale = clampScale(measuredProgressPercent / 100);
+
+    progressPercent.value = measuredProgressPercent;
+    activeHeadingHref.value = calculateTocActiveHeadingHref({
+      headings,
+      progressScale: measuredTocProgressScale,
     });
+    tocProgressScale.value = measuredTocProgressScale;
   }
 
   function scheduleMeasure(): void {
@@ -133,5 +143,6 @@ export function useArticleReadingProgress(
   return {
     activeHeadingHref,
     progressPercent,
+    tocProgressScale,
   };
 }
