@@ -13,6 +13,8 @@ function mountArticleComments(
     submitError?: string;
     commentsState?: "idle" | "loading" | "ready" | "error";
     commentsError?: string;
+    variant?: "full" | "dock";
+    comments?: ArticleComment[];
   } = {},
 ) {
   return mount(ArticleComments, {
@@ -22,11 +24,12 @@ function mountArticleComments(
       sortTabs: ["最有价值", "最新"],
       activeSort: "最有价值",
       draftBody: options.draftBody ?? "评论草稿",
-      comments: [] satisfies ArticleComment[],
+      comments: options.comments ?? ([] satisfies ArticleComment[]),
       submittingComment: options.submitting ?? false,
       commentSubmitError: options.submitError ?? "",
       commentsState: options.commentsState ?? "ready",
       commentsError: options.commentsError ?? "",
+      variant: options.variant ?? "full",
     },
     global: {
       stubs: {
@@ -149,6 +152,46 @@ describe("ArticleComments", () => {
     await wrapper.get('[data-testid="comment-submit"]').trigger("click");
 
     expect(wrapper.emitted("submitComment")).toHaveLength(1);
+  });
+
+  it("keeps the dock composer wired to the same draft and submit events", async () => {
+    const wrapper = mountArticleComments({
+      draftBody: "已有草稿",
+      variant: "dock",
+    });
+
+    const input = wrapper.get<HTMLInputElement>(
+      ".article-comments__dock-input",
+    );
+    expect(input.element.value).toBe("已有草稿");
+
+    await input.setValue("更新后的草稿");
+    await wrapper.get('[data-testid="comment-submit"]').trigger("click");
+
+    expect(wrapper.emitted("update:draftBody")).toEqual([["更新后的草稿"]]);
+    expect(wrapper.emitted("submitComment")).toHaveLength(1);
+    expect(wrapper.text()).not.toContain("关注讨论");
+  });
+
+  it("keeps the readable comment thread in dock mode", () => {
+    const wrapper = mountArticleComments({
+      variant: "dock",
+      comments: [
+        {
+          id: "comment-1",
+          author: "Alice",
+          role: "作者",
+          initial: "A",
+          body: "桌面详情页仍应展示评论内容。",
+          likes: 3,
+          time: "刚刚",
+          replies: [],
+        },
+      ],
+    });
+
+    expect(wrapper.text()).toContain("桌面详情页仍应展示评论内容。");
+    expect(wrapper.text()).toContain("最有价值");
   });
 
   it("disables duplicate comment submit while submitting", async () => {

@@ -51,6 +51,13 @@ describe("ArticleDetailView", () => {
     expect(articleDetailViewSource).not.toContain("@/api/post");
   });
 
+  it("uses the dock comment composer inside the desktop reading card", () => {
+    expect(articleDetailViewSource).toContain(
+      '<div class="article-detail__reading-card">',
+    );
+    expect(articleDetailViewSource).toContain('variant="dock"');
+  });
+
   it("links related posts with real post ids instead of placeholder anchors", () => {
     expect(articleDetailViewSource).toContain(
       'v-for="item in detail.relatedPosts"',

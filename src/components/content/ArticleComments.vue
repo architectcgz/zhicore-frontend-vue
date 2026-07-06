@@ -1,10 +1,11 @@
 <template>
   <section
     id="comments"
-    class="article-comments"
-    aria-labelledby="comments-title"
+    :class="['article-comments', `article-comments--${variant}`]"
+    :aria-labelledby="variant === 'full' ? 'comments-title' : undefined"
+    :aria-label="variant === 'dock' ? title : undefined"
   >
-    <div class="article-comments__head">
+    <div v-if="variant === 'full'" class="article-comments__head">
       <h2 id="comments-title">
         <span>{{ title }}</span>
         <span class="article-comments__count">{{ countLabel }}</span>
@@ -23,11 +24,17 @@
           {{ sort }}
         </button>
       </div>
-      <button class="article-comments__follow" type="button">关注讨论</button>
+      <button
+        v-if="variant === 'full'"
+        class="article-comments__follow"
+        type="button"
+      >
+        关注讨论
+      </button>
     </div>
 
     <div
-      v-if="commentsState === 'error'"
+      v-if="variant === 'full' && commentsState === 'error'"
       class="article-comments__load-error"
       data-testid="comments-load-error"
       role="alert"
@@ -42,7 +49,7 @@
       </button>
     </div>
 
-    <div class="article-comments__composer">
+    <div v-if="variant === 'full'" class="article-comments__composer">
       <span class="article-comments__avatar">我</span>
       <div>
         <EditorCompactBodyComposer
@@ -76,6 +83,54 @@
         </p>
       </div>
     </div>
+
+    <template v-else>
+      <div
+        v-if="commentsState === 'error'"
+        class="article-comments__load-error article-comments__load-error--dock"
+        data-testid="comments-load-error"
+        role="alert"
+      >
+        <span>{{ commentsError || "评论加载失败" }}</span>
+        <button
+          type="button"
+          data-testid="comments-retry"
+          @click="$emit('retryComments')"
+        >
+          重试
+        </button>
+      </div>
+
+      <div class="article-comments__dock-composer">
+        <span class="article-comments__avatar">我</span>
+        <input
+          class="article-comments__dock-input"
+          type="text"
+          :value="draftBody"
+          :maxlength="commentDraftMaxLength"
+          aria-label="评论编辑器"
+          placeholder="Join the conversation..."
+          @input="handleDockInput"
+        />
+        <button
+          class="article-comments__primary article-comments__dock-submit"
+          type="button"
+          data-testid="comment-submit"
+          :disabled="submittingComment"
+          @click="$emit('submitComment')"
+        >
+          {{ submittingComment ? "Posting" : "Post Comment" }}
+        </button>
+      </div>
+      <p
+        v-if="commentSubmitError"
+        class="article-comments__submit-error article-comments__submit-error--dock"
+        data-testid="comment-submit-error"
+        role="alert"
+      >
+        {{ commentSubmitError }}
+      </p>
+    </template>
 
     <div class="article-comments__thread">
       <article
@@ -164,18 +219,24 @@ import type { ArticleComment } from "@/features/content-detail";
 
 const commentDraftMaxLength = 1000;
 
-defineProps<{
-  title: string;
-  countLabel: string;
-  sortTabs: readonly string[];
-  activeSort: string;
-  draftBody: string;
-  comments: readonly ArticleComment[];
-  submittingComment: boolean;
-  commentSubmitError: string;
-  commentsState: "idle" | "loading" | "ready" | "error";
-  commentsError: string;
-}>();
+withDefaults(
+  defineProps<{
+    title: string;
+    countLabel: string;
+    sortTabs: readonly string[];
+    activeSort: string;
+    draftBody: string;
+    comments: readonly ArticleComment[];
+    submittingComment: boolean;
+    commentSubmitError: string;
+    commentsState: "idle" | "loading" | "ready" | "error";
+    commentsError: string;
+    variant?: "full" | "dock";
+  }>(),
+  {
+    variant: "full",
+  },
+);
 
 const emit = defineEmits<{
   selectSort: [sort: string];
@@ -183,6 +244,10 @@ const emit = defineEmits<{
   submitComment: [];
   retryComments: [];
 }>();
+
+function handleDockInput(event: Event): void {
+  emit("update:draftBody", (event.target as HTMLInputElement).value);
+}
 </script>
 
 <style scoped>
@@ -197,6 +262,18 @@ const emit = defineEmits<{
   margin-top: var(--space-8);
   padding-top: var(--space-6);
   border-top: 1px solid var(--color-border);
+}
+
+.article-comments--dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin-top: 0;
+  padding: var(--space-3) var(--space-6);
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+  backdrop-filter: blur(18px);
 }
 
 .article-comments__head,
@@ -329,7 +406,8 @@ const emit = defineEmits<{
 }
 
 .article-comments__tabs button[aria-selected="true"],
-.article-comments__submit .article-comments__primary {
+.article-comments__submit .article-comments__primary,
+.article-comments__dock-submit {
   background: var(--color-accent);
   color: #fff;
 }
@@ -340,6 +418,65 @@ const emit = defineEmits<{
   gap: var(--space-3);
   padding: var(--space-1) 0 var(--space-5);
   border-bottom: 1px solid var(--color-border);
+}
+
+.article-comments__dock-composer {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) max-content;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.article-comments--dock .article-comments__avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.75rem;
+}
+
+.article-comments__dock-submit {
+  min-height: 2.25rem;
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 750;
+}
+
+.article-comments__dock-input {
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-bg-hover) 68%, transparent);
+  color: var(--color-text-strong);
+  outline: 0;
+}
+
+.article-comments__dock-input::placeholder {
+  color: var(--color-text-soft);
+}
+
+.article-comments__dock-input:focus {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 72%,
+    var(--color-border)
+  );
+}
+
+.article-comments__dock-submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.article-comments__load-error--dock {
+  margin: 0 0 var(--space-2);
+}
+
+.article-comments__submit-error--dock {
+  margin-left: calc(1.75rem + var(--space-3));
 }
 
 .article-comments__composer-actions {
@@ -452,6 +589,21 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 640px) {
+  .article-comments--dock {
+    position: static;
+    padding: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .article-comments__dock-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .article-comments__submit-error--dock {
+    margin-left: 0;
+  }
+
   .article-comments__composer {
     grid-template-columns: 1fr;
   }

@@ -26,67 +26,68 @@
     </aside>
 
     <article ref="articleRef" class="article-detail__content">
-      <p class="article-detail__eyebrow">{{ detail.eyebrow }}</p>
-      <h1>{{ detail.title }}</h1>
-      <div class="article-detail__meta">
-        <span class="article-detail__avatar">{{ detail.authorInitial }}</span>
-        <div>
-          <p>{{ detail.authorMeta }}</p>
-          <div class="article-detail__status-row">
-            <span
-              v-for="status in detail.statuses"
-              :key="status.label"
-              class="article-detail__status"
-              :class="`article-detail__status--${status.tone}`"
-            >
-              {{ status.label }}
-            </span>
+      <div class="article-detail__reading-card">
+        <p class="article-detail__eyebrow">{{ detail.eyebrow }}</p>
+        <h1>{{ detail.title }}</h1>
+        <div class="article-detail__meta">
+          <span class="article-detail__avatar">{{ detail.authorInitial }}</span>
+          <div>
+            <p>{{ detail.authorMeta }}</p>
+            <div class="article-detail__status-row">
+              <span
+                v-for="status in detail.statuses"
+                :key="status.label"
+                class="article-detail__status"
+                :class="`article-detail__status--${status.tone}`"
+              >
+                {{ status.label }}
+              </span>
+            </div>
           </div>
         </div>
+
+        <div class="article-detail__body reading-typography">
+          <template v-for="(block, index) in detail.bodyBlocks" :key="index">
+            <h2
+              v-if="block.kind === 'heading'"
+              :id="block.id"
+              class="article-detail__body-heading reading-typography__heading"
+            >
+              {{ block.text }}
+            </h2>
+            <p
+              v-else-if="block.kind === 'paragraph'"
+              class="article-detail__body-paragraph reading-typography__paragraph"
+            >
+              {{ block.text }}
+            </p>
+            <blockquote
+              v-else
+              class="article-detail__body-quote reading-typography__quote"
+            >
+              {{ block.text }}
+            </blockquote>
+          </template>
+        </div>
+
+        <ArticleComments
+          variant="dock"
+          :comments="detail.comments"
+          :count-label="detail.commentsTotalLabel"
+          :title="detail.commentsTitle"
+          :sort-tabs="detail.commentSortTabs"
+          :active-sort="activeCommentSort"
+          :draft-body="commentDraftBody"
+          :submitting-comment="submittingComment"
+          :comment-submit-error="commentSubmitError"
+          :comments-state="commentsState"
+          :comments-error="commentsError"
+          @select-sort="$emit('selectCommentSort', $event)"
+          @update:draft-body="$emit('update:commentDraftBody', $event)"
+          @submit-comment="$emit('submitComment')"
+          @retry-comments="$emit('retryComments')"
+        />
       </div>
-
-      <div class="article-detail__cover" aria-hidden="true" />
-
-      <div class="article-detail__body reading-typography">
-        <template v-for="(block, index) in detail.bodyBlocks" :key="index">
-          <h2
-            v-if="block.kind === 'heading'"
-            :id="block.id"
-            class="article-detail__body-heading reading-typography__heading"
-          >
-            {{ block.text }}
-          </h2>
-          <p
-            v-else-if="block.kind === 'paragraph'"
-            class="article-detail__body-paragraph reading-typography__paragraph"
-          >
-            {{ block.text }}
-          </p>
-          <blockquote
-            v-else
-            class="article-detail__body-quote reading-typography__quote"
-          >
-            {{ block.text }}
-          </blockquote>
-        </template>
-      </div>
-
-      <ArticleComments
-        :comments="detail.comments"
-        :count-label="detail.commentsTotalLabel"
-        :title="detail.commentsTitle"
-        :sort-tabs="detail.commentSortTabs"
-        :active-sort="activeCommentSort"
-        :draft-body="commentDraftBody"
-        :submitting-comment="submittingComment"
-        :comment-submit-error="commentSubmitError"
-        :comments-state="commentsState"
-        :comments-error="commentsError"
-        @select-sort="$emit('selectCommentSort', $event)"
-        @update:draft-body="$emit('update:commentDraftBody', $event)"
-        @submit-comment="$emit('submitComment')"
-        @retry-comments="$emit('retryComments')"
-      />
 
       <div class="article-detail__related-section">
         <div class="article-detail__related-header">
@@ -248,20 +249,25 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 <style scoped>
 .article-detail {
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr) 11rem;
-  gap: var(--space-8);
-  max-width: 75rem;
+  grid-template-columns: minmax(12rem, 14rem) minmax(0, 52rem) minmax(
+      10rem,
+      12rem
+    );
+  gap: var(--space-10);
+  max-width: 92rem;
   margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-12);
 }
 
 .article-detail__toc,
 .article-detail__rail {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
+  background: color-mix(in srgb, var(--color-bg-elevated) 58%, transparent);
   box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(20px);
   align-self: start;
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-6);
 }
 
 .article-detail__toc {
@@ -285,7 +291,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
   padding-left: var(--space-4);
 }
 
@@ -344,8 +350,25 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 .article-detail__content {
-  padding: var(--space-2) 0 0;
   min-width: 0;
+}
+
+.article-detail__reading-card {
+  position: relative;
+  min-height: min(44rem, calc(100vh - 8rem));
+  overflow: hidden;
+  padding: var(--space-6) var(--space-8) calc(var(--space-12) + var(--space-5));
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-elevated) 66%, transparent),
+      color-mix(in srgb, var(--color-bg-reading) 80%, transparent)
+    ),
+    var(--color-bg-reading);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(24px);
 }
 
 .article-detail__eyebrow {
@@ -359,8 +382,8 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   max-width: 48.75rem;
   margin: 0;
   color: var(--color-text-strong);
-  font-size: 2.25rem;
-  line-height: 1.2;
+  font-size: 2rem;
+  line-height: 1.18;
   letter-spacing: 0;
 }
 
@@ -368,7 +391,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin: var(--space-5) 0 var(--space-6);
+  margin: var(--space-4) 0 var(--space-5);
   padding-bottom: var(--space-5);
   border-bottom: 1px solid var(--color-border);
 }
@@ -382,12 +405,13 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 
 .article-detail__avatar {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
   place-items: center;
   border-radius: var(--radius-pill);
   background: var(--color-text-strong);
   color: var(--color-bg-elevated);
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -400,10 +424,10 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 .article-detail__status {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: transparent;
+  background: color-mix(in srgb, var(--color-bg-hover) 72%, transparent);
   color: var(--color-text-soft);
   font-size: 0.75rem;
   font-weight: 500;
@@ -417,30 +441,16 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   color: var(--color-warning);
 }
 
-.article-detail__cover {
-  min-height: 16.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-primary) 18%, transparent),
-      transparent 62%
-    ),
-    linear-gradient(
-      45deg,
-      transparent 0 44%,
-      color-mix(in srgb, var(--color-accent) 30%, transparent) 45% 50%,
-      transparent 51%
-    ),
-    var(--color-bg-hover);
-}
-
 .article-detail__body {
-  min-height: 28.75rem;
-  margin-top: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border);
+  --reading-text: color-mix(
+    in srgb,
+    var(--color-text) 84%,
+    var(--color-text-soft)
+  );
+  --font-size-reading-body: 0.9375rem;
+  --font-size-reading-heading: 1.25rem;
+
+  max-width: 43rem;
   color: var(--color-text);
 }
 
@@ -459,7 +469,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 
 .article-detail__actions {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-8);
 }
 
 .article-detail__action-btn {
@@ -479,7 +489,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  color: var(--color-text-soft);
+  color: var(--color-accent);
 }
 
 .article-detail__action-icon svg {
@@ -528,9 +538,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 .article-detail__related-section {
-  margin-top: var(--space-8);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-6);
 }
 
 .article-detail__related-header {
@@ -562,7 +570,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 .article-detail__related-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .article-detail__related-card {
@@ -573,7 +581,8 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
+  background: color-mix(in srgb, var(--color-bg-elevated) 64%, transparent);
+  backdrop-filter: blur(16px);
   text-decoration: none;
   transition: border-color 0.2s;
 }
@@ -621,6 +630,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 @media (max-width: 64rem) {
   .article-detail {
     grid-template-columns: 1fr;
+    padding: var(--space-6) var(--space-4) var(--space-10);
   }
 
   .article-detail__toc,
