@@ -34,6 +34,30 @@ describe("api boundary", () => {
 
     expect(violations).toEqual([]);
   });
+
+  it("keeps local mock API fixtures owned by the API adapter layer", () => {
+    const srcRoot = resolve(process.cwd(), "src");
+    const apiRoot = normalize(join(srcRoot, "api"));
+    const mockApiRoot = normalize(join(apiRoot, "mock"));
+    const violations: string[] = [];
+
+    for (const filePath of collectSourceFiles(srcRoot)) {
+      if (isInsidePath(filePath, apiRoot)) {
+        continue;
+      }
+
+      const source = readFileSync(filePath, "utf8");
+      for (const specifier of importSpecifiers(source)) {
+        if (isApiMockImport(specifier, filePath, mockApiRoot)) {
+          violations.push(
+            `${relativeToSrc(filePath, srcRoot)} -> ${specifier}`,
+          );
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
 });
 
 function collectSourceFiles(root: string): string[] {
@@ -70,6 +94,31 @@ function isProviderApiImport(
 
   const resolved = normalize(resolve(dirname(fromFile), specifier));
   return resolved === apiRoot || resolved.startsWith(`${apiRoot}/`);
+}
+
+function isApiMockImport(
+  specifier: string,
+  fromFile: string,
+  mockApiRoot: string,
+): boolean {
+  if (specifier === "@/api/mock" || specifier.startsWith("@/api/mock/")) {
+    return true;
+  }
+  if (!specifier.startsWith(".")) {
+    return false;
+  }
+
+  const resolved = normalize(resolve(dirname(fromFile), specifier));
+  return resolved === mockApiRoot || resolved.startsWith(`${mockApiRoot}/`);
+}
+
+function isInsidePath(filePath: string, root: string): boolean {
+  const normalizedFilePath = normalize(filePath);
+  const normalizedRoot = normalize(root);
+  return (
+    normalizedFilePath === normalizedRoot ||
+    normalizedFilePath.startsWith(`${normalizedRoot}/`)
+  );
 }
 
 function relativeToSrc(filePath: string, srcRoot: string): string {

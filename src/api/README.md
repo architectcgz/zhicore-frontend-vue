@@ -19,6 +19,14 @@
 - 只有 endpoint 明确只服务单一 feature 且不会被其他 feature 复用时，才放到 `src/features/<feature>/api/`。
 - 页面、布局和组件不直接 import 本目录；业务请求必须从 `src/features/*` 进入。
 
+## 本地 Mock API
+
+- 本地 mock 只在 API adapter 层接入，fixture 放在 `src/api/mock/` 或 adapter 私有范围。
+- mock 返回值必须使用真实 `Req` / `Resp` DTO 类型，模拟后端 API 返回，而不是模拟 feature view model。
+- feature、page、component 不新增 mock 开关，也不 import `src/api/mock/**`；它们继续调用正常 API 函数。
+- 切换到真实 API 时，只允许改 adapter、fixture 或环境变量，不改页面和 feature 工作流。
+- 新增 mock adapter 时，在 `src/api/__tests__` 验证 mock 模式下不调用 Axios，真实模式下仍验证 URL / 参数 / 解包。
+
 ## 示例
 
 ```ts

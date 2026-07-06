@@ -49,6 +49,7 @@ pnpm format           # Prettier 格式化
 - 所有新页面使用 `<script setup lang="ts">` + Composition API
 - Props / Emits 使用 `defineProps<Props>()` / `defineEmits<Emits>()` 类型声明
 - 服务端数据由 feature workflow 发起；feature 可调用 `src/api` 中的 provider HTTP adapter，页面、布局和组件不直接调用 `src/api`
+- 本地 mock API 必须在 `src/api` adapter 层实现，mock 返回值必须使用真实 `Req` / `Resp` DTO 类型；页面、组件、feature workflow 不添加 mock 开关、不 import `src/api/mock`，后续切真实 API 只能改 adapter / 环境开关。
 - 路由按命名空间拆分（`src/router/routes/*Routes.ts`），新增路由模块后在 `src/router/index.ts` 注册
 - 前端 route page、feature workflow、Pinia、API、组件、测试与 runtime 边界遵循 `docs/architecture/frontend-engineering-guidelines.md`
 - CSS owner、命名、token、响应式与组件样式 contract 遵循 `docs/design/css-style-guide.md`
@@ -101,7 +102,7 @@ pnpm format           # Prettier 格式化
 ## 架构边界
 
 - `src/entities/`：稳定业务对象类型，纯函数，不依赖 Vue / API / store
-- `src/api/`：后端 provider 的 HTTP adapter 和可复用 `Req` / `Resp` owner；只做 URL、请求参数、envelope 解包和边界归一化，不做页面流程
+- `src/api/`：后端 provider 的 HTTP adapter 和可复用 `Req` / `Resp` owner；只做 URL、请求参数、envelope 解包、边界归一化和 API 层本地 mock，不做页面流程
 - `src/features/`：业务流程 owner，可调 API 和 store；feature 内用 `composables/`、`lib/`、`config/`、明确第三方适配目录和 `ui/` 区分职责，不使用泛化的 `model/` 桶；仅当 endpoint 明确只服务单一 feature 且不会复用时，才允许放入 `features/<feature>/api/`
 - `src/components/`：UI 渲染，通过 props/emits 收发数据，不做业务决策
 - `src/pages/`：route composition surface，装配 components + features + layouts

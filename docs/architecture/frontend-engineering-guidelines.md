@@ -169,6 +169,17 @@ store 约束：
 - 上传类接口在 API 边界构造 `FormData`。
 - 对页面更好处理的缺失语义，可以在 API 边界转为 `null`，不要让页面到处 try/catch。
 
+### 本地 Mock API 规范
+
+本地 mock 的目标是模拟后端 API 返回，不是让页面或 feature 进入另一套执行路径。新增或调整本地 mock 时遵守：
+
+- mock fixture 归 `src/api/mock/` 或对应 API adapter 内部所有，返回值类型必须直接使用真实 `Req` / `Resp` DTO，例如 `ListPostsResp`、`PostDetailResp`、`TopLevelCommentPageResp`。
+- `isLocalDemoModeEnabled()` 之类环境开关只允许在 API adapter 或 runtime/session 边界使用；页面、组件、feature workflow 不新增 `localDemoEnabled`、`useMock`、`demo` 等业务分支。
+- feature workflow 始终调用正常 API 函数，例如 `listPosts()`、`getPostDetail()`、`listCommentsPage()`；从 mock 切到真实后端时，只能修改 adapter、fixture 或环境变量，不改页面/feature 逻辑。
+- API 层 mock 要覆盖读取接口和本地可交互所需的命令接口，命令返回也必须是 API DTO，不直接修改 feature 的 view model。
+- 每个 API 层 mock 必须有 `src/api/__tests__` 覆盖：mock 模式下返回 API-shaped DTO，且不会调用 `getAxiosInstance()`；真实模式下仍验证 URL、参数和响应解包。
+- 禁止从 `src/pages/**`、`src/components/**`、`src/features/**` 或 `src/stores/**` import `src/api/mock/**`。若需要测试 feature 行为，用 Vitest mock 正常 API 函数，而不是引入生产 mock fixture。
+
 归属规则：
 
 - `src/api/<provider>.ts` 表示后端 provider 的稳定 HTTP adapter，例如 Content/Post、Auth、User、File、Comment、Ranking。它不是某个页面或 feature 的私有实现。
