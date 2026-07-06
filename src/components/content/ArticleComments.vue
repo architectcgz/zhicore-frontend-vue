@@ -1,5 +1,6 @@
 <template>
   <section
+    ref="commentsRootRef"
     id="comments"
     :class="['article-comments', `article-comments--${variant}`]"
     :aria-labelledby="variant === 'full' ? 'comments-title' : undefined"
@@ -57,6 +58,7 @@
           :max-length="commentDraftMaxLength"
           aria-label="评论编辑器"
           input-label="写下评论"
+          :toolbar-actions="dockCommentToolbarActions"
           @update:model-value="emit('update:draftBody', $event)"
         />
         <div class="article-comments__composer-actions">
@@ -101,26 +103,55 @@
         </button>
       </div>
 
-      <div class="article-comments__dock-composer">
+      <div v-if="!isDockComposerOpen" class="article-comments__dock-composer">
         <span class="article-comments__avatar">我</span>
-        <input
-          class="article-comments__dock-input"
-          type="text"
-          :value="draftBody"
-          :maxlength="commentDraftMaxLength"
-          aria-label="评论编辑器"
-          placeholder="Join the conversation..."
-          @input="handleDockInput"
-        />
         <button
-          class="article-comments__primary article-comments__dock-submit"
+          class="article-comments__dock-trigger"
           type="button"
-          data-testid="comment-submit"
-          :disabled="submittingComment"
-          @click="$emit('submitComment')"
+          data-testid="dock-comment-expand"
+          aria-label="展开评论编辑器"
+          @click="expandDockComposer"
         >
-          {{ submittingComment ? "Posting" : "Post Comment" }}
+          <span>{{ hasDockDraft ? "继续编辑评论" : "写下评论" }}</span>
+          <span v-if="hasDockDraft" class="article-comments__dock-trigger-hint">
+            草稿已保留
+          </span>
         </button>
+      </div>
+
+      <div
+        v-else
+        class="article-comments__dock-composer article-comments__dock-composer--expanded"
+      >
+        <span class="article-comments__avatar">我</span>
+        <div class="article-comments__dock-editor">
+          <EditorCompactBodyComposer
+            :model-value="draftBody"
+            :max-length="commentDraftMaxLength"
+            aria-label="评论编辑器"
+            input-label="写下评论"
+            :toolbar-actions="dockCommentToolbarActions"
+            @update:model-value="emit('update:draftBody', $event)"
+          />
+        </div>
+        <div class="article-comments__dock-actions">
+          <span
+            v-if="hasDockDraft"
+            class="article-comments__draft-state"
+            aria-live="polite"
+          >
+            草稿已保留
+          </span>
+          <button
+            class="article-comments__primary article-comments__dock-submit"
+            type="button"
+            data-testid="comment-submit"
+            :disabled="submittingComment"
+            @click="$emit('submitComment')"
+          >
+            {{ submittingComment ? "发布中" : "发布评论" }}
+          </button>
+        </div>
       </div>
       <p
         v-if="commentSubmitError"
@@ -152,7 +183,11 @@
               <Heart class="article-comments__action-icon" aria-hidden="true" />
               {{ comment.likes }}
             </button>
-            <button type="button">
+            <button
+              type="button"
+              :data-testid="`comment-reply-${comment.id}`"
+              @click="toggleReplyEditor(comment.id)"
+            >
               <MessageCircle
                 class="article-comments__action-icon"
                 aria-hidden="true"
@@ -165,6 +200,30 @@
             </button>
             <span class="article-comments__time">{{ comment.time }}</span>
           </div>
+
+          <section
+            v-if="activeReplyTargetId === comment.id"
+            class="article-comments__reply-editor"
+            :data-testid="`reply-editor-${comment.id}`"
+            aria-label="回复评论"
+          >
+            <EditorCompactBodyComposer
+              :model-value="replyDrafts[comment.id] ?? ''"
+              :max-length="commentDraftMaxLength"
+              aria-label="回复编辑器"
+              input-label="写下回复"
+              :toolbar-actions="dockCommentToolbarActions"
+              @update:model-value="updateReplyDraft(comment.id, $event)"
+            />
+            <div class="article-comments__reply-editor-actions">
+              <button type="button" @click="closeReplyEditor(comment.id)">
+                取消
+              </button>
+              <button class="article-comments__primary" type="button">
+                发布回复
+              </button>
+            </div>
+          </section>
 
           <details
             v-if="comment.replies.length"
@@ -186,7 +245,11 @@
                 </header>
                 <p>{{ reply.body }}</p>
                 <div class="article-comments__actions">
-                  <button type="button">
+                  <button
+                    type="button"
+                    :data-testid="`comment-reply-${reply.id}`"
+                    @click="toggleReplyEditor(reply.id)"
+                  >
                     <MessageCircle
                       class="article-comments__action-icon"
                       aria-hidden="true"
@@ -202,6 +265,29 @@
                   </button>
                   <span class="article-comments__time">{{ reply.time }}</span>
                 </div>
+                <section
+                  v-if="activeReplyTargetId === reply.id"
+                  class="article-comments__reply-editor article-comments__reply-editor--nested"
+                  :data-testid="`reply-editor-${reply.id}`"
+                  aria-label="回复评论"
+                >
+                  <EditorCompactBodyComposer
+                    :model-value="replyDrafts[reply.id] ?? ''"
+                    :max-length="commentDraftMaxLength"
+                    aria-label="回复编辑器"
+                    input-label="写下回复"
+                    :toolbar-actions="dockCommentToolbarActions"
+                    @update:model-value="updateReplyDraft(reply.id, $event)"
+                  />
+                  <div class="article-comments__reply-editor-actions">
+                    <button type="button" @click="closeReplyEditor(reply.id)">
+                      取消
+                    </button>
+                    <button class="article-comments__primary" type="button">
+                      发布回复
+                    </button>
+                  </div>
+                </section>
               </div>
             </article>
           </details>
@@ -213,13 +299,25 @@
 
 <script setup lang="ts">
 import { Heart, Link2, MessageCircle, Quote } from "@lucide/vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
 import EditorCompactBodyComposer from "@/components/editor/EditorCompactBodyComposer.vue";
 import type { ArticleComment } from "@/features/content-detail";
+import type { EditorToolbarAction } from "@/features/editor";
 
 const commentDraftMaxLength = 1000;
+const dockCommentToolbarActions: readonly EditorToolbarAction[] = [
+  "bold",
+  "italic",
+  "link",
+  "mention",
+  "quote",
+  "unorderedList",
+  "orderedList",
+  "code",
+];
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title: string;
     countLabel: string;
@@ -245,9 +343,79 @@ const emit = defineEmits<{
   retryComments: [];
 }>();
 
-function handleDockInput(event: Event): void {
-  emit("update:draftBody", (event.target as HTMLInputElement).value);
+const commentsRootRef = ref<HTMLElement | null>(null);
+const isDockComposerExpanded = ref(false);
+const isDockComposerCollapsed = ref(false);
+const activeReplyTargetId = ref<string | null>(null);
+const replyDrafts = ref<Record<string, string>>({});
+const hasDockDraft = computed(() => props.draftBody.trim().length > 0);
+const isDockComposerOpen = computed(
+  () =>
+    props.variant === "dock" &&
+    !isDockComposerCollapsed.value &&
+    (isDockComposerExpanded.value || hasDockDraft.value),
+);
+
+function expandDockComposer(): void {
+  isDockComposerCollapsed.value = false;
+  isDockComposerExpanded.value = true;
 }
+
+function collapseDockComposer(): void {
+  if (props.variant !== "dock" || !isDockComposerOpen.value) {
+    return;
+  }
+
+  isDockComposerCollapsed.value = true;
+  isDockComposerExpanded.value = false;
+}
+
+function toggleReplyEditor(targetId: string): void {
+  activeReplyTargetId.value =
+    activeReplyTargetId.value === targetId ? null : targetId;
+}
+
+function closeReplyEditor(targetId: string): void {
+  if (activeReplyTargetId.value === targetId) {
+    activeReplyTargetId.value = null;
+  }
+}
+
+function updateReplyDraft(targetId: string, value: string): void {
+  replyDrafts.value = {
+    ...replyDrafts.value,
+    [targetId]: value,
+  };
+}
+
+function isEventInsideComments(event: Event): boolean {
+  const root = commentsRootRef.value;
+  const target = event.target;
+
+  return root !== null && target instanceof Node && root.contains(target);
+}
+
+function handleDocumentPointerDown(event: PointerEvent): void {
+  if (!isEventInsideComments(event)) {
+    collapseDockComposer();
+  }
+}
+
+function handleDocumentFocusIn(event: FocusEvent): void {
+  if (!isEventInsideComments(event)) {
+    collapseDockComposer();
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("pointerdown", handleDocumentPointerDown, true);
+  document.addEventListener("focusin", handleDocumentFocusIn, true);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+  document.removeEventListener("focusin", handleDocumentFocusIn, true);
+});
 </script>
 
 <style scoped>
@@ -418,9 +586,25 @@ function handleDockInput(event: Event): void {
 
 .article-comments__dock-composer {
   display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1fr) max-content;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
   gap: var(--space-3);
   align-items: center;
+}
+
+.article-comments__dock-composer--expanded {
+  row-gap: var(--space-2);
+  align-items: start;
+}
+
+.article-comments__dock-editor {
+  --compact-editor-bg: transparent;
+  --compact-editor-border: 0;
+  --compact-editor-content-padding: var(--space-3) 0;
+  --compact-editor-radius: 0;
+  --compact-editor-toolbar-bg: transparent;
+  --compact-editor-toolbar-border: 1px solid var(--color-border);
+
+  min-width: 0;
 }
 
 .article-comments--dock .article-comments__avatar {
@@ -439,27 +623,62 @@ function handleDockInput(event: Event): void {
   font-weight: 750;
 }
 
-.article-comments__dock-input {
+.article-comments__dock-actions {
+  display: flex;
+  grid-column: 2;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
   min-width: 0;
-  min-height: 2.25rem;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-bg-hover) 68%, transparent);
-  color: var(--color-text-strong);
-  outline: 0;
 }
 
-.article-comments__dock-input::placeholder {
+.article-comments__draft-state {
   color: var(--color-text-soft);
+  font-size: var(--article-comment-meta-size);
+  font-weight: 650;
 }
 
-.article-comments__dock-input:focus {
-  border-color: color-mix(
+.article-comments__dock-trigger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding: 0 0 var(--space-1);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-soft);
+  cursor: text;
+  font-size: var(--article-comment-body-size);
+  font-weight: 650;
+  outline: 0;
+  text-align: left;
+}
+
+.article-comments__dock-trigger:hover,
+.article-comments__dock-trigger:focus-visible {
+  border-bottom-color: color-mix(
     in srgb,
     var(--color-accent) 72%,
     var(--color-border)
   );
+  color: var(--color-text-strong);
+}
+
+.article-comments__dock-trigger:focus-visible {
+  box-shadow: 0 var(--space-1) 0
+    color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.article-comments__dock-trigger-hint {
+  color: var(--color-text-soft);
+  font-size: var(--article-comment-meta-size);
+  font-weight: 650;
 }
 
 .article-comments__dock-submit:disabled {
@@ -478,6 +697,72 @@ function handleDockInput(event: Event): void {
 .article-comments__composer-actions {
   justify-content: flex-end;
   margin-top: var(--space-3);
+}
+
+.article-comments__reply-editor {
+  --compact-editor-bg: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 72%,
+    var(--color-bg)
+  );
+  --compact-editor-panel-bg: var(--color-bg-elevated);
+  --compact-editor-radius: var(--radius-lg);
+
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.article-comments__reply-editor--nested {
+  margin-top: var(--space-2);
+}
+
+.article-comments__reply-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.article-comments__reply-editor-actions button {
+  min-height: 2.125rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-hover);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  font-size: var(--article-comment-meta-size);
+  font-weight: 750;
+}
+
+.article-comments__reply-editor-actions button:hover,
+.article-comments__reply-editor-actions button:focus-visible {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 42%,
+    var(--color-border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--color-accent) 10%,
+    var(--color-bg-hover)
+  );
+  color: var(--color-text-strong);
+  outline: 0;
+}
+
+.article-comments__reply-editor-actions .article-comments__primary {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.article-comments__reply-editor-actions .article-comments__primary:hover,
+.article-comments__reply-editor-actions
+  .article-comments__primary:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 84%, #fff);
+  color: #fff;
 }
 
 .article-comments__thread {
@@ -593,7 +878,19 @@ function handleDockInput(event: Event): void {
   }
 
   .article-comments__dock-composer {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+  }
+
+  .article-comments__dock-composer--expanded {
     grid-template-columns: 1fr;
+  }
+
+  .article-comments__dock-composer--expanded .article-comments__avatar {
+    display: none;
+  }
+
+  .article-comments__dock-actions {
+    grid-column: 1;
   }
 
   .article-comments__submit-error--dock {

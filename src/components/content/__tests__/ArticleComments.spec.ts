@@ -1,10 +1,12 @@
-import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { enableAutoUnmount, mount } from "@vue/test-utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ArticleComment } from "@/features/content-detail";
 
 import ArticleComments from "../ArticleComments.vue";
 import articleCommentsSource from "../ArticleComments.vue?raw";
+
+enableAutoUnmount(afterEach);
 
 function mountArticleComments(
   options: {
@@ -15,6 +17,7 @@ function mountArticleComments(
     commentsError?: string;
     variant?: "full" | "dock";
     comments?: ArticleComment[];
+    stubComposer?: boolean;
   } = {},
 ) {
   return mount(ArticleComments, {
@@ -32,14 +35,17 @@ function mountArticleComments(
       variant: options.variant ?? "full",
     },
     global: {
-      stubs: {
-        EditorCompactBodyComposer: {
-          props: ["modelValue"],
-          emits: ["update:modelValue"],
-          template:
-            '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
-        },
-      },
+      stubs:
+        options.stubComposer === false
+          ? {}
+          : {
+              EditorCompactBodyComposer: {
+                props: ["modelValue"],
+                emits: ["update:modelValue"],
+                template:
+                  '<textarea class="stub-compact-composer" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+              },
+            },
     },
   });
 }
@@ -154,15 +160,26 @@ describe("ArticleComments", () => {
     expect(wrapper.emitted("submitComment")).toHaveLength(1);
   });
 
-  it("keeps the dock composer wired to the same draft and submit events", async () => {
+  it("expands the dock composer before rendering the rich comment editor", async () => {
+    const wrapper = mountArticleComments({
+      draftBody: "",
+      variant: "dock",
+    });
+
+    expect(wrapper.find(".stub-compact-composer").exists()).toBe(false);
+
+    await wrapper.get('[data-testid="dock-comment-expand"]').trigger("click");
+
+    expect(wrapper.find(".stub-compact-composer").exists()).toBe(true);
+  });
+
+  it("keeps the expanded dock composer wired to the same draft and submit events", async () => {
     const wrapper = mountArticleComments({
       draftBody: "已有草稿",
       variant: "dock",
     });
 
-    const input = wrapper.get<HTMLInputElement>(
-      ".article-comments__dock-input",
-    );
+    const input = wrapper.get<HTMLInputElement>(".stub-compact-composer");
     expect(input.element.value).toBe("已有草稿");
 
     await input.setValue("更新后的草稿");
@@ -171,6 +188,181 @@ describe("ArticleComments", () => {
     expect(wrapper.emitted("update:draftBody")).toEqual([["更新后的草稿"]]);
     expect(wrapper.emitted("submitComment")).toHaveLength(1);
     expect(wrapper.text()).not.toContain("关注讨论");
+  });
+
+  it("keeps the real comment editor wired to shared modifier-link behavior", async () => {
+    const wrapper = mountArticleComments({
+      draftBody: "",
+      stubComposer: false,
+    });
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+    await wrapper.get('[data-testid="compact-toolbar-link"]').trigger("click");
+    await wrapper.get('[data-testid="compact-link-text"]').setValue("契约文档");
+    await wrapper
+      .get('[data-testid="compact-link-href"]')
+      .setValue("https://example.com/contracts");
+    await wrapper.get('[data-testid="compact-link-apply"]').trigger("click");
+
+    const editorElement = wrapper.get(
+      ".article-comments__composer .ProseMirror",
+    ).element as HTMLElement;
+    const link = editorElement.querySelector<HTMLAnchorElement>("a");
+
+    expect(link).not.toBeNull();
+
+    link!.dispatchEvent(
+      new MouseEvent("mousemove", {
+        bubbles: true,
+        ctrlKey: true,
+      }),
+    );
+    expect(editorElement.classList.contains("editor-link-open-modifier")).toBe(
+      true,
+    );
+
+    link!.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: true,
+      }),
+    );
+
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://example.com/contracts",
+      "_blank",
+      "noopener,noreferrer",
+    );
+  });
+
+  it("keeps the real dock comment editor wired to shared modifier-link behavior", async () => {
+    const wrapper = mountArticleComments({
+      draftBody: "",
+      variant: "dock",
+      stubComposer: false,
+    });
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+    await wrapper.get('[data-testid="dock-comment-expand"]').trigger("click");
+    await wrapper.get('[data-testid="compact-toolbar-link"]').trigger("click");
+    await wrapper.get('[data-testid="compact-link-text"]').setValue("契约文档");
+    await wrapper
+      .get('[data-testid="compact-link-href"]')
+      .setValue("https://example.com/contracts");
+    await wrapper.get('[data-testid="compact-link-apply"]').trigger("click");
+
+    const editorElement = wrapper.get(
+      ".article-comments__dock-editor .ProseMirror",
+    ).element as HTMLElement;
+    const link = editorElement.querySelector<HTMLAnchorElement>("a");
+
+    expect(link).not.toBeNull();
+
+    link!.dispatchEvent(
+      new MouseEvent("mousemove", {
+        bubbles: true,
+        ctrlKey: true,
+      }),
+    );
+    expect(editorElement.classList.contains("editor-link-open-modifier")).toBe(
+      true,
+    );
+
+    link!.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: true,
+      }),
+    );
+
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://example.com/contracts",
+      "_blank",
+      "noopener,noreferrer",
+    );
+  });
+
+  it("opens the same rich editor when replying to a comment", async () => {
+    const wrapper = mountArticleComments({
+      comments: [
+        {
+          id: "comment-1",
+          author: "Alice",
+          role: "作者",
+          initial: "A",
+          body: "根评论",
+          likes: 3,
+          time: "刚刚",
+          replies: [],
+        },
+      ],
+    });
+
+    await wrapper
+      .get('[data-testid="comment-reply-comment-1"]')
+      .trigger("click");
+
+    expect(
+      wrapper.find('[data-testid="reply-editor-comment-1"]').exists(),
+    ).toBe(true);
+    expect(wrapper.find(".stub-compact-composer").exists()).toBe(true);
+  });
+
+  it("opens the same rich editor when replying to a nested reply", async () => {
+    const wrapper = mountArticleComments({
+      comments: [
+        {
+          id: "comment-1",
+          author: "Alice",
+          role: "作者",
+          initial: "A",
+          body: "根评论",
+          likes: 3,
+          time: "刚刚",
+          replies: [
+            {
+              id: "reply-1",
+              author: "Bob",
+              role: "读者",
+              initial: "B",
+              body: "子回复",
+              time: "刚刚",
+            },
+          ],
+        },
+      ],
+    });
+
+    await wrapper.get("summary").trigger("click");
+    await wrapper.get('[data-testid="comment-reply-reply-1"]').trigger("click");
+
+    expect(wrapper.find('[data-testid="reply-editor-reply-1"]').exists()).toBe(
+      true,
+    );
+    expect(wrapper.find(".stub-compact-composer").exists()).toBe(true);
+  });
+
+  it("collapses the expanded dock composer on outside click without dropping the draft", async () => {
+    const wrapper = mountArticleComments({
+      draftBody: "已有草稿",
+      variant: "dock",
+    });
+
+    document.body.dispatchEvent(
+      new MouseEvent("pointerdown", { bubbles: true }),
+    );
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find(".stub-compact-composer").exists()).toBe(false);
+    expect(wrapper.text()).toContain("继续编辑评论");
+    expect(wrapper.text()).toContain("草稿已保留");
+
+    await wrapper.get('[data-testid="dock-comment-expand"]').trigger("click");
+
+    const input = wrapper.get<HTMLInputElement>(".stub-compact-composer");
+    expect(input.element.value).toBe("已有草稿");
   });
 
   it("keeps dock comments in document flow instead of overlaying article body", () => {
