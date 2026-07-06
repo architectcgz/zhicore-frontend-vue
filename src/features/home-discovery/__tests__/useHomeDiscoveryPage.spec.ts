@@ -10,7 +10,6 @@ import {
 } from "@/api/post";
 
 import { useHomeDiscoveryPage } from "../composables/useHomeDiscoveryPage";
-import { homeDiscoveryMock } from "../config/homeDiscoveryMock";
 
 vi.mock("@/api/post", () => ({
   favoritePost: vi.fn(),
@@ -50,15 +49,25 @@ beforeEach(() => {
     items: [],
     hasMore: false,
   });
+  vi.mocked(listPosts).mockResolvedValue({
+    items: [],
+    hasMore: false,
+  });
 });
 
 describe("useHomeDiscoveryPage", () => {
-  it("uses local demo data only when local demo is enabled", () => {
-    const page = useHomeDiscoveryPage({ localDemoEnabled: true });
+  it("loads the feed through the API adapter so article links use API post ids", async () => {
+    vi.mocked(listPosts).mockResolvedValue({
+      items: [postSummary("post-design-ia", "API mock 文章")],
+      hasMore: false,
+    });
 
-    expect(page.discovery.posts.length).toBeGreaterThan(0);
+    const page = useHomeDiscoveryPage();
+    await flushPromises();
+
     expect(page.feedState.value).toBe("ready");
-    expect(listPosts).not.toHaveBeenCalled();
+    expect(listPosts).toHaveBeenCalledWith({ limit: 20, sort: "latest" });
+    expect(page.discovery.posts[0]?.href).toBe("/posts/post-design-ia");
   });
 
   it("loads public posts in non-demo mode", async () => {
@@ -79,7 +88,6 @@ describe("useHomeDiscoveryPage", () => {
 
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => true,
-      localDemoEnabled: false,
     });
 
     expect(page.feedState.value).toBe("loading");
@@ -105,7 +113,7 @@ describe("useHomeDiscoveryPage", () => {
       hasMore: false,
     });
 
-    const page = useHomeDiscoveryPage({ localDemoEnabled: false });
+    const page = useHomeDiscoveryPage();
     await flushPromises();
 
     expect(listTags).toHaveBeenCalledWith({ limit: 20 });
@@ -120,7 +128,6 @@ describe("useHomeDiscoveryPage", () => {
 
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => false,
-      localDemoEnabled: false,
     });
     await flushPromises();
 
@@ -140,7 +147,6 @@ describe("useHomeDiscoveryPage", () => {
 
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => true,
-      localDemoEnabled: false,
     });
     await flushPromises();
 
@@ -167,7 +173,6 @@ describe("useHomeDiscoveryPage", () => {
 
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => restored,
-      localDemoEnabled: false,
       restoreSession: async () => {
         restored = true;
       },
@@ -189,7 +194,6 @@ describe("useHomeDiscoveryPage", () => {
 
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => true,
-      localDemoEnabled: false,
     });
     await flushPromises();
 
@@ -201,7 +205,7 @@ describe("useHomeDiscoveryPage", () => {
   it("shows page-level retry state and skips engagement when the main list fails", async () => {
     vi.mocked(listPosts).mockRejectedValue(new Error("list failed"));
 
-    const page = useHomeDiscoveryPage({ localDemoEnabled: false });
+    const page = useHomeDiscoveryPage();
     await flushPromises();
 
     expect(page.feedState.value).toBe("error");
@@ -216,7 +220,7 @@ describe("useHomeDiscoveryPage", () => {
       hasMore: false,
     });
 
-    const page = useHomeDiscoveryPage({ localDemoEnabled: false });
+    const page = useHomeDiscoveryPage();
     await flushPromises();
 
     expect(page.feedState.value).toBe("empty");
@@ -262,7 +266,7 @@ describe("useHomeDiscoveryPage", () => {
       hasMore: false,
     });
     vi.mocked(getPostEngagementBatchStatus).mockResolvedValue({ items: [] });
-    const page = useHomeDiscoveryPage({ localDemoEnabled: false });
+    const page = useHomeDiscoveryPage();
     await flushPromises();
 
     page.selectContentCategory("Vue");
@@ -292,7 +296,7 @@ describe("useHomeDiscoveryPage", () => {
   });
 
   it("owns content category and search state outside the UI component", () => {
-    const page = useHomeDiscoveryPage({ localDemoEnabled: true });
+    const page = useHomeDiscoveryPage();
 
     expect(page.activeContentCategory.value).toBe("全部");
     expect(page.searchQuery.value).toBe("");
@@ -307,7 +311,7 @@ describe("useHomeDiscoveryPage", () => {
   });
 
   it("ignores categories that are not part of the mock discovery data", () => {
-    const page = useHomeDiscoveryPage({ localDemoEnabled: true });
+    const page = useHomeDiscoveryPage();
 
     page.selectContentCategory("不存在");
 
@@ -322,7 +326,6 @@ describe("useHomeDiscoveryPage", () => {
     const redirectToLogin = vi.fn();
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => false,
-      localDemoEnabled: false,
       redirectToLogin,
     });
     await flushPromises();
@@ -345,7 +348,6 @@ describe("useHomeDiscoveryPage", () => {
     });
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => restored,
-      localDemoEnabled: true,
       redirectToLogin,
       restoreSession: async () => {
         restored = true;
@@ -376,7 +378,6 @@ describe("useHomeDiscoveryPage", () => {
     });
     const page = useHomeDiscoveryPage({
       isLoggedIn: () => true,
-      localDemoEnabled: false,
     });
     await flushPromises();
 

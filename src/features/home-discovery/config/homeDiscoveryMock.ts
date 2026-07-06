@@ -13,7 +13,8 @@ export const homeDiscoveryMock: HomeDiscoveryData = {
   contentCategories: ["全部", "前端", "架构", "后端", "写作体验"],
   posts: [
     {
-      href: "/posts/demo",
+      id: "post-design-ia",
+      href: "/posts/post-design-ia",
       category: "架构",
       readingTime: "12 分钟阅读",
       title: "从网关到内容服务：一次请求如何被拆成可靠的事实层",
@@ -26,7 +27,8 @@ export const homeDiscoveryMock: HomeDiscoveryData = {
       comments: 6,
     },
     {
-      href: "/posts/demo",
+      id: "post-onboarding-activation",
+      href: "/posts/post-onboarding-activation",
       category: "前端",
       readingTime: "8 分钟阅读",
       title: "编辑器为什么应该像一篇文章，而不是一组表单",

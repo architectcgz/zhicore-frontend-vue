@@ -7,7 +7,6 @@ import {
   listPosts,
   listTags,
 } from "@/api/post";
-import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 
 import { homeDiscoveryMock } from "../config/homeDiscoveryMock";
 import { mapPostSummaryToHomePost } from "../lib/homeDiscoveryMapper";
@@ -15,7 +14,6 @@ import type { HomeDiscoveryData } from "../types";
 
 export interface HomeDiscoveryPageOptions {
   isLoggedIn?: () => boolean;
-  localDemoEnabled?: boolean;
   redirectToLogin?: () => void | Promise<void>;
   restoreSession?: () => Promise<void>;
 }
@@ -38,20 +36,11 @@ function createDiscoveryWithPosts(
 }
 
 export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
-  const localDemoEnabled = options.localDemoEnabled ?? isLocalDemoModeEnabled();
-  const discovery = reactive<HomeDiscoveryData>(
-    localDemoEnabled ? homeDiscoveryMock : createDiscoveryWithPosts([]),
-  );
-  const feedState = ref<"loading" | "ready" | "empty" | "error">(
-    localDemoEnabled ? "ready" : "loading",
-  );
+  const discovery = reactive<HomeDiscoveryData>(createDiscoveryWithPosts([]));
+  const feedState = ref<"loading" | "ready" | "empty" | "error">("loading");
   const feedError = ref("");
   const engagementActionError = ref("");
-  const activeContentCategory = ref(
-    localDemoEnabled
-      ? (homeDiscoveryMock.contentCategories[0] ?? allContentCategory)
-      : allContentCategory,
-  );
+  const activeContentCategory = ref(allContentCategory);
   // 搜索提示是占位文案，不进入状态，避免初始态被误判为已有查询。
   const searchQuery = ref("");
   const tagSlugByLabel = new Map<string, string>();
@@ -212,22 +201,16 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
     }
 
     activeContentCategory.value = category;
-    if (!localDemoEnabled) {
-      void loadPublicPosts();
-    }
+    void loadPublicPosts();
   }
 
   function updateSearchQuery(nextQuery: string): void {
     searchQuery.value = nextQuery;
-    if (!localDemoEnabled) {
-      void loadPublicPosts();
-    }
+    void loadPublicPosts();
   }
 
   function retry(): void {
-    if (!localDemoEnabled) {
-      void loadPublicPosts();
-    }
+    void loadPublicPosts();
   }
 
   async function likePost(postId: string): Promise<void> {
@@ -285,17 +268,15 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
     }
   }
 
-  if (!localDemoEnabled) {
-    void loadContentCategories();
-    void loadPublicPosts();
-  }
+  void loadContentCategories();
+  void loadPublicPosts();
 
   return {
     discovery,
     feedState: readonly(feedState),
     feedError: readonly(feedError),
     engagementActionError: readonly(engagementActionError),
-    showSupplementarySidebar: localDemoEnabled,
+    showSupplementarySidebar: false,
     activeContentCategory: readonly(activeContentCategory),
     searchQuery: readonly(searchQuery),
     selectContentCategory,
