@@ -4,22 +4,50 @@
       v-if="page.isLocalDemo"
       class="messages-route__layout messages-route__layout--list"
     >
-      <aside class="messages-route__rail" aria-label="私信分组">
+      <aside class="messages-route__utility-nav" aria-label="消息功能">
         <RouterLink
-          class="messages-route__rail-item messages-route__rail-item--active"
-          :to="firstConversationHref"
-          aria-label="打开最近私信"
+          class="messages-route__utility-item messages-route__utility-item--active"
+          to="/messages"
+          aria-label="消息"
         >
-          AI
+          <MessageCircle aria-hidden="true" />
+          <span>消息</span>
         </RouterLink>
         <RouterLink
-          v-for="conversation in secondaryConversations"
-          :key="conversation.id"
-          class="messages-route__rail-item"
-          :to="`/messages/${conversation.id}`"
-          :aria-label="`打开与 ${conversation.participantName} 的私信`"
+          class="messages-route__utility-item"
+          to="/explore"
+          aria-label="探索"
         >
-          {{ conversation.participantInitial }}
+          <Search aria-hidden="true" />
+          <span>探索</span>
+        </RouterLink>
+        <RouterLink
+          class="messages-route__utility-item"
+          to="/community"
+          aria-label="社区"
+        >
+          <Users aria-hidden="true" />
+          <span>社区</span>
+        </RouterLink>
+        <button class="messages-route__utility-item" type="button" disabled>
+          <Star aria-hidden="true" />
+          <span>收藏</span>
+        </button>
+        <RouterLink
+          class="messages-route__utility-item"
+          to="/notifications"
+          aria-label="通知"
+        >
+          <Bell aria-hidden="true" />
+          <span>通知</span>
+        </RouterLink>
+        <RouterLink
+          class="messages-route__utility-item"
+          to="/user/profile"
+          aria-label="设置"
+        >
+          <Settings aria-hidden="true" />
+          <span>设置</span>
         </RouterLink>
       </aside>
 
@@ -29,13 +57,44 @@
       >
         <header class="messages-route__contacts-header">
           <div>
-            <p class="messages-route__eyebrow">消息</p>
-            <h1 id="messages-title">私信列表</h1>
+            <p class="messages-route__section-label">私信</p>
+            <h1 id="messages-title">Messages</h1>
           </div>
-          <span v-if="page.unreadCount" class="messages-route__count">
-            {{ page.unreadCount }}
-          </span>
+          <button class="messages-route__icon-button" type="button" disabled>
+            <SquarePen aria-hidden="true" />
+            <span class="messages-route__sr-only">新建消息</span>
+          </button>
         </header>
+
+        <div class="messages-route__search" role="search">
+          <Search aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Search conversations..."
+            aria-label="搜索会话"
+            disabled
+          />
+        </div>
+
+        <div class="messages-route__filters" aria-label="私信筛选">
+          <button
+            class="messages-route__filter messages-route__filter--active"
+            type="button"
+            disabled
+          >
+            全部
+          </button>
+          <button class="messages-route__filter" type="button" disabled>
+            未读
+            <span v-if="page.unreadCount">{{ page.unreadCount }}</span>
+          </button>
+          <button class="messages-route__filter" type="button" disabled>
+            群聊
+          </button>
+          <button class="messages-route__filter" type="button" disabled>
+            收藏
+          </button>
+        </div>
 
         <div class="messages-route__contact-list">
           <RouterLink
@@ -82,59 +141,85 @@
         aria-label="当前会话"
       >
         <header class="messages-route__chat-header">
-          <div>
-            <h2>{{ page.activeConversation.participantName }}</h2>
+          <div class="messages-route__chat-person">
+            <span class="messages-route__avatar messages-route__avatar--header">
+              {{ page.activeConversation.participantInitial }}
+              <span
+                v-if="page.activeConversation.online"
+                class="messages-route__online"
+                aria-label="在线"
+              />
+            </span>
+            <div>
+              <h2>{{ page.activeConversation.participantName }}</h2>
+              <p>{{ page.activeConversation.online ? "在线" : "离线" }}</p>
+            </div>
           </div>
-          <p>
-            {{ page.activeConversation.online ? "在线" : "离线" }}
-          </p>
+
+          <div class="messages-route__chat-actions">
+            <button class="messages-route__icon-button" type="button" disabled>
+              <Phone aria-hidden="true" />
+              <span class="messages-route__sr-only">语音通话</span>
+            </button>
+            <button class="messages-route__icon-button" type="button" disabled>
+              <Video aria-hidden="true" />
+              <span class="messages-route__sr-only">视频通话</span>
+            </button>
+            <button class="messages-route__icon-button" type="button" disabled>
+              <MoreHorizontal aria-hidden="true" />
+              <span class="messages-route__sr-only">更多操作</span>
+            </button>
+          </div>
         </header>
 
         <div class="messages-route__history">
+          <div class="messages-route__date-divider">今天</div>
           <article
             v-for="message in page.activeConversation.messages"
             :key="message.id"
             class="messages-route__message"
+            :class="{
+              'messages-route__message--mine': message.author === 'me',
+            }"
           >
             <span
+              v-if="message.author !== 'me'"
               class="messages-route__message-avatar"
-              :class="{
-                'messages-route__message-avatar--mine': message.author === 'me',
-              }"
             >
-              {{
-                message.author === "me"
-                  ? "我"
-                  : page.activeConversation.participantInitial
-              }}
+              {{ page.activeConversation.participantInitial }}
             </span>
             <div class="messages-route__message-body">
-              <div class="messages-route__message-meta">
-                <strong>
-                  {{
-                    message.author === "me"
-                      ? "我"
-                      : page.activeConversation.participantName
-                  }}
-                </strong>
-                <time>{{ message.sentAt }}</time>
-              </div>
               <p>{{ message.text }}</p>
+              <div class="messages-route__message-meta">
+                <time>{{ message.sentAt }}</time>
+                <span v-if="message.author === 'me'">✓✓</span>
+              </div>
             </div>
           </article>
         </div>
 
         <footer class="messages-route__composer">
+          <button
+            class="messages-route__composer-button"
+            type="button"
+            disabled
+          >
+            <Paperclip aria-hidden="true" />
+            <span class="messages-route__sr-only">添加附件</span>
+          </button>
           <div class="messages-route__input-shell">
-            <button class="messages-route__add-button" type="button" disabled>
-              +
-            </button>
             <input
               type="text"
-              :placeholder="`发送消息给 ${page.activeConversation.participantName}`"
+              placeholder="输入消息..."
               aria-label="消息输入"
+              disabled
             />
+            <Smile aria-hidden="true" />
           </div>
+          <button class="messages-route__send-button" type="button" disabled>
+            <Send aria-hidden="true" />
+            <span class="messages-route__sr-only">发送消息</span>
+          </button>
         </footer>
       </section>
     </section>
@@ -148,15 +233,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import {
+  Bell,
+  MessageCircle,
+  MoreHorizontal,
+  Paperclip,
+  Phone,
+  Search,
+  Send,
+  Settings,
+  Smile,
+  SquarePen,
+  Star,
+  Users,
+  Video,
+} from "@lucide/vue";
 import { RouterLink } from "vue-router";
 
 import { useMessageCenterPage } from "@/features/message";
 import "./message-route.css";
 
 const page = useMessageCenterPage();
-const secondaryConversations = computed(() => page.conversations.slice(1, 3));
-const firstConversationHref = computed(() =>
-  page.conversations[0] ? `/messages/${page.conversations[0].id}` : "/messages",
-);
 </script>
