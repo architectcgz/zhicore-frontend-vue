@@ -164,19 +164,6 @@ const principles: AboutPrinciple[] = [
   );
 }
 
-.about-page::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: var(--space-6);
-  border: 1px solid color-mix(in srgb, var(--color-border-strong) 72%, white);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-text-strong) 7%, transparent),
-    0 1.5rem 4rem rgba(0, 0, 0, 0.28);
-  pointer-events: none;
-}
-
 .about-page__content {
   width: min(100%, 52rem);
   margin: 0 auto;
@@ -293,10 +280,6 @@ const principles: AboutPrinciple[] = [
     padding: var(--space-10) var(--space-5);
   }
 
-  .about-page::before {
-    inset: var(--space-4);
-  }
-
   .about-page__content {
     width: min(100%, 42rem);
   }
@@ -313,11 +296,6 @@ const principles: AboutPrinciple[] = [
 @media (max-width: 640px) {
   .about-page {
     padding: var(--space-8) var(--space-4);
-  }
-
-  .about-page::before {
-    inset: var(--space-3);
-    border-radius: var(--radius-md);
   }
 
   .about-page__hero {
