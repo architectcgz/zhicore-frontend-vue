@@ -49,6 +49,23 @@
   --line-height-reading-heading: 1.35;
   --line-height-reading-code: 1.56;
 
+  /* Product UI Typography Tokens */
+  --font-size-ui-page-title: 1.375rem;
+  --font-size-ui-section-title: 1.125rem;
+  --font-size-ui-row-title: 0.9375rem;
+  --font-size-ui-body: 0.875rem;
+  --font-size-ui-meta: 0.8125rem;
+  --font-size-ui-caption: 0.75rem;
+  --font-size-ui-data: 1.5rem;
+  --font-weight-ui-title: 820;
+  --font-weight-ui-strong: 750;
+  --font-weight-ui-control: 700;
+  --font-weight-ui-body: 500;
+  --line-height-ui-title: 1.2;
+  --line-height-ui-row-title: 1.35;
+  --line-height-ui-body: 1.5;
+  --line-height-ui-meta: 1.4;
+
   /* Brand Typography Tokens */
   --font-weight-h1: 850;
   --font-weight-h3: 750;

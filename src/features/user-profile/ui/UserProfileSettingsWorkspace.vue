@@ -419,7 +419,8 @@ const onFileChange = async (event: Event) => {
 <style scoped>
 .user-profile {
   min-height: calc(100vh - 81px);
-  padding: var(--space-4) var(--space-6) var(--space-6);
+  display: grid;
+  padding: 0;
 }
 
 .user-profile__loading {
@@ -429,7 +430,7 @@ const onFileChange = async (event: Event) => {
   min-height: 420px;
   gap: var(--space-3);
   color: var(--color-text-soft);
-  font-size: 0.875rem;
+  font-size: var(--font-size-ui-body);
 }
 
 .user-profile__spinner,
@@ -459,21 +460,15 @@ const onFileChange = async (event: Event) => {
 .user-profile__layout {
   display: grid;
   grid-template-columns: minmax(220px, 316px) minmax(0, 1fr);
-  gap: var(--space-6);
-  width: min(100%, 1448px);
-  margin: 0 auto;
+  width: 100%;
+  min-height: 100%;
+  border-inline: 1px solid
+    color-mix(in srgb, var(--color-border) 72%, transparent);
 }
 
 .user-profile__nav-panel,
 .user-profile__form-panel {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-bg-elevated) 74%, transparent),
-    color-mix(in srgb, var(--color-bg) 86%, transparent)
-  );
-  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-panel);
+  background: color-mix(in srgb, var(--color-bg-elevated) 54%, transparent);
 }
 
 .user-profile__nav-panel {
@@ -483,19 +478,21 @@ const onFileChange = async (event: Event) => {
   grid-template-rows: auto 1fr auto;
   min-height: calc(100vh - 128px);
   padding: var(--space-8) var(--space-5);
+  border-right: 1px solid
+    color-mix(in srgb, var(--color-border) 72%, transparent);
 }
 
 .user-profile__nav-title {
   margin: 0 0 var(--space-8);
   color: var(--color-text-strong);
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: var(--font-size-ui-section-title);
+  font-weight: var(--font-weight-ui-title);
   letter-spacing: 0;
 }
 
 .user-profile__tabs {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-1);
   align-content: start;
 }
 
@@ -508,10 +505,10 @@ const onFileChange = async (event: Event) => {
   gap: var(--space-4);
   padding: 0 var(--space-4);
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-ui-body);
   font-weight: 650;
   text-align: left;
   cursor: pointer;
@@ -539,16 +536,9 @@ const onFileChange = async (event: Event) => {
 }
 
 .user-profile__tab--active {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--color-primary) 20%, transparent),
-    color-mix(in srgb, var(--color-bg-elevated-2) 82%, transparent)
-  );
-  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border-color: transparent;
   color: var(--color-text-strong);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent),
-    0 0 24px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .user-profile__tab--disabled {
@@ -577,7 +567,7 @@ const onFileChange = async (event: Event) => {
 .user-profile__form-panel {
   display: grid;
   min-height: calc(100vh - 128px);
-  padding: var(--space-8);
+  padding: var(--space-8) var(--space-10);
 }
 
 .user-profile__section {
@@ -594,8 +584,8 @@ const onFileChange = async (event: Event) => {
 .user-profile__section-title {
   margin: 0;
   color: var(--color-text-strong);
-  font-size: 1.75rem;
-  font-weight: 820;
+  font-size: var(--font-size-ui-data);
+  font-weight: var(--font-weight-ui-title);
   line-height: 1.15;
   letter-spacing: 0;
 }
@@ -603,7 +593,7 @@ const onFileChange = async (event: Event) => {
 .user-profile__section-subtitle {
   margin: 0;
   color: var(--color-text-soft);
-  font-size: 1rem;
+  font-size: var(--font-size-ui-row-title);
 }
 
 .user-profile__avatar-row {
@@ -636,7 +626,7 @@ const onFileChange = async (event: Event) => {
 
 .user-profile__avatar-placeholder {
   color: var(--color-text-strong);
-  font-size: 2.25rem;
+  font-size: 2rem;
   font-weight: 800;
 }
 
@@ -657,8 +647,8 @@ const onFileChange = async (event: Event) => {
 .user-profile__preference-title {
   margin: 0;
   color: var(--color-text-strong);
-  font-size: 1rem;
-  font-weight: 750;
+  font-size: var(--font-size-ui-row-title);
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: 0;
 }
 
@@ -667,8 +657,8 @@ const onFileChange = async (event: Event) => {
 .user-profile__field-help {
   margin: 0;
   color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  font-size: var(--font-size-ui-body);
+  line-height: var(--line-height-ui-body);
 }
 
 .user-profile__avatar-actions {
@@ -699,8 +689,8 @@ const onFileChange = async (event: Event) => {
   display: flex;
   align-items: center;
   color: var(--color-text-strong);
-  font-size: 0.9375rem;
-  font-weight: 750;
+  font-size: var(--font-size-ui-body);
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .user-profile__field-control {
@@ -719,7 +709,7 @@ const onFileChange = async (event: Event) => {
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-bg) 58%, transparent);
   color: var(--color-text-strong);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-ui-row-title);
 }
 
 .user-profile__input,
@@ -758,7 +748,7 @@ const onFileChange = async (event: Event) => {
   top: 10px;
   right: var(--space-3);
   color: var(--color-text-soft);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-ui-caption);
 }
 
 .user-profile__counter--textarea {
@@ -791,7 +781,7 @@ const onFileChange = async (event: Event) => {
 .user-profile__field-error {
   margin: 0;
   color: var(--color-danger);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-ui-meta);
   font-weight: 650;
 }
 
@@ -800,10 +790,9 @@ const onFileChange = async (event: Event) => {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-6);
-  padding: var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-bg) 48%, transparent);
+  padding: var(--space-5) 0;
+  border-block: 1px solid
+    color-mix(in srgb, var(--color-border) 70%, transparent);
 }
 
 .user-profile__preference-info {
@@ -882,8 +871,8 @@ const onFileChange = async (event: Event) => {
   gap: var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  font-size: 0.9375rem;
-  font-weight: 750;
+  font-size: var(--font-size-ui-body);
+  font-weight: var(--font-weight-ui-strong);
   cursor: pointer;
   transition:
     background-color 0.18s ease,
@@ -917,7 +906,6 @@ const onFileChange = async (event: Event) => {
     var(--color-bg-elevated)
   );
   color: var(--color-primary-soft);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .user-profile__btn--primary:hover:not(:disabled) {
@@ -941,7 +929,7 @@ const onFileChange = async (event: Event) => {
   gap: var(--space-2);
   margin-left: auto;
   color: var(--color-text);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-ui-body);
 }
 
 .user-profile__save-dot {
@@ -973,7 +961,7 @@ const onFileChange = async (event: Event) => {
 .user-profile__message {
   margin: var(--space-4) 0 0;
   color: var(--color-danger);
-  font-size: 0.875rem;
+  font-size: var(--font-size-ui-body);
   font-weight: 650;
 }
 
@@ -988,18 +976,18 @@ const onFileChange = async (event: Event) => {
 }
 
 @media (max-width: 980px) {
-  .user-profile {
-    padding: var(--space-4) var(--space-4)
-      calc(var(--space-12) + var(--space-8));
-  }
-
   .user-profile__layout {
     grid-template-columns: 1fr;
+    border-inline: 1px solid
+      color-mix(in srgb, var(--color-border) 72%, transparent);
   }
 
   .user-profile__nav-panel {
     position: static;
     min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-border) 72%, transparent);
   }
 
   .user-profile__tabs {
@@ -1008,10 +996,6 @@ const onFileChange = async (event: Event) => {
 }
 
 @media (max-width: 640px) {
-  .user-profile {
-    padding-inline: var(--space-3);
-  }
-
   .user-profile__nav-panel,
   .user-profile__form-panel {
     padding: var(--space-5);
