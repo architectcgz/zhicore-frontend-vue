@@ -4,7 +4,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import AuthLayout from "@/layouts/AuthLayout.vue";
 
-async function mountAuthLayout() {
+async function mountAuthLayout(path = "/auth/login") {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -14,12 +14,20 @@ async function mountAuthLayout() {
       },
       {
         path: "/auth/login",
+        name: "Login",
         component: { template: '<section class="login-stub">login</section>' },
+      },
+      {
+        path: "/auth/register",
+        name: "Register",
+        component: {
+          template: '<section class="register-stub">register</section>',
+        },
       },
     ],
   });
 
-  await router.push("/auth/login");
+  await router.push(path);
   await router.isReady();
 
   return mount(AuthLayout, {
@@ -30,18 +38,34 @@ async function mountAuthLayout() {
 }
 
 describe("AuthLayout", () => {
-  it("renders a lightweight auth header without the product navigation", async () => {
+  it("keeps login focused without the registration top navigation", async () => {
     const wrapper = await mountAuthLayout();
 
-    expect(wrapper.find(".auth-layout__brand").text()).toContain("知构");
-    expect(wrapper.find(".auth-layout__actions").text()).toContain("返回首页");
+    expect(wrapper.find(".auth-layout__header").exists()).toBe(false);
     expect(wrapper.text()).not.toContain("写作");
-    expect(wrapper.text()).not.toContain("热榜");
+    expect(wrapper.text()).not.toContain("New Post");
   });
 
   it("keeps the auth page content in the layout main region", async () => {
     const wrapper = await mountAuthLayout();
 
     expect(wrapper.find(".auth-layout__main .login-stub").exists()).toBe(true);
+  });
+
+  it("renders the registration top navigation when the register route is active", async () => {
+    const wrapper = await mountAuthLayout("/auth/register");
+
+    expect(wrapper.find(".auth-layout__brand").text()).toContain("ZhiCore");
+    expect(wrapper.find(".auth-layout__nav").text()).toContain("Explore");
+    expect(wrapper.find(".auth-layout__post-btn").text()).toContain("New Post");
+    expect(wrapper.find('[aria-label="消息"]').attributes("href")).toBe(
+      "/messages",
+    );
+    expect(wrapper.find('[aria-label="通知"]').attributes("href")).toBe(
+      "/notifications",
+    );
+    expect(wrapper.find(".auth-layout__main .register-stub").exists()).toBe(
+      true,
+    );
   });
 });

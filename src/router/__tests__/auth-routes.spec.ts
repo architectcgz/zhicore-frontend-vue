@@ -28,6 +28,25 @@ describe("auth routes", () => {
     expect(resolved.matched.some((route) => route.name === "Login")).toBe(true);
   });
 
+  it("renders register through the same auth page owner", () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: authRoutes,
+    });
+
+    const loginComponent = router.resolve("/auth/login").matched.at(1)
+      ?.components?.default;
+    const registerResolved = router.resolve("/auth/register");
+
+    expect(registerResolved.matched).toHaveLength(2);
+    expect(
+      registerResolved.matched.some((route) => route.name === "Register"),
+    ).toBe(true);
+    expect(
+      registerResolved.matched.at(1)?.components?.default?.toString(),
+    ).toBe(loginComponent?.toString());
+  });
+
   it("mounts login inside AuthLayout in the real app router", async () => {
     const router = createRouter({
       history: createMemoryHistory(),
