@@ -23,6 +23,7 @@ async function mountAppLayout(
         meta: { appShellFlush: true },
       },
       { path: "/explore", component: { template: "<div />" } },
+      { path: "/community", component: { template: "<div />" } },
       { path: "/structure", component: { template: "<div />" } },
       { path: "/resources", component: { template: "<div />" } },
       { path: "/search", component: { template: "<div />" } },
@@ -59,6 +60,9 @@ describe("AppLayout", () => {
     const { wrapper } = await mountAppLayout();
     expect(wrapper.exists()).toBe(true);
     expect(wrapper.find(".app-layout__nav").text()).toContain("发现");
+    expect(wrapper.find('a[aria-label="社区"]').attributes("href")).toBe(
+      "/community",
+    );
     expect(wrapper.find(".app-layout__post-btn").text()).toContain("写作");
   });
 

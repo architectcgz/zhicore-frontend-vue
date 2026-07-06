@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from "vue-router";
 
+import { communityRoutes } from "./communityRoutes";
 import { contentRoutes } from "./contentRoutes";
 import { editorRoutes } from "./editorRoutes";
 import { homeRoutes } from "./homeRoutes";
@@ -18,6 +19,7 @@ export const appShellRoute: RouteRecordRaw = {
   redirect: "/",
   children: [
     ...homeRoutes,
+    ...communityRoutes,
     ...contentRoutes,
     ...structureRoutes,
     ...resourcesRoutes,

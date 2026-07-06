@@ -21,7 +21,7 @@
         </RouterLink>
         <RouterLink
           class="app-layout__nav-link"
-          to="/structure"
+          to="/community"
           aria-label="社区"
         >
           <span>社区</span>
