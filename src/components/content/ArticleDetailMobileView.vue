@@ -99,7 +99,7 @@
             :disabled="submittingLike"
             @click="$emit('likePost')"
           >
-            <Heart aria-hidden="true" />
+            <ThumbsUp aria-hidden="true" />
             <strong>{{ detail.readingActions.likeCountLabel }}</strong>
             <span>点赞</span>
           </button>
@@ -171,7 +171,7 @@
 <script setup lang="ts">
 import {
   Bookmark,
-  Heart,
+  ThumbsUp,
   ListTree,
   MessageCircle,
   MoreHorizontal,
@@ -243,47 +243,45 @@ function closeActionSheet(): void {
 }
 
 .article-detail-mobile__eyebrow {
-  margin: 0;
-  color: var(--color-text-soft);
-  font-size: 0.8125rem;
-  font-weight: 750;
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .article-detail-mobile__content h1 {
-  margin: var(--space-2) 0 0;
+  margin: 0;
   color: var(--color-text-strong);
-  font-size: 1.75rem;
-  line-height: 1.24;
+  font-size: 2rem;
+  line-height: 1.2;
   letter-spacing: 0;
 }
 
 .article-detail-mobile__meta {
-  display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: var(--space-3);
+  display: flex;
   align-items: center;
-  margin: var(--space-4) 0 var(--space-5);
-  padding-bottom: var(--space-4);
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-6);
+  padding-bottom: var(--space-5);
   border-bottom: 1px solid var(--color-border);
 }
 
 .article-detail-mobile__meta p {
-  margin: 0;
+  margin: 0 0 var(--space-2);
   color: var(--color-text-soft);
   font-size: 0.8125rem;
-  font-weight: 750;
-  line-height: 1.5;
+  font-weight: 500;
 }
 
 .article-detail-mobile__avatar {
   display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   border-radius: var(--radius-pill);
   background: var(--color-text-strong);
   color: var(--color-bg-elevated);
-  font-weight: 850;
+  font-weight: 700;
 }
 
 .article-detail-mobile__status-row {
@@ -296,13 +294,13 @@ function closeActionSheet(): void {
 .article-detail-mobile__status {
   display: inline-flex;
   align-items: center;
-  min-height: 1.75rem;
-  padding: var(--space-1) var(--space-2);
+  padding: 0.25rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: var(--color-bg-hover);
-  font-size: 0.8125rem;
-  font-weight: 750;
+  background: transparent;
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .article-detail-mobile__status--ok {
@@ -315,7 +313,7 @@ function closeActionSheet(): void {
 }
 
 .article-detail-mobile__cover {
-  min-height: 11rem;
+  min-height: 16.25rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background:

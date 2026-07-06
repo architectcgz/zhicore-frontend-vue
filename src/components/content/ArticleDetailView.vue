@@ -3,20 +3,26 @@
     <aside class="article-detail__toc" aria-label="文章导航">
       <h2>本文导航</h2>
       <div
-        class="article-detail__progress"
-        :aria-label="`阅读进度 ${progressPercent}%`"
+        class="article-detail__toc-list"
         :style="{ '--article-progress': `${progressPercent}%` }"
       >
-        <span />
+        <div
+          class="article-detail__progress"
+          role="progressbar"
+          :aria-label="`阅读进度 ${progressPercent}%`"
+          :aria-valuenow="progressPercent"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        />
+        <a
+          v-for="tocItem in detail.tocItems"
+          :key="tocItem.label"
+          :href="tocItem.href"
+          :class="{ 'is-active': tocItem.href === activeHeadingHref }"
+        >
+          {{ tocItem.label }}
+        </a>
       </div>
-      <a
-        v-for="tocItem in detail.tocItems"
-        :key="tocItem.label"
-        :href="tocItem.href"
-        :class="{ 'is-active': tocItem.href === activeHeadingHref }"
-      >
-        {{ tocItem.label }}
-      </a>
     </aside>
 
     <article ref="articleRef" class="article-detail__content">
@@ -81,66 +87,118 @@
         @submit-comment="$emit('submitComment')"
         @retry-comments="$emit('retryComments')"
       />
+
+      <div class="article-detail__related-section">
+        <div class="article-detail__related-header">
+          <h2 id="related-reading" class="article-detail__related-title">
+            相关阅读
+          </h2>
+          <a href="/explore" class="article-detail__related-more">
+            View more
+            <ChevronRight aria-hidden="true" />
+          </a>
+        </div>
+        <div class="article-detail__related-list">
+          <a
+            v-for="item in detail.relatedPosts"
+            :key="item.id"
+            :href="`/posts/${item.id}`"
+            class="article-detail__related-card"
+          >
+            <div
+              class="article-detail__related-card-cover"
+              aria-hidden="true"
+            />
+            <div class="article-detail__related-card-content">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.meta }}</span>
+            </div>
+          </a>
+        </div>
+      </div>
     </article>
 
     <aside class="article-detail__rail">
-      <h2>阅读操作</h2>
       <div class="article-detail__actions">
         <button
           type="button"
+          class="article-detail__action-btn"
           :aria-label="`喜欢，${detail.readingActions.likeCountLabel} 次`"
           :disabled="submittingLike"
           @click="$emit('likePost')"
         >
-          <span><Heart aria-hidden="true" /></span>
-          <strong>{{ detail.readingActions.likeCountLabel }}</strong>
+          <div class="article-detail__action-icon">
+            <ThumbsUp aria-hidden="true" />
+          </div>
+          <div class="article-detail__action-text">
+            <strong>Like</strong>
+            <span>{{ detail.readingActions.likeCountLabel }}</span>
+          </div>
         </button>
         <button
-          :class="{ 'is-unknown': detail.readingActions.bookmarkUnavailable }"
+          :class="[
+            'article-detail__action-btn',
+            { 'is-unknown': detail.readingActions.bookmarkUnavailable },
+          ]"
           type="button"
           aria-label="收藏状态暂不可用"
           :disabled="submittingFavorite"
           @click="$emit('favoritePost')"
         >
-          <span><Bookmark aria-hidden="true" /></span>
-          <strong>{{ detail.readingActions.bookmarkCountLabel }}</strong>
+          <div class="article-detail__action-icon">
+            <Bookmark aria-hidden="true" />
+          </div>
+          <div class="article-detail__action-text">
+            <strong>Save</strong>
+            <span>{{ detail.readingActions.bookmarkCountLabel }}</span>
+          </div>
         </button>
         <a
           href="#comments"
+          class="article-detail__action-btn is-active"
           :aria-label="`查看评论，${detail.readingActions.commentCountLabel} 条`"
         >
-          <span><MessageCircle aria-hidden="true" /></span>
-          <strong>{{ detail.readingActions.commentCountLabel }}</strong>
+          <div class="article-detail__action-icon">
+            <MessageCircle aria-hidden="true" />
+          </div>
+          <div class="article-detail__action-text">
+            <strong>Comment</strong>
+            <span>{{ detail.readingActions.commentCountLabel }}</span>
+          </div>
         </a>
-        <button type="button" aria-label="分享文章" @click="$emit('sharePost')">
-          <span><Share2 aria-hidden="true" /></span>
-          <strong>{{ detail.readingActions.shareLabel }}</strong>
+        <button
+          class="article-detail__action-btn"
+          type="button"
+          aria-label="分享文章"
+          @click="$emit('sharePost')"
+        >
+          <div class="article-detail__action-icon">
+            <Share2 aria-hidden="true" />
+          </div>
+          <div class="article-detail__action-text">
+            <strong>{{ detail.readingActions.shareLabel || "Share" }}</strong>
+          </div>
         </button>
       </div>
 
-      <p class="article-detail__note">
+      <p
+        v-if="readingActionError || detail.readingActions.note"
+        class="article-detail__note"
+      >
         {{ readingActionError || detail.readingActions.note }}
       </p>
-
-      <h2 id="related-reading" class="article-detail__related-title">
-        相关阅读
-      </h2>
-      <div class="article-detail__related-list">
-        <a
-          v-for="item in detail.relatedPosts"
-          :key="item.id"
-          :href="`/posts/${item.id}`"
-        >
-          <strong>{{ item.title }}</strong>
-          <span>{{ item.meta }}</span>
-        </a>
-      </div>
     </aside>
   </section>
 </template>
 
 <script setup lang="ts">
-import { Bookmark, Heart, MessageCircle, Share2 } from "@lucide/vue";
+import {
+  Bookmark,
+  ChevronRight,
+  MessageCircle,
+  Share2,
+  ThumbsUp,
+} from "@lucide/vue";
 import { useTemplateRef } from "vue";
 
 import type { ArticleDetailData } from "@/features/content-detail";
@@ -190,8 +248,10 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 <style scoped>
 .article-detail {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 300px;
-  gap: var(--space-5);
+  grid-template-columns: 15rem minmax(0, 1fr) 11rem;
+  gap: var(--space-8);
+  max-width: 75rem;
+  margin: 0 auto;
 }
 
 .article-detail__toc,
@@ -200,130 +260,153 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   border-radius: var(--radius-lg);
   background: var(--color-bg-elevated);
   box-shadow: var(--shadow-panel);
-}
-
-.article-detail__toc,
-.article-detail__rail {
   align-self: start;
-  padding: var(--space-4);
+  padding: var(--space-5);
 }
 
 .article-detail__toc {
   position: sticky;
-  top: 88px;
+  top: 5.5rem;
 }
 
-.article-detail__toc h2,
-.article-detail__rail h2 {
-  margin: 0 0 var(--space-3);
+.article-detail__rail {
+  position: sticky;
+  top: 5.5rem;
+}
+
+.article-detail__toc h2 {
+  margin: 0 0 var(--space-4);
   color: var(--color-text-strong);
-  font-size: 20px;
+  font-size: 1rem;
   letter-spacing: 0;
 }
 
-.article-detail__progress {
-  height: 4px;
-  margin-bottom: var(--space-3);
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--color-bg-hover);
-}
-
-.article-detail__progress span {
-  display: block;
-  width: var(--article-progress);
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-accent);
-}
-
-.article-detail__toc a,
-.article-detail__related-list a {
+.article-detail__toc-list {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-lg);
+  gap: var(--space-4);
+  padding-left: var(--space-4);
+}
+
+.article-detail__toc-list::before {
+  content: "";
+  position: absolute;
+  left: 0.25rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 0.125rem;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.article-detail__progress {
+  position: absolute;
+  left: 0.25rem;
+  top: 0.5rem;
+  width: 0.125rem;
+  height: var(--article-progress);
+  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+  z-index: 1;
+}
+
+.article-detail__toc a {
+  position: relative;
+  display: flex;
+  align-items: center;
   color: var(--color-text-soft);
-  font-weight: 750;
+  font-weight: 500;
+  font-size: 0.875rem;
   text-decoration: none;
+  line-height: 1.4;
+}
+
+.article-detail__toc a::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--space-4) * -1 - 0.0625rem);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-text-soft);
+  z-index: 2;
 }
 
 .article-detail__toc a.is-active {
-  background: color-mix(
-    in srgb,
-    var(--color-accent) 12%,
-    var(--color-bg-hover)
-  );
-  color: var(--color-text-strong);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.article-detail__toc a.is-active::before {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 0.125rem var(--color-bg-elevated);
 }
 
 .article-detail__content {
   padding: var(--space-2) 0 0;
+  min-width: 0;
 }
 
 .article-detail__eyebrow {
-  margin: 0;
-  color: var(--color-text-soft);
-  font-size: 13px;
-  font-weight: 750;
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .article-detail__content h1 {
-  max-width: 780px;
-  margin: var(--space-2) 0 0;
+  max-width: 48.75rem;
+  margin: 0;
   color: var(--color-text-strong);
-  font-size: 36px;
-  line-height: 1.24;
+  font-size: 2.25rem;
+  line-height: 1.2;
   letter-spacing: 0;
 }
 
 .article-detail__meta {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: var(--space-3);
+  display: flex;
   align-items: center;
-  margin: var(--space-4) 0 var(--space-6);
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-6);
   padding-bottom: var(--space-5);
   border-bottom: 1px solid var(--color-border);
 }
 
 .article-detail__meta p {
-  margin: 0;
+  margin: 0 0 var(--space-2);
   color: var(--color-text-soft);
-  font-size: 13px;
-  font-weight: 750;
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 .article-detail__avatar {
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   border-radius: var(--radius-pill);
   background: var(--color-text-strong);
   color: var(--color-bg-elevated);
-  font-weight: 850;
+  font-weight: 700;
 }
 
 .article-detail__status-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-2);
 }
 
 .article-detail__status {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 5px 9px;
+  padding: 0.25rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: var(--color-bg-hover);
-  font-size: 13px;
-  font-weight: 750;
+  background: transparent;
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .article-detail__status--ok {
@@ -335,7 +418,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 .article-detail__cover {
-  min-height: 260px;
+  min-height: 16.25rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background:
@@ -354,8 +437,8 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 }
 
 .article-detail__body {
-  min-height: 460px;
-  margin-top: var(--space-5);
+  min-height: 28.75rem;
+  margin-top: var(--space-6);
   padding-top: var(--space-5);
   border-top: 1px solid var(--color-border);
   color: var(--color-text);
@@ -363,6 +446,7 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
 
 .article-detail__body-heading {
   color: var(--color-text-strong);
+  scroll-margin-top: 6rem;
 }
 
 .article-detail__body-quote {
@@ -373,57 +457,58 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
   );
 }
 
-.article-detail__body-heading,
-.article-detail__related-title {
-  scroll-margin-top: 96px;
-}
-
 .article-detail__actions {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.article-detail__action-btn {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.article-detail__actions button,
-.article-detail__actions a {
-  display: grid;
-  gap: var(--space-2);
-  place-items: center;
-  min-width: 58px;
-  border: 0;
+  align-items: center;
+  gap: var(--space-4);
   background: transparent;
-  color: var(--color-text);
-  text-align: center;
-  text-decoration: none;
+  border: none;
   cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  text-align: left;
 }
 
-.article-detail__actions span {
+.article-detail__action-icon {
   display: grid;
-  width: 52px;
-  height: 52px;
   place-items: center;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-hover);
-}
-
-.article-detail__actions svg {
-  width: 20px;
-  height: 20px;
-}
-
-.article-detail__actions strong {
+  width: 2.25rem;
+  height: 2.25rem;
   color: var(--color-text-soft);
-  font-size: 13px;
 }
 
-.article-detail__actions .is-unknown {
+.article-detail__action-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.article-detail__action-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.article-detail__action-text strong {
+  color: var(--color-text-strong);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.article-detail__action-text span {
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+}
+
+.article-detail__action-btn.is-active .article-detail__action-icon {
+  color: var(--color-accent);
+}
+
+.article-detail__action-btn.is-unknown .article-detail__action-icon {
   color: var(--color-warning);
-}
-
-.article-detail__actions .is-unknown span {
-  border-style: dashed;
 }
 
 .article-detail__note {
@@ -437,44 +522,110 @@ const { activeHeadingHref, progressPercent } = useArticleReadingProgress(
     var(--color-bg-elevated)
   );
   color: var(--color-warning);
-  font-size: 13px;
-  font-weight: 750;
-  line-height: 1.65;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.article-detail__related-section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.article-detail__related-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
 }
 
 .article-detail__related-title {
-  margin-top: var(--space-6);
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 1.25rem;
+}
+
+.article-detail__related-more {
+  display: flex;
+  align-items: center;
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.article-detail__related-more svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .article-detail__related-list {
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: var(--space-4);
 }
 
-.article-detail__related-list strong,
-.article-detail__related-list span {
-  display: block;
+.article-detail__related-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  text-decoration: none;
+  transition: border-color 0.2s;
 }
 
-.article-detail__related-list span {
-  margin-top: var(--space-1);
+.article-detail__related-card:hover {
+  border-color: var(--color-accent);
+}
+
+.article-detail__related-card-cover {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 18%, transparent),
+      transparent 62%
+    ),
+    var(--color-bg-hover);
+}
+
+.article-detail__related-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  overflow: hidden;
+}
+
+.article-detail__related-card-content strong {
+  color: var(--color-text-strong);
+  font-size: 0.875rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-detail__related-card-content span {
   color: var(--color-text-soft);
-  font-size: 13px;
+  font-size: 0.75rem;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 64rem) {
   .article-detail {
     grid-template-columns: 1fr;
   }
 
-  .article-detail__toc {
+  .article-detail__toc,
+  .article-detail__rail {
     position: static;
-  }
-}
-
-@media (max-width: 640px) {
-  .article-detail__content h1 {
-    font-size: 30px;
   }
 }
 </style>
