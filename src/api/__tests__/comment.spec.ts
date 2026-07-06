@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
+
 import { getAxiosInstance } from "../request";
 import {
   createComment,
@@ -10,6 +12,10 @@ import {
 
 vi.mock("../request", () => ({
   getAxiosInstance: vi.fn(),
+}));
+
+vi.mock("@/runtime/localDemoMode", () => ({
+  isLocalDemoModeEnabled: vi.fn(() => false),
 }));
 
 describe("comment api", () => {
@@ -55,5 +61,35 @@ describe("comment api", () => {
     expect(get).toHaveBeenCalledWith("/v1/posts/post-1/comments/page", {
       params: input,
     });
+  });
+
+  it("serves top-level comments from an API-shaped local mock response without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+    const get = vi.fn().mockResolvedValue({ data: { shouldNot: "be used" } });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      get,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    await expect(
+      listCommentsPage("post-design-ia", {
+        page: 1,
+        size: 20,
+        sort: "RECOMMENDED",
+      }),
+    ).resolves.toMatchObject({
+      items: [
+        {
+          postId: "post-design-ia",
+          commentId: "comment_design_review",
+          status: "NORMAL",
+        },
+      ],
+      page: 1,
+      size: 20,
+      totalComments: 24,
+      totalTopLevelComments: 1,
+      pages: 1,
+    });
+    expect(get).not.toHaveBeenCalled();
   });
 });

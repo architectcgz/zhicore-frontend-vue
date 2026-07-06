@@ -1,5 +1,10 @@
 import type { ApiPageReq } from "@/types/api";
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 
+import {
+  getMockCreateCommentResp,
+  getMockListCommentsPageResp,
+} from "./mock/contentMockApi";
 import { getAxiosInstance } from "./request";
 
 export type CommentSort = "RECOMMENDED" | "HOT" | "TIME";
@@ -70,6 +75,10 @@ export async function createComment(
   postId: string,
   input: CreateCommentReq,
 ): Promise<CreateCommentResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockCreateCommentResp(postId);
+  }
+
   const response = await getAxiosInstance().post<CreateCommentResp>(
     `/v1/posts/${postId}/comments`,
     input,
@@ -81,6 +90,10 @@ export async function listCommentsPage(
   postId: string,
   input?: ListCommentsPageReq,
 ): Promise<TopLevelCommentPageResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockListCommentsPageResp(postId, input);
+  }
+
   const response = await getAxiosInstance().get<TopLevelCommentPageResp>(
     `/v1/posts/${postId}/comments/page`,
     { params: input },

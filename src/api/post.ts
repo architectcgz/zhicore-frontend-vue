@@ -1,6 +1,15 @@
 import type { PostBody, PostBodyWriteInput } from "@/entities/post-body";
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 import type { ApiCursorReq, ApiCursorResp } from "@/types/api";
 
+import {
+  getMockEngagementBatchStatusResp,
+  getMockFavoritePostResp,
+  getMockLikePostResp,
+  getMockListPostsResp,
+  getMockListTagsResp,
+  getMockPostDetailResp,
+} from "./mock/contentMockApi";
 import { getAxiosInstance } from "./request";
 
 export interface CreatePostReq {
@@ -170,6 +179,10 @@ export async function getPostBody(postId: string): Promise<PostBodyResp> {
 }
 
 export async function getPostDetail(postId: string): Promise<PostDetailResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockPostDetailResp(postId);
+  }
+
   const response = await getAxiosInstance().get<PostDetailResp>(
     `/v1/posts/${postId}`,
   );
@@ -177,6 +190,10 @@ export async function getPostDetail(postId: string): Promise<PostDetailResp> {
 }
 
 export async function listPosts(input?: ListPostsReq): Promise<ListPostsResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockListPostsResp(input);
+  }
+
   const response = await getAxiosInstance().get<ListPostsResp>("/v1/posts", {
     params: input,
   });
@@ -184,6 +201,10 @@ export async function listPosts(input?: ListPostsReq): Promise<ListPostsResp> {
 }
 
 export async function listTags(input?: ListTagsReq): Promise<ListTagsResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockListTagsResp(input);
+  }
+
   const response = await getAxiosInstance().get<ListTagsResp>("/v1/tags", {
     params: input,
   });
@@ -193,6 +214,10 @@ export async function listTags(input?: ListTagsReq): Promise<ListTagsResp> {
 export async function getPostEngagementBatchStatus(
   postIds: string[],
 ): Promise<PostEngagementBatchStatusResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockEngagementBatchStatusResp(postIds);
+  }
+
   const response = await getAxiosInstance().post<PostEngagementBatchStatusResp>(
     "/v1/posts/engagement/batch-status",
     { postIds },
@@ -201,6 +226,10 @@ export async function getPostEngagementBatchStatus(
 }
 
 export async function likePost(postId: string): Promise<LikePostResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockLikePostResp(postId);
+  }
+
   const response = await getAxiosInstance().put<LikePostResp>(
     `/v1/posts/${postId}/like`,
   );
@@ -208,6 +237,10 @@ export async function likePost(postId: string): Promise<LikePostResp> {
 }
 
 export async function favoritePost(postId: string): Promise<FavoritePostResp> {
+  if (isLocalDemoModeEnabled()) {
+    return getMockFavoritePostResp(postId);
+  }
+
   const response = await getAxiosInstance().put<FavoritePostResp>(
     `/v1/posts/${postId}/favorite`,
   );

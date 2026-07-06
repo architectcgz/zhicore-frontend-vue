@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
+
 import { getAxiosInstance } from "../request";
 import {
   createPost,
@@ -19,6 +21,10 @@ import {
 
 vi.mock("../request", () => ({
   getAxiosInstance: vi.fn(),
+}));
+
+vi.mock("@/runtime/localDemoMode", () => ({
+  isLocalDemoModeEnabled: vi.fn(() => false),
 }));
 
 describe("post api", () => {
@@ -283,5 +289,63 @@ describe("post api", () => {
     });
     expect(put).toHaveBeenNthCalledWith(1, "/v1/posts/post-1/like");
     expect(put).toHaveBeenNthCalledWith(2, "/v1/posts/post-1/favorite");
+  });
+
+  it("serves public post reads from API-shaped local mock responses without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+    const get = vi.fn().mockResolvedValue({ data: { shouldNot: "be used" } });
+    const post = vi.fn().mockResolvedValue({ data: { shouldNot: "be used" } });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      get,
+      post,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    const tagsResp = await listTags({ limit: 24 });
+    expect(tagsResp.hasMore).toBe(false);
+    expect(tagsResp.items[0]).toEqual({
+      tagId: "tag_product_design",
+      name: "Product Design",
+      slug: "product-design",
+    });
+    const postsResp = await listPosts({
+      limit: 10,
+      sort: "latest",
+      tag: "product-design",
+    });
+    expect(postsResp.hasMore).toBe(false);
+    expect(postsResp.items[0]).toMatchObject({
+      postId: "post-design-ia",
+      title: "Mastering Information Architecture: A Guide",
+      status: "PUBLISHED",
+    });
+    const detailResp = await getPostDetail("post-design-ia");
+    expect(detailResp).toMatchObject({
+      post: {
+        postId: "post-design-ia",
+        title: "Mastering Information Architecture: A Guide",
+      },
+      body: {
+        format: "blocks",
+      },
+    });
+    expect(detailResp.tags?.[0]).toMatchObject({
+      tagId: "tag_product_design",
+      slug: "product-design",
+    });
+    await expect(
+      getPostEngagementBatchStatus(["post-design-ia"]),
+    ).resolves.toEqual({
+      items: [
+        {
+          postId: "post-design-ia",
+          liked: false,
+          favorited: null,
+          degraded: true,
+        },
+      ],
+    });
+
+    expect(get).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
   });
 });
