@@ -73,6 +73,35 @@
           </template>
         </div>
 
+        <div class="article-detail__related-section">
+          <div class="article-detail__related-header">
+            <h2 id="related-reading" class="article-detail__related-title">
+              相关阅读
+            </h2>
+            <a href="/explore" class="article-detail__related-more">
+              View more
+              <ChevronRight aria-hidden="true" />
+            </a>
+          </div>
+          <div class="article-detail__related-list">
+            <a
+              v-for="item in detail.relatedPosts"
+              :key="item.id"
+              :href="`/posts/${item.id}`"
+              class="article-detail__related-card"
+            >
+              <div
+                class="article-detail__related-card-cover"
+                aria-hidden="true"
+              />
+              <div class="article-detail__related-card-content">
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.meta }}</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <ArticleComments
           variant="dock"
           :comments="detail.comments"
@@ -90,35 +119,6 @@
           @submit-comment="$emit('submitComment')"
           @retry-comments="$emit('retryComments')"
         />
-      </div>
-
-      <div class="article-detail__related-section">
-        <div class="article-detail__related-header">
-          <h2 id="related-reading" class="article-detail__related-title">
-            相关阅读
-          </h2>
-          <a href="/explore" class="article-detail__related-more">
-            View more
-            <ChevronRight aria-hidden="true" />
-          </a>
-        </div>
-        <div class="article-detail__related-list">
-          <a
-            v-for="item in detail.relatedPosts"
-            :key="item.id"
-            :href="`/posts/${item.id}`"
-            class="article-detail__related-card"
-          >
-            <div
-              class="article-detail__related-card-cover"
-              aria-hidden="true"
-            />
-            <div class="article-detail__related-card-content">
-              <strong>{{ item.title }}</strong>
-              <span>{{ item.meta }}</span>
-            </div>
-          </a>
-        </div>
       </div>
     </article>
 
@@ -292,6 +292,12 @@ const { activeHeadingHref, progressPercent, tocProgressScale } =
 }
 
 .article-detail__toc-list {
+  --article-toc-marker-size: 0.5rem;
+  --article-toc-track-width: 0.125rem;
+  --article-toc-track-left: calc(
+    var(--article-toc-marker-size) / 2 - var(--article-toc-track-width) / 2
+  );
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -302,20 +308,20 @@ const { activeHeadingHref, progressPercent, tocProgressScale } =
 .article-detail__toc-list::before {
   content: "";
   position: absolute;
-  left: 0.25rem;
+  left: var(--article-toc-track-left);
   top: 0.5rem;
   bottom: 0.5rem;
-  width: 0.125rem;
+  width: var(--article-toc-track-width);
   background: var(--color-border);
   border-radius: var(--radius-pill);
 }
 
 .article-detail__progress {
   position: absolute;
-  left: 0.25rem;
+  left: var(--article-toc-track-left);
   top: 0.5rem;
   bottom: 0.5rem;
-  width: 0.125rem;
+  width: var(--article-toc-track-width);
   background: var(--color-accent);
   border-radius: var(--radius-pill);
   transform: scaleY(var(--article-progress-scale, 0));
@@ -337,9 +343,9 @@ const { activeHeadingHref, progressPercent, tocProgressScale } =
 .article-detail__toc a::before {
   content: "";
   position: absolute;
-  left: calc(var(--space-4) * -1 - 0.0625rem);
-  width: 0.5rem;
-  height: 0.5rem;
+  left: calc(var(--space-4) * -1);
+  width: var(--article-toc-marker-size);
+  height: var(--article-toc-marker-size);
   border-radius: 50%;
   background: var(--color-text-soft);
   z-index: 2;

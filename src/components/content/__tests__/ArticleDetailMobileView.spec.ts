@@ -110,4 +110,19 @@ describe("ArticleDetailMobileView", () => {
     );
     expect(articleDetailMobileViewSource).not.toContain("@/api/post");
   });
+
+  it("places related reading between the article body and comments on mobile", () => {
+    const bodyIndex = articleDetailMobileViewSource.indexOf(
+      'class="article-detail-mobile__body reading-typography"',
+    );
+    const relatedIndex = articleDetailMobileViewSource.indexOf(
+      'class="article-detail-mobile__related-section"',
+    );
+    const commentsIndex =
+      articleDetailMobileViewSource.indexOf("<ArticleComments");
+
+    expect(bodyIndex).toBeGreaterThan(-1);
+    expect(relatedIndex).toBeGreaterThan(bodyIndex);
+    expect(commentsIndex).toBeGreaterThan(relatedIndex);
+  });
 });

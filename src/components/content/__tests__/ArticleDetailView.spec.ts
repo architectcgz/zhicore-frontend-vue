@@ -48,6 +48,21 @@ describe("ArticleDetailView", () => {
     );
   });
 
+  it("centers the desktop toc track on the navigation markers", () => {
+    expect(articleDetailViewSource).toContain("--article-toc-marker-size");
+    expect(articleDetailViewSource).toContain("--article-toc-track-width");
+    expect(articleDetailViewSource).toContain("--article-toc-track-left");
+    expect(articleDetailViewSource).toContain(
+      "left: var(--article-toc-track-left);",
+    );
+    expect(articleDetailViewSource).toContain(
+      "left: calc(var(--space-4) * -1);",
+    );
+    expect(articleDetailViewSource).not.toContain(
+      "left: calc(var(--space-4) * -1 - 0.0625rem);",
+    );
+  });
+
   it("binds active toc item to scroll-driven heading state", () => {
     expect(articleDetailViewSource).toContain(
       ":class=\"{ 'is-active': tocItem.href === activeHeadingHref }\"",
@@ -71,6 +86,20 @@ describe("ArticleDetailView", () => {
       '<div class="article-detail__reading-card">',
     );
     expect(articleDetailViewSource).toContain('variant="dock"');
+  });
+
+  it("places related reading between the article body and dock comments", () => {
+    const bodyIndex = articleDetailViewSource.indexOf(
+      'class="article-detail__body reading-typography"',
+    );
+    const relatedIndex = articleDetailViewSource.indexOf(
+      'class="article-detail__related-section"',
+    );
+    const commentsIndex = articleDetailViewSource.indexOf("<ArticleComments");
+
+    expect(bodyIndex).toBeGreaterThan(-1);
+    expect(relatedIndex).toBeGreaterThan(bodyIndex);
+    expect(commentsIndex).toBeGreaterThan(relatedIndex);
   });
 
   it("links related posts with real post ids instead of placeholder anchors", () => {

@@ -48,6 +48,27 @@
         </template>
       </div>
 
+      <div class="article-detail-mobile__related-section">
+        <div class="article-detail-mobile__related-header">
+          <h2>相关阅读</h2>
+          <a href="/explore" class="article-detail-mobile__related-more">
+            查看更多
+            <ChevronRight aria-hidden="true" />
+          </a>
+        </div>
+        <div class="article-detail-mobile__related-list">
+          <a
+            v-for="item in detail.relatedPosts"
+            :key="item.id"
+            :href="`/posts/${item.id}`"
+            class="article-detail-mobile__related-item"
+          >
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.meta }}</span>
+          </a>
+        </div>
+      </div>
+
       <ArticleComments
         :comments="detail.comments"
         :count-label="detail.commentsTotalLabel"
@@ -171,11 +192,12 @@
 <script setup lang="ts">
 import {
   Bookmark,
-  ThumbsUp,
+  ChevronRight,
   ListTree,
   MessageCircle,
   MoreHorizontal,
   Share2,
+  ThumbsUp,
 } from "@lucide/vue";
 import { ref, useTemplateRef } from "vue";
 
@@ -349,6 +371,67 @@ function closeActionSheet(): void {
     var(--color-accent) 32%,
     var(--color-border)
   );
+}
+
+.article-detail-mobile__related-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.article-detail-mobile__related-header {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.article-detail-mobile__related-header h2 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-18);
+  letter-spacing: 0;
+}
+
+.article-detail-mobile__related-more {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  color: var(--color-accent);
+  font-size: var(--font-size-13);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.article-detail-mobile__related-more svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.article-detail-mobile__related-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.article-detail-mobile__related-item {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  text-decoration: none;
+}
+
+.article-detail-mobile__related-item strong {
+  color: var(--color-text-strong);
+  font-size: var(--font-size-15);
+  line-height: 1.45;
+}
+
+.article-detail-mobile__related-item span {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-13);
+  line-height: 1.45;
 }
 
 .article-detail-mobile__fab {
