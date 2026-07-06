@@ -415,6 +415,115 @@ describe("EditorWritingPane", () => {
     expect(wrapper.emitted("bodyDocumentInput")).toBeUndefined();
   });
 
+  it("edits link text and href from the article link panel", async () => {
+    const wrapper = mountWritingPane();
+
+    await wrapper.get('button[aria-label="插入链接"]').trigger("click");
+    await wrapper.get('[data-testid="article-link-text"]').setValue("契约文档");
+    await wrapper
+      .get('[data-testid="article-link-href"]')
+      .setValue("https://example.com/contracts");
+    await wrapper.get('[data-testid="article-link-apply"]').trigger("click");
+
+    const editor = exposedEditor(wrapper).bodyEditor;
+
+    expect(wrapper.emitted("toolbarAction")).toBeUndefined();
+    expect(blocksFromEditor(editor!)[0]).toEqual({
+      type: "paragraph",
+      children: [
+        {
+          type: "text",
+          text: "契约文档",
+          marks: [{ type: "link", href: "https://example.com/contracts" }],
+        },
+        {
+          type: "text",
+          text: "草稿正文",
+        },
+      ],
+    });
+  });
+
+  it("closes the article link panel when the body selection moves elsewhere", async () => {
+    const wrapper = mountWritingPane();
+    const exposed = exposedEditor(wrapper);
+
+    await wrapper.get('button[aria-label="插入链接"]').trigger("click");
+    expect(wrapper.find('[data-testid="article-link-text"]').exists()).toBe(
+      true,
+    );
+
+    exposed.setBodySelection({ start: 2, end: 2 });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="article-link-text"]').exists()).toBe(
+      false,
+    );
+  });
+
+  it("opens editor links only from a modifier click while editing", async () => {
+    const wrapper = mountWritingPane();
+    const exposed = exposedEditor(wrapper);
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+    exposed.setBodySelection({ start: 1, end: 5 });
+    exposed.applyBodyToolbarAction("link");
+    await wrapper.vm.$nextTick();
+
+    const link =
+      exposed.bodyEditorElement?.querySelector<HTMLAnchorElement>("a");
+
+    expect(link).not.toBeNull();
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      ".ProseMirror.editor-link-open-modifier a[href]",
+    );
+
+    link!.dispatchEvent(
+      new MouseEvent("mousemove", {
+        bubbles: true,
+        ctrlKey: true,
+      }),
+    );
+    expect(
+      exposed.bodyEditorElement?.classList.contains(
+        "editor-link-open-modifier",
+      ),
+    ).toBe(true);
+
+    exposed.bodyEditorElement!.dispatchEvent(
+      new KeyboardEvent("keyup", {
+        key: "Control",
+        bubbles: true,
+      }),
+    );
+    expect(
+      exposed.bodyEditorElement?.classList.contains(
+        "editor-link-open-modifier",
+      ),
+    ).toBe(false);
+
+    link!.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(openSpy).not.toHaveBeenCalled();
+
+    link!.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: true,
+      }),
+    );
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://example.com/",
+      "_blank",
+      "noopener,noreferrer",
+    );
+  });
+
   it("emits save from the editor save shortcut", () => {
     const wrapper = mountWritingPane();
     const titleInput = wrapper.find<HTMLTextAreaElement>(".title-input");

@@ -31,6 +31,10 @@
   margin: 0;
 }
 
+.writing-editor .body-input .ProseMirror.editor-link-open-modifier a[href] {
+  cursor: pointer;
+}
+
 .writing-editor .body-input .ProseMirror h1,
 .writing-editor .body-input .ProseMirror h2,
 .writing-editor .body-input .ProseMirror h3,

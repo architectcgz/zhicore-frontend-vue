@@ -300,6 +300,114 @@ const EditorTiptapTableExit = Extension.create({
   },
 });
 
+function findClickedLinkElement(
+  target: EventTarget | null,
+): HTMLAnchorElement | null {
+  if (!(target instanceof HTMLElement)) {
+    return null;
+  }
+
+  return target.closest<HTMLAnchorElement>("a[href]");
+}
+
+function setModifierLinkOpenClass(
+  element: HTMLElement,
+  isActive: boolean,
+): void {
+  element.classList.toggle("editor-link-open-modifier", isActive);
+}
+
+const EditorTiptapModifierLinkOpen = Extension.create({
+  name: "editorModifierLinkOpen",
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        props: {
+          handleDOMEvents: {
+            keydown(view, event) {
+              if (event instanceof KeyboardEvent) {
+                setModifierLinkOpenClass(
+                  view.dom,
+                  event.ctrlKey || event.metaKey,
+                );
+              }
+
+              return false;
+            },
+            keyup(view, event) {
+              if (event instanceof KeyboardEvent) {
+                setModifierLinkOpenClass(
+                  view.dom,
+                  event.ctrlKey || event.metaKey,
+                );
+              }
+
+              return false;
+            },
+            mousemove(view, event) {
+              if (event instanceof MouseEvent) {
+                setModifierLinkOpenClass(
+                  view.dom,
+                  event.ctrlKey || event.metaKey,
+                );
+              }
+
+              return false;
+            },
+            mouseleave(view) {
+              setModifierLinkOpenClass(view.dom, false);
+              return false;
+            },
+            click(view, event) {
+              if (
+                !(event instanceof MouseEvent) ||
+                (!event.ctrlKey && !event.metaKey)
+              ) {
+                return false;
+              }
+
+              const linkElement = findClickedLinkElement(event.target);
+              const href = linkElement
+                ? sanitizePostBodyExternalUrl(linkElement.href)
+                : null;
+
+              if (!href) {
+                return false;
+              }
+
+              event.preventDefault();
+              window.open(href, "_blank", "noopener,noreferrer");
+              setModifierLinkOpenClass(view.dom, false);
+              return true;
+            },
+          },
+        },
+        view(view) {
+          const syncModifierClass = (event: KeyboardEvent): void => {
+            setModifierLinkOpenClass(view.dom, event.ctrlKey || event.metaKey);
+          };
+          const clearModifierClass = (): void => {
+            setModifierLinkOpenClass(view.dom, false);
+          };
+
+          window.addEventListener("keydown", syncModifierClass);
+          window.addEventListener("keyup", syncModifierClass);
+          window.addEventListener("blur", clearModifierClass);
+
+          return {
+            destroy() {
+              window.removeEventListener("keydown", syncModifierClass);
+              window.removeEventListener("keyup", syncModifierClass);
+              window.removeEventListener("blur", clearModifierClass);
+            },
+          };
+        },
+      }),
+    ];
+  },
+});
+
 export function createEditorTiptapContractGuardExtension(
   options: EditorTiptapContractGuardOptions = {},
 ) {
@@ -364,6 +472,7 @@ export function createEditorTiptapExtensions(
       autolink: false,
       linkOnPaste: false,
     }),
+    EditorTiptapModifierLinkOpen,
     Table.configure({
       resizable: false,
     }),

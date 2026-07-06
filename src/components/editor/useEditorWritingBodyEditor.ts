@@ -310,6 +310,7 @@ export function useEditorWritingBodyEditor(
     writingEditorRef,
     bodyEditor,
     currentCodeBlockLanguage,
+    bodySelection: lastBodySelection,
     focusBody,
     getBodySelection,
     setBodySelection,
