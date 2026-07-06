@@ -29,6 +29,7 @@ async function mountAppLayout(
       { path: "/search", component: { template: "<div />" } },
       { path: "/about", component: { template: "<div />" } },
       { path: "/messages", component: { template: "<div />" } },
+      { path: "/user/profile", component: { template: "<div />" } },
       {
         path: "/messages/:conversationId",
         component: { template: "<div />" },
@@ -73,8 +74,8 @@ describe("AppLayout", () => {
     expect(wrapper.find('button[aria-label="通知"]').exists()).toBe(false);
     expect(wrapper.find('a[aria-label="消息"]').exists()).toBe(false);
     expect(wrapper.find(".app-layout__badge").exists()).toBe(false);
-    expect(wrapper.find('a[aria-label="登录"]').attributes("href")).toBe(
-      "/auth/login",
+    expect(wrapper.find('a[aria-label="个人信息"]').attributes("href")).toBe(
+      "/user/profile",
     );
   });
 
@@ -101,17 +102,16 @@ describe("AppLayout", () => {
     ).toEqual(["2"]);
   });
 
-  it("runs the logout action from mirrored account controls", async () => {
-    const logout = vi.fn();
-    const { wrapper } = await mountAppLayout({ logout });
+  it("links mirrored account controls to the profile page during profile development", async () => {
+    const { wrapper } = await mountAppLayout({ isLoggedIn: true });
 
-    await wrapper.find('button[aria-label="退出登录"]').trigger("click");
-    await wrapper
-      .findAll('button[aria-label="退出登录"]')
-      .at(1)
-      ?.trigger("click");
+    const accountLinks = wrapper.findAll('a[aria-label="个人信息"]');
 
-    expect(logout).toHaveBeenCalledTimes(2);
+    expect(accountLinks).toHaveLength(2);
+    expect(accountLinks.map((link) => link.attributes("href"))).toEqual([
+      "/user/profile",
+      "/user/profile",
+    ]);
   });
 
   it("does not render mobile bottom navigation on flush shell pages", async () => {

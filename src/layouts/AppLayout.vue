@@ -79,20 +79,10 @@
           </span>
         </RouterLink>
 
-        <button
-          v-if="props.isLoggedIn"
-          class="app-layout__icon-btn app-layout__profile-btn"
-          type="button"
-          aria-label="退出登录"
-          @click="props.logout"
-        >
-          <User class="app-layout__icon" aria-hidden="true" />
-        </button>
         <RouterLink
-          v-else
           class="app-layout__icon-btn app-layout__profile-btn"
-          to="/auth/login"
-          aria-label="登录"
+          to="/user/profile"
+          aria-label="个人信息"
         >
           <User class="app-layout__icon" aria-hidden="true" />
         </RouterLink>
@@ -150,24 +140,13 @@
         </div>
         <span>消息</span>
       </RouterLink>
-      <button
-        v-if="props.isLoggedIn"
-        class="app-layout__mobile-nav-link"
-        type="button"
-        aria-label="退出登录"
-        @click="props.logout"
-      >
-        <User class="app-layout__icon" aria-hidden="true" />
-        <span>退出</span>
-      </button>
       <RouterLink
-        v-else
         class="app-layout__mobile-nav-link"
-        to="/auth/login"
-        aria-label="登录"
+        to="/user/profile"
+        aria-label="个人信息"
       >
         <User class="app-layout__icon" aria-hidden="true" />
-        <span>登录</span>
+        <span>我的</span>
       </RouterLink>
     </nav>
   </div>
