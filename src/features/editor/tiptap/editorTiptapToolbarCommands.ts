@@ -160,6 +160,15 @@ export function applyTiptapToolbarAction(
     return;
   }
 
+  if (action === "mention") {
+    editor
+      .chain()
+      .focus(undefined, { scrollIntoView: false })
+      .insertContent("@用户 ")
+      .run();
+    return;
+  }
+
   if (action in headingToolbarLevels) {
     editor
       .chain()

@@ -5,6 +5,7 @@ export type EditorToolbarAction =
   | "strike"
   | "inlineCode"
   | "link"
+  | "mention"
   | "heading1"
   | "heading2"
   | "heading3"

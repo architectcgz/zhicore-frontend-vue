@@ -1,7 +1,8 @@
 import type { Editor } from "@tiptap/vue-3";
 import { enableAutoUnmount, mount } from "@vue/test-utils";
+import { readFileSync } from "node:fs";
 import { nextTick } from "vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getTiptapPlainText,
@@ -11,7 +12,16 @@ import {
 import EditorCompactBodyComposer from "../EditorCompactBodyComposer.vue";
 import editorCompactBodyComposerSource from "../EditorCompactBodyComposer.vue?raw";
 
+const writingPaneTiptapBaseStyleSource = readFileSync(
+  "src/components/editor/EditorWritingPaneTiptapBase.css",
+  "utf8",
+);
+
 enableAutoUnmount(afterEach);
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function docFromText(text: string): EditorTiptapDocumentJson {
   return {
@@ -28,6 +38,7 @@ function docFromText(text: string): EditorTiptapDocumentJson {
 function exposedEditor(wrapper: ReturnType<typeof mount>) {
   return wrapper.vm as unknown as {
     bodyEditor: Editor | null;
+    bodyEditorElement: HTMLElement | null;
   };
 }
 
@@ -58,8 +69,8 @@ describe("EditorCompactBodyComposer", () => {
     expect(editorCompactBodyComposerSource).toContain("unorderedList");
     expect(editorCompactBodyComposerSource).toContain("orderedList");
     expect(editorCompactBodyComposerSource).toContain("taskList");
-    expect(editorCompactBodyComposerSource).not.toContain(
-      "outline: 2px solid var(--color-accent)",
+    expect(editorCompactBodyComposerSource).toContain(
+      "editor-compact-body__panel-actions button:focus-visible",
     );
   });
 
@@ -105,5 +116,130 @@ describe("EditorCompactBodyComposer", () => {
     await nextTick();
 
     expect(hasCodeBlock(editor!)).toBe(true);
+  });
+
+  it("edits link text and href from the compact link panel", async () => {
+    const wrapper = mount(EditorCompactBodyComposer, {
+      props: {
+        modelValue: "",
+        maxLength: 1000,
+        toolbarActions: ["link"],
+      },
+    });
+
+    await wrapper.get('[data-testid="compact-toolbar-link"]').trigger("click");
+    await wrapper.get('[data-testid="compact-link-text"]').setValue("契约文档");
+    await wrapper
+      .get('[data-testid="compact-link-href"]')
+      .setValue("https://example.com/contracts");
+    await wrapper.get('[data-testid="compact-link-apply"]').trigger("click");
+
+    const editor = exposedEditor(wrapper).bodyEditor;
+    const paragraph = editor?.getJSON().content?.[0];
+    const textNode = paragraph?.content?.[0];
+
+    expect(textNode).toMatchObject({
+      type: "text",
+      text: "契约文档",
+      marks: [
+        {
+          type: "link",
+          attrs: { href: "https://example.com/contracts" },
+        },
+      ],
+    });
+    expect(wrapper.emitted("update:modelValue")?.at(-1)).toEqual(["契约文档"]);
+  });
+
+  it("closes the compact link panel when the editor selection moves elsewhere", async () => {
+    const wrapper = mount(EditorCompactBodyComposer, {
+      props: {
+        modelValue: "已有评论",
+        maxLength: 1000,
+        toolbarActions: ["link"],
+      },
+    });
+    const editor = exposedEditor(wrapper).bodyEditor;
+
+    await wrapper.get('[data-testid="compact-toolbar-link"]').trigger("click");
+    expect(wrapper.find('[data-testid="compact-link-text"]').exists()).toBe(
+      true,
+    );
+
+    editor!.commands.setTextSelection(2);
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="compact-link-text"]').exists()).toBe(
+      false,
+    );
+  });
+
+  it("uses the shared editor link open modifier state in comments", async () => {
+    const wrapper = mount(EditorCompactBodyComposer, {
+      props: {
+        modelValue: "",
+        maxLength: 1000,
+        toolbarActions: ["link"],
+      },
+    });
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+    await wrapper.get('[data-testid="compact-toolbar-link"]').trigger("click");
+    await wrapper.get('[data-testid="compact-link-text"]').setValue("契约文档");
+    await wrapper
+      .get('[data-testid="compact-link-href"]')
+      .setValue("https://example.com/contracts");
+    await wrapper.get('[data-testid="compact-link-apply"]').trigger("click");
+
+    const editorElement = exposedEditor(wrapper).bodyEditorElement;
+    const link = editorElement?.querySelector<HTMLAnchorElement>("a");
+
+    expect(link).not.toBeNull();
+    expect(writingPaneTiptapBaseStyleSource).toContain(
+      ".ProseMirror.editor-link-open-modifier a[href]",
+    );
+
+    link!.dispatchEvent(
+      new MouseEvent("mousemove", {
+        bubbles: true,
+        ctrlKey: true,
+      }),
+    );
+    expect(editorElement?.classList.contains("editor-link-open-modifier")).toBe(
+      true,
+    );
+
+    link!.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: true,
+      }),
+    );
+
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://example.com/contracts",
+      "_blank",
+      "noopener,noreferrer",
+    );
+  });
+
+  it("inserts a mention from the compact mention panel", async () => {
+    const wrapper = mount(EditorCompactBodyComposer, {
+      props: {
+        modelValue: "",
+        maxLength: 1000,
+        toolbarActions: ["mention"],
+      },
+    });
+
+    await wrapper
+      .get('[data-testid="compact-toolbar-mention"]')
+      .trigger("click");
+    await wrapper
+      .get('[data-testid="compact-mention-option-user-lin"]')
+      .trigger("click");
+
+    expect(wrapper.emitted("update:modelValue")?.at(-1)).toEqual(["@Lin "]);
   });
 });
