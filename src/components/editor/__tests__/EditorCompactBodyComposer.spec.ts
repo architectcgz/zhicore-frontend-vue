@@ -1,7 +1,7 @@
 import type { Editor } from "@tiptap/vue-3";
-import { mount } from "@vue/test-utils";
+import { enableAutoUnmount, mount } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   getTiptapPlainText,
@@ -10,6 +10,8 @@ import {
 
 import EditorCompactBodyComposer from "../EditorCompactBodyComposer.vue";
 import editorCompactBodyComposerSource from "../EditorCompactBodyComposer.vue?raw";
+
+enableAutoUnmount(afterEach);
 
 function docFromText(text: string): EditorTiptapDocumentJson {
   return {
