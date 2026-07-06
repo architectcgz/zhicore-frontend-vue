@@ -1,27 +1,75 @@
+import { ref } from "vue";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import { describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { ApiError } from "@/api/request";
-import { getMe, updateProfile } from "@/api/user";
 import UserProfileRoutePage from "@/pages/user/UserProfileRoutePage.vue";
 
-vi.mock("@/api/user", () => ({
-  getMe: vi.fn(),
-  updateProfile: vi.fn(),
+const mockActiveTab = ref("profile");
+const mockForm = ref({
+  nickname: "Alice",
+  bio: "old bio",
+  strangerMessageAllowed: true,
+  avatarFileId: "avatar-1",
+  avatarUrl: "https://cdn.example.com/avatar.jpg",
+});
+const mockFieldErrors = ref({
+  nickname: "",
+  bio: "",
+});
+
+const mockHandleSave = vi.fn().mockImplementation(async () => {
+  if (mockForm.value.nickname === "Alice2") {
+    mockFieldErrors.value.nickname = "昵称已被使用";
+  }
+});
+
+vi.mock("@/features/user-profile", () => ({
+  useUserProfile: () => ({
+    profile: ref({
+      avatarUrl: "https://cdn.example.com/avatar.jpg",
+      publicId: "user_pub_1",
+      profileVersion: 3,
+    }),
+    form: mockForm,
+    tabs: [
+      { id: "profile", label: "个人信息", description: "昵称、头像和简介" },
+      {
+        id: "message-preference",
+        label: "消息偏好",
+        description: "陌生人消息设置",
+      },
+    ],
+    activeTab: mockActiveTab,
+    isLoading: ref(false),
+    isSaving: ref(false),
+    isUploading: ref(false),
+    successMessage: ref(""),
+    errorMessage: ref(""),
+    fieldErrors: mockFieldErrors,
+    handleSave: mockHandleSave,
+    handleLogout: vi.fn(),
+    handleAvatarUpload: vi.fn(),
+    handleAvatarRemove: vi.fn(),
+    resetForm: vi.fn(),
+  }),
 }));
 
 async function mountUserProfilePage() {
-  vi.mocked(getMe).mockResolvedValue({
-    publicId: "user_pub_1",
+  mockActiveTab.value = "profile";
+  mockForm.value = {
     nickname: "Alice",
-    avatarFileId: "avatar-1",
-    avatarUrl: "https://cdn.example.com/avatar.jpg",
     bio: "old bio",
     strangerMessageAllowed: true,
-    profileVersion: 3,
-  });
+    avatarFileId: "avatar-1",
+    avatarUrl: "https://cdn.example.com/avatar.jpg",
+  };
+  mockFieldErrors.value = {
+    nickname: "",
+    bio: "",
+  };
+  mockHandleSave.mockClear();
 
   const router = createRouter({
     history: createMemoryHistory(),
@@ -44,11 +92,35 @@ async function mountUserProfilePage() {
 }
 
 describe("UserProfileRoutePage", () => {
+  it("switches settings content through the left tab list", async () => {
+    const wrapper = await mountUserProfilePage();
+
+    expect(wrapper.find("#profile-nickname").exists()).toBe(true);
+    expect(wrapper.find("#profile-message-preference").exists()).toBe(false);
+    expect(
+      wrapper
+        .find('[data-testid="user-profile-tab-profile"]')
+        .attributes("aria-selected"),
+    ).toBe("true");
+    expect(wrapper.find(".user-profile__nav-panel").text()).not.toContain(
+      "Alice",
+    );
+
+    await wrapper
+      .find('[data-testid="user-profile-tab-message-preference"]')
+      .trigger("click");
+
+    expect(wrapper.find("#profile-nickname").exists()).toBe(false);
+    expect(wrapper.find("#profile-message-preference").exists()).toBe(true);
+    expect(
+      wrapper
+        .find('[data-testid="user-profile-tab-message-preference"]')
+        .attributes("aria-selected"),
+    ).toBe("true");
+  });
+
   it("maps nickname ApiError codes to the nickname field", async () => {
     const wrapper = await mountUserProfilePage();
-    vi.mocked(updateProfile).mockRejectedValue(
-      new ApiError("昵称已被使用", { status: 409, code: 3005 }),
-    );
 
     await wrapper.find("#profile-nickname").setValue("Alice2");
     await wrapper.find("form").trigger("submit");
