@@ -16,14 +16,14 @@
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------- |
 | `docs/design/资源.png`                         | `/resources` / `src/pages/resources/ResourcesRoutePage.vue`                               | 已完成，见 `2026-07-06-resources-page-design-implementation-plan.md` | 后续接真实资源能力时另开 API/feature 计划 |
 | `docs/design/个人.png`                         | `/user/profile` / `src/pages/user/UserProfileRoutePage.vue` + `src/features/user-profile` | 任务 1 已完成：设置导航、个人资料表单、保存区和状态反馈已收敛        | 后续如接安全/隐私/日志能力需另开切片      |
-| `docs/design/explore.png`                      | `/explore` / `src/pages/explore/ExploreRoutePage.vue`                                     | 已有路由，待核对设计稿还原度                                         | 本计划任务 2                              |
-| `docs/design/社区.png`                         | `/community` / `src/pages/community/CommunityRoutePage.vue`                               | 已有路由，待核对设计稿还原度                                         | 本计划任务 3                              |
-| `docs/design/about.png`                        | `/about` 或现有 About 路由 owner                                                          | 待确认路由/页面 owner                                                | 本计划任务 4                              |
-| `docs/design/文档.png`                         | 文档/编辑器展示相关 route                                                                 | 待确认目标路由                                                       | 后续单独切片                              |
-| `docs/design/文章详情.png`                     | `/posts/:postId` / content detail owner                                                   | 已有内容详情实现，待核对新稿                                         | 后续单独切片                              |
-| `docs/design/会话.png`、`消息.png`、`通知.png` | message/notification owners                                                               | 已有部分消息/通知路由与 feature，本轮暂不混入个人页                  | 后续单独切片                              |
-| `docs/design/登录.png`、`注册.png`             | auth owner                                                                                | 登录页已有，注册路由需确认能力边界                                   | 后续单独切片                              |
-| `docs/design/401，403，404,500.png`            | `/error/:status`                                                                          | 已有错误页，待核对新稿                                               | 后续单独切片                              |
+| `docs/design/explore.png`                      | `/explore` / `src/pages/explore/ExploreRoutePage.vue`                                     | 已完成：双栏探索页、筛选/趋势侧栏和派生统计已收敛                    | 右侧 Filter 仍为静态展示                  |
+| `docs/design/社区.png`                         | `/community` / `src/pages/community/CommunityRoutePage.vue`                               | 已完成：三栏社区浏览、降级互动状态和公开帖子区已收敛                 | 真实社区统计接 API 时另开切片             |
+| `docs/design/about.png`                        | `/about` / `src/pages/home/HomeAboutRoutePage.vue`                                        | 已完成：品牌介绍页、能力块和底部 statement 已收敛                    | 无                                        |
+| `docs/design/文档.png`                         | `/editor-document-showcase` / `src/components/editor/EditorDocumentViewer.vue`            | 已完成：工程文档 showcase、左右栏和发布检查已收敛                    | 仅展示页，不改编辑器保存链路              |
+| `docs/design/文章详情.png`                     | `/posts/:postId` / content detail owner                                                   | 已完成：三栏阅读、右侧操作栏和 dock 评论入口已收敛                   | 像素级与真实本地数据存在自然差异          |
+| `docs/design/会话.png`、`消息.png`、`通知.png` | message/notification owners                                                               | 已完成：消息列表、会话详情、通知中心布局已收敛                       | 未读数仍来自现有 feature owner            |
+| `docs/design/登录.png`、`注册.png`             | auth owner                                                                                | 已完成：登录/注册视觉、注册顶栏和现有表单流程已收敛                  | 发送验证码/OAuth 仅为视觉入口             |
+| `docs/design/401，403，404,500.png`            | `/error/:status`                                                                          | 已完成：状态页导航、大号状态码、摘要和恢复操作已收敛                 | 无                                        |
 
 ## 范围
 
@@ -83,25 +83,57 @@
 
 **目标：** 对照 `docs/design/explore.png` 检查 `/explore` 现状，补齐首屏结构、筛选、列表密度和移动端收口。
 
-- [ ] 核对当前 `ExploreRoutePage.vue` 与设计稿差异。
-- [ ] 只在现有 route owner 内做静态/展示收敛。
-- [ ] 运行定向验证。
+- [x] 核对当前 `ExploreRoutePage.vue` 与设计稿差异。
+- [x] 只在现有 route owner 内做静态/展示收敛。
+- [x] 运行定向验证。
 
 ## 任务 3：社区页核对 `社区.png`
 
 **目标：** 对照 `docs/design/社区.png` 检查 `/community` 现状，保持社区页作为内容浏览页，不伪造真实社区统计。
 
-- [ ] 核对当前 `CommunityRoutePage.vue` 与设计稿差异。
-- [ ] 补齐必要的静态结构和降级状态。
-- [ ] 运行定向验证。
+- [x] 核对当前 `CommunityRoutePage.vue` 与设计稿差异。
+- [x] 补齐必要的静态结构和降级状态。
+- [x] 运行定向验证。
 
 ## 任务 4：About 路由归属确认
 
 **目标：** 对照 `docs/design/about.png` 确认当前是否已有 `/about` 路由和 owner，再决定是否新增页面。
 
-- [ ] 搜索路由和页面 owner。
-- [ ] 如没有 route，单独补路由计划和导航测试。
-- [ ] 如已有 route，只做设计还原和定向验证。
+- [x] 搜索路由和页面 owner。
+- [x] 如没有 route，单独补路由计划和导航测试。
+- [x] 如已有 route，只做设计还原和定向验证。
+
+## 任务 5：文章详情核对 `文章详情.png`
+
+**目标：** 对照 `docs/design/文章详情.png` 收敛 `/posts/:postId` 阅读首屏，同时保留现有内容详情 owner、评论行为和未知计数降级。
+
+- [x] 核对文章详情组件与设计稿差异。
+- [x] 补齐三栏阅读、右侧操作栏和 dock 评论入口。
+- [x] 运行内容详情定向测试、类型检查和截图验证。
+
+## 任务 6：文档展示页核对 `文档.png`
+
+**目标：** 对照 `docs/design/文档.png` 收敛文档 showcase 页面，不改正式编辑器持久化和 Tiptap 工作流。
+
+- [x] 确认目标 owner 为 `EditorDocumentViewer`。
+- [x] 补齐浅色工程文档界面、左侧导航、右侧状态栏和发布检查。
+- [x] 运行组件定向测试和类型检查。
+
+## 任务 7：消息、会话和通知核对
+
+**目标：** 对照 `docs/design/消息.png`、`docs/design/会话.png`、`docs/design/通知.png` 收敛消息中心和通知中心页面。
+
+- [x] 核对现有 message/notification owner 和 route page。
+- [x] 补齐消息列表、会话详情、通知列表、筛选和分页布局。
+- [x] 运行 message/notification feature 与页面定向测试。
+
+## 任务 8：认证与错误页核对
+
+**目标：** 对照 `docs/design/登录.png`、`docs/design/注册.png`、`docs/design/401，403，404,500.png` 收敛认证与状态页。
+
+- [x] 保留 `/auth/register` 复用 `LoginRoutePage` 和现有 `useRegisterForm`。
+- [x] 补齐登录/注册视觉、错误状态页和恢复操作。
+- [x] 运行 auth/error route 与页面定向测试。
 
 ## 架构适配评估
 
@@ -115,4 +147,6 @@
 - [x] `pnpm exec vitest run src/pages/user/__tests__/UserProfileRoutePage.spec.ts`
 - [x] `pnpm typecheck`
 - [x] `pnpm build`（如涉及构建风险或 SFC/CSS 编译风险）
-- [ ] 个人页在桌面和移动端不横向溢出（浏览器或截图验证）
+- [x] `pnpm test:run` 全量回归（64 个测试文件、309 个测试）
+- [x] 文章详情桌面截图验证（Playwright，agent 产物 `/tmp/zhicore-article-detail.png`）
+- [ ] 其他页面桌面和移动端不横向溢出（浏览器或截图验证）
