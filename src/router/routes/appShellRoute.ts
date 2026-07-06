@@ -7,6 +7,7 @@ import { homeRoutes } from "./homeRoutes";
 import { resourcesRoutes } from "./resourcesRoutes";
 import { searchRoutes } from "./searchRoutes";
 import { structureRoutes } from "./structureRoutes";
+import { userRoutes } from "./userRoutes";
 
 /**
  * AppShell 路由：
@@ -25,5 +26,6 @@ export const appShellRoute: RouteRecordRaw = {
     ...resourcesRoutes,
     ...searchRoutes,
     ...editorRoutes,
+    ...userRoutes,
   ],
 };
