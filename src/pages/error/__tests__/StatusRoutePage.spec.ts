@@ -5,17 +5,21 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import StatusRoutePage from "@/pages/error/StatusRoutePage.vue";
 
 async function mountStatusPage(status: number) {
+  const EmptyRoute = { template: "<div />" };
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
       {
         path: "/",
-        component: { template: "<div />" },
+        component: EmptyRoute,
       },
-      {
-        path: "/auth/login",
-        component: { template: "<div />" },
-      },
+      { path: "/auth/login", component: EmptyRoute },
+      { path: "/about", component: EmptyRoute },
+      { path: "/community", component: EmptyRoute },
+      { path: "/explore", component: EmptyRoute },
+      { path: "/messages", component: EmptyRoute },
+      { path: "/resources", component: EmptyRoute },
+      { path: "/search", component: EmptyRoute },
     ],
   });
 
@@ -31,21 +35,22 @@ async function mountStatusPage(status: number) {
 }
 
 describe("StatusRoutePage", () => {
-  it("shows a session recovery path for 401 errors", async () => {
+  it("shows the designed unauthorized state for 401 errors", async () => {
     const wrapper = await mountStatusPage(401);
 
-    expect(wrapper.text()).toContain("登录状态已失效");
-    expect(wrapper.text()).toContain("重新登录");
+    expect(wrapper.text()).toContain("未授权访问");
+    expect(wrapper.text()).toContain("Unauthorized");
     expect(
       wrapper.find(".status-page__primary-action").attributes("href"),
     ).toBe("/auth/login");
+    expect(wrapper.text()).not.toContain("a8f3d9e2");
   });
 
-  it("shows a home recovery path for 404 errors", async () => {
+  it("shows the designed not found state for 404 errors", async () => {
     const wrapper = await mountStatusPage(404);
 
-    expect(wrapper.text()).toContain("页面不存在");
-    expect(wrapper.text()).toContain("返回发现页");
+    expect(wrapper.text()).toContain("页面未找到");
+    expect(wrapper.text()).toContain("Not Found");
     expect(
       wrapper.find(".status-page__primary-action").attributes("href"),
     ).toBe("/");
@@ -54,7 +59,8 @@ describe("StatusRoutePage", () => {
   it("falls back to 500 copy when status is not finite", async () => {
     const wrapper = await mountStatusPage(Number.NaN);
 
-    expect(wrapper.text()).toContain("页面暂时不可用");
-    expect(wrapper.text()).toContain("稍后重试");
+    expect(wrapper.text()).toContain("服务器错误");
+    expect(wrapper.text()).toContain("稍后再试");
+    expect(wrapper.text()).not.toContain("已记录此错误");
   });
 });
