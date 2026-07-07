@@ -1,4 +1,5 @@
 export type NotificationCenterType = "interaction" | "system" | "content";
+export type NotificationCenterCategory = "all" | NotificationCenterType;
 
 export interface NotificationCenterItem {
   id: string;

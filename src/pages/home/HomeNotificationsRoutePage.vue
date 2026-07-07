@@ -18,50 +18,56 @@
             class="notifications-route__nav-item"
             type="button"
             aria-label="全部通知"
-            :aria-current="selectedCategory === 'all' ? 'page' : undefined"
-            @click="selectCategory('all')"
+            :aria-current="
+              page.selectedCategory.value === 'all' ? 'page' : undefined
+            "
+            @click="page.selectCategory('all')"
           >
             <Bell class="notifications-route__nav-icon" aria-hidden="true" />
             <span>全部</span>
-            <strong>{{ categoryCounts.all }}</strong>
+            <strong>{{ page.categoryCounts.value.all }}</strong>
           </button>
           <button
             class="notifications-route__nav-item"
             type="button"
             aria-label="提及通知"
-            :aria-current="selectedCategory === 'content' ? 'page' : undefined"
-            @click="selectCategory('content')"
+            :aria-current="
+              page.selectedCategory.value === 'content' ? 'page' : undefined
+            "
+            @click="page.selectCategory('content')"
           >
             <AtSign class="notifications-route__nav-icon" aria-hidden="true" />
             <span>提及</span>
-            <strong>{{ categoryCounts.content }}</strong>
+            <strong>{{ page.categoryCounts.value.content }}</strong>
           </button>
           <button
             class="notifications-route__nav-item"
             type="button"
             aria-label="互动通知"
             :aria-current="
-              selectedCategory === 'interaction' ? 'page' : undefined
+              page.selectedCategory.value === 'interaction' ? 'page' : undefined
             "
-            @click="selectCategory('interaction')"
+            @click="page.selectCategory('interaction')"
           >
             <Heart class="notifications-route__nav-icon" aria-hidden="true" />
             <span>互动</span>
-            <strong>{{ categoryCounts.interaction }}</strong>
+            <strong>{{ page.categoryCounts.value.interaction }}</strong>
           </button>
           <button
             class="notifications-route__nav-item"
             type="button"
             aria-label="系统通知"
-            :aria-current="selectedCategory === 'system' ? 'page' : undefined"
-            @click="selectCategory('system')"
+            :aria-current="
+              page.selectedCategory.value === 'system' ? 'page' : undefined
+            "
+            @click="page.selectCategory('system')"
           >
             <Sparkles
               class="notifications-route__nav-icon"
               aria-hidden="true"
             />
             <span>系统</span>
-            <strong>{{ categoryCounts.system }}</strong>
+            <strong>{{ page.categoryCounts.value.system }}</strong>
           </button>
         </nav>
 
@@ -103,7 +109,7 @@
 
         <div class="notifications-route__list">
           <article
-            v-for="notification in paginatedNotifications"
+            v-for="notification in page.paginatedNotifications.value"
             :key="notification.id"
             class="notifications-route__item"
             :class="{
@@ -140,29 +146,29 @@
         </div>
 
         <footer
-          v-if="totalPages > 1"
+          v-if="page.totalPages.value > 1"
           class="notifications-route__pagination"
           aria-label="通知分页"
         >
           <button
             type="button"
             aria-label="上一页通知"
-            :disabled="!canGoPrevious"
-            @click="goPreviousPage"
+            :disabled="!page.canGoPrevious.value"
+            @click="page.goPreviousPage"
           >
             <ChevronLeft aria-hidden="true" />
           </button>
           <span class="notifications-route__page-number">{{
-            currentPage
+            page.currentPage.value
           }}</span>
           <span class="notifications-route__pagination-status">
-            第 {{ currentPage }} / {{ totalPages }} 页
+            第 {{ page.currentPage.value }} / {{ page.totalPages.value }} 页
           </span>
           <button
             type="button"
             aria-label="下一页通知"
-            :disabled="!canGoNext"
-            @click="goNextPage"
+            :disabled="!page.canGoNext.value"
+            @click="page.goNextPage"
           >
             <ChevronRight aria-hidden="true" />
           </button>
@@ -190,71 +196,10 @@ import {
   Search,
   Sparkles,
 } from "@lucide/vue";
-import { computed, ref } from "vue";
 
 import { useNotificationCenterPage } from "@/features/notification";
-import type { NotificationCenterType } from "@/features/notification";
 
 const page = useNotificationCenterPage();
-const notificationsPerPage = 3;
-type NotificationCategory = "all" | NotificationCenterType;
-
-const selectedCategory = ref<NotificationCategory>("all");
-const currentPage = ref(1);
-
-const categoryCounts = computed(() => ({
-  all: page.notifications.length,
-  content: page.notifications.filter(
-    (notification) => notification.type === "content",
-  ).length,
-  interaction: page.notifications.filter(
-    (notification) => notification.type === "interaction",
-  ).length,
-  system: page.notifications.filter(
-    (notification) => notification.type === "system",
-  ).length,
-}));
-
-const filteredNotifications = computed(() => {
-  if (selectedCategory.value === "all") {
-    return page.notifications;
-  }
-
-  return page.notifications.filter(
-    (notification) => notification.type === selectedCategory.value,
-  );
-});
-
-const totalPages = computed(() =>
-  Math.max(
-    1,
-    Math.ceil(filteredNotifications.value.length / notificationsPerPage),
-  ),
-);
-const canGoPrevious = computed(() => currentPage.value > 1);
-const canGoNext = computed(() => currentPage.value < totalPages.value);
-const paginatedNotifications = computed(() => {
-  const start = (currentPage.value - 1) * notificationsPerPage;
-
-  return filteredNotifications.value.slice(start, start + notificationsPerPage);
-});
-
-function selectCategory(category: NotificationCategory) {
-  selectedCategory.value = category;
-  currentPage.value = 1;
-}
-
-function goPreviousPage() {
-  if (canGoPrevious.value) {
-    currentPage.value -= 1;
-  }
-}
-
-function goNextPage() {
-  if (canGoNext.value) {
-    currentPage.value += 1;
-  }
-}
 </script>
 
 <style scoped>
