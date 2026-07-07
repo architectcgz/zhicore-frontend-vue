@@ -39,6 +39,22 @@ export const useAuthStore = defineStore("auth", () => {
     sessionRestored.value = true;
   }
 
+  function setLocalDemoAuth(): void {
+    // 本地 demo 身份只用于前端调试登录态；后端真实鉴权仍依赖网关注入的用户身份。
+    setAuth({
+      accessToken: "local-demo-access-token",
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      csrfToken: "local-demo-csrf-token",
+      user: {
+        id: "local-demo-user",
+        username: "local-demo@zhicore.dev",
+        role: "user",
+        displayName: "本地调试用户",
+      },
+    });
+  }
+
   function logout(): void {
     user.value = null;
     accessToken.value = null;
@@ -100,6 +116,7 @@ export const useAuthStore = defineStore("auth", () => {
     sessionRestored,
     isLoggedIn,
     setAuth,
+    setLocalDemoAuth,
     logout,
     restore,
   };

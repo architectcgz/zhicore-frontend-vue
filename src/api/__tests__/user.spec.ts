@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 
 import { getAxiosInstance } from "../request";
 import {
@@ -12,7 +14,16 @@ vi.mock("../request", () => ({
   getAxiosInstance: vi.fn(),
 }));
 
+vi.mock("@/runtime/localDemoMode", () => ({
+  isLocalDemoModeEnabled: vi.fn(() => false),
+}));
+
 describe("user api", () => {
+  beforeEach(() => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(false);
+    vi.mocked(getAxiosInstance).mockReset();
+  });
+
   it("gets current user profile from the User provider", async () => {
     const response = {
       publicId: "u_1",
@@ -55,5 +66,46 @@ describe("user api", () => {
     await expect(updateProfile(input)).resolves.toEqual(profile);
     expect(get).toHaveBeenCalledWith("/v1/users/u_2");
     expect(patch).toHaveBeenCalledWith("/v1/users/me/profile", input);
+  });
+
+  it("serves local demo profile reads and updates as API-shaped DTOs without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+    const get = vi.fn().mockResolvedValue({ data: { shouldNot: "be used" } });
+    const patch = vi.fn().mockResolvedValue({
+      data: { shouldNot: "be used" },
+    });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      get,
+      patch,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    await expect(getMe()).resolves.toEqual({
+      publicId: "local-demo-user",
+      nickname: "本地调试用户",
+      avatarFileId: "local-demo-avatar",
+      avatarUrl: "/vite.svg",
+      bio: "本地 demo 资料仅用于前端调试。",
+      strangerMessageAllowed: true,
+      profileVersion: 1,
+    });
+    await expect(
+      updateProfile({
+        nickname: "新的昵称",
+        bio: "新的简介",
+        avatarFileId: "uploaded-avatar",
+        strangerMessageAllowed: false,
+      }),
+    ).resolves.toEqual({
+      publicId: "local-demo-user",
+      nickname: "新的昵称",
+      avatarFileId: "uploaded-avatar",
+      avatarUrl: "/vite.svg",
+      bio: "新的简介",
+      strangerMessageAllowed: false,
+      profileVersion: 2,
+    });
+
+    expect(get).not.toHaveBeenCalled();
+    expect(patch).not.toHaveBeenCalled();
   });
 });

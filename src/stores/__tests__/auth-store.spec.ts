@@ -36,6 +36,23 @@ describe("useAuthStore", () => {
     expect(store.sessionRestored).toBe(true);
   });
 
+  it("creates a local demo identity with a fake access token", () => {
+    const store = useAuthStore();
+
+    store.setLocalDemoAuth();
+
+    expect(store.user).toEqual({
+      id: "local-demo-user",
+      username: "local-demo@zhicore.dev",
+      role: "user",
+      displayName: "本地调试用户",
+    });
+    expect(store.accessToken).toBe("local-demo-access-token");
+    expect(store.csrfToken).toBe("local-demo-csrf-token");
+    expect(store.isLoggedIn).toBe(true);
+    expect(store.sessionRestored).toBe(true);
+  });
+
   it("restores session only once after a successful profile fetch", async () => {
     const getProfile = vi.spyOn(authApi, "getProfile").mockResolvedValue({
       id: "user-1",

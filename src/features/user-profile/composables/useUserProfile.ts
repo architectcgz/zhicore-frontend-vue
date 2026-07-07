@@ -3,7 +3,6 @@ import { useRouter } from "vue-router";
 import { ApiError } from "@/api/request";
 import { getMe, updateProfile } from "@/api/user";
 import { uploadImage } from "@/api/file";
-import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 import { useAuthStore } from "@/stores/auth";
 
 export function useUserProfile() {
@@ -126,10 +125,6 @@ export function useUserProfile() {
   };
 
   onMounted(async () => {
-    if (isLocalDemoModeEnabled()) {
-      authStore.setLocalDemoAuth();
-    }
-
     if (!authStore.isLoggedIn) {
       router.push("/auth/login");
       return;

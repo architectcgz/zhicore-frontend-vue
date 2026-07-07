@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import { setupRouterGuards } from "@/router/guards";
+import { useAuthStore } from "@/stores/auth";
 
 vi.mock("@/api/auth", () => ({
   getCsrfToken: vi.fn().mockRejectedValue(new Error("No test session")),
@@ -37,5 +38,8 @@ describe("router guards", () => {
     await router.push("/messages");
 
     expect(router.currentRoute.value.name).toBe("Messages");
+    const authStore = useAuthStore();
+    expect(authStore.isLoggedIn).toBe(true);
+    expect(authStore.accessToken).toBe("local-demo-access-token");
   });
 });

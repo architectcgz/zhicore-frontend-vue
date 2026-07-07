@@ -1,3 +1,5 @@
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
+
 import { getAxiosInstance } from "./request";
 
 export type FileAccessLevel = "PUBLIC" | "PRIVATE";
@@ -30,6 +32,10 @@ export interface UploadImagesBatchReq {
 export async function uploadImage(
   input: UploadImageReq,
 ): Promise<UploadFileResp> {
+  if (isLocalDemoModeEnabled()) {
+    return createLocalDemoUploadResp(input.file);
+  }
+
   const response = await getAxiosInstance().post<UploadFileResp>(
     "/v1/files/image",
     formDataWithFile("file", input.file),
@@ -82,4 +88,18 @@ function formDataWithFile(fieldName: string, file: File): FormData {
   const formData = new FormData();
   formData.append(fieldName, file);
   return formData;
+}
+
+function createLocalDemoUploadResp(file: File): UploadFileResp {
+  return {
+    fileId: `local-demo-avatar-${file.name}`,
+    url: "/vite.svg",
+    fileSize: file.size,
+    fileHash: "sha256:local-demo",
+    instantUpload: true,
+    uploadTime: "2026-01-01T00:00:00.000Z",
+    accessLevel: "PUBLIC",
+    originalName: file.name,
+    contentType: file.type || "application/octet-stream",
+  };
 }
