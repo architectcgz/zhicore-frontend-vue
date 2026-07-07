@@ -18,15 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from "vue-router";
-
 import HomeDiscoveryFeed from "@/components/home/HomeDiscoveryFeed.vue";
-import { useHomeDiscoveryPage } from "@/features/home-discovery";
-import { useAuthStore } from "@/stores/auth";
+import { useHomeDiscoveryRoutePage } from "@/features/home-discovery";
 
-const route = useRoute();
-const router = useRouter();
-const authStore = useAuthStore();
 const {
   discovery,
   feedState,
@@ -40,18 +34,7 @@ const {
   retry,
   likePost,
   favoritePost,
-} = useHomeDiscoveryPage({
-  isLoggedIn: () => authStore.isLoggedIn,
-  restoreSession: () => authStore.restore(),
-  redirectToLogin: async () => {
-    await router.push({
-      path: "/auth/login",
-      query: {
-        redirect: route.fullPath,
-      },
-    });
-  },
-});
+} = useHomeDiscoveryRoutePage();
 </script>
 
 <style scoped>

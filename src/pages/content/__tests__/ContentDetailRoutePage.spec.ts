@@ -1,7 +1,7 @@
 import { mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { useContentDetailPage } from "@/features/content-detail";
+import { useContentDetailRoutePage } from "@/features/content-detail";
 
 import ContentDetailRoutePage from "../ContentDetailRoutePage.vue";
 
@@ -24,7 +24,7 @@ vi.mock("@/stores/auth", () => ({
 }));
 
 vi.mock("@/features/content-detail", () => ({
-  useContentDetailPage: vi.fn(() => ({
+  useContentDetailRoutePage: vi.fn(() => ({
     detail: {
       value: {
         title: "文章",
@@ -46,6 +46,12 @@ vi.mock("@/features/content-detail", () => ({
       value: "ready",
     },
     commentsError: {
+      value: "",
+    },
+    submittingComment: {
+      value: false,
+    },
+    commentSubmitError: {
       value: "",
     },
     submittingLike: {
@@ -76,82 +82,19 @@ vi.mock("@/components/content/ArticleDetailView.vue", () => ({
   },
 }));
 
-vi.mock("@/components/content/ArticleDetailMobileView.vue", () => ({
-  default: {
-    name: "ArticleDetailMobileView",
-    props: ["detail", "activeCommentSort", "commentDraftBody"],
-    emits: ["selectCommentSort", "update:commentDraftBody"],
-    template: '<section data-testid="mobile-article-detail" />',
-  },
-}));
-
-function setViewportWidth(width: number): void {
-  Object.defineProperty(window, "innerWidth", {
-    configurable: true,
-    value: width,
-  });
-  window.dispatchEvent(new Event("resize"));
-}
-
 describe("ContentDetailRoutePage", () => {
-  afterEach(() => {
-    setViewportWidth(1024);
-  });
-
-  it("renders the desktop article page outside the mobile breakpoint", () => {
-    setViewportWidth(1024);
-
+  it("renders the responsive article detail through the route workflow owner", () => {
     const wrapper = mount(ContentDetailRoutePage);
 
     expect(
       wrapper.find('[data-testid="desktop-article-detail"]').exists(),
     ).toBe(true);
-    expect(wrapper.find('[data-testid="mobile-article-detail"]').exists()).toBe(
-      false,
-    );
+    expect(useContentDetailRoutePage).toHaveBeenCalledTimes(1);
   });
 
-  it("passes the route postId into the content detail workflow", () => {
-    setViewportWidth(1024);
-
+  it("keeps route parameter and auth redirect logic out of the route component", () => {
     mount(ContentDetailRoutePage);
 
-    expect(useContentDetailPage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        value: "post-from-route",
-      }),
-      expect.objectContaining({
-        isLoggedIn: expect.any(Function),
-        redirectToLogin: expect.any(Function),
-      }),
-    );
-  });
-
-  it("renders the dedicated mobile article page at the mobile breakpoint", () => {
-    setViewportWidth(375);
-
-    const wrapper = mount(ContentDetailRoutePage);
-
-    expect(wrapper.find('[data-testid="mobile-article-detail"]').exists()).toBe(
-      true,
-    );
-    expect(
-      wrapper.find('[data-testid="desktop-article-detail"]').exists(),
-    ).toBe(false);
-  });
-
-  it("switches to the mobile article page after resizing to iPhone SE width", async () => {
-    setViewportWidth(1024);
-    const wrapper = mount(ContentDetailRoutePage);
-
-    setViewportWidth(375);
-    await wrapper.vm.$nextTick();
-
-    expect(wrapper.find('[data-testid="mobile-article-detail"]').exists()).toBe(
-      true,
-    );
-    expect(
-      wrapper.find('[data-testid="desktop-article-detail"]').exists(),
-    ).toBe(false);
+    expect(useContentDetailRoutePage).toHaveBeenCalledWith();
   });
 });

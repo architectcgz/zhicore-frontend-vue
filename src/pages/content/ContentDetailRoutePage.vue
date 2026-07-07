@@ -13,26 +13,6 @@
   >
     {{ pageError || "文章详情加载失败" }}
   </section>
-  <ArticleDetailMobileView
-    v-else-if="isMobileDetailPage"
-    :detail="detail"
-    :active-comment-sort="activeCommentSort"
-    :comment-draft-body="commentDraftBody"
-    :submitting-comment="submittingComment"
-    :comment-submit-error="commentSubmitError"
-    :comments-state="commentsState"
-    :comments-error="commentsError"
-    :submitting-like="submittingLike"
-    :submitting-favorite="submittingFavorite"
-    :reading-action-error="readingActionError"
-    @select-comment-sort="selectCommentSort"
-    @update:comment-draft-body="updateCommentDraftBody"
-    @submit-comment="submitComment"
-    @retry-comments="retryComments"
-    @like-post="likePost"
-    @favorite-post="favoritePost"
-    @share-post="sharePost"
-  />
   <ArticleDetailView
     v-else
     :detail="detail"
@@ -56,19 +36,9 @@
 </template>
 
 <script setup lang="ts">
-import { useEventListener } from "@vueuse/core";
-import { computed, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-
-import ArticleDetailMobileView from "@/components/content/ArticleDetailMobileView.vue";
 import ArticleDetailView from "@/components/content/ArticleDetailView.vue";
-import { useContentDetailPage } from "@/features/content-detail";
-import { useAuthStore } from "@/stores/auth";
+import { useContentDetailRoutePage } from "@/features/content-detail";
 
-const route = useRoute();
-const router = useRouter();
-const authStore = useAuthStore();
-const postId = computed(() => String(route.params.postId ?? ""));
 const {
   detail,
   pageState,
@@ -89,26 +59,7 @@ const {
   likePost,
   favoritePost,
   sharePost,
-} = useContentDetailPage(postId, {
-  isLoggedIn: () => authStore.isLoggedIn,
-  redirectToLogin: async () => {
-    await router.push({
-      path: "/auth/login",
-      query: {
-        redirect: route.fullPath,
-      },
-    });
-  },
-});
-
-const mobileDetailMaxWidth = 640;
-const isMobileDetailPage = ref(window.innerWidth <= mobileDetailMaxWidth);
-
-function syncDetailViewportMode(): void {
-  isMobileDetailPage.value = window.innerWidth <= mobileDetailMaxWidth;
-}
-
-useEventListener(window, "resize", syncDetailViewportMode);
+} = useContentDetailRoutePage();
 </script>
 
 <style scoped>

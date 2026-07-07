@@ -257,21 +257,10 @@ import {
   Users,
   Video,
 } from "@lucide/vue";
-import { computed } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink } from "vue-router";
 
-import { useMessageCenterPage } from "@/features/message";
+import { useMessageCenterRoutePage } from "@/features/message";
 import "./message-route.css";
 
-const route = useRoute();
-const conversationId = computed(() => {
-  const param = route.params.conversationId;
-  return Array.isArray(param) ? param[0] : param;
-});
-
-// 路由 id 是详情页唯一会话来源；未知 id 不回退到默认会话，避免用户看到错误私信内容。
-const page = computed(() =>
-  useMessageCenterPage({ activeConversationId: conversationId.value }),
-);
-const conversation = computed(() => page.value.activeConversation);
+const { page, conversation } = useMessageCenterRoutePage();
 </script>

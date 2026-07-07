@@ -48,7 +48,7 @@ const pageState = {
 
 vi.mock("@/features/home-discovery", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/home-discovery")>()),
-  useHomeDiscoveryPage: () => ({
+  useHomeDiscoveryRoutePage: () => ({
     discovery: pageState.discovery,
     feedState: computed(() => pageState.feedState.value),
     feedError: computed(() => pageState.feedError.value),

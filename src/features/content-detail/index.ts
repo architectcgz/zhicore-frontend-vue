@@ -1,4 +1,5 @@
 export { useContentDetailPage } from "./composables/useContentDetailPage";
+export { useContentDetailRoutePage } from "./composables/useContentDetailRoutePage";
 export type {
   ArticleBodyBlock,
   ArticleComment,
