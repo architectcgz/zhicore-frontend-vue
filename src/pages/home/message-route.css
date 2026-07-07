@@ -474,12 +474,15 @@
 
 .messages-route__message {
   display: grid;
+  max-width: 100%;
+  align-self: flex-start;
   grid-template-columns: auto minmax(0, max-content);
   gap: var(--space-3);
   align-items: end;
 }
 
 .messages-route__message--mine {
+  align-self: flex-end;
   grid-template-columns: minmax(0, max-content);
   justify-content: end;
 }
