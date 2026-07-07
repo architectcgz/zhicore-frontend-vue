@@ -58,10 +58,9 @@ describe("CommunityRoutePage", () => {
   it("renders the community workspace and forwards topic selection", async () => {
     const wrapper = await mountCommunityRoutePage();
 
-    expect(wrapper.get("#community-route-title").text()).toBe(
-      "All Communities",
-    );
+    expect(wrapper.get("#community-route-title").text()).toBe("全部社区");
     expect(wrapper.text()).toContain("社区文章");
+    expect(wrapper.text()).toContain("主题社区");
 
     await wrapper.findAll(".community-route__topic-btn")[1].trigger("click");
 

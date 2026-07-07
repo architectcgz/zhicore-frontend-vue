@@ -295,19 +295,16 @@ describe("useHomeDiscoveryPage", () => {
     expect(page.discovery.posts[0]?.title).toBe("最终");
   });
 
-  it("owns content category and search state outside the UI component", () => {
+  it("owns content category state outside the UI component", () => {
     const page = useHomeDiscoveryPage();
 
     expect(page.activeContentCategory.value).toBe("全部");
-    expect(page.searchQuery.value).toBe("");
 
     page.discovery.contentCategories = ["全部", "Vue"];
 
     page.selectContentCategory("Vue");
-    page.updateSearchQuery("内容服务");
 
     expect(page.activeContentCategory.value).toBe("Vue");
-    expect(page.searchQuery.value).toBe("内容服务");
   });
 
   it("ignores categories that are not part of the mock discovery data", () => {

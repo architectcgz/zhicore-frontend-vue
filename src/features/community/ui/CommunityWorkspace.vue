@@ -2,10 +2,10 @@
   <section class="community-route" aria-labelledby="community-route-title">
     <div class="community-route__layout">
       <aside class="community-route__sidebar" aria-label="主题社区">
-        <h2 class="community-route__sidebar-title">All Topics</h2>
+        <h2 class="community-route__sidebar-title">主题社区</h2>
 
         <div v-if="topicState === 'loading'" class="community-route__state">
-          Loading topics...
+          正在加载主题
         </div>
         <div
           v-else-if="topicState === 'error'"
@@ -18,11 +18,11 @@
             class="community-route__btn"
             @click="emit('retryTopics')"
           >
-            Retry
+            重试
           </button>
         </div>
         <div v-else-if="topicState === 'empty'" class="community-route__state">
-          No public topics yet.
+          暂无公开主题
         </div>
         <div v-else class="community-route__topic-list">
           <button
@@ -35,7 +35,7 @@
             @click="emit('selectTopic', '')"
           >
             <LayoutGrid class="community-route__topic-icon" />
-            <span>All Topics</span>
+            <span>全部主题</span>
           </button>
           <button
             v-for="topic in topics"
@@ -59,10 +59,10 @@
             type="button"
             class="community-route__topic-btn"
             disabled
-            title="Additional topic discovery is not connected."
+            title="更多主题暂未接入"
           >
             <Rows3 class="community-route__topic-icon" />
-            <span>More Topics</span>
+            <span>更多主题</span>
           </button>
         </div>
 
@@ -70,10 +70,10 @@
           type="button"
           class="community-route__browse-btn"
           disabled
-          title="Full community browsing is not connected."
+          title="完整社区浏览暂未接入"
         >
           <LayoutGrid class="community-route__browse-icon" aria-hidden="true" />
-          <span>Browse Communities</span>
+          <span>浏览社区</span>
         </button>
       </aside>
 
@@ -88,15 +88,15 @@
               type="button"
               class="community-route__btn community-route__btn--primary"
               disabled
-              title="Follow is not connected."
+              title="关注功能暂未接入"
             >
-              Follow
+              关注
             </button>
             <button
               type="button"
               class="community-route__btn-icon"
               disabled
-              aria-label="More community actions are not connected"
+              aria-label="更多社区操作暂未接入"
             >
               <MoreHorizontal aria-hidden="true" />
             </button>
@@ -108,30 +108,27 @@
             class="community-route__tab community-route__tab--active"
             role="listitem"
           >
-            Latest
+            最新
           </span>
           <span
             class="community-route__tab community-route__tab--disabled"
             role="listitem"
             aria-disabled="true"
           >
-            Top
+            热门
           </span>
           <span
             class="community-route__tab community-route__tab--disabled"
             role="listitem"
             aria-disabled="true"
           >
-            Unanswered
+            待回复
           </span>
         </div>
-        <p class="community-route__data-note">
-          Connected public posts only. Likes, saves, counts, and replies are
-          degraded.
-        </p>
+        <p class="community-route__data-note">互动统计暂未接入</p>
 
         <div v-if="feedState === 'loading'" class="community-route__state">
-          Loading public posts...
+          正在加载近期讨论
         </div>
         <div
           v-else-if="feedState === 'error'"
@@ -144,11 +141,11 @@
             class="community-route__btn"
             @click="emit('retryPosts')"
           >
-            Retry
+            重试
           </button>
         </div>
         <div v-else-if="feedState === 'empty'" class="community-route__state">
-          No public posts for this topic yet.
+          当前主题暂无讨论
         </div>
         <div v-else class="community-route__feed">
           <article
@@ -178,7 +175,7 @@
                     {{ activeTopic.label }}
                   </span>
                   <span v-else class="community-route__post-tag">
-                    Public Post
+                    公开讨论
                   </span>
                 </div>
                 <div class="community-route__post-stats">
@@ -186,14 +183,14 @@
                     type="button"
                     class="community-route__post-stat-btn"
                     disabled
-                    title="Like data is not connected."
+                    title="喜欢数据暂未接入"
                   >
                     <Heart
                       class="community-route__post-stat-icon"
                       aria-hidden="true"
                     />
                     <span class="community-route__sr-only">
-                      Like data unavailable
+                      喜欢数据暂不可用
                     </span>
                   </button>
                   <RouterLink
@@ -211,14 +208,14 @@
                     type="button"
                     class="community-route__post-stat-btn"
                     disabled
-                    title="Save is not connected."
+                    title="收藏功能暂未接入"
                   >
                     <Bookmark
                       class="community-route__post-stat-icon"
                       aria-hidden="true"
                     />
                     <span class="community-route__sr-only">
-                      Save is unavailable
+                      收藏暂不可用
                     </span>
                   </button>
                 </div>
@@ -233,8 +230,8 @@
           v-if="topicState === 'ready' && trendingTopics.length > 0"
           class="community-route__extra-section"
         >
-          <h3>Trending Categories</h3>
-          <p class="community-route__extra-note">Live counts unavailable.</p>
+          <h3>主题导航</h3>
+          <p class="community-route__extra-note">计数暂未接入</p>
           <div class="community-route__trending-list">
             <button
               v-for="topic in trendingTopics"
@@ -251,7 +248,7 @@
                 <span>{{ topic.label }}</span>
               </div>
               <span class="community-route__trending-unavailable"
-                >No count</span
+                >暂无计数</span
               >
             </button>
           </div>
@@ -261,10 +258,8 @@
           v-if="feedState === 'ready' && latestPosts.length > 0"
           class="community-route__extra-section"
         >
-          <h3>Latest Public Posts</h3>
-          <p class="community-route__extra-note">
-            Reply feed is not connected.
-          </p>
+          <h3>近期讨论</h3>
+          <p class="community-route__extra-note">回复流暂未接入</p>
           <div class="community-route__reply-list">
             <div
               v-for="post in latestPosts"
@@ -360,13 +355,13 @@ const activeTopic = computed(() =>
 );
 
 const activeTopicTitle = computed(() =>
-  activeTopic.value ? activeTopic.value.label : "All Communities",
+  activeTopic.value ? activeTopic.value.label : "全部社区",
 );
 
 const activeTopicSummary = computed(() =>
   activeTopic.value
-    ? "Latest public posts for this connected topic."
-    : "Latest public posts across connected topics.",
+    ? "当前主题下的近期公开讨论。"
+    : "跨主题的近期公开讨论。",
 );
 
 // Community counts, likes, saves, and reply feeds are not exposed by the current

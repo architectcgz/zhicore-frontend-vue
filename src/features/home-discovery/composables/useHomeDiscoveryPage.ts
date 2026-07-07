@@ -41,8 +41,6 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
   const feedError = ref("");
   const engagementActionError = ref("");
   const activeContentCategory = ref(allContentCategory);
-  // 搜索提示是占位文案，不进入状态，避免初始态被误判为已有查询。
-  const searchQuery = ref("");
   const tagSlugByLabel = new Map<string, string>();
   let requestId = 0;
   let restoreSessionPromise: Promise<void> | null = null;
@@ -139,10 +137,8 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
 
     try {
       const activeTagSlug = tagSlugByLabel.get(activeContentCategory.value);
-      const trimmedSearch = searchQuery.value.trim();
       const postsResp = await listPosts({
         ...(activeTagSlug ? { tag: activeTagSlug } : {}),
-        ...(trimmedSearch ? { tag: trimmedSearch } : {}),
         limit: 20,
         sort: "latest",
       });
@@ -201,11 +197,6 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
     }
 
     activeContentCategory.value = category;
-    void loadPublicPosts();
-  }
-
-  function updateSearchQuery(nextQuery: string): void {
-    searchQuery.value = nextQuery;
     void loadPublicPosts();
   }
 
@@ -276,11 +267,8 @@ export function useHomeDiscoveryPage(options: HomeDiscoveryPageOptions = {}) {
     feedState: readonly(feedState),
     feedError: readonly(feedError),
     engagementActionError: readonly(engagementActionError),
-    showSupplementarySidebar: false,
     activeContentCategory: readonly(activeContentCategory),
-    searchQuery: readonly(searchQuery),
     selectContentCategory,
-    updateSearchQuery,
     retry,
     likePost,
     favoritePost,

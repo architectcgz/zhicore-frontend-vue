@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import articleCommentsSource from "@/components/content/ArticleComments.vue?raw";
 import articleDetailSource from "@/components/content/ArticleDetailView.vue?raw";
-import homeDiscoverySource from "@/components/home/HomeDiscoveryFeed.vue?raw";
+import homeOverviewSource from "@/components/home/HomeOverviewWidget.vue?raw";
 import authRouteWorkspaceSource from "@/features/auth/ui/AuthRouteWorkspace.vue?raw";
 import communityWorkspaceSource from "@/features/community/ui/CommunityWorkspace.vue?raw";
 import homeDiscoveryExploreWorkspaceSource from "@/features/home-discovery/ui/HomeDiscoveryExploreWorkspace.vue?raw";
@@ -26,11 +26,7 @@ function expectNoUiMockFixtures(
 
 describe("page layer separation", () => {
   it("keeps mock data out of UI components", () => {
-    expectNoUiMockFixtures(homeDiscoverySource, [
-      "metrics",
-      "posts",
-      "authors",
-    ]);
+    expectNoUiMockFixtures(homeOverviewSource, ["metrics", "posts", "authors"]);
     expectNoUiMockFixtures(articleDetailSource, ["tocItems", "relatedPosts"]);
     expectNoUiMockFixtures(articleCommentsSource, ["comments"]);
     expectNoUiMockFixtures(authRouteWorkspaceSource, []);
@@ -48,7 +44,8 @@ describe("page layer separation", () => {
   });
 
   it("keeps route pages as composition surfaces over feature page logic", () => {
-    expect(homeRouteSource).toContain("useHomeDiscoveryRoutePage");
+    expect(homeRouteSource).toContain("HomeOverviewWidget");
+    expect(homeRouteSource).not.toContain("useHomeDiscoveryRoutePage");
     expect(exploreRouteSource).toContain("useHomeDiscoveryRoutePage");
     expect(contentRouteSource).toContain("useContentDetailRoutePage");
     expect(messageDetailRouteSource).toContain("useMessageCenterRoutePage");
