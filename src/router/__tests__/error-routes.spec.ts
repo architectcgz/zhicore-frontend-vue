@@ -28,12 +28,12 @@ describe("error routes", () => {
       routes: [appShellRoute],
     });
 
-    const resolved = router.resolve("/401");
+    const resolved = router.resolve("/400");
 
     expect(
       resolved.matched.some((route) => route.name === "ErrorStatusShorthand"),
     ).toBe(true);
-    expect(resolved.params.status).toBe("401");
+    expect(resolved.params.status).toBe("400");
   });
 
   it("routes unknown paths to the 404 status page", () => {

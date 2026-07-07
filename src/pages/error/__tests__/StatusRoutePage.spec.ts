@@ -35,6 +35,16 @@ async function mountStatusPage(status: number) {
 }
 
 describe("StatusRoutePage", () => {
+  it("shows the designed bad request state for 400 errors", async () => {
+    const wrapper = await mountStatusPage(400);
+
+    expect(wrapper.text()).toContain("请求无效");
+    expect(wrapper.text()).toContain("Bad Request");
+    expect(
+      wrapper.find(".status-page__primary-action").attributes("href"),
+    ).toBe("/");
+  });
+
   it("shows the designed unauthorized state for 401 errors", async () => {
     const wrapper = await mountStatusPage(401);
 

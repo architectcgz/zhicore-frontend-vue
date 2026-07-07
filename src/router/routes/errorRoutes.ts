@@ -10,7 +10,7 @@ export const errorRoutes: RouteRecordRaw[] = [
     }),
   },
   {
-    path: ":status(401|403|404|500)",
+    path: ":status(400|401|403|404|500)",
     name: "ErrorStatusShorthand",
     component: () => import("@/pages/error/StatusRoutePage.vue"),
     props: (route) => ({

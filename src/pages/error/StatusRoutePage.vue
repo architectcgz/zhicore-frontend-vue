@@ -88,7 +88,7 @@ const props = defineProps<{
 }>();
 
 interface StatusView {
-  statusCode: 401 | 403 | 404 | 500;
+  statusCode: 400 | 401 | 403 | 404 | 500;
   title: string;
   description: string;
   errorType: string;
@@ -103,8 +103,16 @@ interface StatusView {
 const titleId = "status-page-title";
 const unavailableMetadata = "暂未提供";
 
-const normalizedStatus = computed<401 | 403 | 404 | 500>(() => {
-  if (props.status === 401 || props.status === 403 || props.status === 404) {
+type SupportedStatus = StatusView["statusCode"];
+
+const normalizedStatus = computed<SupportedStatus>(() => {
+  // 只直接暴露已完成产品设计的状态页；其他异常数字统一按 500 提供恢复入口。
+  if (
+    props.status === 400 ||
+    props.status === 401 ||
+    props.status === 403 ||
+    props.status === 404
+  ) {
     return props.status;
   }
 
@@ -112,6 +120,21 @@ const normalizedStatus = computed<401 | 403 | 404 | 500>(() => {
 });
 
 const statusView = computed<StatusView>(() => {
+  if (normalizedStatus.value === 400) {
+    return {
+      statusCode: 400,
+      title: "请求无效",
+      description: "抱歉，请求参数不完整或格式不正确，暂时无法继续处理。",
+      errorType: "Bad Request",
+      footer: "你可以返回首页重新进入，也可以继续探索公开内容。",
+      recordState: unavailableMetadata,
+      supportInfo: "检查请求参数",
+      primaryActionLabel: "返回首页",
+      primaryActionTo: "/",
+      icon: SearchCheck,
+    };
+  }
+
   if (normalizedStatus.value === 401) {
     return {
       statusCode: 401,
