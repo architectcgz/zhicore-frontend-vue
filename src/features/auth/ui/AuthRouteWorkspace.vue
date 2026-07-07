@@ -4,7 +4,10 @@
 
     <article
       class="auth-card"
-      :class="{ 'auth-card--register': isRegistering }"
+      :class="{
+        'auth-card--login': !isRegistering,
+        'auth-card--register': isRegistering,
+      }"
     >
       <header class="auth-card__header">
         <div
@@ -33,6 +36,7 @@
         v-if="!isRegistering"
         class="auth-card__form"
         aria-label="登录"
+        novalidate
         @submit.prevent="submitLogin"
       >
         <label class="auth-field" for="login-email">
@@ -44,8 +48,19 @@
               type="email"
               autocomplete="email"
               placeholder="liamchen@example.com"
+              :aria-invalid="Boolean(loginFieldErrors.email)"
+              :aria-describedby="
+                loginFieldErrors.email ? 'login-email-error' : undefined
+              "
             />
             <Check class="auth-field__state-icon" aria-hidden="true" />
+          </span>
+          <span
+            v-if="loginFieldErrors.email"
+            id="login-email-error"
+            class="auth-card__field-error"
+          >
+            {{ loginFieldErrors.email }}
           </span>
         </label>
 
@@ -59,7 +74,9 @@
               autocomplete="current-password"
               placeholder="请输入密码"
               :aria-invalid="Boolean(loginError)"
-              aria-describedby="login-password-error"
+              :aria-describedby="
+                loginError ? 'login-password-error' : undefined
+              "
             />
             <button
               class="auth-field__icon-btn"
@@ -108,10 +125,15 @@
 
         <div class="auth-card__socials" aria-label="第三方登录">
           <button type="button" aria-label="GitHub 登录暂未接入" disabled>
-            <span aria-hidden="true">GH</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M12 2C6.48 2 2 6.58 2 12.24c0 4.52 2.87 8.35 6.84 9.71.5.09.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.51.47-3.16-.63-3.36-1.21-.11-.3-.6-1.21-1.03-1.45-.35-.19-.85-.66-.01-.67.79-.01 1.35.74 1.54 1.05.9 1.55 2.34 1.11 2.91.85.09-.67.35-1.11.64-1.37-2.22-.26-4.55-1.14-4.55-5.05 0-1.11.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05.8-.23 1.65-.34 2.5-.34s1.7.11 2.5.34c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.05.36.32.68.93.68 1.89 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.1 10.1 0 0 0 22 12.24C22 6.58 17.52 2 12 2Z"
+              />
+            </svg>
           </button>
-          <button type="button" aria-label="Google 登录暂未接入" disabled>
-            <span aria-hidden="true">G</span>
+          <button type="button" aria-label="Gmail 登录暂未接入" disabled>
+            <Mail aria-hidden="true" />
           </button>
           <button type="button" aria-label="Apple 登录暂未接入" disabled>
             <Apple aria-hidden="true" />
@@ -157,8 +179,33 @@
           </span>
         </label>
 
+        <label class="auth-field" for="reg-nickname">
+          <span>昵称</span>
+          <span class="auth-field__control">
+            <UserRound aria-hidden="true" />
+            <input
+              id="reg-nickname"
+              v-model="registerNickname"
+              type="text"
+              autocomplete="nickname"
+              placeholder="请输入昵称"
+              :aria-invalid="Boolean(registerFieldErrors.nickname)"
+              :aria-describedby="
+                registerFieldErrors.nickname ? 'reg-nickname-error' : undefined
+              "
+            />
+          </span>
+          <span
+            v-if="registerFieldErrors.nickname"
+            id="reg-nickname-error"
+            class="auth-card__field-error"
+          >
+            {{ registerFieldErrors.nickname }}
+          </span>
+        </label>
+
         <label
-          class="auth-field auth-field--inline-action"
+          class="auth-field auth-field--inline-action auth-field--wide"
           for="reg-email-token"
         >
           <span>邮箱验证码</span>
@@ -191,31 +238,6 @@
             class="auth-card__field-error"
           >
             {{ registerFieldErrors.emailVerificationToken }}
-          </span>
-        </label>
-
-        <label class="auth-field" for="reg-nickname">
-          <span>昵称</span>
-          <span class="auth-field__control">
-            <UserRound aria-hidden="true" />
-            <input
-              id="reg-nickname"
-              v-model="registerNickname"
-              type="text"
-              autocomplete="nickname"
-              placeholder="请输入昵称"
-              :aria-invalid="Boolean(registerFieldErrors.nickname)"
-              :aria-describedby="
-                registerFieldErrors.nickname ? 'reg-nickname-error' : undefined
-              "
-            />
-          </span>
-          <span
-            v-if="registerFieldErrors.nickname"
-            id="reg-nickname-error"
-            class="auth-card__field-error"
-          >
-            {{ registerFieldErrors.nickname }}
           </span>
         </label>
 
@@ -353,6 +375,7 @@ const {
   username: loginUsername,
   password: loginPassword,
   submitting: isLoginSubmitting,
+  fieldErrors: loginFieldErrors,
   errorMessage: loginError,
   submit: submitLogin,
 } = useLoginForm();
@@ -389,7 +412,8 @@ watch(registerSuccessMessage, (message) => {
 
 .auth-page--register {
   min-height: calc(100vh - 5.25rem);
-  padding-top: var(--space-3);
+  align-items: start;
+  padding-block: var(--space-5);
 }
 
 .auth-page__backdrop {
@@ -468,9 +492,14 @@ watch(registerSuccessMessage, (message) => {
   -webkit-backdrop-filter: blur(1.375rem);
 }
 
+.auth-card--login {
+  width: min(30rem, 100%);
+  padding: var(--space-8);
+}
+
 .auth-card--register {
-  width: min(46rem, 100%);
-  padding-block: var(--space-8);
+  width: min(44rem, 100%);
+  padding: var(--space-5) var(--space-6);
 }
 
 .auth-card__header {
@@ -492,10 +521,19 @@ watch(registerSuccessMessage, (message) => {
 }
 
 .auth-card__brand--stacked {
-  display: grid;
-  justify-items: center;
+  display: inline-flex;
+  justify-items: initial;
   gap: var(--space-2);
   font-size: 1rem;
+}
+
+.auth-card--login .auth-card__brand {
+  gap: var(--space-3);
+  font-size: 1.5rem;
+}
+
+.auth-card--register .auth-card__brand {
+  font-size: 0.9375rem;
 }
 
 .auth-card__mark {
@@ -516,7 +554,13 @@ watch(registerSuccessMessage, (message) => {
 }
 
 .auth-card__brand--stacked .auth-card__mark {
-  width: 2.875rem;
+  width: 2.25rem;
+  height: 2rem;
+  font-size: 1.5rem;
+}
+
+.auth-card--login .auth-card__mark {
+  width: 3rem;
   height: 2.5rem;
   font-size: 2rem;
 }
@@ -529,6 +573,16 @@ watch(registerSuccessMessage, (message) => {
   line-height: 1.15;
 }
 
+.auth-card--login h1 {
+  margin-top: var(--space-3);
+  font-size: 1.5rem;
+}
+
+.auth-card--register h1 {
+  margin-top: var(--space-3);
+  font-size: 1.5rem;
+}
+
 .auth-card p {
   margin: 0;
 }
@@ -538,13 +592,44 @@ watch(registerSuccessMessage, (message) => {
   font-size: 1rem;
 }
 
+.auth-card--login .auth-card__header {
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.auth-card--register .auth-card__header {
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.auth-card--login .auth-card__header p {
+  font-size: 0.875rem;
+}
+
+.auth-card--register .auth-card__header p {
+  font-size: 0.875rem;
+}
+
 .auth-card__form {
   display: grid;
   gap: var(--space-5);
 }
 
-.auth-card__form--register {
+.auth-card--login .auth-card__form {
   gap: var(--space-4);
+}
+
+.auth-card__form--register {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.auth-card__form--register .auth-field--wide,
+.auth-card__form--register .auth-check--terms,
+.auth-card__form--register .auth-card__error,
+.auth-card__form--register .auth-card__submit,
+.auth-card__form--register .auth-card__switch {
+  grid-column: 1 / -1;
 }
 
 .auth-field {
@@ -555,9 +640,16 @@ watch(registerSuccessMessage, (message) => {
   font-weight: 700;
 }
 
+.auth-card--login .auth-field {
+  font-size: 0.875rem;
+}
+
+.auth-card--register .auth-field {
+  font-size: 0.875rem;
+}
+
 .auth-field__control {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
   min-height: 3.25rem;
   padding: 0 var(--space-4);
@@ -572,6 +664,14 @@ watch(registerSuccessMessage, (message) => {
     background-color 160ms ease;
 }
 
+.auth-card--login .auth-field__control {
+  min-height: 2.875rem;
+}
+
+.auth-card--register .auth-field__control {
+  min-height: 2.875rem;
+}
+
 .auth-field__control:focus-within {
   border-color: color-mix(in srgb, var(--color-primary) 88%, transparent);
   background: color-mix(in srgb, var(--color-bg) 78%, transparent);
@@ -581,12 +681,13 @@ watch(registerSuccessMessage, (message) => {
 }
 
 .auth-field__control > svg {
+  flex: 0 0 auto;
   width: 1.125rem;
   height: 1.125rem;
-  margin-right: var(--space-3);
 }
 
 .auth-field__control input {
+  flex: 1 1 auto;
   width: 100%;
   min-width: 0;
   border: 0;
@@ -603,11 +704,13 @@ watch(registerSuccessMessage, (message) => {
 .auth-field__state-icon {
   width: 1.25rem;
   height: 1.25rem;
+  margin-left: var(--space-3);
   color: var(--color-primary);
 }
 
 .auth-field__icon-btn {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 2rem;
@@ -617,6 +720,11 @@ watch(registerSuccessMessage, (message) => {
   background: transparent;
   color: var(--color-text);
   cursor: pointer;
+}
+
+.auth-card--login .auth-field__icon-btn {
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .auth-field__icon-btn svg {
@@ -770,6 +878,14 @@ watch(registerSuccessMessage, (message) => {
   box-shadow: 0 0 2rem color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
+.auth-card--login .auth-card__submit {
+  min-height: 3rem;
+}
+
+.auth-card--register .auth-card__submit {
+  min-height: 3rem;
+}
+
 .auth-card__submit:disabled {
   cursor: not-allowed;
   opacity: 0.68;
@@ -782,6 +898,10 @@ watch(registerSuccessMessage, (message) => {
   align-items: center;
   color: var(--color-text);
   font-size: 0.9375rem;
+}
+
+.auth-card--login .auth-card__divider {
+  font-size: 0.8125rem;
 }
 
 .auth-card__divider::before,
@@ -810,6 +930,15 @@ watch(registerSuccessMessage, (message) => {
   cursor: pointer;
 }
 
+.auth-card--login .auth-card__socials {
+  gap: var(--space-4);
+}
+
+.auth-card--login .auth-card__socials button {
+  width: 3rem;
+  height: 2.75rem;
+}
+
 .auth-card__text-btn:disabled,
 .auth-card__socials button:disabled {
   cursor: not-allowed;
@@ -821,18 +950,22 @@ watch(registerSuccessMessage, (message) => {
   height: 1.375rem;
 }
 
-.auth-card__socials span {
-  font-size: 0.875rem;
-  font-weight: 850;
-  line-height: 1;
-}
-
 .auth-card__switch {
   display: flex;
   justify-content: center;
   gap: var(--space-2);
   color: var(--color-text);
   font-size: 1rem;
+}
+
+.auth-card--login .auth-card__switch,
+.auth-card--login .auth-check {
+  font-size: 0.875rem;
+}
+
+.auth-card--register .auth-card__switch,
+.auth-card--register .auth-check {
+  font-size: 0.875rem;
 }
 
 .auth-field__icon-btn:focus-visible,
@@ -866,7 +999,19 @@ watch(registerSuccessMessage, (message) => {
     font-size: 1.75rem;
   }
 
+  .auth-card--login h1 {
+    font-size: 1.5rem;
+  }
+
+  .auth-card--login .auth-card__brand {
+    font-size: 1.375rem;
+  }
+
   .auth-field__inline {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card__form--register {
     grid-template-columns: 1fr;
   }
 

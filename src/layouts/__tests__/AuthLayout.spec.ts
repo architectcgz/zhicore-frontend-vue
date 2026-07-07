@@ -43,7 +43,6 @@ describe("AuthLayout", () => {
 
     expect(wrapper.find(".auth-layout__header").exists()).toBe(false);
     expect(wrapper.text()).not.toContain("写作");
-    expect(wrapper.text()).not.toContain("New Post");
   });
 
   it("keeps the auth page content in the layout main region", async () => {
@@ -56,8 +55,8 @@ describe("AuthLayout", () => {
     const wrapper = await mountAuthLayout("/auth/register");
 
     expect(wrapper.find(".auth-layout__brand").text()).toContain("ZhiCore");
-    expect(wrapper.find(".auth-layout__nav").text()).toContain("Explore");
-    expect(wrapper.find(".auth-layout__post-btn").text()).toContain("New Post");
+    expect(wrapper.find(".auth-layout__nav").text()).toContain("发现");
+    expect(wrapper.find(".auth-layout__post-btn").text()).toContain("写作");
     expect(wrapper.find('[aria-label="消息"]').attributes("href")).toBe(
       "/messages",
     );

@@ -59,6 +59,21 @@ describe("useLoginForm", () => {
     expect(form.errorMessage.value).toBe("");
   });
 
+  it("rejects invalid email before submitting credentials", async () => {
+    const form = useLoginForm();
+
+    form.username.value = "not-an-email";
+    form.password.value = "Password123";
+
+    await form.submit();
+
+    expect(login).not.toHaveBeenCalled();
+    expect(form.fieldErrors.value).toEqual({
+      email: "请输入有效的邮箱地址",
+    });
+    expect(form.submitting.value).toBe(false);
+  });
+
   it.each([
     ["external protocol URL", "https://evil.example/path"],
     ["protocol-relative URL", "//evil.example/path"],

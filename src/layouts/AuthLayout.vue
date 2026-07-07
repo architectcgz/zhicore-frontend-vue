@@ -11,17 +11,17 @@
       </RouterLink>
 
       <nav class="auth-layout__nav" aria-label="主导航">
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/explore">Explore</RouterLink>
-        <RouterLink to="/community">Communities</RouterLink>
-        <RouterLink to="/resources">Resources</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/">首页</RouterLink>
+        <RouterLink to="/explore">发现</RouterLink>
+        <RouterLink to="/community">社区</RouterLink>
+        <RouterLink to="/resources">资源</RouterLink>
+        <RouterLink to="/about">关于</RouterLink>
       </nav>
 
       <div class="auth-layout__tools" aria-label="辅助操作">
         <RouterLink class="auth-layout__search" to="/search" aria-label="搜索">
           <Search aria-hidden="true" />
-          <span>Search...</span>
+          <span>搜索知识、社区、内容...</span>
         </RouterLink>
         <RouterLink
           class="auth-layout__icon-btn"
@@ -44,9 +44,13 @@
         >
           <UserRound aria-hidden="true" />
         </RouterLink>
-        <RouterLink class="auth-layout__post-btn" to="/editor">
+        <RouterLink
+          class="auth-layout__post-btn"
+          to="/editor"
+          aria-label="写作"
+        >
           <Plus aria-hidden="true" />
-          <span>New Post</span>
+          <span>写作</span>
         </RouterLink>
       </div>
     </header>
@@ -70,7 +74,7 @@ const shouldShowNav = computed(() => route.name === "Register");
 <style scoped>
 .auth-layout {
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
   background:
     linear-gradient(
       115deg,
@@ -88,21 +92,26 @@ const shouldShowNav = computed(() => route.name === "Register");
 }
 
 .auth-layout__header {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(12rem, 1fr) auto minmax(18rem, 1fr);
+  display: flex;
   gap: var(--space-6);
   align-items: center;
+  justify-content: space-between;
   min-height: 5.25rem;
-  padding: var(--space-5) var(--space-12);
+  padding: var(--space-4) var(--space-10);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  backdrop-filter: blur(1rem);
+  -webkit-backdrop-filter: blur(1rem);
 }
 
 .auth-layout__brand {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  justify-self: start;
+  flex: 0 0 auto;
   color: var(--color-text-strong);
   font-weight: 800;
   text-decoration: none;
@@ -158,15 +167,17 @@ const shouldShowNav = computed(() => route.name === "Register");
 
 .auth-layout__tools {
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
-  justify-self: end;
   gap: var(--space-4);
+  min-width: 0;
 }
 
 .auth-layout__search {
   display: inline-flex;
   align-items: center;
-  width: min(22rem, 28vw);
+  width: min(22rem, 24vw);
+  min-width: 13rem;
   min-height: 2.875rem;
   gap: var(--space-3);
   padding: 0 var(--space-4);
@@ -240,7 +251,6 @@ const shouldShowNav = computed(() => route.name === "Register");
 
 @media (max-width: 1180px) {
   .auth-layout__header {
-    grid-template-columns: 1fr auto;
     padding-inline: var(--space-8);
   }
 
@@ -251,13 +261,13 @@ const shouldShowNav = computed(() => route.name === "Register");
 
 @media (max-width: 820px) {
   .auth-layout__header {
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
     gap: var(--space-4);
     padding: var(--space-4);
   }
 
   .auth-layout__tools {
-    justify-self: stretch;
+    flex: 1 1 100%;
     justify-content: space-between;
   }
 
