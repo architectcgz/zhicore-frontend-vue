@@ -145,6 +145,9 @@ describe("AppLayout", () => {
       },
       global: {
         plugins: [createPinia(), router],
+        stubs: {
+          RouterView: true,
+        },
       },
     });
 
