@@ -19,6 +19,7 @@ export const messageCenterLocalMock: MessageCenterConversation[] = [
       {
         id: "msg-2",
         author: "me",
+        deliveryStatus: "read",
         text: "可以，我们把冲突提示放在正文保存状态旁边。",
         sentAt: "16:02",
       },

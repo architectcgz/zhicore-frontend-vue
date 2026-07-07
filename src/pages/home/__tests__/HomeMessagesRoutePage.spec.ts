@@ -50,6 +50,64 @@ describe("HomeMessagesRoutePage", () => {
     expect(
       wrapper.find(".messages-route__contacts--mobile-list").exists(),
     ).toBe(true);
+
+    const input = wrapper.get('input[aria-label="消息输入"]');
+    expect(input.attributes("disabled")).toBeUndefined();
+    await input.setValue("可以继续聊这里");
+    expect((input.element as HTMLInputElement).value).toBe("可以继续聊这里");
+
+    const readMessage = wrapper
+      .findAll(".messages-route__message--mine")
+      .find((message) => message.text().includes("可以，我们把冲突提示"));
+    expect(
+      readMessage
+        ?.get(".messages-route__delivery-status")
+        .attributes("aria-label"),
+    ).toBe("已读");
+  });
+
+  it("sends a local message from the inbox composer", async () => {
+    const wrapper = await mountWithRouter(HomeMessagesRoutePage, "/messages");
+    const input = wrapper.get('input[aria-label="消息输入"]');
+    const sendButton = wrapper.get(".messages-route__send-button");
+
+    expect(sendButton.attributes("disabled")).toBeDefined();
+
+    await input.setValue("我这边已经收到");
+
+    expect(sendButton.attributes("disabled")).toBeUndefined();
+
+    await sendButton.trigger("click");
+
+    const sentMessages = wrapper.findAll(".messages-route__message--mine");
+    const newMessage = sentMessages.find((message) =>
+      message.text().includes("我这边已经收到"),
+    );
+    expect(
+      newMessage
+        ?.get(".messages-route__delivery-status")
+        .attributes("aria-label"),
+    ).toBe("已发送");
+    expect((input.element as HTMLInputElement).value).toBe("");
+  });
+
+  it("does not send blank local messages", async () => {
+    const wrapper = await mountWithRouter(HomeMessagesRoutePage, "/messages");
+    const input = wrapper.get('input[aria-label="消息输入"]');
+    const sendButton = wrapper.get(".messages-route__send-button");
+    const messageCountBeforeSend = wrapper.findAll(
+      ".messages-route__message",
+    ).length;
+
+    await input.setValue("   ");
+
+    expect(sendButton.attributes("disabled")).toBeDefined();
+
+    await sendButton.trigger("click");
+
+    expect(wrapper.findAll(".messages-route__message")).toHaveLength(
+      messageCountBeforeSend,
+    );
   });
 
   it("renders the detail route as desktop master-detail and mobile detail-only content", async () => {
@@ -76,7 +134,33 @@ describe("HomeMessagesRoutePage", () => {
     expect(wrapper.findAll(".messages-route__message").length).toBeGreaterThan(
       0,
     );
-    expect(wrapper.find("input").exists()).toBe(true);
+    const input = wrapper.get('input[aria-label="消息输入"]');
+    expect(input.attributes("disabled")).toBeUndefined();
+    await input.setValue("收到，我看看");
+    expect((input.element as HTMLInputElement).value).toBe("收到，我看看");
+  });
+
+  it("sends a local message from the detail composer", async () => {
+    const wrapper = await mountWithRouter(
+      HomeMessageDetailRoutePage,
+      "/messages/conv-lin",
+    );
+    const input = wrapper.get('input[aria-label="消息输入"]');
+    const sendButton = wrapper.get(".messages-route__send-button");
+
+    await input.setValue("我稍后整理反馈");
+    await sendButton.trigger("click");
+
+    const sentMessages = wrapper.findAll(".messages-route__message--mine");
+    const newMessage = sentMessages.find((message) =>
+      message.text().includes("我稍后整理反馈"),
+    );
+    expect(
+      newMessage
+        ?.get(".messages-route__delivery-status")
+        .attributes("aria-label"),
+    ).toBe("已发送");
+    expect((input.element as HTMLInputElement).value).toBe("");
   });
 
   it("opens conversation management actions from the inbox chat header", async () => {

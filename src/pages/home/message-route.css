@@ -505,6 +505,7 @@
 
 .messages-route__message-meta {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--space-2);
   margin-top: var(--space-2);
@@ -512,8 +513,20 @@
   line-height: 1;
 }
 
-.messages-route__message-meta span {
+.messages-route__delivery-status {
+  display: inline-flex;
+  align-items: center;
+  color: var(--messages-muted);
+}
+
+.messages-route__delivery-status--read {
   color: var(--color-primary);
+}
+
+.messages-route__delivery-status svg {
+  width: var(--space-4);
+  height: var(--space-4);
+  stroke-width: 2.4;
 }
 
 .messages-route__composer {

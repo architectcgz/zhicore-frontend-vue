@@ -201,7 +201,7 @@
         <div class="messages-route__history">
           <div class="messages-route__date-divider">今天</div>
           <article
-            v-for="message in conversation.messages"
+            v-for="message in messages"
             :key="message.id"
             class="messages-route__message"
             :class="{
@@ -218,7 +218,21 @@
               <p>{{ message.text }}</p>
               <div class="messages-route__message-meta">
                 <time>{{ message.sentAt }}</time>
-                <span v-if="message.author === 'me'">✓✓</span>
+                <span
+                  v-if="message.author === 'me' && message.deliveryStatus"
+                  class="messages-route__delivery-status"
+                  :class="`messages-route__delivery-status--${message.deliveryStatus}`"
+                  :aria-label="
+                    message.deliveryStatus === 'read' ? '已读' : '已发送'
+                  "
+                  :title="message.deliveryStatus === 'read' ? '已读' : '已发送'"
+                >
+                  <Check
+                    v-if="message.deliveryStatus === 'sent'"
+                    aria-hidden="true"
+                  />
+                  <CheckCheck v-else aria-hidden="true" />
+                </span>
               </div>
             </div>
           </article>
@@ -235,14 +249,19 @@
           </button>
           <div class="messages-route__input-shell">
             <input
+              v-model="messageDraft"
               type="text"
               placeholder="输入消息..."
               aria-label="消息输入"
-              disabled
             />
             <Smile aria-hidden="true" />
           </div>
-          <button class="messages-route__send-button" type="button" disabled>
+          <button
+            class="messages-route__send-button"
+            type="button"
+            :disabled="!canSendMessage"
+            @click="sendMessage"
+          >
             <Send aria-hidden="true" />
             <span class="messages-route__sr-only">发送消息</span>
           </button>
@@ -265,6 +284,8 @@
 import {
   ArrowLeft,
   Bell,
+  Check,
+  CheckCheck,
   MessageCircle,
   MoreHorizontal,
   Paperclip,
@@ -281,6 +302,7 @@ import { RouterLink } from "vue-router";
 import { useMessageCenterRoutePage } from "@/features/message";
 import "./message-route.css";
 import { useConversationActionMenu } from "./useConversationActionMenu";
+import { useMessageComposerDraft } from "./useMessageComposerDraft";
 
 const { page, conversation } = useMessageCenterRoutePage();
 const {
@@ -288,4 +310,6 @@ const {
   isConversationActionMenuOpen,
   toggleConversationActionMenu,
 } = useConversationActionMenu();
+const { canSendMessage, messageDraft, messages, sendMessage } =
+  useMessageComposerDraft(() => conversation.value?.messages);
 </script>

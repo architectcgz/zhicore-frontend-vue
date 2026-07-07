@@ -1,6 +1,7 @@
 export interface MessageCenterMessage {
   id: string;
   author: "me" | "other";
+  deliveryStatus?: "sent" | "read";
   text: string;
   sentAt: string;
 }
