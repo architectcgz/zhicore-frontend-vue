@@ -46,7 +46,8 @@ const pageState = {
   activeContentCategory: ref("全部"),
 };
 
-vi.mock("@/features/home-discovery", () => ({
+vi.mock("@/features/home-discovery", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/home-discovery")>()),
   useHomeDiscoveryPage: () => ({
     discovery: pageState.discovery,
     feedState: computed(() => pageState.feedState.value),
