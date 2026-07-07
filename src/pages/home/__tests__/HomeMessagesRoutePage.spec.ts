@@ -110,6 +110,23 @@ describe("HomeMessagesRoutePage", () => {
     );
   });
 
+  it("opens the inbox emoji picker and inserts an emoji into the draft", async () => {
+    const wrapper = await mountWithRouter(HomeMessagesRoutePage, "/messages");
+    const input = wrapper.get('input[aria-label="消息输入"]');
+
+    expect(wrapper.find('[aria-label="表情"]').exists()).toBe(false);
+
+    await wrapper.get('button[aria-label="选择表情"]').trigger("click");
+
+    const emojiPicker = wrapper.get('[aria-label="表情"]');
+    expect(emojiPicker.text()).toContain("😊");
+
+    await emojiPicker.get('button[aria-label="插入 😊"]').trigger("click");
+
+    expect((input.element as HTMLInputElement).value).toBe("😊");
+    expect(wrapper.find('[aria-label="表情"]').exists()).toBe(false);
+  });
+
   it("renders the detail route as desktop master-detail and mobile detail-only content", async () => {
     const wrapper = await mountWithRouter(
       HomeMessageDetailRoutePage,
@@ -161,6 +178,24 @@ describe("HomeMessagesRoutePage", () => {
         .attributes("aria-label"),
     ).toBe("已发送");
     expect((input.element as HTMLInputElement).value).toBe("");
+  });
+
+  it("opens the detail emoji picker and closes it when clicking outside", async () => {
+    const wrapper = await mountWithRouter(
+      HomeMessageDetailRoutePage,
+      "/messages/conv-lin",
+    );
+
+    await wrapper.get('button[aria-label="选择表情"]').trigger("click");
+
+    expect(wrapper.find('[aria-label="表情"]').exists()).toBe(true);
+
+    document.body.dispatchEvent(
+      new MouseEvent("pointerdown", { bubbles: true }),
+    );
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[aria-label="表情"]').exists()).toBe(false);
   });
 
   it("opens conversation management actions from the inbox chat header", async () => {

@@ -242,14 +242,40 @@
             <Paperclip aria-hidden="true" />
             <span class="messages-route__sr-only">添加附件</span>
           </button>
-          <div class="messages-route__input-shell">
+          <div ref="composerInputRoot" class="messages-route__input-shell">
             <input
               v-model="messageDraft"
               type="text"
               placeholder="输入消息..."
               aria-label="消息输入"
             />
-            <Smile aria-hidden="true" />
+            <button
+              class="messages-route__emoji-button"
+              type="button"
+              aria-label="选择表情"
+              aria-haspopup="menu"
+              :aria-expanded="isEmojiPickerOpen"
+              @click="toggleEmojiPicker"
+            >
+              <Smile aria-hidden="true" />
+            </button>
+            <div
+              v-if="isEmojiPickerOpen"
+              class="messages-route__emoji-menu"
+              role="menu"
+              aria-label="表情"
+            >
+              <button
+                v-for="emoji in emojiOptions"
+                :key="emoji"
+                type="button"
+                role="menuitem"
+                :aria-label="`插入 ${emoji}`"
+                @click="insertEmoji(emoji)"
+              >
+                {{ emoji }}
+              </button>
+            </div>
           </div>
           <button
             class="messages-route__send-button"
@@ -301,6 +327,15 @@ const {
   isConversationActionMenuOpen,
   toggleConversationActionMenu,
 } = useConversationActionMenu();
-const { canSendMessage, messageDraft, messages, sendMessage } =
-  useMessageComposerDraft(() => page.activeConversation?.messages);
+const {
+  canSendMessage,
+  composerInputRoot,
+  emojiOptions,
+  insertEmoji,
+  isEmojiPickerOpen,
+  messageDraft,
+  messages,
+  sendMessage,
+  toggleEmojiPicker,
+} = useMessageComposerDraft(() => page.activeConversation?.messages);
 </script>
