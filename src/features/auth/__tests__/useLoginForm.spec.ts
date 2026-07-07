@@ -45,6 +45,7 @@ describe("useLoginForm", () => {
 
     form.username.value = "demo@example.com";
     form.password.value = "Password123";
+    form.termsAccepted.value = true;
 
     await form.submit();
 
@@ -64,12 +65,28 @@ describe("useLoginForm", () => {
 
     form.username.value = "not-an-email";
     form.password.value = "Password123";
+    form.termsAccepted.value = true;
 
     await form.submit();
 
     expect(login).not.toHaveBeenCalled();
     expect(form.fieldErrors.value).toEqual({
       email: "请输入有效的邮箱地址",
+    });
+    expect(form.submitting.value).toBe(false);
+  });
+
+  it("rejects login before the user accepts the terms and privacy policy", async () => {
+    const form = useLoginForm();
+
+    form.username.value = "demo@example.com";
+    form.password.value = "Password123";
+
+    await form.submit();
+
+    expect(login).not.toHaveBeenCalled();
+    expect(form.fieldErrors.value).toEqual({
+      terms: "请先阅读并同意用户协议和隐私政策",
     });
     expect(form.submitting.value).toBe(false);
   });
@@ -97,6 +114,7 @@ describe("useLoginForm", () => {
 
     form.username.value = "demo@example.com";
     form.password.value = "Password123";
+    form.termsAccepted.value = true;
 
     await form.submit();
 

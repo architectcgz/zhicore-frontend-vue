@@ -111,6 +111,32 @@
           </button>
         </div>
 
+        <label class="auth-check auth-check--terms" for="login-terms">
+          <input
+            id="login-terms"
+            v-model="loginTermsAccepted"
+            type="checkbox"
+            :aria-invalid="Boolean(loginFieldErrors.terms)"
+            :aria-describedby="
+              loginFieldErrors.terms ? 'login-terms-error' : undefined
+            "
+          />
+          <span class="auth-check__box" aria-hidden="true"></span>
+          <span class="auth-check__label">
+            我已阅读并同意
+            <RouterLink :to="{ name: 'TermsOfService' }">用户协议</RouterLink>
+            和
+            <RouterLink :to="{ name: 'PrivacyPolicy' }">隐私政策</RouterLink>
+          </span>
+        </label>
+        <span
+          v-if="loginFieldErrors.terms"
+          id="login-terms-error"
+          class="auth-card__field-error"
+        >
+          {{ loginFieldErrors.terms }}
+        </span>
+
         <button
           class="auth-card__submit"
           type="submit"
@@ -379,6 +405,7 @@ const toggleMode = (name: "Login" | "Register") => {
 const {
   username: loginUsername,
   password: loginPassword,
+  termsAccepted: loginTermsAccepted,
   submitting: isLoginSubmitting,
   fieldErrors: loginFieldErrors,
   errorMessage: loginError,

@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/auth";
 
 import { sanitizeAuthRedirect } from "../lib/redirect";
 
-type LoginField = "email";
+type LoginField = "email" | "terms";
 type LoginFieldErrors = Partial<Record<LoginField, string>>;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,6 +22,7 @@ export function useLoginForm() {
 
   const username = ref("");
   const password = ref("");
+  const termsAccepted = ref(false);
   const submitting = ref(false);
   const fieldErrors = ref<LoginFieldErrors>({});
   const errorMessage = ref("");
@@ -32,6 +33,9 @@ export function useLoginForm() {
 
     if (!normalizedEmail || !emailPattern.test(normalizedEmail)) {
       nextErrors.email = "请输入有效的邮箱地址";
+    }
+    if (!termsAccepted.value) {
+      nextErrors.terms = "请先阅读并同意用户协议和隐私政策";
     }
 
     fieldErrors.value = nextErrors;
@@ -46,7 +50,7 @@ export function useLoginForm() {
     errorMessage.value = "";
     fieldErrors.value = {};
 
-    // 邮箱格式错误属于用户可修正的字段问题，先在本地拦截，避免发起无效登录请求。
+    // 邮箱格式和协议确认都属于用户可修正的字段问题，先在本地拦截，避免发起无效登录请求。
     if (!validate()) {
       return;
     }
@@ -71,6 +75,7 @@ export function useLoginForm() {
   return {
     username,
     password,
+    termsAccepted,
     submitting,
     fieldErrors,
     errorMessage,

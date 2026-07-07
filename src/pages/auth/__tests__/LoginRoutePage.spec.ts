@@ -65,4 +65,18 @@ describe("LoginRoutePage", () => {
     );
     expect(wrapper.get("#login-email").attributes("aria-invalid")).toBe("true");
   });
+
+  it("shows a login terms validation error before submitting credentials", async () => {
+    const wrapper = await mountLoginRoutePage();
+
+    await wrapper.get("#login-email").setValue("demo@example.com");
+    await wrapper.get("#login-password").setValue("Password123");
+    await wrapper.get('form[aria-label="登录"]').trigger("submit");
+    await flushPromises();
+
+    expect(login).not.toHaveBeenCalled();
+    expect(wrapper.get("#login-terms-error").text()).toBe(
+      "请先阅读并同意用户协议和隐私政策",
+    );
+  });
 });
