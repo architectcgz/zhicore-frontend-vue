@@ -103,7 +103,7 @@
         <div class="auth-card__row">
           <label class="auth-check">
             <input v-model="rememberMe" type="checkbox" />
-            <span aria-hidden="true"></span>
+            <span class="auth-check__box" aria-hidden="true"></span>
             记住我
           </label>
           <button class="auth-card__text-btn" type="button" disabled>
@@ -313,8 +313,13 @@
 
         <label class="auth-check auth-check--terms">
           <input type="checkbox" required />
-          <span aria-hidden="true"></span>
-          我已阅读并同意《用户协议》和《隐私政策》
+          <span class="auth-check__box" aria-hidden="true"></span>
+          <span class="auth-check__label">
+            我已阅读并同意
+            <RouterLink :to="{ name: 'TermsOfService' }">用户协议</RouterLink>
+            和
+            <RouterLink :to="{ name: 'PrivacyPolicy' }">隐私政策</RouterLink>
+          </span>
         </label>
 
         <p v-if="registerFormError" class="auth-card__error" role="alert">
@@ -341,7 +346,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import {
   Apple,
   Check,
@@ -808,7 +813,7 @@ watch(registerSuccessMessage, (message) => {
   white-space: nowrap;
 }
 
-.auth-check > span {
+.auth-check__box {
   display: grid;
   width: 1.25rem;
   height: 1.25rem;
@@ -819,11 +824,11 @@ watch(registerSuccessMessage, (message) => {
   color: var(--color-bg);
 }
 
-.auth-check input:checked + span {
+.auth-check input:checked + .auth-check__box {
   background: var(--color-primary);
 }
 
-.auth-check input:checked + span::after {
+.auth-check input:checked + .auth-check__box::after {
   width: 0.375rem;
   height: 0.625rem;
   border-right: 0.125rem solid currentColor;
@@ -832,13 +837,23 @@ watch(registerSuccessMessage, (message) => {
   transform: rotate(45deg) translateY(-0.0625rem);
 }
 
-.auth-check input:focus-visible + span {
+.auth-check input:focus-visible + .auth-check__box {
   outline: 0.125rem solid var(--color-primary);
   outline-offset: 0.1875rem;
 }
 
 .auth-check--terms {
   flex-wrap: wrap;
+}
+
+.auth-check__label {
+  display: inline;
+}
+
+.auth-check__label a {
+  color: var(--color-primary);
+  font-weight: 800;
+  text-decoration: none;
 }
 
 .auth-card__text-btn,

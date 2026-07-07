@@ -8,6 +8,8 @@ import { login } from "@/api/auth";
 
 import LoginRoutePage from "../LoginRoutePage.vue";
 
+const EmptyRoute = { template: "<div />" };
+
 vi.mock("@/api/auth", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/auth")>()),
   login: vi.fn(),
@@ -19,6 +21,8 @@ async function mountLoginRoutePage(path = "/auth/login") {
     routes: [
       { path: "/auth/login", name: "Login", component: LoginRoutePage },
       { path: "/auth/register", name: "Register", component: LoginRoutePage },
+      { path: "/legal/privacy", name: "PrivacyPolicy", component: EmptyRoute },
+      { path: "/legal/terms", name: "TermsOfService", component: EmptyRoute },
     ],
   });
   await router.push(path);
