@@ -213,7 +213,7 @@ export function useContentDetailPage(
   async function loadPage(): Promise<void> {
     const requestId = ++pageRequestId;
     const requestPostId = getCurrentPostId();
-    commentsRequestId += 1;
+    const initialCommentsRequestId = ++commentsRequestId;
     pageState.value = "loading";
     pageError.value = "";
     commentsState.value = "idle";
@@ -256,17 +256,25 @@ export function useContentDetailPage(
         };
       }
 
-      const commentsPage =
-        commentsResult.status === "fulfilled"
-          ? commentsResult.value
-          : createEmptyCommentsPage();
-      if (commentsResult.status === "rejected") {
-        commentsError.value = getErrorMessage(commentsResult.reason);
-        commentsState.value = "error";
-      } else {
-        commentsState.value = "ready";
+      if (initialCommentsRequestId === commentsRequestId) {
+        const commentsPage =
+          commentsResult.status === "fulfilled"
+            ? commentsResult.value
+            : createEmptyCommentsPage();
+        if (commentsResult.status === "rejected") {
+          commentsError.value = getErrorMessage(commentsResult.reason);
+          commentsState.value = "error";
+        } else {
+          commentsState.value = "ready";
+        }
+        applyDetail(commentsPage);
+      } else if (!detail.value) {
+        // 用户在首屏评论返回前切换排序时，首屏响应只负责让正文完成 ready，不再覆盖新排序评论。
+        applyDetail(lastCommentsPage ?? createEmptyCommentsPage());
+      } else if (lastCommentsPage) {
+        // 首屏 engagement 可能晚于排序后的评论返回；复用最新评论页刷新互动降级状态。
+        applyDetail(lastCommentsPage);
       }
-      applyDetail(commentsPage);
       pageState.value = "ready";
     } catch (error) {
       if (requestId !== pageRequestId) {

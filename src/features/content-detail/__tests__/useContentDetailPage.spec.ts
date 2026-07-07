@@ -258,6 +258,112 @@ describe("useContentDetailPage", () => {
     expect(page.detail.value?.comments[0]?.author).toBe("最终");
   });
 
+  it("does not let a late initial comments response overwrite comments loaded after a sort change", async () => {
+    let resolveInitialComments:
+      ((page: TopLevelCommentPageResp) => void) | undefined;
+    let resolveSortedComments:
+      ((page: TopLevelCommentPageResp) => void) | undefined;
+    vi.mocked(getPostDetail).mockResolvedValue(mockPostDetail());
+    vi.mocked(getPostEngagementBatchStatus).mockResolvedValue({ items: [] });
+    vi.mocked(listCommentsPage)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveInitialComments = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSortedComments = resolve;
+          }),
+      );
+
+    const page = useContentDetailPage("post-1");
+    await flushPromises();
+
+    expect(listCommentsPage).toHaveBeenCalledTimes(1);
+
+    page.selectCommentSort("最新");
+    resolveSortedComments?.(commentPageWith("sorted-wins", "新排序"));
+    await flushPromises();
+    expect(page.detail.value?.comments[0]?.author).toBe("新排序");
+
+    resolveInitialComments?.(commentPageWith("initial-loses", "首屏旧响应"));
+    await flushPromises();
+
+    expect(listCommentsPage).toHaveBeenNthCalledWith(2, "post-1", {
+      page: 1,
+      size: 20,
+      sort: "TIME",
+    });
+    expect(page.pageState.value).toBe("ready");
+    expect(page.detail.value?.comments[0]?.author).toBe("新排序");
+  });
+
+  it("keeps late initial engagement degradation while preserving sorted comments", async () => {
+    let resolveInitialComments:
+      ((page: TopLevelCommentPageResp) => void) | undefined;
+    let resolveEngagement:
+      | ((
+          value: Awaited<ReturnType<typeof getPostEngagementBatchStatus>>,
+        ) => void)
+      | undefined;
+    let resolveSortedComments:
+      ((page: TopLevelCommentPageResp) => void) | undefined;
+    vi.mocked(getPostDetail).mockResolvedValue(mockPostDetail());
+    vi.mocked(getPostEngagementBatchStatus).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveEngagement = resolve;
+        }),
+    );
+    vi.mocked(listCommentsPage)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveInitialComments = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSortedComments = resolve;
+          }),
+      );
+
+    const page = useContentDetailPage("post-1");
+    await flushPromises();
+
+    page.selectCommentSort("最新");
+    resolveSortedComments?.(commentPageWith("sorted-wins", "新排序"));
+    await flushPromises();
+    expect(page.detail.value?.comments[0]?.author).toBe("新排序");
+    expect(page.detail.value?.readingActions.bookmarkCountLabel).toBe("0");
+
+    resolveEngagement?.({
+      items: [
+        {
+          postId: "post-1",
+          liked: true,
+          favorited: null,
+          degraded: true,
+        },
+      ],
+    });
+    resolveInitialComments?.(commentPageWith("initial-loses", "首屏旧响应"));
+    await flushPromises();
+
+    expect(page.pageState.value).toBe("ready");
+    expect(page.detail.value?.comments[0]?.author).toBe("新排序");
+    expect(page.detail.value?.readingActions.bookmarkCountLabel).toBe("--");
+    expect(page.detail.value?.statuses).toContainEqual(
+      expect.objectContaining({
+        label: "互动状态未知",
+      }),
+    );
+  });
+
   it("validates comment submit and keeps the draft after a failure", async () => {
     vi.mocked(getPostDetail).mockResolvedValue(mockPostDetail());
     vi.mocked(getPostEngagementBatchStatus).mockResolvedValue({ items: [] });
