@@ -5,6 +5,8 @@ import { authSessionFromRegisterResp, register } from "@/api/auth";
 import { ApiError } from "@/api/request";
 import { useAuthStore } from "@/stores/auth";
 
+import { sanitizeAuthRedirect } from "../lib/redirect";
+
 type RegisterField =
   | "email"
   | "nickname"
@@ -15,25 +17,6 @@ type RegisterField =
 type RegisterFieldErrors = Partial<Record<RegisterField, string>>;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function sanitizeRedirect(rawRedirect: unknown): string {
-  if (typeof rawRedirect !== "string") {
-    return "/";
-  }
-
-  const redirect = rawRedirect.trim();
-
-  if (
-    !redirect ||
-    !redirect.startsWith("/") ||
-    redirect.startsWith("//") ||
-    /^[a-z][a-z0-9+.-]*:/i.test(redirect)
-  ) {
-    return "/";
-  }
-
-  return redirect;
-}
 
 /**
  * 注册表单 workflow owner。
@@ -139,7 +122,7 @@ export function useRegisterForm() {
 
       if (response.authenticated) {
         authStore.setAuth(authSessionFromRegisterResp(response));
-        await router.push(sanitizeRedirect(route.query.redirect));
+        await router.push(sanitizeAuthRedirect(route.query.redirect));
         return;
       }
 

@@ -7,9 +7,12 @@ import { useAuthStore } from "@/stores/auth";
 import { useLoginForm } from "../composables/useLoginForm";
 
 const push = vi.fn();
+const routeState = vi.hoisted(() => ({
+  query: { redirect: "/editor" } as Record<string, unknown>,
+}));
 
 vi.mock("vue-router", () => ({
-  useRoute: () => ({ query: { redirect: "/editor" } }),
+  useRoute: () => ({ query: routeState.query }),
   useRouter: () => ({ push }),
 }));
 
@@ -21,6 +24,7 @@ describe("useLoginForm", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    routeState.query = { redirect: "/editor" };
   });
 
   it("submits credentials, stores the mapped auth user and navigates in the feature workflow", async () => {
@@ -53,5 +57,34 @@ describe("useLoginForm", () => {
     expect(useAuthStore().csrfToken).toBe("csrf-token");
     expect(push).toHaveBeenCalledWith("/editor");
     expect(form.errorMessage.value).toBe("");
+  });
+
+  it.each([
+    ["external protocol URL", "https://evil.example/path"],
+    ["protocol-relative URL", "//evil.example/path"],
+    ["empty redirect", ""],
+    ["non-string redirect", ["/editor"]],
+  ])("falls back to home for unsafe %s", async (_caseName, redirect) => {
+    routeState.query = { redirect };
+    vi.mocked(login).mockResolvedValue({
+      accessToken: "access-token",
+      tokenType: "Bearer",
+      expiresIn: 7200,
+      csrfToken: "csrf-token",
+      user: {
+        id: "user-1",
+        username: "demo@example.com",
+        role: "user",
+        displayName: "demo@example.com",
+      },
+    });
+    const form = useLoginForm();
+
+    form.username.value = "demo@example.com";
+    form.password.value = "Password123";
+
+    await form.submit();
+
+    expect(push).toHaveBeenCalledWith("/");
   });
 });
