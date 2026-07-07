@@ -7,9 +7,8 @@ import {
 import { setupRouterGuards } from "./guards";
 import { appShellRoute } from "./routes/appShellRoute";
 import { authRoutes } from "./routes/authRoutes";
-import { errorRoutes } from "./routes/errorRoutes";
 
-const routes: RouteRecordRaw[] = [...authRoutes, appShellRoute, ...errorRoutes];
+const routes: RouteRecordRaw[] = [...authRoutes, appShellRoute];
 
 const router = createRouter({
   history: createWebHistory(),

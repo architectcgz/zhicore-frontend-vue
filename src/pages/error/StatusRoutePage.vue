@@ -2,34 +2,6 @@
   <section class="status-page" :aria-labelledby="titleId">
     <div class="status-page__backdrop" aria-hidden="true"></div>
 
-    <header class="status-page__header">
-      <RouterLink
-        class="status-page__brand"
-        to="/"
-        aria-label="返回 ZhiCore 首页"
-      >
-        <span class="status-page__brand-mark">Z</span>
-        <span class="status-page__brand-name">ZhiCore</span>
-      </RouterLink>
-
-      <nav class="status-page__nav" aria-label="主导航">
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/explore">Explore</RouterLink>
-        <RouterLink to="/community">Communities</RouterLink>
-        <RouterLink to="/resources">Resources</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-
-      <div class="status-page__tools" aria-label="辅助操作">
-        <RouterLink to="/search" aria-label="搜索">
-          <Search aria-hidden="true" />
-        </RouterLink>
-        <RouterLink to="/auth/login" aria-label="登录">
-          <UserRound aria-hidden="true" />
-        </RouterLink>
-      </div>
-    </header>
-
     <main class="status-page__content">
       <div class="status-page__message">
         <p class="status-page__code" aria-hidden="true">
@@ -104,7 +76,6 @@ import { RouterLink } from "vue-router";
 import {
   FileQuestion,
   LockKeyhole,
-  Search,
   SearchCheck,
   ServerCrash,
   ShieldX,
@@ -204,7 +175,7 @@ const statusView = computed<StatusView>(() => {
 <style scoped>
 .status-page {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh - 4rem);
   padding: var(--space-6);
   overflow: hidden;
   color: var(--color-text);
@@ -267,90 +238,6 @@ const statusView = computed<StatusView>(() => {
   filter: blur(0.25rem);
 }
 
-.status-page__header {
-  display: grid;
-  grid-template-columns: minmax(12rem, 1fr) auto minmax(8rem, 1fr);
-  gap: var(--space-6);
-  align-items: center;
-  min-height: 3.5rem;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-bg-elevated) 58%, transparent);
-  backdrop-filter: blur(1rem);
-  -webkit-backdrop-filter: blur(1rem);
-}
-
-.status-page__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  justify-self: start;
-  color: var(--color-text-strong);
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.status-page__brand-mark {
-  display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
-  border-radius: var(--radius-sm);
-  color: var(--color-primary);
-  line-height: 1;
-  box-shadow: 0 0 1rem color-mix(in srgb, var(--color-primary) 30%, transparent);
-}
-
-.status-page__brand-name {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.status-page__nav {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-8);
-  color: var(--color-text);
-  font-size: 0.8125rem;
-  font-weight: 650;
-}
-
-.status-page__nav a {
-  position: relative;
-  padding: var(--space-2) 0;
-  text-decoration: none;
-}
-
-.status-page__nav a:nth-child(2)::after {
-  position: absolute;
-  right: 0;
-  bottom: calc(var(--space-2) * -1);
-  left: 0;
-  height: 0.0625rem;
-  background: color-mix(in srgb, var(--color-primary) 82%, transparent);
-  content: "";
-}
-
-.status-page__tools {
-  display: inline-flex;
-  align-items: center;
-  justify-self: end;
-  gap: var(--space-4);
-}
-
-.status-page__tools a {
-  display: inline-flex;
-  width: 2rem;
-  height: 2rem;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.status-page__tools svg,
 .status-page__quick-links svg {
   width: 1rem;
   height: 1rem;
@@ -535,9 +422,6 @@ const statusView = computed<StatusView>(() => {
   color: var(--color-primary);
 }
 
-.status-page__brand:focus-visible,
-.status-page__nav a:focus-visible,
-.status-page__tools a:focus-visible,
 .status-page__primary-action:focus-visible,
 .status-page__secondary-action:focus-visible,
 .status-page__quick-links a:focus-visible {
@@ -546,14 +430,6 @@ const statusView = computed<StatusView>(() => {
 }
 
 @media (max-width: 920px) {
-  .status-page__header {
-    grid-template-columns: 1fr auto;
-  }
-
-  .status-page__nav {
-    display: none;
-  }
-
   .status-page__content {
     grid-template-columns: 1fr;
     gap: var(--space-8);
@@ -565,14 +441,6 @@ const statusView = computed<StatusView>(() => {
 @media (max-width: 560px) {
   .status-page {
     padding: var(--space-4);
-  }
-
-  .status-page__header {
-    padding: var(--space-2) var(--space-3);
-  }
-
-  .status-page__brand-name {
-    display: none;
   }
 
   .status-page__code {

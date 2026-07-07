@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const errorRoutes: RouteRecordRaw[] = [
   {
-    path: "/error/:status(\\d+)",
+    path: "error/:status(\\d+)",
     name: "ErrorStatus",
     component: () => import("@/pages/error/StatusRoutePage.vue"),
     props: (route) => ({
@@ -10,7 +10,7 @@ export const errorRoutes: RouteRecordRaw[] = [
     }),
   },
   {
-    path: "/:status(401|403|404|500)",
+    path: ":status(401|403|404|500)",
     name: "ErrorStatusShorthand",
     component: () => import("@/pages/error/StatusRoutePage.vue"),
     props: (route) => ({
@@ -18,7 +18,7 @@ export const errorRoutes: RouteRecordRaw[] = [
     }),
   },
   {
-    path: "/:pathMatch(.*)*",
+    path: ":pathMatch(.*)*",
     name: "NotFound",
     component: () => import("@/pages/error/StatusRoutePage.vue"),
     props: {
