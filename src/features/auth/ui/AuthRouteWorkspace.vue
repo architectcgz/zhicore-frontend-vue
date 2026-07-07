@@ -451,7 +451,7 @@ watch(registerSuccessMessage, (message) => {
 }
 
 .auth-card {
-  width: min(42rem, 100%);
+  width: min(34rem, 100%);
   padding: var(--space-12);
   border: 1px solid color-mix(in srgb, var(--color-primary) 36%, transparent);
   border-radius: var(--radius-lg);
