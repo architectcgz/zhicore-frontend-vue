@@ -304,7 +304,7 @@ describe("post api", () => {
     expect(tagsResp.hasMore).toBe(false);
     expect(tagsResp.items[0]).toEqual({
       tagId: "tag_product_design",
-      name: "Product Design",
+      name: "产品设计",
       slug: "product-design",
     });
     const postsResp = await listPosts({
@@ -315,14 +315,14 @@ describe("post api", () => {
     expect(postsResp.hasMore).toBe(false);
     expect(postsResp.items[0]).toMatchObject({
       postId: "post-design-ia",
-      title: "Mastering Information Architecture: A Guide",
+      title: "信息架构落地指南：从导航到知识路径",
       status: "PUBLISHED",
     });
     const detailResp = await getPostDetail("post-design-ia");
     expect(detailResp).toMatchObject({
       post: {
         postId: "post-design-ia",
-        title: "Mastering Information Architecture: A Guide",
+        title: "信息架构落地指南：从导航到知识路径",
       },
       body: {
         format: "blocks",

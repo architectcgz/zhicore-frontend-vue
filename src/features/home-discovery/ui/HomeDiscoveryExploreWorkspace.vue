@@ -2,11 +2,11 @@
   <section class="explore-route" aria-labelledby="explore-route-title">
     <header class="explore-hero">
       <div class="explore-hero__copy">
-        <h1 id="explore-route-title">Discover Content</h1>
-        <p>Find high-quality public content by topic</p>
+        <h1 id="explore-route-title">探索内容</h1>
+        <p>按主题发现高质量公开内容</p>
       </div>
 
-      <dl class="explore-hero__stats" aria-label="Explore overview">
+      <dl class="explore-hero__stats" aria-label="探索概览">
         <div
           v-for="stat in overviewStats"
           :key="stat.label"
@@ -42,7 +42,7 @@
     </nav>
 
     <div class="explore-toolbar" aria-label="内容排序">
-      <span>Sort by: Latest</span>
+      <span>排序：最新发布</span>
       <ChevronDown class="explore-toolbar__icon" aria-hidden="true" />
     </div>
 
@@ -194,16 +194,16 @@
 
           <div class="explore-feed__footer">
             <button type="button" class="explore-more" disabled>
-              Load More
+              加载更多
             </button>
-            <span>Showing {{ postCards.length }} public posts</span>
+            <span>已显示 {{ postCards.length }} 篇公开内容</span>
           </div>
         </template>
       </main>
 
       <aside class="explore-sidebar" aria-label="内容辅助信息">
         <section class="explore-panel" aria-labelledby="explore-filter-title">
-          <h2 id="explore-filter-title">Filter by</h2>
+          <h2 id="explore-filter-title">筛选</h2>
           <div class="explore-filter">
             <div
               v-for="filter in filterGroups"
@@ -221,8 +221,8 @@
 
         <section class="explore-panel" aria-labelledby="explore-tags-title">
           <div class="explore-panel__header">
-            <h2 id="explore-tags-title">Popular Tags</h2>
-            <span>View all</span>
+            <h2 id="explore-tags-title">热门标签</h2>
+            <span>查看全部</span>
           </div>
 
           <div v-if="popularTags.length > 0" class="explore-tag-cloud">
@@ -236,12 +236,12 @@
             </span>
           </div>
           <p v-else class="explore-panel__empty">
-            No tags in the current list.
+            当前列表暂无标签
           </p>
         </section>
 
         <section class="explore-panel" aria-labelledby="explore-trending-title">
-          <h2 id="explore-trending-title">Trending Now</h2>
+          <h2 id="explore-trending-title">当前热门</h2>
           <ol v-if="trendingPosts.length > 0" class="explore-trending">
             <li v-for="post in trendingPosts" :key="post.id ?? post.title">
               <ArrowUpRight class="explore-trending__icon" aria-hidden="true" />
@@ -250,7 +250,7 @@
             </li>
           </ol>
           <p v-else class="explore-panel__empty">
-            Trending items appear after posts load.
+            内容加载后显示热门文章
           </p>
         </section>
 
@@ -259,8 +259,8 @@
           aria-labelledby="explore-community-title"
         >
           <div class="explore-panel__header">
-            <h2 id="explore-community-title">Suggested Communities</h2>
-            <span>View all</span>
+            <h2 id="explore-community-title">推荐社区</h2>
+            <span>查看全部</span>
           </div>
           <ul class="explore-communities">
             <li v-for="community in suggestedCommunities" :key="community.name">
@@ -271,7 +271,7 @@
                 <strong>{{ community.name }}</strong>
                 <small>{{ community.description }}</small>
               </span>
-              <RouterLink class="explore-join" to="/community">Join</RouterLink>
+              <RouterLink class="explore-join" to="/community">加入</RouterLink>
             </li>
           </ul>
         </section>
@@ -327,11 +327,14 @@ const {
 } = toRefs(props);
 
 const categoryTranslations = new Map<string, string>([
-  ["全部", "All"],
-  ["前端", "Frontend"],
-  ["架构", "Architecture"],
-  ["后端", "Backend"],
-  ["写作体验", "Writing"],
+  ["All", "全部"],
+  ["Frontend", "前端"],
+  ["Architecture", "架构"],
+  ["Backend", "后端"],
+  ["Writing", "写作"],
+  ["Product Design", "产品设计"],
+  ["System Design", "系统架构"],
+  ["AI & ML", "AI 应用"],
 ]);
 
 const thumbnailClasses = [
@@ -342,24 +345,24 @@ const thumbnailClasses = [
 ] as const;
 
 const filterGroups = [
-  { label: "Content Type", value: "All Types" },
-  { label: "Time", value: "All Time" },
-  { label: "Difficulty", value: "All Levels" },
+  { label: "内容类型", value: "全部类型" },
+  { label: "时间", value: "全部时间" },
+  { label: "难度", value: "全部级别" },
 ] as const;
 
 const suggestedCommunities = [
   {
-    name: "Design Systems",
+    name: "设计系统",
     description: "公共社区",
     icon: Box,
   },
   {
-    name: "Frontend",
+    name: "前端工程",
     description: "公共社区",
     icon: Code2,
   },
   {
-    name: "DevOps",
+    name: "DevOps 实践",
     description: "公共社区",
     icon: GitBranch,
   },
@@ -380,17 +383,17 @@ const resultCountLabel = computed(() => {
 
 const overviewStats = computed(() => [
   {
-    label: "Posts",
+    label: "文章",
     value: resultCountLabel.value,
     icon: FileText,
   },
   {
-    label: "Categories",
+    label: "分类",
     value: String(discovery.value.contentCategories.length),
     icon: Tags,
   },
   {
-    label: "Contributors",
+    label: "作者",
     value: String(discovery.value.authors.length),
     icon: Users,
   },
@@ -442,7 +445,7 @@ function trendScoreLabel(post: DiscoveryPost): string {
     return post.readingTime;
   }
 
-  return `${score} interactions`;
+  return `${score} 次互动`;
 }
 
 function likeActionLabel(post: DiscoveryPost): string {

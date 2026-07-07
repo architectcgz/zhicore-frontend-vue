@@ -16,7 +16,7 @@ vi.mock("@/stores/auth", () => ({
 
 const pageState = {
   discovery: reactive<HomeDiscoveryData>({
-    eyebrow: "Explore",
+    eyebrow: "探索",
     title: "发现内容",
     lede: "",
     searchInitialQuery: "",
@@ -120,23 +120,23 @@ describe("ExploreRoutePage", () => {
 
     expect(wrapper.get(".explore-hero__stats").text()).toContain("--");
     expect(wrapper.get(".explore-state").text()).toContain("list failed");
-    expect(wrapper.get(".explore-hero__stats").text()).not.toContain("Posts0");
+    expect(wrapper.get(".explore-hero__stats").text()).not.toContain("文章0");
   });
 
   it("renders the restored explore sidebar and derives counts from local page data", async () => {
     const wrapper = await mountExploreRoutePage();
     const stats = wrapper.findAll(".explore-hero__stat");
 
-    expect(stats[0].text()).toContain("1Posts");
-    expect(stats[1].text()).toContain("3Categories");
-    expect(stats[2].text()).toContain("1Contributors");
-    expect(wrapper.get(".explore-panel").text()).toContain("Filter by");
+    expect(stats[0].text()).toContain("1文章");
+    expect(stats[1].text()).toContain("3分类");
+    expect(stats[2].text()).toContain("1作者");
+    expect(wrapper.get(".explore-panel").text()).toContain("筛选");
     expect(wrapper.get(".explore-tag-cloud").text()).toContain("Vue");
     expect(wrapper.get(".explore-trending").text()).toContain(
       "Vue 组合式页面边界",
     );
     expect(wrapper.get(".explore-communities").text()).toContain(
-      "Design Systems",
+      "设计系统",
     );
   });
 });

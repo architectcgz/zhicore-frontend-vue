@@ -43,7 +43,7 @@ export const homeDiscoveryMock: HomeDiscoveryData = {
   ],
   authorsTitle: "推荐作者",
   authors: [
-    { initial: "林", name: "Lin", bio: "前端工程化与编辑器" },
+    { initial: "林", name: "林言", bio: "前端工程化与编辑器" },
     { initial: "周", name: "周牧", bio: "Go 与服务治理" },
   ],
 };
