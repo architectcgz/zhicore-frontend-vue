@@ -161,19 +161,40 @@
             </div>
           </div>
 
-          <div class="messages-route__chat-actions">
-            <button class="messages-route__icon-button" type="button" disabled>
-              <Phone aria-hidden="true" />
-              <span class="messages-route__sr-only">语音通话</span>
-            </button>
-            <button class="messages-route__icon-button" type="button" disabled>
-              <Video aria-hidden="true" />
-              <span class="messages-route__sr-only">视频通话</span>
-            </button>
-            <button class="messages-route__icon-button" type="button" disabled>
+          <div
+            ref="conversationActionMenuRoot"
+            class="messages-route__chat-actions"
+          >
+            <button
+              class="messages-route__icon-button"
+              type="button"
+              aria-label="更多操作"
+              aria-haspopup="menu"
+              :aria-expanded="isConversationActionMenuOpen"
+              aria-controls="message-detail-conversation-action-menu"
+              @click="toggleConversationActionMenu"
+            >
               <MoreHorizontal aria-hidden="true" />
               <span class="messages-route__sr-only">更多操作</span>
             </button>
+            <div
+              v-if="isConversationActionMenuOpen"
+              id="message-detail-conversation-action-menu"
+              class="messages-route__action-menu"
+              role="menu"
+              aria-label="会话管理"
+            >
+              <button type="button" role="menuitem" disabled>拉黑用户</button>
+              <button type="button" role="menuitem" disabled>举报对话</button>
+              <button
+                type="button"
+                role="menuitem"
+                class="messages-route__action-menu-item--danger"
+                disabled
+              >
+                删除会话
+              </button>
+            </div>
           </div>
         </header>
 
@@ -247,7 +268,6 @@ import {
   MessageCircle,
   MoreHorizontal,
   Paperclip,
-  Phone,
   Search,
   Send,
   Settings,
@@ -255,12 +275,17 @@ import {
   SquarePen,
   Star,
   Users,
-  Video,
 } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 
 import { useMessageCenterRoutePage } from "@/features/message";
 import "./message-route.css";
+import { useConversationActionMenu } from "./useConversationActionMenu";
 
 const { page, conversation } = useMessageCenterRoutePage();
+const {
+  conversationActionMenuRoot,
+  isConversationActionMenuOpen,
+  toggleConversationActionMenu,
+} = useConversationActionMenu();
 </script>

@@ -78,4 +78,40 @@ describe("HomeMessagesRoutePage", () => {
     );
     expect(wrapper.find("input").exists()).toBe(true);
   });
+
+  it("opens conversation management actions from the inbox chat header", async () => {
+    const wrapper = await mountWithRouter(HomeMessagesRoutePage, "/messages");
+
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+
+    await wrapper.get('button[aria-label="更多操作"]').trigger("click");
+
+    const menu = wrapper.get('[role="menu"]');
+    expect(menu.text()).toContain("拉黑用户");
+    expect(menu.text()).toContain("举报对话");
+    expect(menu.text()).toContain("删除会话");
+
+    document.body.dispatchEvent(
+      new MouseEvent("pointerdown", { bubbles: true }),
+    );
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+  });
+
+  it("opens conversation management actions from the detail chat header", async () => {
+    const wrapper = await mountWithRouter(
+      HomeMessageDetailRoutePage,
+      "/messages/conv-lin",
+    );
+
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+
+    await wrapper.get('button[aria-label="更多操作"]').trigger("click");
+
+    const menu = wrapper.get('[role="menu"]');
+    expect(menu.text()).toContain("拉黑用户");
+    expect(menu.text()).toContain("举报对话");
+    expect(menu.text()).toContain("删除会话");
+  });
 });
