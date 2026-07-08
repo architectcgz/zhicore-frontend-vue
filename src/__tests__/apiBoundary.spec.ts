@@ -66,6 +66,9 @@ function collectSourceFiles(root: string): string[] {
     const path = join(root, entry);
     const stat = statSync(path);
     if (stat.isDirectory()) {
+      if (entry === "__tests__") {
+        continue;
+      }
       files.push(...collectSourceFiles(path));
       continue;
     }

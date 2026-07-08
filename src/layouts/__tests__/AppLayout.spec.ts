@@ -1,10 +1,24 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
-import { describe, expect, it, vi } from "vitest";
+import { ref } from "vue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import AppLayout from "@/layouts/AppLayout.vue";
 import { routes } from "@/router";
+
+const featureMocks = vi.hoisted(() => ({
+  useMessageCenterPage: vi.fn(),
+  useNotificationUnreadBadge: vi.fn(),
+}));
+
+vi.mock("@/features/message", () => ({
+  useMessageCenterPage: featureMocks.useMessageCenterPage,
+}));
+
+vi.mock("@/features/notification", () => ({
+  useNotificationUnreadBadge: featureMocks.useNotificationUnreadBadge,
+}));
 
 async function mountAppLayout(
   options: {
@@ -57,6 +71,18 @@ async function mountAppLayout(
 }
 
 describe("AppLayout", () => {
+  beforeEach(() => {
+    featureMocks.useMessageCenterPage.mockReset();
+    featureMocks.useNotificationUnreadBadge.mockReset();
+    featureMocks.useMessageCenterPage.mockReturnValue({
+      unreadCount: 2,
+    });
+    featureMocks.useNotificationUnreadBadge.mockReturnValue({
+      unreadCount: ref(3),
+      loadError: ref(null),
+    });
+  });
+
   it("mounts successfully with the new design", async () => {
     const { wrapper } = await mountAppLayout();
     expect(wrapper.exists()).toBe(true);
@@ -79,7 +105,7 @@ describe("AppLayout", () => {
     );
   });
 
-  it("links logged-in users to private inbox pages with local demo unread counts", async () => {
+  it("links logged-in users to private inbox pages with unread badges", async () => {
     const { wrapper } = await mountAppLayout();
 
     expect(wrapper.find('a[aria-label="消息"]').attributes("href")).toBe(
@@ -100,6 +126,19 @@ describe("AppLayout", () => {
         .findAll(".app-layout__badge")
         .map((item) => item.text()),
     ).toEqual(["2"]);
+  });
+
+  it("hides the notification badge when unread count loading fails", async () => {
+    featureMocks.useNotificationUnreadBadge.mockReturnValue({
+      unreadCount: ref(null),
+      loadError: ref("服务暂时不可用"),
+    });
+    const { wrapper } = await mountAppLayout();
+
+    const notificationLink = wrapper.find('a[aria-label="通知"]');
+
+    expect(notificationLink.exists()).toBe(true);
+    expect(notificationLink.find(".app-layout__badge").exists()).toBe(false);
   });
 
   it("links mirrored account controls to the profile page during profile development", async () => {

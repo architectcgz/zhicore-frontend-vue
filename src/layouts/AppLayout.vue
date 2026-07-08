@@ -166,7 +166,7 @@ import { computed, ref } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 
 import { useMessageCenterPage } from "@/features/message";
-import { useNotificationCenterPage } from "@/features/notification";
+import { useNotificationUnreadBadge } from "@/features/notification";
 
 const props = defineProps<{
   isLoggedIn: boolean;
@@ -178,10 +178,10 @@ const router = useRouter();
 const isShellFlush = computed(() => route.meta.appShellFlush === true);
 const globalSearchQuery = ref("");
 const messageCenter = useMessageCenterPage();
-const notificationCenter = useNotificationCenterPage();
+const notificationBadge = useNotificationUnreadBadge();
 const messageUnreadCount = computed(() => messageCenter.unreadCount ?? 0);
 const notificationUnreadCount = computed(
-  () => notificationCenter.unreadCount ?? 0,
+  () => notificationBadge.unreadCount.value ?? 0,
 );
 
 async function submitGlobalSearch(): Promise<void> {

@@ -1,11 +1,11 @@
 <template>
   <main class="notifications-route" aria-labelledby="notifications-title">
-    <section v-if="page.isLocalDemo" class="notifications-route__layout">
+    <section class="notifications-route__layout">
       <aside class="notifications-route__sidebar" aria-label="通知分类">
         <section class="notifications-route__summary" aria-label="未读摘要">
           <div>
             <span>未读摘要</span>
-            <strong>{{ page.unreadCount }}</strong>
+            <strong>{{ page.unreadCount.value ?? "—" }}</strong>
             <p>未读通知</p>
           </div>
           <span class="notifications-route__summary-icon">
@@ -15,63 +15,33 @@
 
         <nav class="notifications-route__nav" aria-label="通知分类">
           <button
+            v-for="category in categories"
+            :key="category.value"
             class="notifications-route__nav-item"
             type="button"
-            aria-label="全部通知"
+            :aria-label="category.ariaLabel"
             :aria-current="
-              page.selectedCategory.value === 'all' ? 'page' : undefined
+              page.selectedCategory.value === category.value ? 'page' : undefined
             "
-            @click="page.selectCategory('all')"
+            @click="page.selectCategory(category.value)"
           >
-            <Bell class="notifications-route__nav-icon" aria-hidden="true" />
-            <span>全部</span>
-            <strong>{{ page.categoryCounts.value.all }}</strong>
-          </button>
-          <button
-            class="notifications-route__nav-item"
-            type="button"
-            aria-label="提及通知"
-            :aria-current="
-              page.selectedCategory.value === 'content' ? 'page' : undefined
-            "
-            @click="page.selectCategory('content')"
-          >
-            <AtSign class="notifications-route__nav-icon" aria-hidden="true" />
-            <span>提及</span>
-            <strong>{{ page.categoryCounts.value.content }}</strong>
-          </button>
-          <button
-            class="notifications-route__nav-item"
-            type="button"
-            aria-label="互动通知"
-            :aria-current="
-              page.selectedCategory.value === 'interaction' ? 'page' : undefined
-            "
-            @click="page.selectCategory('interaction')"
-          >
-            <Heart class="notifications-route__nav-icon" aria-hidden="true" />
-            <span>互动</span>
-            <strong>{{ page.categoryCounts.value.interaction }}</strong>
-          </button>
-          <button
-            class="notifications-route__nav-item"
-            type="button"
-            aria-label="系统通知"
-            :aria-current="
-              page.selectedCategory.value === 'system' ? 'page' : undefined
-            "
-            @click="page.selectCategory('system')"
-          >
-            <Sparkles
+            <component
+              :is="category.icon"
               class="notifications-route__nav-icon"
               aria-hidden="true"
             />
-            <span>系统</span>
-            <strong>{{ page.categoryCounts.value.system }}</strong>
+            <span>{{ category.label }}</span>
+            <strong>{{ page.categoryCounts.value[category.value] ?? "—" }}</strong>
           </button>
         </nav>
 
-        <button class="notifications-route__mark-button" type="button" disabled>
+        <button
+          class="notifications-route__mark-button"
+          type="button"
+          aria-label="全部已读"
+          :disabled="page.submittingMarkAll.value || page.items.value.length === 0"
+          @click="page.markAllRead"
+        >
           <CheckCircle2 aria-hidden="true" />
           <span>全部已读</span>
         </button>
@@ -83,33 +53,46 @@
             <p class="notifications-route__section-label">通知中心</p>
             <h1 id="notifications-title">Notifications</h1>
           </div>
-          <div class="notifications-route__toolbar">
-            <div class="notifications-route__search" role="search">
-              <Search
-                class="notifications-route__search-icon"
-                aria-hidden="true"
-              />
-              <input
-                type="search"
-                placeholder="Search notifications"
-                aria-label="搜索通知"
-                disabled
-              />
-            </div>
-            <button
-              class="notifications-route__filter-button"
-              type="button"
-              disabled
-            >
-              <Filter aria-hidden="true" />
-              <span>筛选</span>
-            </button>
-          </div>
         </header>
 
-        <div class="notifications-route__list">
+        <div
+          v-if="page.status.value === 'loading'"
+          class="notifications-route__empty"
+        >
+          <p class="notifications-route__eyebrow">Loading</p>
+          <h2>通知加载中</h2>
+          <p>正在读取通知列表和未读摘要。</p>
+        </div>
+
+        <div
+          v-else-if="page.status.value === 'error'"
+          class="notifications-route__empty"
+        >
+          <p class="notifications-route__eyebrow">Error</p>
+          <h2>{{ page.error.value || "通知加载失败" }}</h2>
+          <p>可以稍后重试，已读状态不会被本地伪造。</p>
+          <button
+            class="notifications-route__mark-button"
+            type="button"
+            aria-label="重新加载通知"
+            @click="page.retry"
+          >
+            重新加载
+          </button>
+        </div>
+
+        <div
+          v-else-if="page.status.value === 'empty'"
+          class="notifications-route__empty"
+        >
+          <p class="notifications-route__eyebrow">Empty</p>
+          <h2>暂无通知</h2>
+          <p>新的互动、内容、系统或安全通知会显示在这里。</p>
+        </div>
+
+        <div v-else class="notifications-route__list">
           <article
-            v-for="notification in page.paginatedNotifications.value"
+            v-for="notification in page.items.value"
             :key="notification.id"
             class="notifications-route__item"
             :class="{
@@ -118,14 +101,14 @@
           >
             <span
               class="notifications-route__item-icon"
-              :class="`notifications-route__item-icon--${notification.type}`"
+              :class="`notifications-route__item-icon--${notification.category}`"
             >
               <Heart
-                v-if="notification.type === 'interaction'"
+                v-if="notification.category === 'interaction'"
                 aria-hidden="true"
               />
               <AtSign
-                v-else-if="notification.type === 'content'"
+                v-else-if="notification.category === 'content'"
                 aria-hidden="true"
               />
               <Sparkles v-else aria-hidden="true" />
@@ -142,44 +125,38 @@
               class="notifications-route__unread-dot"
               aria-label="未读"
             />
+            <a
+              v-if="notification.targetPath"
+              class="notifications-route__target-link"
+              :href="notification.targetPath"
+            >
+              查看
+            </a>
           </article>
         </div>
 
+        <p v-if="page.actionError.value" class="notifications-route__error">
+          {{ page.actionError.value }}
+        </p>
+
         <footer
-          v-if="page.totalPages.value > 1"
+          v-if="page.hasMore.value"
           class="notifications-route__pagination"
           aria-label="通知分页"
         >
           <button
             type="button"
-            aria-label="上一页通知"
-            :disabled="!page.canGoPrevious.value"
-            @click="page.goPreviousPage"
-          >
-            <ChevronLeft aria-hidden="true" />
-          </button>
-          <span class="notifications-route__page-number">{{
-            page.currentPage.value
-          }}</span>
-          <span class="notifications-route__pagination-status">
-            第 {{ page.currentPage.value }} / {{ page.totalPages.value }} 页
-          </span>
-          <button
-            type="button"
-            aria-label="下一页通知"
-            :disabled="!page.canGoNext.value"
-            @click="page.goNextPage"
+            aria-label="加载更多通知"
+            :disabled="!page.canLoadMore.value"
+            @click="page.loadMore"
           >
             <ChevronRight aria-hidden="true" />
+            <span>{{
+              page.loadingMore.value ? "加载中" : "加载更多"
+            }}</span>
           </button>
         </footer>
       </section>
-    </section>
-
-    <section v-else class="notifications-route__empty">
-      <p class="notifications-route__eyebrow">Notification</p>
-      <h1 id="notifications-title">通知暂不可用</h1>
-      <p>通知服务接入后会显示收件箱、未读状态和通知动作。</p>
     </section>
   </main>
 </template>
@@ -189,15 +166,41 @@ import {
   AtSign,
   Bell,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
-  Filter,
   Heart,
-  Search,
   Sparkles,
 } from "@lucide/vue";
 
-import { useNotificationCenterPage } from "@/features/notification";
+import {
+  useNotificationCenterPage,
+  type NotificationCenterCategory,
+} from "@/features/notification";
+
+interface NotificationCategoryOption {
+  value: NotificationCenterCategory;
+  label: string;
+  ariaLabel: string;
+  icon: typeof Bell;
+}
+
+const categories: NotificationCategoryOption[] = [
+  { value: "all", label: "全部", ariaLabel: "全部通知", icon: Bell },
+  {
+    value: "content",
+    label: "内容",
+    ariaLabel: "内容通知",
+    icon: AtSign,
+  },
+  {
+    value: "interaction",
+    label: "互动",
+    ariaLabel: "互动通知",
+    icon: Heart,
+  },
+  { value: "social", label: "社交", ariaLabel: "社交通知", icon: Heart },
+  { value: "system", label: "系统", ariaLabel: "系统通知", icon: Sparkles },
+  { value: "security", label: "安全", ariaLabel: "安全通知", icon: Sparkles },
+];
 
 const page = useNotificationCenterPage();
 </script>
