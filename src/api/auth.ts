@@ -1,4 +1,5 @@
 import type { AuthUser, UserRole } from "@/entities/user/model/user";
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 
 import { getAxiosInstance } from "./request";
 
@@ -97,13 +98,52 @@ export interface RegisterResp {
   loginDeferredReason: string | null;
 }
 
+const localDemoPrincipal: AuthPrincipal = {
+  accountId: "local-demo-account",
+  userId: "local-demo-user",
+  email: "local-demo@zhicore.dev",
+  roles: ["ROLE_USER"],
+  accountStatus: "ACTIVE",
+  sessionId: "local-demo-session",
+  sessionVersion: 1,
+  principalVersion: 1,
+};
+
+const localDemoCsrfToken = "local-demo-csrf-token";
+const localDemoAccessToken = "local-demo-access-token";
+
+function localDemoAuthUser(): AuthUser {
+  return {
+    ...authUserFromPrincipal(localDemoPrincipal),
+    displayName: "本地调试用户",
+  };
+}
+
+function localDemoAuthSession(): AuthSession {
+  return {
+    accessToken: localDemoAccessToken,
+    tokenType: "Bearer",
+    expiresIn: 3600,
+    csrfToken: localDemoCsrfToken,
+    user: localDemoAuthUser(),
+  };
+}
+
 export async function getProfile(): Promise<AuthUser> {
+  if (isLocalDemoModeEnabled()) {
+    return localDemoAuthUser();
+  }
+
   const response =
     await getAxiosInstance().get<AuthPrincipalResp>("/v1/auth/me");
   return authUserFromPrincipal(response.data.principal);
 }
 
 export async function login(input: LoginReq): Promise<AuthSession> {
+  if (isLocalDemoModeEnabled()) {
+    return localDemoAuthSession();
+  }
+
   const response = await getAxiosInstance().post<LoginResp>(
     "/v1/auth/login",
     input,
@@ -112,11 +152,22 @@ export async function login(input: LoginReq): Promise<AuthSession> {
 }
 
 export async function getCsrfToken(): Promise<CsrfResp> {
+  if (isLocalDemoModeEnabled()) {
+    return { csrfToken: localDemoCsrfToken };
+  }
+
   const response = await getAxiosInstance().get<CsrfResp>("/v1/auth/csrf");
   return response.data;
 }
 
 export async function refreshSession(): Promise<RefreshSessionResult> {
+  if (isLocalDemoModeEnabled()) {
+    return {
+      state: "authenticated",
+      session: localDemoAuthSession(),
+    };
+  }
+
   const response = await getAxiosInstance().post<
     RefreshResp | RefreshProcessingResp
   >("/v1/auth/refresh");
@@ -135,6 +186,14 @@ export async function refreshSession(): Promise<RefreshSessionResult> {
 }
 
 export async function logout(): Promise<LogoutResult> {
+  if (isLocalDemoModeEnabled()) {
+    return {
+      state: "completed",
+      loggedOut: true,
+      serverRevoked: false,
+    };
+  }
+
   const response = await getAxiosInstance().post<
     LogoutResp | LogoutProcessingResp
   >("/v1/auth/logout");

@@ -1,13 +1,31 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 
 import { getAxiosInstance } from "../request";
-import { login, logout, refreshSession, type LoginReq } from "../auth";
+import {
+  getCsrfToken,
+  getProfile,
+  login,
+  logout,
+  refreshSession,
+  type LoginReq,
+} from "../auth";
 
 vi.mock("../request", () => ({
   getAxiosInstance: vi.fn(),
 }));
 
+vi.mock("@/runtime/localDemoMode", () => ({
+  isLocalDemoModeEnabled: vi.fn(() => false),
+}));
+
 describe("auth api", () => {
+  beforeEach(() => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(false);
+    vi.mocked(getAxiosInstance).mockReset();
+  });
+
   it("logs in through the Go Auth envelope and preserves tokens with the mapped AuthUser", async () => {
     const post = vi.fn().mockResolvedValue({
       status: 200,
@@ -48,6 +66,50 @@ describe("auth api", () => {
       },
     });
     expect(post).toHaveBeenCalledWith("/v1/auth/login", input);
+  });
+
+  it("serves a local demo auth session as API-shaped DTOs without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+
+    await expect(getCsrfToken()).resolves.toEqual({
+      csrfToken: "local-demo-csrf-token",
+    });
+    await expect(refreshSession()).resolves.toEqual({
+      state: "authenticated",
+      session: {
+        accessToken: "local-demo-access-token",
+        tokenType: "Bearer",
+        expiresIn: 3600,
+        csrfToken: "local-demo-csrf-token",
+        user: {
+          id: "local-demo-user",
+          username: "local-demo@zhicore.dev",
+          role: "user",
+          displayName: "本地调试用户",
+        },
+      },
+    });
+    await expect(getProfile()).resolves.toEqual({
+      id: "local-demo-user",
+      username: "local-demo@zhicore.dev",
+      role: "user",
+      displayName: "本地调试用户",
+    });
+    await expect(
+      login({ email: "demo@example.com", password: "Password123" }),
+    ).resolves.toMatchObject({
+      accessToken: "local-demo-access-token",
+      user: {
+        id: "local-demo-user",
+        role: "user",
+      },
+    });
+    await expect(logout()).resolves.toEqual({
+      state: "completed",
+      loggedOut: true,
+      serverRevoked: false,
+    });
+    expect(getAxiosInstance).not.toHaveBeenCalled();
   });
 
   it("maps a successful refresh response to an authenticated session", async () => {

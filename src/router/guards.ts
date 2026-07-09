@@ -1,6 +1,5 @@
 import type { Router } from "vue-router";
 
-import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 import { useAuthStore } from "@/stores/auth";
 
 export function setupRouterGuards(router: Router): void {
@@ -9,11 +8,6 @@ export function setupRouterGuards(router: Router): void {
 
     // 需要登录的路由：先恢复 session，未登录则跳转登录页
     if (to.meta.requiresAuth) {
-      if (isLocalDemoModeEnabled()) {
-        authStore.setLocalDemoAuth();
-        return true;
-      }
-
       await authStore.restore();
       if (!authStore.isLoggedIn) {
         return {
