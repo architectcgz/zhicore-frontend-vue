@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
+
 import { ApiError, getAxiosInstance } from "../request";
 import {
   getNotificationUnreadBreakdown,
@@ -20,8 +22,13 @@ vi.mock("../request", async () => {
   };
 });
 
+vi.mock("@/runtime/localDemoMode", () => ({
+  isLocalDemoModeEnabled: vi.fn(() => false),
+}));
+
 describe("notification api", () => {
   beforeEach(() => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(false);
     vi.mocked(getAxiosInstance).mockReset();
   });
 
@@ -70,6 +77,32 @@ describe("notification api", () => {
         unreadOnly: true,
       },
     });
+  });
+
+  it("serves local demo notifications as API-shaped DTOs without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+
+    const page = await listNotifications({ size: 20 });
+    const unreadCount = await getNotificationUnreadCount();
+    const breakdown = await getNotificationUnreadBreakdown();
+    const readAll = await markAllNotificationsRead();
+
+    expect(page.items.length).toBeGreaterThan(0);
+    expect(page.items[0]).toMatchObject({
+      groupKey: expect.any(String),
+      latestNotificationId: expect.any(String),
+      category: "INTERACTION",
+      unreadCount: expect.any(Number),
+    });
+    expect(unreadCount).toEqual({
+      unreadCount: page.items.reduce((sum, item) => sum + item.unreadCount, 0),
+    });
+    expect(breakdown.total).toBe(unreadCount.unreadCount);
+    expect(readAll).toMatchObject({
+      readAll: true,
+      affectedCount: unreadCount.unreadCount,
+    });
+    expect(getAxiosInstance).not.toHaveBeenCalled();
   });
 
   it("reads unread total and category breakdown", async () => {
