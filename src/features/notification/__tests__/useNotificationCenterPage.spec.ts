@@ -5,8 +5,9 @@ import {
   getNotificationUnreadBreakdown,
   getNotificationUnreadCount,
   listNotifications,
+  listNotificationGroupActors,
   markAllNotificationsRead,
-  markNotificationRead,
+  markNotificationGroupRead,
   type ListNotificationsResp,
 } from "@/api/notification";
 
@@ -16,8 +17,9 @@ vi.mock("@/api/notification", () => ({
   getNotificationUnreadBreakdown: vi.fn(),
   getNotificationUnreadCount: vi.fn(),
   listNotifications: vi.fn(),
+  listNotificationGroupActors: vi.fn(),
   markAllNotificationsRead: vi.fn(),
-  markNotificationRead: vi.fn(),
+  markNotificationGroupRead: vi.fn(),
 }));
 
 function notificationPage(
@@ -32,24 +34,20 @@ function notificationPage(
 }
 
 function notificationItem(
-  groupKey: string,
+  groupId: string,
   overrides: Partial<ListNotificationsResp["items"][number]> = {},
 ): ListNotificationsResp["items"][number] {
   return {
-    groupKey,
-    latestNotificationId: `latest-${groupKey}`,
+    groupId,
     type: "POST_LIKED",
     category: "INTERACTION",
-    targetType: "POST",
-    targetId: "post-1",
     totalCount: 1,
     unreadCount: 1,
-    latestTime: "2026-07-07T08:00:00Z",
-    latestContent: "Han Meimei 赞了你的文章",
-    actorIds: ["user-1"],
-    aggregatedContent: {
-      title: "新的互动",
-    },
+    actorTotalCount: 1,
+    latestOccurredAt: "2026-07-07T08:00:00Z",
+    content: { title: "新的互动", body: "Han Meimei 赞了你的文章" },
+    recentActors: [{ publicId: "user-1", displayName: "Han Meimei" }],
+    target: { resource: { type: "POST", id: "post-1" }, snapshot: {} },
     ...overrides,
   };
 }
@@ -68,10 +66,11 @@ function deferred<T>() {
 describe("useNotificationCenterPage", () => {
   beforeEach(() => {
     vi.mocked(listNotifications).mockReset();
+    vi.mocked(listNotificationGroupActors).mockReset();
     vi.mocked(getNotificationUnreadCount).mockReset();
     vi.mocked(getNotificationUnreadBreakdown).mockReset();
     vi.mocked(markAllNotificationsRead).mockReset();
-    vi.mocked(markNotificationRead).mockReset();
+    vi.mocked(markNotificationGroupRead).mockReset();
 
     vi.mocked(getNotificationUnreadCount).mockResolvedValue({ unreadCount: 3 });
     vi.mocked(getNotificationUnreadBreakdown).mockResolvedValue({
@@ -81,6 +80,10 @@ describe("useNotificationCenterPage", () => {
       social: 0,
       system: 0,
       security: 0,
+    });
+    vi.mocked(listNotificationGroupActors).mockResolvedValue({
+      items: [],
+      hasMore: false,
     });
   });
 
@@ -98,14 +101,14 @@ describe("useNotificationCenterPage", () => {
     expect(page.items.value).toHaveLength(1);
     expect(page.items.value[0]).toMatchObject({
       id: "notif-1",
-      latestNotificationId: "latest-notif-1",
       category: "interaction",
       title: "新的互动",
       unread: true,
-      targetPath: null,
+      targetPath: "/posts/post-1",
     });
-    // 仅有 actorIds 时回退为无名触发者，名字留给 UI 展示 id。
-    expect(page.items.value[0].actors).toEqual([{ id: "user-1", name: null }]);
+    expect(page.items.value[0].actors).toEqual([
+      { id: "user-1", name: "Han Meimei", avatarUrl: null },
+    ]);
     expect(page.unreadCount.value).toBe(3);
     expect(page.breakdown.value?.content).toBe(1);
     expect(page.hasMore.value).toBe(true);
@@ -116,10 +119,9 @@ describe("useNotificationCenterPage", () => {
     vi.mocked(listNotifications).mockResolvedValue(
       notificationPage([
         notificationItem("notif-1", {
-          actorIds: ["user-1", "user-2"],
           recentActors: [
-            { id: "user-1", name: "陈立" },
-            { id: "user-2", name: "王雨溪" },
+            { publicId: "user-1", displayName: "陈立" },
+            { publicId: "user-2", displayName: "王雨溪" },
           ],
         }),
       ]),
@@ -129,8 +131,8 @@ describe("useNotificationCenterPage", () => {
     await flushPromises();
 
     expect(page.items.value[0].actors).toEqual([
-      { id: "user-1", name: "陈立" },
-      { id: "user-2", name: "王雨溪" },
+      { id: "user-1", name: "陈立", avatarUrl: null },
+      { id: "user-2", name: "王雨溪", avatarUrl: null },
     ]);
   });
 
@@ -180,7 +182,7 @@ describe("useNotificationCenterPage", () => {
         notificationItem("content-1", {
           category: "CONTENT",
           type: "POST_PUBLISHED",
-          latestContent: "你的关注发布了新文章",
+          content: { title: "内容通知", body: "你的关注发布了新文章" },
           unreadCount: 0,
         }),
       ]),
@@ -201,7 +203,9 @@ describe("useNotificationCenterPage", () => {
 
   it("loads more notifications with the next cursor and stops at the end", async () => {
     vi.mocked(listNotifications)
-      .mockResolvedValueOnce(notificationPage([notificationItem("notif-1")], "c2"))
+      .mockResolvedValueOnce(
+        notificationPage([notificationItem("notif-1")], "c2"),
+      )
       .mockResolvedValueOnce(notificationPage([notificationItem("notif-2")]));
 
     const page = useNotificationCenterPage();
@@ -283,9 +287,11 @@ describe("useNotificationCenterPage", () => {
         notificationItem("notif-2", { unreadCount: 0 }),
       ]),
     );
-    vi.mocked(markNotificationRead).mockResolvedValue({
-      notificationId: "latest-notif-1",
+    vi.mocked(markNotificationGroupRead).mockResolvedValue({
+      groupId: "notif-1",
       read: true,
+      changedCount: 1,
+      unreadCount: 0,
       readAt: "2026-07-07T08:15:00Z",
     });
 
@@ -307,9 +313,11 @@ describe("useNotificationCenterPage", () => {
         notificationItem("notif-2", { unreadCount: 1 }),
       ]),
     );
-    vi.mocked(markNotificationRead).mockResolvedValue({
-      notificationId: "latest-notif-1",
+    vi.mocked(markNotificationGroupRead).mockResolvedValue({
+      groupId: "notif-1",
       read: true,
+      changedCount: 2,
+      unreadCount: 0,
       readAt: "2026-07-07T08:15:00Z",
     });
 
@@ -320,11 +328,13 @@ describe("useNotificationCenterPage", () => {
 
     await page.selectNotification("notif-1");
 
-    expect(markNotificationRead).toHaveBeenCalledWith("latest-notif-1");
+    expect(markNotificationGroupRead).toHaveBeenCalledWith("notif-1");
     expect(page.items.value[0].unread).toBe(false);
     expect(page.items.value[0].unreadCount).toBe(0);
     // 未读总数按该分组未读数递减：3 - 2 = 1。
     expect(page.unreadCount.value).toBe(1);
+    // 已知分类摘要必须和组级已读命令同步，不能继续显示旧的互动未读数。
+    expect(page.breakdown.value?.interaction).toBe(0);
   });
 
   it("does not mark an already-read notification and sends no request", async () => {
@@ -338,14 +348,42 @@ describe("useNotificationCenterPage", () => {
     await page.selectNotification("notif-1");
 
     expect(page.selectedGroupKey.value).toBe("notif-1");
-    expect(markNotificationRead).not.toHaveBeenCalled();
+    expect(markNotificationGroupRead).not.toHaveBeenCalled();
+  });
+
+  it("loads actor pages for the selected group and keeps the cursor", async () => {
+    vi.mocked(listNotifications).mockResolvedValue(
+      notificationPage([notificationItem("notif-1", { unreadCount: 0 })]),
+    );
+    vi.mocked(listNotificationGroupActors).mockResolvedValue({
+      items: [
+        {
+          actor: { publicId: "user_2", displayName: "Alice", avatarUrl: null },
+          eventCount: 2,
+          latestOccurredAt: "2026-07-10T05:30:00Z",
+        },
+      ],
+      nextCursor: "actor-cursor-2",
+      hasMore: true,
+    });
+    const page = useNotificationCenterPage();
+    await flushPromises();
+
+    await page.selectNotification("notif-1");
+    await flushPromises();
+
+    expect(page.items.value[0].actors).toEqual([
+      { id: "user_2", name: "Alice", avatarUrl: null },
+    ]);
+    expect(page.actorHasMore.value).toBe(true);
+    expect(page.actorCursor.value).toBe("actor-cursor-2");
   });
 
   it("rolls back unread state when single mark-read fails", async () => {
     vi.mocked(listNotifications).mockResolvedValue(
       notificationPage([notificationItem("notif-1", { unreadCount: 2 })]),
     );
-    vi.mocked(markNotificationRead).mockRejectedValue(
+    vi.mocked(markNotificationGroupRead).mockRejectedValue(
       new Error("mark read failed"),
     );
 
@@ -365,11 +403,13 @@ describe("useNotificationCenterPage", () => {
       notificationPage([notificationItem("notif-1", { unreadCount: 1 })]),
     );
     const markRead = deferred<{
-      notificationId: string;
+      groupId: string;
       read: true;
+      changedCount: number;
+      unreadCount: number;
       readAt: string;
     }>();
-    vi.mocked(markNotificationRead).mockReturnValue(markRead.promise);
+    vi.mocked(markNotificationGroupRead).mockReturnValue(markRead.promise);
 
     const page = useNotificationCenterPage();
     await flushPromises();
@@ -378,13 +418,15 @@ describe("useNotificationCenterPage", () => {
     const second = page.selectNotification("notif-1");
     expect(page.submittingReadIds.value.has("notif-1")).toBe(true);
     markRead.resolve({
-      notificationId: "latest-notif-1",
+      groupId: "notif-1",
       read: true,
+      changedCount: 1,
+      unreadCount: 0,
       readAt: "2026-07-07T08:15:00Z",
     });
     await Promise.all([first, second]);
 
-    expect(markNotificationRead).toHaveBeenCalledTimes(1);
+    expect(markNotificationGroupRead).toHaveBeenCalledTimes(1);
     expect(page.submittingReadIds.value.has("notif-1")).toBe(false);
   });
 
@@ -406,9 +448,11 @@ describe("useNotificationCenterPage", () => {
         system: 0,
         security: 0,
       });
-    vi.mocked(markNotificationRead).mockResolvedValue({
-      notificationId: "latest-notif-1",
+    vi.mocked(markNotificationGroupRead).mockResolvedValue({
+      groupId: "notif-1",
       read: true,
+      changedCount: 1,
+      unreadCount: 0,
       readAt: "2026-07-07T08:15:00Z",
     });
 
@@ -431,9 +475,11 @@ describe("useNotificationCenterPage", () => {
           notificationItem("content-1", { category: "CONTENT" }),
         ]),
       );
-    vi.mocked(markNotificationRead).mockResolvedValue({
-      notificationId: "latest-notif-1",
+    vi.mocked(markNotificationGroupRead).mockResolvedValue({
+      groupId: "notif-1",
       read: true,
+      changedCount: 1,
+      unreadCount: 0,
       readAt: "2026-07-07T08:15:00Z",
     });
 

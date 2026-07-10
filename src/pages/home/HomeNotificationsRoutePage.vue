@@ -21,7 +21,9 @@
             type="button"
             :aria-label="category.ariaLabel"
             :aria-current="
-              page.selectedCategory.value === category.value ? 'page' : undefined
+              page.selectedCategory.value === category.value
+                ? 'page'
+                : undefined
             "
             @click="page.selectCategory(category.value)"
           >
@@ -31,7 +33,9 @@
               aria-hidden="true"
             />
             <span>{{ category.label }}</span>
-            <strong>{{ page.categoryCounts.value[category.value] ?? "—" }}</strong>
+            <strong>{{
+              page.categoryCounts.value[category.value] ?? "—"
+            }}</strong>
           </button>
         </nav>
 
@@ -39,7 +43,9 @@
           class="notifications-route__mark-button"
           type="button"
           aria-label="全部已读"
-          :disabled="page.submittingMarkAll.value || page.items.value.length === 0"
+          :disabled="
+            page.submittingMarkAll.value || page.items.value.length === 0
+          "
           @click="page.markAllRead"
         >
           <CheckCircle2 aria-hidden="true" />
@@ -114,11 +120,15 @@
                   :class="`notifications-route__item-icon--${page.activeNotification.value.category}`"
                 >
                   <Heart
-                    v-if="page.activeNotification.value.category === 'interaction'"
+                    v-if="
+                      page.activeNotification.value.category === 'interaction'
+                    "
                     aria-hidden="true"
                   />
                   <AtSign
-                    v-else-if="page.activeNotification.value.category === 'content'"
+                    v-else-if="
+                      page.activeNotification.value.category === 'content'
+                    "
                     aria-hidden="true"
                   />
                   <Sparkles v-else aria-hidden="true" />
@@ -168,7 +178,23 @@
                       </span>
                     </li>
                   </ul>
-                  <span v-else class="notifications-route__detail-actors-empty">
+                  <button
+                    v-if="page.actorHasMore.value"
+                    class="notifications-route__detail-load-actors"
+                    type="button"
+                    :disabled="page.loadingMoreActors.value"
+                    @click="page.loadMoreActors"
+                  >
+                    {{
+                      page.loadingMoreActors.value
+                        ? "加载中…"
+                        : "加载更多触发者"
+                    }}
+                  </button>
+                  <span
+                    v-if="page.activeNotification.value.actors.length === 0"
+                    class="notifications-route__detail-actors-empty"
+                  >
                     系统通知，无触发用户
                   </span>
                 </dd>
@@ -176,8 +202,11 @@
               <div>
                 <dt>目标</dt>
                 <dd>
-                  {{ page.activeNotification.value.targetType }} ·
-                  {{ page.activeNotification.value.targetId }}
+                  <template v-if="page.activeNotification.value.target">
+                    {{ page.activeNotification.value.target.resource.type }} ·
+                    {{ page.activeNotification.value.target.resource.id }}
+                  </template>
+                  <template v-else>无可导航目标</template>
                 </dd>
               </div>
             </dl>
@@ -257,9 +286,7 @@
             @click="page.loadMore"
           >
             <ChevronRight aria-hidden="true" />
-            <span>{{
-              page.loadingMore.value ? "加载中" : "加载更多"
-            }}</span>
+            <span>{{ page.loadingMore.value ? "加载中" : "加载更多" }}</span>
           </button>
         </footer>
       </section>
@@ -844,6 +871,21 @@ const page = useNotificationCenterPage();
 .notifications-route__detail-actors-empty {
   color: var(--notifications-muted);
   font-size: var(--font-size-ui-meta);
+}
+
+.notifications-route__detail-load-actors {
+  margin-top: var(--space-2);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.notifications-route__detail-load-actors:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .notifications-route__detail-open {

@@ -20,7 +20,6 @@ function createPageState(
   const items = ref([
     {
       id: "notif-1",
-      latestNotificationId: "latest-notif-1",
       type: "POST_LIKED",
       category: "interaction" as const,
       title: "新的互动",
@@ -29,10 +28,10 @@ function createPageState(
       unread: true,
       unreadCount: 1,
       totalCount: 1,
-      targetType: "POST",
-      targetId: "post-1",
+      actorTotalCount: 1,
+      target: { resource: { type: "POST", id: "post-1" } },
       targetPath: null,
-      actors: [{ id: "user-1", name: "Han Meimei" }],
+      actors: [{ id: "user-1", name: "Han Meimei", avatarUrl: null }],
     },
   ]);
 
@@ -58,6 +57,9 @@ function createPageState(
     selectedGroupKey: ref(null),
     activeNotification: computed(() => null),
     submittingReadIds: ref(new Set<string>()),
+    actorCursor: ref(null),
+    actorHasMore: ref(false),
+    loadingMoreActors: ref(false),
     categoryCounts: computed(() => ({
       all: 1,
       interaction: 1,
@@ -73,6 +75,7 @@ function createPageState(
     markAllRead: vi.fn(),
     selectNotification: vi.fn(),
     closeDetail: vi.fn(),
+    loadMoreActors: vi.fn(),
     ...overrides,
   } as NotificationCenterPageState;
 }
@@ -80,7 +83,9 @@ function createPageState(
 describe("HomeNotificationsRoutePage", () => {
   beforeEach(() => {
     notificationMocks.useNotificationCenterPage.mockReset();
-    notificationMocks.useNotificationCenterPage.mockReturnValue(createPageState());
+    notificationMocks.useNotificationCenterPage.mockReturnValue(
+      createPageState(),
+    );
   });
 
   it("renders real notification success state instead of the unavailable placeholder", () => {
@@ -104,9 +109,9 @@ describe("HomeNotificationsRoutePage", () => {
     expect(page.selectCategory).toHaveBeenCalledWith("content");
     expect(page.loadMore).toHaveBeenCalledOnce();
     expect(page.markAllRead).toHaveBeenCalledOnce();
-    expect(wrapper.find('button[aria-label="标记 notif-1 已读"]').exists()).toBe(
-      false,
-    );
+    expect(
+      wrapper.find('button[aria-label="标记 notif-1 已读"]').exists(),
+    ).toBe(false);
   });
 
   it("selects a notification when its list item is clicked", async () => {
@@ -114,7 +119,9 @@ describe("HomeNotificationsRoutePage", () => {
     notificationMocks.useNotificationCenterPage.mockReturnValue(page);
     const wrapper = mount(HomeNotificationsRoutePage);
 
-    await wrapper.get('button[aria-label="查看通知：新的互动"]').trigger("click");
+    await wrapper
+      .get('button[aria-label="查看通知：新的互动"]')
+      .trigger("click");
 
     expect(page.selectNotification).toHaveBeenCalledWith("notif-1");
   });
@@ -122,7 +129,6 @@ describe("HomeNotificationsRoutePage", () => {
   it("renders the active notification detail in the main panel", () => {
     const activeItem = {
       id: "notif-1",
-      latestNotificationId: "latest-notif-1",
       type: "POST_LIKED",
       category: "interaction" as const,
       title: "新的互动",
@@ -131,12 +137,12 @@ describe("HomeNotificationsRoutePage", () => {
       unread: false,
       unreadCount: 0,
       totalCount: 3,
-      targetType: "POST",
-      targetId: "post-1",
+      actorTotalCount: 2,
+      target: { resource: { type: "POST", id: "post-1" } },
       targetPath: null,
       actors: [
-        { id: "user-1", name: "陈立" },
-        { id: "user-2", name: null },
+        { id: "user-1", name: "陈立", avatarUrl: null },
+        { id: "user-2", name: "用户二", avatarUrl: null },
       ],
     };
     notificationMocks.useNotificationCenterPage.mockReturnValue(
@@ -150,9 +156,9 @@ describe("HomeNotificationsRoutePage", () => {
     const detail = wrapper.get('[aria-label="通知详情"]');
     expect(detail.text()).toContain("Han Meimei 赞了你的文章");
     expect(detail.text()).toContain("POST");
-    // 显式展示聚合触发者：有名字用名字，无名字回退 id。
+    // 显式展示服务端保存的公开触发者快照。
     expect(detail.text()).toContain("陈立");
-    expect(detail.text()).toContain("user-2");
+    expect(detail.text()).toContain("用户二");
     // 详情态整块替换列表，列表不再渲染。
     expect(wrapper.find(".notifications-route__list").exists()).toBe(false);
     // targetPath 为 null，打开目标按钮禁用。
@@ -164,7 +170,6 @@ describe("HomeNotificationsRoutePage", () => {
   it("returns to the list when the back button is clicked", async () => {
     const activeItem = {
       id: "notif-1",
-      latestNotificationId: "latest-notif-1",
       type: "POST_LIKED",
       category: "interaction" as const,
       title: "新的互动",
@@ -173,10 +178,10 @@ describe("HomeNotificationsRoutePage", () => {
       unread: false,
       unreadCount: 0,
       totalCount: 3,
-      targetType: "POST",
-      targetId: "post-1",
+      actorTotalCount: 1,
+      target: { resource: { type: "POST", id: "post-1" } },
       targetPath: null,
-      actors: [{ id: "user-1", name: "陈立" }],
+      actors: [{ id: "user-1", name: "陈立", avatarUrl: null }],
     };
     const page = createPageState({
       selectedGroupKey: ref("notif-1"),

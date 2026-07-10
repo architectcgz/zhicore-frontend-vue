@@ -1,25 +1,13 @@
 import type { ComputedRef, Ref } from "vue";
 
 export type NotificationCenterCategory =
-  | "all"
-  | "interaction"
-  | "content"
-  | "social"
-  | "system"
-  | "security";
+  "all" | "interaction" | "content" | "social" | "system" | "security";
 
 export type NotificationCenterType =
-  | "interaction"
-  | "content"
-  | "social"
-  | "system"
-  | "security";
+  "interaction" | "content" | "social" | "system" | "security";
 
 export type NotificationCenterStatus =
-  | "loading"
-  | "success"
-  | "empty"
-  | "error";
+  "loading" | "success" | "empty" | "error";
 
 export interface NotificationCenterBreakdown {
   total: number;
@@ -30,17 +18,19 @@ export interface NotificationCenterBreakdown {
   security: number;
 }
 
-// 聚合通知的单个触发者。名字来自后端 recentActors（接入 User summary 后才有），
-// 否则回退到 actorIds 的内部用户 ID，保证详情始终能显式列出"谁触发了"。
 export interface NotificationCenterActor {
   id: string;
-  // 可展示名称；缺 User summary 时为 null，由 UI 回退展示 id。
-  name: string | null;
+  name: string;
+  avatarUrl: string | null;
+}
+
+export interface NotificationCenterTarget {
+  resource: { type: string; id: string };
+  anchor?: { type: string; id: string };
 }
 
 export interface NotificationCenterItem {
   id: string;
-  latestNotificationId?: string;
   type: string;
   category: NotificationCenterType;
   title: string;
@@ -49,8 +39,8 @@ export interface NotificationCenterItem {
   unread: boolean;
   unreadCount: number;
   totalCount: number;
-  targetType: string;
-  targetId: string;
+  actorTotalCount: number;
+  target: NotificationCenterTarget | null;
   targetPath: string | null;
   // 参与聚合的触发者列表；空数组表示系统类通知或后端未返回触发者。
   actors: NotificationCenterActor[];
@@ -74,7 +64,12 @@ export interface NotificationCenterPageState {
   activeNotification: ComputedRef<NotificationCenterItem | null>;
   // 正在提交单条已读的分组 key 集合，用于防止重复点击同一条。
   submittingReadIds: Ref<ReadonlySet<string>>;
-  categoryCounts: ComputedRef<Record<NotificationCenterCategory, number | null>>;
+  actorCursor: Ref<string | null>;
+  actorHasMore: Ref<boolean>;
+  loadingMoreActors: Ref<boolean>;
+  categoryCounts: ComputedRef<
+    Record<NotificationCenterCategory, number | null>
+  >;
   canLoadMore: ComputedRef<boolean>;
   retry: () => Promise<void>;
   selectCategory: (category: NotificationCenterCategory) => Promise<void>;
@@ -84,4 +79,5 @@ export interface NotificationCenterPageState {
   selectNotification: (groupKey: string) => Promise<void>;
   // 关闭详情面板，清空选中态。
   closeDetail: () => void;
+  loadMoreActors: () => Promise<void>;
 }

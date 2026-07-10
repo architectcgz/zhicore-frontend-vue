@@ -4,9 +4,10 @@ import {
   type ListNotificationsReq,
   getNotificationUnreadBreakdown,
   getNotificationUnreadCount,
+  listNotificationGroupActors,
   listNotifications,
   markAllNotificationsRead,
-  markNotificationRead,
+  markNotificationGroupRead,
 } from "@/api/notification";
 
 import {
@@ -56,6 +57,23 @@ function emptyBreakdown(): NotificationCenterBreakdown {
   };
 }
 
+function adjustBreakdown(
+  current: NotificationCenterBreakdown | null,
+  category: NotificationCenterItem["category"],
+  delta: number,
+): NotificationCenterBreakdown | null {
+  if (!current) {
+    return null;
+  }
+
+  const key = category;
+  return {
+    ...current,
+    total: Math.max(0, current.total + delta),
+    [key]: Math.max(0, current[key] + delta),
+  };
+}
+
 export function useNotificationCenterPage(): NotificationCenterPageState {
   const status = ref<NotificationCenterStatus>("loading");
   const items = ref<NotificationCenterItem[]>([]);
@@ -70,6 +88,9 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
   const submittingMarkAll = ref(false);
   const selectedGroupKey = ref<string | null>(null);
   const submittingReadIds = ref<ReadonlySet<string>>(new Set());
+  const actorCursor = ref<string | null>(null);
+  const actorHasMore = ref(false);
+  const loadingMoreActors = ref(false);
   let listRequestId = 0;
 
   const activeNotification = computed<NotificationCenterItem | null>(
@@ -77,16 +98,16 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
       items.value.find((item) => item.id === selectedGroupKey.value) ?? null,
   );
 
-  const categoryCounts = computed<Record<NotificationCenterCategory, number | null>>(
-    () => ({
-      all: breakdown.value?.total ?? unreadCount.value,
-      interaction: breakdown.value?.interaction ?? null,
-      content: breakdown.value?.content ?? null,
-      social: breakdown.value?.social ?? null,
-      system: breakdown.value?.system ?? null,
-      security: breakdown.value?.security ?? null,
-    }),
-  );
+  const categoryCounts = computed<
+    Record<NotificationCenterCategory, number | null>
+  >(() => ({
+    all: breakdown.value?.total ?? unreadCount.value,
+    interaction: breakdown.value?.interaction ?? null,
+    content: breakdown.value?.content ?? null,
+    social: breakdown.value?.social ?? null,
+    system: breakdown.value?.system ?? null,
+    security: breakdown.value?.security ?? null,
+  }));
   const canLoadMore = computed(() => hasMore.value && !loadingMore.value);
 
   async function refreshUnreadFacts(requestId: number): Promise<void> {
@@ -117,6 +138,8 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     hasMore.value = false;
     // 重新加载或切换分类会替换整个列表，旧的选中项不再有效。
     selectedGroupKey.value = null;
+    actorCursor.value = null;
+    actorHasMore.value = false;
 
     try {
       const [listResult] = await Promise.all([
@@ -216,14 +239,14 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
   async function selectNotification(groupKey: string): Promise<void> {
     // 选中始终生效，即使已读也可反复查看详情。
     selectedGroupKey.value = groupKey;
+    void loadGroupActors(groupKey, true);
 
     const target = items.value.find((item) => item.id === groupKey);
-    // 无对应项、已读，或缺少可标记的 notificationId 时，只切换选中，不发已读请求。
-    if (!target || !target.unread || !target.latestNotificationId) {
+    // 无对应项或已读时，只切换选中，不发组级已读请求。
+    if (!target || !target.unread) {
       return;
     }
 
-    const notificationId = target.latestNotificationId;
     // 同一条正在提交时不重复发起，避免抖动式重复请求。
     if (submittingReadIds.value.has(groupKey)) {
       return;
@@ -238,6 +261,7 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     const previousUnreadCount = target.unreadCount;
     const unreadKnown = unreadCount.value !== null;
     const previousTotalUnread = unreadCount.value;
+    const previousBreakdown = breakdown.value;
 
     // 乐观更新：立即清除该分组 unread dot 与计数。
     items.value = items.value.map((item) =>
@@ -246,11 +270,39 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     // 未读总数已知时按该分组未读数递减；未知时不做本地算术，
     // 依据设计文档在成功后触发重拉，避免伪造 0。
     if (unreadKnown && previousTotalUnread !== null) {
-      unreadCount.value = Math.max(0, previousTotalUnread - previousUnreadCount);
+      unreadCount.value = Math.max(
+        0,
+        previousTotalUnread - previousUnreadCount,
+      );
     }
+    breakdown.value = adjustBreakdown(
+      breakdown.value,
+      target.category,
+      -previousUnreadCount,
+    );
 
     try {
-      await markNotificationRead(notificationId);
+      const readResult = await markNotificationGroupRead(groupKey);
+      items.value = items.value.map((item) =>
+        item.id === groupKey
+          ? {
+              ...item,
+              unread: readResult.unreadCount > 0,
+              unreadCount: readResult.unreadCount,
+            }
+          : item,
+      );
+      // The response owns the exact changedCount. Reconcile the optimistic
+      // subtraction so category badges remain correct under concurrent events.
+      const reconciliation = previousUnreadCount - readResult.changedCount;
+      if (unreadKnown && unreadCount.value !== null) {
+        unreadCount.value = Math.max(0, unreadCount.value + reconciliation);
+      }
+      breakdown.value = adjustBreakdown(
+        breakdown.value,
+        target.category,
+        reconciliation,
+      );
 
       if (!unreadKnown) {
         // 之前未读数未知，成功后重拉未读事实而不是本地计算。
@@ -266,6 +318,7 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
       if (unreadKnown) {
         unreadCount.value = previousTotalUnread;
       }
+      breakdown.value = previousBreakdown;
       actionError.value = toErrorMessage(requestError);
     } finally {
       const doneSubmitting = new Set(submittingReadIds.value);
@@ -274,8 +327,67 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     }
   }
 
+  async function loadGroupActors(
+    groupId: string,
+    replace: boolean,
+  ): Promise<void> {
+    try {
+      const page = await listNotificationGroupActors(groupId, {
+        size: notificationPageSize,
+        ...(replace || !actorCursor.value ? {} : { cursor: actorCursor.value }),
+      });
+      if (selectedGroupKey.value !== groupId) {
+        return;
+      }
+      items.value = items.value.map((item) =>
+        item.id === groupId
+          ? {
+              ...item,
+              actors: (replace ? [] : item.actors)
+                .concat(
+                  page.items.map((entry) => ({
+                    id: entry.actor.publicId,
+                    name: entry.actor.displayName,
+                    avatarUrl: entry.actor.avatarUrl,
+                  })),
+                )
+                .filter(
+                  (actor, index, actors) =>
+                    actors.findIndex(
+                      (candidate) => candidate.id === actor.id,
+                    ) === index,
+                ),
+            }
+          : item,
+      );
+      actorCursor.value = page.nextCursor ?? null;
+      actorHasMore.value = page.hasMore;
+    } catch (requestError) {
+      if (selectedGroupKey.value === groupId) {
+        actionError.value = toErrorMessage(requestError);
+      }
+    }
+  }
+
+  async function loadMoreActors(): Promise<void> {
+    if (
+      !selectedGroupKey.value ||
+      !actorHasMore.value ||
+      loadingMoreActors.value
+    )
+      return;
+    loadingMoreActors.value = true;
+    try {
+      await loadGroupActors(selectedGroupKey.value, false);
+    } finally {
+      loadingMoreActors.value = false;
+    }
+  }
+
   function closeDetail(): void {
     selectedGroupKey.value = null;
+    actorCursor.value = null;
+    actorHasMore.value = false;
   }
 
   void loadFirstPage();
@@ -295,6 +407,9 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     selectedGroupKey,
     activeNotification,
     submittingReadIds,
+    actorCursor,
+    actorHasMore,
+    loadingMoreActors,
     categoryCounts,
     canLoadMore,
     retry: loadFirstPage,
@@ -303,5 +418,6 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     markAllRead,
     selectNotification,
     closeDetail,
+    loadMoreActors,
   };
 }
