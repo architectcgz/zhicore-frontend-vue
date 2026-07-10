@@ -8,12 +8,12 @@ import AppLayout from "@/layouts/AppLayout.vue";
 import { routes } from "@/router";
 
 const featureMocks = vi.hoisted(() => ({
-  useMessageCenterPage: vi.fn(),
+  useMessageUnreadBadge: vi.fn(),
   useNotificationUnreadBadge: vi.fn(),
 }));
 
 vi.mock("@/features/message", () => ({
-  useMessageCenterPage: featureMocks.useMessageCenterPage,
+  useMessageUnreadBadge: featureMocks.useMessageUnreadBadge,
 }));
 
 vi.mock("@/features/notification", () => ({
@@ -72,10 +72,10 @@ async function mountAppLayout(
 
 describe("AppLayout", () => {
   beforeEach(() => {
-    featureMocks.useMessageCenterPage.mockReset();
+    featureMocks.useMessageUnreadBadge.mockReset();
     featureMocks.useNotificationUnreadBadge.mockReset();
-    featureMocks.useMessageCenterPage.mockReturnValue({
-      unreadCount: 2,
+    featureMocks.useMessageUnreadBadge.mockReturnValue({
+      unreadCount: ref(2),
     });
     featureMocks.useNotificationUnreadBadge.mockReturnValue({
       unreadCount: ref(3),

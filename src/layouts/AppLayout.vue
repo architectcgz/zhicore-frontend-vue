@@ -165,7 +165,7 @@ import {
 import { computed, ref } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 
-import { useMessageCenterPage } from "@/features/message";
+import { useMessageUnreadBadge } from "@/features/message";
 import { useNotificationUnreadBadge } from "@/features/notification";
 
 const props = defineProps<{
@@ -177,9 +177,9 @@ const route = useRoute();
 const router = useRouter();
 const isShellFlush = computed(() => route.meta.appShellFlush === true);
 const globalSearchQuery = ref("");
-const messageCenter = useMessageCenterPage();
+const messageBadge = useMessageUnreadBadge();
 const notificationBadge = useNotificationUnreadBadge();
-const messageUnreadCount = computed(() => messageCenter.unreadCount ?? 0);
+const messageUnreadCount = computed(() => messageBadge.unreadCount.value ?? 0);
 const notificationUnreadCount = computed(
   () => notificationBadge.unreadCount.value ?? 0,
 );

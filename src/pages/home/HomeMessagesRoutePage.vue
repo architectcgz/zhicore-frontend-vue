@@ -1,9 +1,6 @@
 <template>
   <main class="messages-route" aria-labelledby="messages-title">
-    <section
-      v-if="page.isLocalDemo"
-      class="messages-route__layout messages-route__layout--list"
-    >
+    <section class="messages-route__layout messages-route__layout--list">
       <aside class="messages-route__utility-nav" aria-label="消息功能">
         <RouterLink
           class="messages-route__utility-item messages-route__utility-item--active"
@@ -70,7 +67,7 @@
           <Search aria-hidden="true" />
           <input
             type="search"
-            placeholder="Search conversations..."
+            placeholder="搜索会话"
             aria-label="搜索会话"
             disabled
           />
@@ -86,7 +83,10 @@
           </button>
           <button class="messages-route__filter" type="button" disabled>
             未读
-            <span v-if="page.unreadCount">{{ page.unreadCount }}</span>
+            <!-- 未读数加载失败为 null 时隐藏 badge，不显示为 0（见 message 设计文档未读规则）。 -->
+            <span v-if="center.unreadCount.value">{{
+              center.unreadCount.value
+            }}</span>
           </button>
           <button class="messages-route__filter" type="button" disabled>
             群聊
@@ -97,62 +97,96 @@
         </div>
 
         <div class="messages-route__contact-list">
-          <RouterLink
-            v-for="conversation in page.conversations"
-            :key="conversation.id"
-            class="messages-route__conversation"
-            :class="{
-              'messages-route__conversation--active':
-                conversation.id === page.activeConversation?.id,
-            }"
-            :to="`/messages/${conversation.id}`"
-            :aria-label="`打开与 ${conversation.participantName} 的私信`"
+          <p
+            v-if="center.status.value === 'loading'"
+            class="messages-route__list-hint"
+            role="status"
           >
-            <span class="messages-route__avatar">
-              {{ conversation.participantInitial }}
-              <span
-                v-if="conversation.online"
-                class="messages-route__online"
-                aria-label="在线"
-              />
-            </span>
-            <span class="messages-route__conversation-main">
-              <span class="messages-route__conversation-top">
-                <strong>{{ conversation.participantName }}</strong>
-                <span>{{ conversation.lastMessageAt }}</span>
-              </span>
-              <span class="messages-route__preview">
-                {{ conversation.lastMessage }}
-              </span>
-            </span>
-            <span
-              v-if="conversation.unreadCount > 0"
-              class="messages-route__conversation-badge"
+            正在加载会话…
+          </p>
+          <div
+            v-else-if="center.status.value === 'error'"
+            class="messages-route__list-error"
+            role="alert"
+          >
+            <p>{{ center.error.value ?? "会话列表加载失败" }}</p>
+            <button type="button" @click="center.retry">重试</button>
+          </div>
+          <p
+            v-else-if="center.status.value === 'empty'"
+            class="messages-route__list-hint"
+          >
+            还没有任何私信会话。
+          </p>
+          <template v-else>
+            <RouterLink
+              v-for="conversation in center.conversations.value"
+              :key="conversation.id"
+              class="messages-route__conversation"
+              :class="{
+                'messages-route__conversation--active':
+                  conversation.id === center.activeConversation.value?.id,
+              }"
+              :to="`/messages/${conversation.id}`"
+              :aria-label="`打开与 ${conversation.participantName} 的私信`"
             >
-              {{ conversation.unreadCount }}
-            </span>
-          </RouterLink>
+              <span class="messages-route__avatar">
+                {{ conversation.participantInitial }}
+                <span
+                  v-if="conversation.online"
+                  class="messages-route__online"
+                  aria-label="在线"
+                />
+              </span>
+              <span class="messages-route__conversation-main">
+                <span class="messages-route__conversation-top">
+                  <strong>{{ conversation.participantName }}</strong>
+                  <span>{{ conversation.lastMessageAt }}</span>
+                </span>
+                <span class="messages-route__preview">
+                  {{ conversation.lastMessage }}
+                </span>
+              </span>
+              <span
+                v-if="conversation.unreadCount > 0"
+                class="messages-route__conversation-badge"
+              >
+                {{ conversation.unreadCount }}
+              </span>
+            </RouterLink>
+            <button
+              v-if="center.hasMore.value"
+              class="messages-route__list-more"
+              type="button"
+              :disabled="!center.canLoadMore.value"
+              @click="center.loadMore"
+            >
+              {{ center.loadingMore.value ? "加载中…" : "加载更多会话" }}
+            </button>
+          </template>
         </div>
       </aside>
 
       <section
-        v-if="page.activeConversation"
+        v-if="center.activeConversation.value"
         class="messages-route__chat messages-route__chat--desktop"
         aria-label="当前会话"
       >
         <header class="messages-route__chat-header">
           <div class="messages-route__chat-person">
             <span class="messages-route__avatar messages-route__avatar--header">
-              {{ page.activeConversation.participantInitial }}
+              {{ center.activeConversation.value.participantInitial }}
               <span
-                v-if="page.activeConversation.online"
+                v-if="center.activeConversation.value.online"
                 class="messages-route__online"
                 aria-label="在线"
               />
             </span>
             <div>
-              <h2>{{ page.activeConversation.participantName }}</h2>
-              <p>{{ page.activeConversation.online ? "在线" : "离线" }}</p>
+              <h2>{{ center.activeConversation.value.participantName }}</h2>
+              <p>
+                {{ center.activeConversation.value.online ? "在线" : "离线" }}
+              </p>
             </div>
           </div>
 
@@ -194,43 +228,89 @@
         </header>
 
         <div class="messages-route__history">
-          <div class="messages-route__date-divider">今天</div>
-          <article
-            v-for="message in messages"
-            :key="message.id"
-            class="messages-route__message"
-            :class="{
-              'messages-route__message--mine': message.author === 'me',
-            }"
+          <p
+            v-if="thread.status.value === 'loading'"
+            class="messages-route__list-hint"
+            role="status"
           >
-            <span
-              v-if="message.author !== 'me'"
-              class="messages-route__message-avatar"
+            正在加载消息…
+          </p>
+          <div
+            v-else-if="thread.status.value === 'error'"
+            class="messages-route__list-error"
+            role="alert"
+          >
+            <p>{{ thread.error.value ?? "历史消息加载失败" }}</p>
+            <button type="button" @click="thread.retry">重试</button>
+          </div>
+          <p
+            v-else-if="thread.status.value === 'empty'"
+            class="messages-route__list-hint"
+          >
+            还没有历史消息，发送第一条开始对话。
+          </p>
+          <template v-else>
+            <button
+              v-if="thread.hasMore.value"
+              class="messages-route__list-more"
+              type="button"
+              :disabled="!thread.canLoadMore.value"
+              @click="thread.loadMore"
             >
-              {{ page.activeConversation.participantInitial }}
-            </span>
-            <div class="messages-route__message-body">
-              <p>{{ message.text }}</p>
-              <div class="messages-route__message-meta">
-                <time>{{ message.sentAt }}</time>
-                <span
-                  v-if="message.author === 'me' && message.deliveryStatus"
-                  class="messages-route__delivery-status"
-                  :class="`messages-route__delivery-status--${message.deliveryStatus}`"
-                  :aria-label="
-                    message.deliveryStatus === 'read' ? '已读' : '已发送'
-                  "
-                  :title="message.deliveryStatus === 'read' ? '已读' : '已发送'"
-                >
-                  <Check
-                    v-if="message.deliveryStatus === 'sent'"
-                    aria-hidden="true"
-                  />
-                  <CheckCheck v-else aria-hidden="true" />
-                </span>
+              {{ thread.loadingMore.value ? "加载中…" : "加载更早消息" }}
+            </button>
+            <div class="messages-route__date-divider">今天</div>
+            <article
+              v-for="message in thread.messages.value"
+              :key="message.id"
+              class="messages-route__message"
+              :class="{
+                'messages-route__message--mine': message.author === 'me',
+              }"
+            >
+              <span
+                v-if="message.author !== 'me'"
+                class="messages-route__message-avatar"
+              >
+                {{ center.activeConversation.value.participantInitial }}
+              </span>
+              <div class="messages-route__message-body">
+                <p>{{ message.text }}</p>
+                <div class="messages-route__message-meta">
+                  <time v-if="message.sentAt">{{ message.sentAt }}</time>
+                  <span
+                    v-if="message.author === 'me' && message.deliveryState"
+                    class="messages-route__delivery-status"
+                    :class="`messages-route__delivery-status--${message.deliveryState}`"
+                    :aria-label="deliveryStatusLabel(message.deliveryState)"
+                    :title="deliveryStatusLabel(message.deliveryState)"
+                  >
+                    <LoaderCircle
+                      v-if="message.deliveryState === 'sending'"
+                      aria-hidden="true"
+                    />
+                    <TriangleAlert
+                      v-else-if="message.deliveryState === 'failed'"
+                      aria-hidden="true"
+                    />
+                    <Check
+                      v-else-if="message.deliveryState === 'sent'"
+                      aria-hidden="true"
+                    />
+                    <CheckCheck v-else aria-hidden="true" />
+                  </span>
+                  <button
+                    v-if="message.deliveryState === 'failed'"
+                    class="messages-route__message-retry"
+                    type="button"
+                    @click="thread.retryMessage(message.id)"
+                  >
+                    重试
+                  </button>
+                </div>
               </div>
-            </div>
-          </article>
+            </article>
+          </template>
         </div>
 
         <footer class="messages-route__composer">
@@ -244,10 +324,11 @@
           </button>
           <div ref="composerInputRoot" class="messages-route__input-shell">
             <input
-              v-model="messageDraft"
+              v-model="thread.draft.value"
               type="text"
               placeholder="输入消息..."
               aria-label="消息输入"
+              @keydown.enter.prevent="thread.send"
             />
             <button
               class="messages-route__emoji-button"
@@ -280,20 +361,14 @@
           <button
             class="messages-route__send-button"
             type="button"
-            :disabled="!canSendMessage"
-            @click="sendMessage"
+            :disabled="!thread.canSend.value"
+            @click="thread.send"
           >
             <Send aria-hidden="true" />
             <span class="messages-route__sr-only">发送消息</span>
           </button>
         </footer>
       </section>
-    </section>
-
-    <section v-else class="messages-route__empty">
-      <p class="messages-route__eyebrow">Message</p>
-      <h1 id="messages-title">私信暂不可用</h1>
-      <p>消息服务接入后会显示会话列表和历史消息。</p>
     </section>
   </main>
 </template>
@@ -303,6 +378,7 @@ import {
   Bell,
   Check,
   CheckCheck,
+  LoaderCircle,
   MessageCircle,
   MoreHorizontal,
   Paperclip,
@@ -312,30 +388,47 @@ import {
   Smile,
   SquarePen,
   Star,
+  TriangleAlert,
   Users,
 } from "@lucide/vue";
 import { RouterLink } from "vue-router";
 
-import { useMessageCenterPage } from "@/features/message";
+import {
+  useConversationActionMenu,
+  useMessageComposer,
+  useMessageCenterPage,
+  useMessageThread,
+  type MessageDeliveryState,
+} from "@/features/message";
 import "./message-route.css";
-import { useConversationActionMenu } from "./useConversationActionMenu";
-import { useMessageComposerDraft } from "./useMessageComposerDraft";
 
-const page = useMessageCenterPage();
+// 会话列表入口：加载成功后默认选中第一条会话，供桌面端右侧内联展示线程。
+const center = useMessageCenterPage({ autoSelectFirst: true });
+// 线程跟随当前选中的会话 id 独立加载，会话切换时自动重载并丢弃旧响应。
+const thread = useMessageThread(center.activeConversationId);
 const {
   conversationActionMenuRoot,
   isConversationActionMenuOpen,
   toggleConversationActionMenu,
 } = useConversationActionMenu();
 const {
-  canSendMessage,
   composerInputRoot,
   emojiOptions,
-  insertEmoji,
   isEmojiPickerOpen,
-  messageDraft,
-  messages,
-  sendMessage,
+  insertEmoji,
   toggleEmojiPicker,
-} = useMessageComposerDraft(() => page.activeConversation?.messages);
+} = useMessageComposer(thread.draft);
+
+function deliveryStatusLabel(state: MessageDeliveryState): string {
+  switch (state) {
+    case "sending":
+      return "发送中";
+    case "failed":
+      return "发送失败";
+    case "read":
+      return "已读";
+    default:
+      return "已发送";
+  }
+}
 </script>
