@@ -6,6 +6,7 @@ import {
   getNotificationUnreadCount,
   listNotifications,
   markAllNotificationsRead,
+  markNotificationRead,
 } from "@/api/notification";
 
 import {
@@ -67,7 +68,14 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
   const unreadCount = ref<number | null>(null);
   const breakdown = ref<NotificationCenterBreakdown | null>(null);
   const submittingMarkAll = ref(false);
+  const selectedGroupKey = ref<string | null>(null);
+  const submittingReadIds = ref<ReadonlySet<string>>(new Set());
   let listRequestId = 0;
+
+  const activeNotification = computed<NotificationCenterItem | null>(
+    () =>
+      items.value.find((item) => item.id === selectedGroupKey.value) ?? null,
+  );
 
   const categoryCounts = computed<Record<NotificationCenterCategory, number | null>>(
     () => ({
@@ -107,6 +115,8 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     items.value = [];
     cursor.value = null;
     hasMore.value = false;
+    // 重新加载或切换分类会替换整个列表，旧的选中项不再有效。
+    selectedGroupKey.value = null;
 
     try {
       const [listResult] = await Promise.all([
@@ -203,6 +213,71 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     }
   }
 
+  async function selectNotification(groupKey: string): Promise<void> {
+    // 选中始终生效，即使已读也可反复查看详情。
+    selectedGroupKey.value = groupKey;
+
+    const target = items.value.find((item) => item.id === groupKey);
+    // 无对应项、已读，或缺少可标记的 notificationId 时，只切换选中，不发已读请求。
+    if (!target || !target.unread || !target.latestNotificationId) {
+      return;
+    }
+
+    const notificationId = target.latestNotificationId;
+    // 同一条正在提交时不重复发起，避免抖动式重复请求。
+    if (submittingReadIds.value.has(groupKey)) {
+      return;
+    }
+
+    actionError.value = null;
+    const nextSubmitting = new Set(submittingReadIds.value);
+    nextSubmitting.add(groupKey);
+    submittingReadIds.value = nextSubmitting;
+
+    // 记录乐观更新前的未读事实，用于失败回滚。
+    const previousUnreadCount = target.unreadCount;
+    const unreadKnown = unreadCount.value !== null;
+    const previousTotalUnread = unreadCount.value;
+
+    // 乐观更新：立即清除该分组 unread dot 与计数。
+    items.value = items.value.map((item) =>
+      item.id === groupKey ? { ...item, unread: false, unreadCount: 0 } : item,
+    );
+    // 未读总数已知时按该分组未读数递减；未知时不做本地算术，
+    // 依据设计文档在成功后触发重拉，避免伪造 0。
+    if (unreadKnown && previousTotalUnread !== null) {
+      unreadCount.value = Math.max(0, previousTotalUnread - previousUnreadCount);
+    }
+
+    try {
+      await markNotificationRead(notificationId);
+
+      if (!unreadKnown) {
+        // 之前未读数未知，成功后重拉未读事实而不是本地计算。
+        await refreshUnreadFacts(listRequestId);
+      }
+    } catch (requestError) {
+      // 失败回滚：恢复该分组未读状态与未读总数。
+      items.value = items.value.map((item) =>
+        item.id === groupKey
+          ? { ...item, unread: true, unreadCount: previousUnreadCount }
+          : item,
+      );
+      if (unreadKnown) {
+        unreadCount.value = previousTotalUnread;
+      }
+      actionError.value = toErrorMessage(requestError);
+    } finally {
+      const doneSubmitting = new Set(submittingReadIds.value);
+      doneSubmitting.delete(groupKey);
+      submittingReadIds.value = doneSubmitting;
+    }
+  }
+
+  function closeDetail(): void {
+    selectedGroupKey.value = null;
+  }
+
   void loadFirstPage();
 
   return {
@@ -217,11 +292,16 @@ export function useNotificationCenterPage(): NotificationCenterPageState {
     unreadCount,
     breakdown,
     submittingMarkAll,
+    selectedGroupKey,
+    activeNotification,
+    submittingReadIds,
     categoryCounts,
     canLoadMore,
     retry: loadFirstPage,
     selectCategory,
     loadMore,
     markAllRead,
+    selectNotification,
+    closeDetail,
   };
 }
