@@ -5,6 +5,7 @@ import type {
 } from "@/api/notification";
 
 import type {
+  NotificationCenterActor,
   NotificationCenterBreakdown,
   NotificationCenterCategory,
   NotificationCenterItem,
@@ -21,14 +22,16 @@ const categoryToApi: Partial<
   security: "SECURITY",
 };
 
-const categoryFromApi: Record<NotificationCategoryResp, NotificationCenterType> =
-  {
-    INTERACTION: "interaction",
-    CONTENT: "content",
-    SOCIAL: "social",
-    SYSTEM: "system",
-    SECURITY: "security",
-  };
+const categoryFromApi: Record<
+  NotificationCategoryResp,
+  NotificationCenterType
+> = {
+  INTERACTION: "interaction",
+  CONTENT: "content",
+  SOCIAL: "social",
+  SYSTEM: "system",
+  SECURITY: "security",
+};
 
 const fallbackTitleByCategory: Record<NotificationCenterType, string> = {
   interaction: "新的互动",
@@ -57,28 +60,29 @@ export function mapNotificationBreakdown(
   };
 }
 
-function readStringField(
-  source: Record<string, unknown>,
-  key: string,
-): string | undefined {
-  const value = source[key];
-
-  return typeof value === "string" && value.trim() ? value : undefined;
-}
-
 function resolveTitle(item: NotificationGroupResp): string {
-  const snapshotTitle =
-    readStringField(item.aggregatedContent, "title") ||
-    readStringField(item.aggregatedContent, "subject");
-
-  return snapshotTitle || fallbackTitleByCategory[categoryFromApi[item.category]];
+  return (
+    item.content.title ||
+    fallbackTitleByCategory[categoryFromApi[item.category]]
+  );
 }
 
 function resolveTargetPath(item: NotificationGroupResp): string | null {
-  void item;
-  // targetId 当前是后端内部目标标识，不等同于前端可路由的公开 post id。
-  // 在契约明确提供 public route target 前，聚合通知不生成跳转链接。
+  if (item.target?.resource.type === "POST" && item.target.resource.id) {
+    const path = `/posts/${encodeURIComponent(item.target.resource.id)}`;
+    return item.target.anchor?.type === "COMMENT"
+      ? `${path}#comment-${encodeURIComponent(item.target.anchor.id)}`
+      : path;
+  }
   return null;
+}
+
+function resolveActors(item: NotificationGroupResp): NotificationCenterActor[] {
+  return item.recentActors.map((actor) => ({
+    id: actor.publicId,
+    name: actor.displayName,
+    avatarUrl: actor.avatarUrl ?? null,
+  }));
 }
 
 export function mapNotificationCenterItem(
@@ -87,18 +91,18 @@ export function mapNotificationCenterItem(
   const category = categoryFromApi[item.category];
 
   return {
-    id: item.groupKey,
-    latestNotificationId: item.latestNotificationId,
+    id: item.groupId,
     type: item.type,
     category,
     title: resolveTitle(item),
-    body: item.latestContent,
-    occurredAt: item.latestTime,
+    body: item.content.body,
+    occurredAt: item.latestOccurredAt,
     unread: item.unreadCount > 0,
     unreadCount: item.unreadCount,
     totalCount: item.totalCount,
-    targetType: item.targetType,
-    targetId: item.targetId,
+    actorTotalCount: item.actorTotalCount,
+    target: item.target ?? null,
     targetPath: resolveTargetPath(item),
+    actors: resolveActors(item),
   };
 }

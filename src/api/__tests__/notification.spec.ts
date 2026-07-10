@@ -7,14 +7,16 @@ import {
   getNotificationUnreadBreakdown,
   getNotificationUnreadCount,
   listNotifications,
+  listNotificationGroupActors,
   markAllNotificationsRead,
+  markNotificationGroupRead,
+  markNotificationRead,
   type ListNotificationsResp,
 } from "../notification";
 
 vi.mock("../request", async () => {
-  const actual = await vi.importActual<typeof import("../request")>(
-    "../request",
-  );
+  const actual =
+    await vi.importActual<typeof import("../request")>("../request");
 
   return {
     ...actual,
@@ -36,20 +38,16 @@ describe("notification api", () => {
     const response: ListNotificationsResp = {
       items: [
         {
-          groupKey: "recipient:1:INTERACTION:POST_LIKED:POST:post_1",
-          latestNotificationId: "notif_1",
+          groupId: "ng1abc",
           type: "POST_LIKED",
           category: "INTERACTION",
-          targetType: "POST",
-          targetId: "post_1",
           totalCount: 3,
           unreadCount: 2,
-          latestTime: "2026-07-07T08:00:00Z",
-          latestContent: "Han Meimei 赞了你的文章",
-          actorIds: ["user_1"],
-          aggregatedContent: {
-            title: "新的互动",
-          },
+          actorTotalCount: 1,
+          latestOccurredAt: "2026-07-07T08:00:00Z",
+          content: { title: "新的互动", body: "Han Meimei 赞了你的文章" },
+          recentActors: [{ publicId: "user_1", displayName: "Han Meimei" }],
+          target: { resource: { type: "POST", id: "post_1" }, snapshot: {} },
         },
       ],
       nextCursor: "cursor-2",
@@ -89,8 +87,7 @@ describe("notification api", () => {
 
     expect(page.items.length).toBeGreaterThan(0);
     expect(page.items[0]).toMatchObject({
-      groupKey: expect.any(String),
-      latestNotificationId: expect.any(String),
+      groupId: expect.any(String),
       category: "INTERACTION",
       unreadCount: expect.any(Number),
     });
@@ -126,14 +123,70 @@ describe("notification api", () => {
     await expect(getNotificationUnreadCount()).resolves.toEqual(unreadCount);
     await expect(getNotificationUnreadBreakdown()).resolves.toEqual(breakdown);
 
-    expect(get).toHaveBeenNthCalledWith(
-      1,
-      "/v1/notifications/unread-count",
-    );
+    expect(get).toHaveBeenNthCalledWith(1, "/v1/notifications/unread-count");
     expect(get).toHaveBeenNthCalledWith(
       2,
       "/v1/notifications/unread/breakdown",
     );
+  });
+
+  it("marks a single notification as read by id", async () => {
+    const read = {
+      notificationId: "notif_1",
+      read: true,
+      readAt: "2026-07-07T08:15:00Z",
+    };
+    const post = vi.fn().mockResolvedValueOnce({ data: read });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      post,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    await expect(markNotificationRead("notif_1")).resolves.toEqual(read);
+
+    expect(post).toHaveBeenCalledWith("/v1/notifications/notif_1/read");
+  });
+
+  it("marks an aggregation group as read by its opaque groupId", async () => {
+    const read = {
+      groupId: "ng1abc",
+      read: true as const,
+      changedCount: 2,
+      unreadCount: 0,
+      readAt: "2026-07-10T05:31:00Z",
+    };
+    const post = vi.fn().mockResolvedValueOnce({ data: read });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      post,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    await expect(markNotificationGroupRead("ng1abc")).resolves.toEqual(read);
+    expect(post).toHaveBeenCalledWith("/v1/notification-groups/ng1abc/read");
+  });
+
+  it("lists group actors with the opaque groupId and cursor", async () => {
+    const response = { items: [], hasMore: false };
+    const get = vi.fn().mockResolvedValueOnce({ data: response });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      get,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+    await expect(
+      listNotificationGroupActors("ng1abc", { cursor: "opaque", size: 20 }),
+    ).resolves.toEqual(response);
+    expect(get).toHaveBeenCalledWith("/v1/notification-groups/ng1abc/actors", {
+      params: { cursor: "opaque", size: 20 },
+    });
+  });
+
+  it("serves a local demo single mark-read response without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+
+    await expect(
+      markNotificationRead("local-demo-notif"),
+    ).resolves.toMatchObject({
+      notificationId: "local-demo-notif",
+      read: true,
+    });
+    expect(getAxiosInstance).not.toHaveBeenCalled();
   });
 
   it("marks all notifications as read", async () => {
@@ -167,5 +220,6 @@ describe("notification api", () => {
 
     await expect(getNotificationUnreadCount()).rejects.toBe(authError);
     await expect(markAllNotificationsRead()).rejects.toBe(serviceError);
+    await expect(markNotificationRead("notif_1")).rejects.toBe(serviceError);
   });
 });
