@@ -54,6 +54,12 @@ export interface MarkAllNotificationsReadResp {
   affectedCount: number;
 }
 
+export interface MarkNotificationReadResp {
+  notificationId: string;
+  read: true;
+  readAt: string;
+}
+
 const localDemoNotifications: NotificationGroupResp[] = [
   {
     groupKey: "local-demo:INTERACTION:POST_LIKED:POST:post-design-ia",
@@ -66,7 +72,12 @@ const localDemoNotifications: NotificationGroupResp[] = [
     unreadCount: 2,
     latestTime: "2026-07-07T08:00:00.000Z",
     latestContent: "陈立等 3 人赞了你的文章",
-    actorIds: ["user_liam_chen", "user_yuxi_wang"],
+    actorIds: ["user_liam_chen", "user_yuxi_wang", "user_mei_lin"],
+    recentActors: [
+      { id: "user_liam_chen", name: "陈立" },
+      { id: "user_yuxi_wang", name: "王雨溪" },
+      { id: "user_mei_lin", name: "林美" },
+    ],
     aggregatedContent: {
       title: "新的互动",
       summary: "你的信息架构文章获得了新的点赞。",
@@ -84,6 +95,7 @@ const localDemoNotifications: NotificationGroupResp[] = [
     latestTime: "2026-07-07T07:30:00.000Z",
     latestContent: "你关注的作者发布了新文章",
     actorIds: ["user_ethan_park"],
+    recentActors: [{ id: "user_ethan_park", name: "朴以森" }],
     aggregatedContent: {
       title: "组件库的边界：设计系统的可维护实践",
     },
@@ -234,6 +246,26 @@ export async function markAllNotificationsRead(): Promise<MarkAllNotificationsRe
 
   const response = await getAxiosInstance().post<MarkAllNotificationsReadResp>(
     "/v1/notifications/read-all",
+  );
+
+  return response.data;
+}
+
+// 单条已读：契约 POST /v1/notifications/{notificationId}/read，幂等。
+// path 段需转义，防止 notificationId 中的特殊字符破坏 URL 结构。
+export async function markNotificationRead(
+  notificationId: string,
+): Promise<MarkNotificationReadResp> {
+  if (isLocalDemoModeEnabled()) {
+    return {
+      notificationId,
+      read: true,
+      readAt: new Date(0).toISOString(),
+    };
+  }
+
+  const response = await getAxiosInstance().post<MarkNotificationReadResp>(
+    `/v1/notifications/${encodeURIComponent(notificationId)}/read`,
   );
 
   return response.data;

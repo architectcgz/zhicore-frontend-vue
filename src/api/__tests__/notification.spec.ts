@@ -8,6 +8,7 @@ import {
   getNotificationUnreadCount,
   listNotifications,
   markAllNotificationsRead,
+  markNotificationRead,
   type ListNotificationsResp,
 } from "../notification";
 
@@ -136,6 +137,34 @@ describe("notification api", () => {
     );
   });
 
+  it("marks a single notification as read by id", async () => {
+    const read = {
+      notificationId: "notif_1",
+      read: true,
+      readAt: "2026-07-07T08:15:00Z",
+    };
+    const post = vi.fn().mockResolvedValueOnce({ data: read });
+    vi.mocked(getAxiosInstance).mockReturnValue({
+      post,
+    } as unknown as ReturnType<typeof getAxiosInstance>);
+
+    await expect(markNotificationRead("notif_1")).resolves.toEqual(read);
+
+    expect(post).toHaveBeenCalledWith("/v1/notifications/notif_1/read");
+  });
+
+  it("serves a local demo single mark-read response without axios", async () => {
+    vi.mocked(isLocalDemoModeEnabled).mockReturnValue(true);
+
+    await expect(markNotificationRead("local-demo-notif")).resolves.toMatchObject(
+      {
+        notificationId: "local-demo-notif",
+        read: true,
+      },
+    );
+    expect(getAxiosInstance).not.toHaveBeenCalled();
+  });
+
   it("marks all notifications as read", async () => {
     const all = {
       readAll: true,
@@ -167,5 +196,6 @@ describe("notification api", () => {
 
     await expect(getNotificationUnreadCount()).rejects.toBe(authError);
     await expect(markAllNotificationsRead()).rejects.toBe(serviceError);
+    await expect(markNotificationRead("notif_1")).rejects.toBe(serviceError);
   });
 });
