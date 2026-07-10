@@ -90,49 +90,155 @@
           <p>新的互动、内容、系统或安全通知会显示在这里。</p>
         </div>
 
-        <div v-else class="notifications-route__list">
-          <article
-            v-for="notification in page.items.value"
-            :key="notification.id"
-            class="notifications-route__item"
-            :class="{
-              'notifications-route__item--unread': notification.unread,
-            }"
+        <div class="notifications-route__body">
+          <!-- 详情态和列表态整块互斥切换：选中一条通知后，详情占满主区，点返回回到列表。 -->
+          <section
+            v-if="page.activeNotification.value"
+            class="notifications-route__detail"
+            aria-label="通知详情"
           >
-            <span
-              class="notifications-route__item-icon"
-              :class="`notifications-route__item-icon--${notification.category}`"
+            <button
+              class="notifications-route__detail-back"
+              type="button"
+              aria-label="返回通知列表"
+              @click="page.closeDetail"
             >
-              <Heart
-                v-if="notification.category === 'interaction'"
-                aria-hidden="true"
-              />
-              <AtSign
-                v-else-if="notification.category === 'content'"
-                aria-hidden="true"
-              />
-              <Sparkles v-else aria-hidden="true" />
-            </span>
+              <ChevronLeft aria-hidden="true" />
+              <span>返回通知列表</span>
+            </button>
 
-            <div class="notifications-route__item-body">
-              <h2>{{ notification.title }}</h2>
-              <p>{{ notification.body }}</p>
-            </div>
+            <header class="notifications-route__detail-header">
+              <div class="notifications-route__detail-title">
+                <span
+                  class="notifications-route__item-icon"
+                  :class="`notifications-route__item-icon--${page.activeNotification.value.category}`"
+                >
+                  <Heart
+                    v-if="page.activeNotification.value.category === 'interaction'"
+                    aria-hidden="true"
+                  />
+                  <AtSign
+                    v-else-if="page.activeNotification.value.category === 'content'"
+                    aria-hidden="true"
+                  />
+                  <Sparkles v-else aria-hidden="true" />
+                </span>
+                <div class="notifications-route__detail-heading">
+                  <p class="notifications-route__eyebrow">
+                    {{ page.activeNotification.value.type }}
+                  </p>
+                  <h2>{{ page.activeNotification.value.title }}</h2>
+                </div>
+              </div>
+            </header>
 
-            <time>{{ notification.occurredAt }}</time>
-            <span
-              v-if="notification.unread"
-              class="notifications-route__unread-dot"
-              aria-label="未读"
-            />
-            <a
-              v-if="notification.targetPath"
-              class="notifications-route__target-link"
-              :href="notification.targetPath"
+            <p class="notifications-route__detail-body">
+              {{ page.activeNotification.value.body }}
+            </p>
+
+            <dl class="notifications-route__detail-meta">
+              <div>
+                <dt>时间</dt>
+                <dd>{{ page.activeNotification.value.occurredAt }}</dd>
+              </div>
+              <div>
+                <dt>聚合数量</dt>
+                <dd>
+                  {{ page.activeNotification.value.totalCount }} 条 ·
+                  {{ page.activeNotification.value.unreadCount }} 条未读
+                </dd>
+              </div>
+              <div>
+                <dt>触发者</dt>
+                <dd>
+                  <ul
+                    v-if="page.activeNotification.value.actors.length > 0"
+                    class="notifications-route__detail-actors"
+                  >
+                    <li
+                      v-for="actor in page.activeNotification.value.actors"
+                      :key="actor.id"
+                      class="notifications-route__detail-actor"
+                    >
+                      <span class="notifications-route__detail-actor-avatar">
+                        {{ (actor.name ?? actor.id).slice(0, 1).toUpperCase() }}
+                      </span>
+                      <span class="notifications-route__detail-actor-name">
+                        {{ actor.name ?? actor.id }}
+                      </span>
+                    </li>
+                  </ul>
+                  <span v-else class="notifications-route__detail-actors-empty">
+                    系统通知，无触发用户
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt>目标</dt>
+                <dd>
+                  {{ page.activeNotification.value.targetType }} ·
+                  {{ page.activeNotification.value.targetId }}
+                </dd>
+              </div>
+            </dl>
+
+            <!-- targetPath 为 null 表示后端契约尚未提供公开可路由目标；此时按钮禁用并说明原因，不伪造跳转。 -->
+            <button
+              class="notifications-route__detail-open"
+              type="button"
+              :disabled="!page.activeNotification.value.targetPath"
+              :title="
+                page.activeNotification.value.targetPath
+                  ? undefined
+                  : '目标页面暂不可跳转：后端尚未提供公开路由目标'
+              "
             >
-              查看
-            </a>
-          </article>
+              <ChevronRight aria-hidden="true" />
+              <span>打开目标</span>
+            </button>
+          </section>
+
+          <div v-else class="notifications-route__list" role="list">
+            <button
+              v-for="notification in page.items.value"
+              :key="notification.id"
+              type="button"
+              role="listitem"
+              class="notifications-route__item"
+              :class="{
+                'notifications-route__item--unread': notification.unread,
+              }"
+              :aria-label="`查看通知：${notification.title}`"
+              @click="page.selectNotification(notification.id)"
+            >
+              <span
+                class="notifications-route__item-icon"
+                :class="`notifications-route__item-icon--${notification.category}`"
+              >
+                <Heart
+                  v-if="notification.category === 'interaction'"
+                  aria-hidden="true"
+                />
+                <AtSign
+                  v-else-if="notification.category === 'content'"
+                  aria-hidden="true"
+                />
+                <Sparkles v-else aria-hidden="true" />
+              </span>
+
+              <div class="notifications-route__item-body">
+                <h2>{{ notification.title }}</h2>
+                <p>{{ notification.body }}</p>
+              </div>
+
+              <time>{{ notification.occurredAt }}</time>
+              <span
+                v-if="notification.unread"
+                class="notifications-route__unread-dot"
+                aria-label="未读"
+              />
+            </button>
+          </div>
         </div>
 
         <p v-if="page.actionError.value" class="notifications-route__error">
@@ -140,7 +246,7 @@
         </p>
 
         <footer
-          v-if="page.hasMore.value"
+          v-if="page.hasMore.value && !page.activeNotification.value"
           class="notifications-route__pagination"
           aria-label="通知分页"
         >
@@ -166,6 +272,7 @@ import {
   AtSign,
   Bell,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Heart,
   Sparkles,
@@ -487,26 +594,49 @@ const page = useNotificationCenterPage();
   padding: 0 var(--space-4);
 }
 
-.notifications-route__list {
+.notifications-route__body {
   display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
 }
 
+.notifications-route__list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
 .notifications-route__item {
   position: relative;
   display: grid;
+  width: 100%;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: var(--space-4);
   align-items: center;
   min-height: 5.25rem;
-  padding: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 0;
   border-bottom: 1px solid var(--notifications-line);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background 0.2s ease;
 }
 
 .notifications-route__item:hover {
   background: color-mix(in srgb, var(--notifications-control) 52%, transparent);
+}
+
+.notifications-route__item--active {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.notifications-route__item:focus-visible {
+  outline: 2px solid var(--notifications-focus-ring);
+  outline-offset: -2px;
 }
 
 .notifications-route__item-icon {
@@ -568,6 +698,189 @@ const page = useNotificationCenterPage();
   height: 0.625rem;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
+}
+
+.notifications-route__detail {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-top: var(--space-2);
+}
+
+.notifications-route__detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--notifications-line);
+}
+
+/* 返回入口做成轻量文字链接，避免实心按钮在标题上方喧宾夺主。 */
+.notifications-route__detail-back {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+  padding: var(--space-1) 0;
+  border: 0;
+  background: transparent;
+  color: var(--notifications-muted);
+  cursor: pointer;
+  font-size: var(--font-size-ui-meta);
+  font-weight: var(--font-weight-ui-control);
+  transition: color 0.2s ease;
+}
+
+.notifications-route__detail-back:hover {
+  color: var(--color-primary);
+}
+
+.notifications-route__detail-back:focus-visible {
+  outline: 2px solid var(--notifications-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.notifications-route__detail-back svg {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.notifications-route__detail-title {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.notifications-route__detail-heading {
+  min-width: 0;
+}
+
+.notifications-route__detail-heading h2 {
+  margin: var(--space-1) 0 0;
+  color: var(--notifications-text-strong);
+  font-size: var(--font-size-ui-page-title);
+  font-weight: var(--font-weight-ui-title);
+  line-height: var(--line-height-ui-title);
+}
+
+.notifications-route__detail-body {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--notifications-text);
+  font-size: var(--font-size-ui-row-title);
+  line-height: var(--line-height-ui-body);
+}
+
+.notifications-route__detail-meta {
+  display: grid;
+  max-width: 48rem;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4) 0;
+  border-block: 1px solid var(--notifications-line);
+}
+
+.notifications-route__detail-meta div {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.notifications-route__detail-meta dt {
+  color: var(--notifications-muted);
+  font-size: var(--font-size-ui-meta);
+}
+
+.notifications-route__detail-meta dd {
+  margin: 0;
+  color: var(--notifications-text);
+  font-size: var(--font-size-ui-meta);
+  overflow-wrap: anywhere;
+}
+
+.notifications-route__detail-actors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notifications-route__detail-actor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border: 1px solid var(--notifications-line);
+  border-radius: var(--radius-pill);
+  background: var(--notifications-control);
+}
+
+.notifications-route__detail-actor-avatar {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-primary);
+  font-size: var(--font-size-ui-caption);
+  font-weight: var(--font-weight-ui-title);
+}
+
+.notifications-route__detail-actor-name {
+  color: var(--notifications-text);
+  font-size: var(--font-size-ui-meta);
+  overflow-wrap: anywhere;
+}
+
+.notifications-route__detail-actors-empty {
+  color: var(--notifications-muted);
+  font-size: var(--font-size-ui-meta);
+}
+
+.notifications-route__detail-open {
+  display: inline-flex;
+  align-self: flex-start;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--notifications-line);
+  border-radius: var(--radius-md);
+  background: var(--notifications-control);
+  color: var(--notifications-text-strong);
+  cursor: pointer;
+  font-size: var(--font-size-ui-body);
+  font-weight: var(--font-weight-ui-control);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.notifications-route__detail-open svg {
+  width: var(--space-5);
+  height: var(--space-5);
+}
+
+.notifications-route__detail-open:hover:not(:disabled) {
+  border-color: var(--notifications-line-strong);
+  background: var(--notifications-control-hover);
+  color: var(--color-primary);
+}
+
+.notifications-route__detail-open:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .notifications-route__pagination {
