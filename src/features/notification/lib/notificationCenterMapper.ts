@@ -5,6 +5,7 @@ import type {
 } from "@/api/notification";
 
 import type {
+  NotificationCenterActor,
   NotificationCenterBreakdown,
   NotificationCenterCategory,
   NotificationCenterItem,
@@ -81,6 +82,54 @@ function resolveTargetPath(item: NotificationGroupResp): string | null {
   return null;
 }
 
+// 从 recentActors（可能是带 id/name 的对象数组）里读取一个可展示名称。
+// 契约未接入 User summary 前 recentActors 常为空，字段名也可能是 name/displayName/nickname。
+function readActorName(actor: Record<string, unknown>): string | null {
+  return (
+    readStringField(actor, "name") ||
+    readStringField(actor, "displayName") ||
+    readStringField(actor, "nickname") ||
+    null
+  );
+}
+
+function readActorId(
+  actor: Record<string, unknown>,
+  fallbackId: string,
+): string {
+  return (
+    readStringField(actor, "id") ||
+    readStringField(actor, "userId") ||
+    readStringField(actor, "actorId") ||
+    fallbackId
+  );
+}
+
+// 合并 recentActors（带名字）和 actorIds（内部 ID），保证详情能显式列出触发者。
+// recentActors 到位时优先用其名字；否则回退到 actorIds，UI 再决定如何展示。
+function resolveActors(item: NotificationGroupResp): NotificationCenterActor[] {
+  const summaries = Array.isArray(item.recentActors) ? item.recentActors : [];
+  const actorIds = Array.isArray(item.actorIds) ? item.actorIds : [];
+
+  if (summaries.length > 0) {
+    return summaries.map((actor, index) => {
+      const record =
+        actor && typeof actor === "object"
+          ? (actor as Record<string, unknown>)
+          : {};
+      const fallbackId = actorIds[index] ?? `actor-${index}`;
+
+      return {
+        id: readActorId(record, fallbackId),
+        name: readActorName(record),
+      };
+    });
+  }
+
+  // 仅有内部 ID：名字未知，交给 UI 回退展示 id。
+  return actorIds.map((id) => ({ id, name: null }));
+}
+
 export function mapNotificationCenterItem(
   item: NotificationGroupResp,
 ): NotificationCenterItem {
@@ -100,5 +149,6 @@ export function mapNotificationCenterItem(
     targetType: item.targetType,
     targetId: item.targetId,
     targetPath: resolveTargetPath(item),
+    actors: resolveActors(item),
   };
 }

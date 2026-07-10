@@ -30,6 +30,14 @@ export interface NotificationCenterBreakdown {
   security: number;
 }
 
+// 聚合通知的单个触发者。名字来自后端 recentActors（接入 User summary 后才有），
+// 否则回退到 actorIds 的内部用户 ID，保证详情始终能显式列出"谁触发了"。
+export interface NotificationCenterActor {
+  id: string;
+  // 可展示名称；缺 User summary 时为 null，由 UI 回退展示 id。
+  name: string | null;
+}
+
 export interface NotificationCenterItem {
   id: string;
   latestNotificationId?: string;
@@ -44,6 +52,8 @@ export interface NotificationCenterItem {
   targetType: string;
   targetId: string;
   targetPath: string | null;
+  // 参与聚合的触发者列表；空数组表示系统类通知或后端未返回触发者。
+  actors: NotificationCenterActor[];
 }
 
 export interface NotificationCenterPageState {
@@ -58,10 +68,20 @@ export interface NotificationCenterPageState {
   unreadCount: Ref<number | null>;
   breakdown: Ref<NotificationCenterBreakdown | null>;
   submittingMarkAll: Ref<boolean>;
+  // 当前在主区详情面板展开的通知分组 key；null 表示未选中任何通知。
+  selectedGroupKey: Ref<string | null>;
+  // 由 selectedGroupKey 解析出的选中项；列表变化后自动失效。
+  activeNotification: ComputedRef<NotificationCenterItem | null>;
+  // 正在提交单条已读的分组 key 集合，用于防止重复点击同一条。
+  submittingReadIds: Ref<ReadonlySet<string>>;
   categoryCounts: ComputedRef<Record<NotificationCenterCategory, number | null>>;
   canLoadMore: ComputedRef<boolean>;
   retry: () => Promise<void>;
   selectCategory: (category: NotificationCenterCategory) => Promise<void>;
   loadMore: () => Promise<void>;
   markAllRead: () => Promise<void>;
+  // 选中一条通知并在其未读时乐观标记已读；失败回滚该条未读状态。
+  selectNotification: (groupKey: string) => Promise<void>;
+  // 关闭详情面板，清空选中态。
+  closeDetail: () => void;
 }
