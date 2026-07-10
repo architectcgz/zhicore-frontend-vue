@@ -4,11 +4,7 @@ import { isLocalDemoModeEnabled } from "@/runtime/localDemoMode";
 import { getAxiosInstance } from "./request";
 
 export type NotificationCategoryResp =
-  | "INTERACTION"
-  | "CONTENT"
-  | "SOCIAL"
-  | "SYSTEM"
-  | "SECURITY";
+  "INTERACTION" | "CONTENT" | "SOCIAL" | "SYSTEM" | "SECURITY";
 
 export interface ListNotificationsReq {
   cursor?: string;
@@ -18,19 +14,24 @@ export interface ListNotificationsReq {
 }
 
 export interface NotificationGroupResp {
-  groupKey: string;
-  latestNotificationId?: string;
+  groupId: string;
   type: string;
   category: NotificationCategoryResp;
-  targetType: string;
-  targetId: string;
   totalCount: number;
   unreadCount: number;
-  latestTime: string;
-  latestContent: string;
-  recentActors?: unknown[];
-  actorIds: string[];
-  aggregatedContent: Record<string, unknown>;
+  actorTotalCount: number;
+  latestOccurredAt: string;
+  content: { title: string; body: string };
+  recentActors: Array<{
+    publicId: string;
+    displayName: string;
+    avatarUrl?: string | null;
+  }>;
+  target?: {
+    resource: { type: string; id: string };
+    anchor?: { type: string; id: string };
+    snapshot: Record<string, unknown>;
+  } | null;
 }
 
 export type ListNotificationsResp = ApiCursorResp<NotificationGroupResp>;
@@ -54,55 +55,81 @@ export interface MarkAllNotificationsReadResp {
   affectedCount: number;
 }
 
+export interface MarkNotificationReadResp {
+  notificationId: string;
+  read: true;
+  readAt: string;
+}
+
+export interface MarkNotificationGroupReadResp {
+  groupId: string;
+  read: true;
+  changedCount: number;
+  unreadCount: number;
+  readAt: string;
+}
+
+export interface ListNotificationGroupActorsReq {
+  cursor?: string;
+  size?: number;
+}
+export interface NotificationGroupActorResp {
+  actor: { publicId: string; displayName: string; avatarUrl: string | null };
+  eventCount: number;
+  latestOccurredAt: string;
+}
+export type ListNotificationGroupActorsResp =
+  ApiCursorResp<NotificationGroupActorResp>;
+
 const localDemoNotifications: NotificationGroupResp[] = [
   {
-    groupKey: "local-demo:INTERACTION:POST_LIKED:POST:post-design-ia",
-    latestNotificationId: "local-demo-notification-like-1",
+    groupId: "ng_local_like_post_design_ia",
     type: "POST_LIKED",
     category: "INTERACTION",
-    targetType: "POST",
-    targetId: "post-design-ia",
     totalCount: 3,
     unreadCount: 2,
-    latestTime: "2026-07-07T08:00:00.000Z",
-    latestContent: "陈立等 3 人赞了你的文章",
-    actorIds: ["user_liam_chen", "user_yuxi_wang"],
-    aggregatedContent: {
-      title: "新的互动",
-      summary: "你的信息架构文章获得了新的点赞。",
+    actorTotalCount: 3,
+    latestOccurredAt: "2026-07-07T08:00:00.000Z",
+    content: { title: "新的互动", body: "陈立等 3 人赞了你的文章" },
+    recentActors: [
+      { publicId: "user_liam_chen", displayName: "陈立" },
+      { publicId: "user_yuxi_wang", displayName: "王雨溪" },
+      { publicId: "user_mei_lin", displayName: "林美" },
+    ],
+    target: {
+      resource: { type: "POST", id: "post-design-ia" },
+      snapshot: { title: "信息架构的边界" },
     },
   },
   {
-    groupKey: "local-demo:CONTENT:POST_PUBLISHED:POST:post-component-library",
-    latestNotificationId: "local-demo-notification-content-1",
+    groupId: "ng_local_post_component_library",
     type: "POST_PUBLISHED",
     category: "CONTENT",
-    targetType: "POST",
-    targetId: "post-component-library",
     totalCount: 1,
     unreadCount: 1,
-    latestTime: "2026-07-07T07:30:00.000Z",
-    latestContent: "你关注的作者发布了新文章",
-    actorIds: ["user_ethan_park"],
-    aggregatedContent: {
+    actorTotalCount: 1,
+    latestOccurredAt: "2026-07-07T07:30:00.000Z",
+    content: {
       title: "组件库的边界：设计系统的可维护实践",
+      body: "你关注的作者发布了新文章",
+    },
+    recentActors: [{ publicId: "user_ethan_park", displayName: "朴以森" }],
+    target: {
+      resource: { type: "POST", id: "post-component-library" },
+      snapshot: { title: "组件库的边界：设计系统的可维护实践" },
     },
   },
   {
-    groupKey: "local-demo:SYSTEM:WELCOME:USER:local-demo-user",
-    latestNotificationId: "local-demo-notification-system-1",
+    groupId: "ng_local_system_welcome",
     type: "WELCOME",
     category: "SYSTEM",
-    targetType: "USER",
-    targetId: "local-demo-user",
     totalCount: 1,
     unreadCount: 0,
-    latestTime: "2026-07-06T09:00:00.000Z",
-    latestContent: "欢迎使用 ZhiCore",
-    actorIds: [],
-    aggregatedContent: {
-      title: "欢迎使用 ZhiCore",
-    },
+    actorTotalCount: 0,
+    latestOccurredAt: "2026-07-06T09:00:00.000Z",
+    content: { title: "欢迎使用 ZhiCore", body: "欢迎使用 ZhiCore" },
+    recentActors: [],
+    target: null,
   },
 ];
 
@@ -236,5 +263,76 @@ export async function markAllNotificationsRead(): Promise<MarkAllNotificationsRe
     "/v1/notifications/read-all",
   );
 
+  return response.data;
+}
+
+// 单条已读：契约 POST /v1/notifications/{notificationId}/read，幂等。
+// path 段需转义，防止 notificationId 中的特殊字符破坏 URL 结构。
+export async function markNotificationRead(
+  notificationId: string,
+): Promise<MarkNotificationReadResp> {
+  if (isLocalDemoModeEnabled()) {
+    return {
+      notificationId,
+      read: true,
+      readAt: new Date(0).toISOString(),
+    };
+  }
+
+  const response = await getAxiosInstance().post<MarkNotificationReadResp>(
+    `/v1/notifications/${encodeURIComponent(notificationId)}/read`,
+  );
+
+  return response.data;
+}
+
+export async function markNotificationGroupRead(
+  groupId: string,
+): Promise<MarkNotificationGroupReadResp> {
+  if (isLocalDemoModeEnabled()) {
+    const item = localDemoNotifications.find(
+      (candidate) => candidate.groupId === groupId,
+    );
+    const changedCount = item?.unreadCount ?? 0;
+    return {
+      groupId,
+      read: true,
+      changedCount,
+      unreadCount: 0,
+      readAt: new Date(0).toISOString(),
+    };
+  }
+  const response = await getAxiosInstance().post<MarkNotificationGroupReadResp>(
+    `/v1/notification-groups/${encodeURIComponent(groupId)}/read`,
+  );
+  return response.data;
+}
+
+export async function listNotificationGroupActors(
+  groupId: string,
+  input?: ListNotificationGroupActorsReq,
+): Promise<ListNotificationGroupActorsResp> {
+  if (isLocalDemoModeEnabled()) {
+    const item = localDemoNotifications.find(
+      (candidate) => candidate.groupId === groupId,
+    );
+    const actors = (item?.recentActors ?? []).map((actor) => {
+      return {
+        actor: {
+          publicId: actor.publicId,
+          displayName: actor.displayName,
+          avatarUrl: actor.avatarUrl ?? null,
+        },
+        eventCount: 1,
+        latestOccurredAt: item?.latestOccurredAt ?? new Date(0).toISOString(),
+      };
+    });
+    return { items: actors, hasMore: false };
+  }
+  const response =
+    await getAxiosInstance().get<ListNotificationGroupActorsResp>(
+      `/v1/notification-groups/${encodeURIComponent(groupId)}/actors`,
+      { params: input },
+    );
   return response.data;
 }
