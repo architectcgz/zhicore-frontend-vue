@@ -5,6 +5,7 @@ import {
   getMessageUnreadCount,
   listConversations,
 } from "@/api/message";
+import { useMessageUnreadStore } from "@/stores/messageUnread";
 
 import { mapConversationSummary } from "../lib/messageCenterMapper";
 import type {
@@ -43,7 +44,8 @@ export function useMessageCenterPage(
   const error = ref<string | null>(null);
   const conversations = ref<MessageCenterConversation[]>([]);
   const activeConversationId = ref<string | null>(null);
-  const unreadCount = ref<number | null>(null);
+  const unreadStore = useMessageUnreadStore();
+  const unreadCount = computed(() => unreadStore.total);
   const cursor = ref<string | null>(null);
   const hasMore = ref(false);
   const loadingMore = ref(false);
@@ -65,10 +67,10 @@ export function useMessageCenterPage(
       if (requestId !== listRequestId) {
         return;
       }
-      unreadCount.value = result.unreadCount;
+      unreadStore.setTotal(result.unreadCount);
     } catch {
       if (requestId === listRequestId) {
-        unreadCount.value = null;
+        unreadStore.setTotal(null);
       }
     }
   }
@@ -92,6 +94,8 @@ export function useMessageCenterPage(
       }
 
       conversations.value = listResult.items.map(mapConversationSummary);
+      // 会话行徽标与顶栏总数共享同一 store；API 摘要到达后在 workflow 边界统一灌入。
+      unreadStore.hydrateFromConversations(conversations.value);
       cursor.value = listResult.nextCursor ?? null;
       hasMore.value = listResult.hasMore;
       status.value = conversations.value.length > 0 ? "success" : "empty";
@@ -133,10 +137,9 @@ export function useMessageCenterPage(
         return;
       }
 
-      conversations.value = [
-        ...conversations.value,
-        ...listResult.items.map(mapConversationSummary),
-      ];
+      const appendedConversations = listResult.items.map(mapConversationSummary);
+      conversations.value = [...conversations.value, ...appendedConversations];
+      unreadStore.hydrateFromConversations(appendedConversations);
       cursor.value = listResult.nextCursor ?? null;
       hasMore.value = listResult.hasMore;
     } catch {

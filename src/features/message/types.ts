@@ -42,8 +42,8 @@ export interface MessageCenterPageState {
   conversations: Ref<MessageCenterConversation[]>;
   activeConversationId: Ref<string | null>;
   activeConversation: ComputedRef<MessageCenterConversation | null>;
-  // 会话列表未读总数；加载失败时为 null，UI 用占位而非显示 0。
-  unreadCount: Ref<number | null>;
+  // 会话列表未读总数；来自共享未读 store，加载失败时为 null，UI 用占位而非显示 0。
+  unreadCount: ComputedRef<number | null>;
   hasMore: Ref<boolean>;
   loadingMore: Ref<boolean>;
   canLoadMore: ComputedRef<boolean>;

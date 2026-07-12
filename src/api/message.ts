@@ -50,6 +50,16 @@ export interface ConversationUnreadCountResp {
   unreadCount: number;
 }
 
+export interface MarkConversationReadReq {
+  conversationId: string;
+}
+
+export interface MarkConversationReadResp {
+  conversationId: string;
+  // 该会话被清空后剩余的未读；后端已把这条会话的未读归零。
+  unreadCount: number;
+}
+
 export interface SendMessageReq {
   conversationId: string;
   content: string;
@@ -72,8 +82,9 @@ const localDemoConversations: ConversationSummaryResp[] = [
     participantId: "user-antigravity",
     participantName: "Antigravity",
     participantAvatarInitial: "AI",
-    lastMessagePreview: "编辑器保存冲突那篇我看完了，有一个问题想请教。",
-    lastMessageAt: "2026-07-07T16:02:00.000Z",
+    // 摘要的预览与时间取会话最后一条消息（此处为对方最新未读），未读数与线程里的未读 incoming 条数一致。
+    lastMessagePreview: "另外历史版本能一起看到就更好了。",
+    lastMessageAt: "2026-07-07T16:05:00.000Z",
     unreadCount: 2,
     participantOnline: true,
   },
@@ -105,10 +116,25 @@ const localDemoMessages: Record<string, MessageResp[]> = {
       sentAt: "2026-07-07T16:02:00.000Z",
       read: true,
     },
+    // 会话以对方两条未读结尾，对应会话摘要 unreadCount: 2；incoming 的 read: false 表示本端未读。
+    {
+      messageId: "msg-3",
+      direction: "incoming",
+      content: "那放在保存状态旁边会不会太挤？",
+      sentAt: "2026-07-07T16:04:00.000Z",
+      read: false,
+    },
+    {
+      messageId: "msg-4",
+      direction: "incoming",
+      content: "另外历史版本能一起看到就更好了。",
+      sentAt: "2026-07-07T16:05:00.000Z",
+      read: false,
+    },
   ],
   "conv-lin": [
     {
-      messageId: "msg-3",
+      messageId: "msg-5",
       direction: "incoming",
       content: "你的编辑器体验笔记我收藏了。",
       sentAt: "2026-07-07T14:12:00.000Z",
@@ -212,6 +238,29 @@ export async function sendConversationMessage(
   const response = await getAxiosInstance().post<SendMessageResp>(
     `/v1/conversations/${encodeURIComponent(input.conversationId)}/messages`,
     { content: input.content },
+  );
+
+  return response.data;
+}
+
+// 将某个会话标记为已读：后端把该会话未读归零并返回归零后的该会话未读数。
+// demo 模式直接改共享 fixture 的 unreadCount，让后续未读汇总与列表刷新保持一致。
+export async function markConversationRead(
+  input: MarkConversationReadReq,
+): Promise<MarkConversationReadResp> {
+  if (isLocalDemoModeEnabled()) {
+    const target = localDemoConversations.find(
+      (conversation) => conversation.conversationId === input.conversationId,
+    );
+    if (target) {
+      target.unreadCount = 0;
+    }
+    return { conversationId: input.conversationId, unreadCount: 0 };
+  }
+
+  const response = await getAxiosInstance().post<MarkConversationReadResp>(
+    `/v1/conversations/${encodeURIComponent(input.conversationId)}/read`,
+    {},
   );
 
   return response.data;

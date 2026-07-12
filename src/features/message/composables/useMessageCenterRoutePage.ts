@@ -1,6 +1,8 @@
 import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 
+import { useMessageUnreadStore } from "@/stores/messageUnread";
+
 import { useMessageCenterPage } from "./useMessageCenterPage";
 import { useMessageThread } from "./useMessageThread";
 
@@ -17,6 +19,11 @@ export function useMessageCenterRoutePage() {
 
   const center = useMessageCenterPage();
   const thread = useMessageThread(conversationId);
+  const unreadStore = useMessageUnreadStore();
+  const activeUnreadCount = computed(() => {
+    const id = conversationId.value;
+    return id ? unreadStore.unreadOf(id) : 0;
+  });
 
   // 路由 conversationId 变化时同步选中态，让列表高亮跟随 URL。
   // 未知 id 保持空详情，不回退默认会话，避免展示错误私信内容。
@@ -29,6 +36,17 @@ export function useMessageCenterRoutePage() {
   );
 
   const conversation = center.activeConversation;
+
+  // 只有线程成功进入可见状态后才消费未读；同时监听会话摘要，消除线程先于列表返回的竞态。
+  watch(
+    [conversationId, thread.status, activeUnreadCount],
+    ([id, status, unreadCount]) => {
+      if (id && unreadCount > 0 && (status === "success" || status === "empty")) {
+        void unreadStore.markConversationRead(id);
+      }
+    },
+    { immediate: true },
+  );
 
   return {
     center,

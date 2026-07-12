@@ -1,9 +1,11 @@
 import { flushPromises } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getMessageUnreadCount,
   listConversations,
+  markConversationRead,
   type ConversationSummaryResp,
   type ListConversationsResp,
 } from "@/api/message";
@@ -15,6 +17,7 @@ vi.mock("@/api/message", () => ({
   listConversations: vi.fn(),
   listConversationMessages: vi.fn(),
   sendConversationMessage: vi.fn(),
+  markConversationRead: vi.fn(),
 }));
 
 function conversationSummary(
@@ -57,9 +60,16 @@ function deferred<T>() {
 
 describe("useMessageCenterPage", () => {
   beforeEach(() => {
+    // 每个用例重建 Pinia，隔离未读 store 状态，避免跨用例串扰。
+    setActivePinia(createPinia());
     vi.mocked(listConversations).mockReset();
     vi.mocked(getMessageUnreadCount).mockReset();
     vi.mocked(getMessageUnreadCount).mockResolvedValue({ unreadCount: 2 });
+    vi.mocked(markConversationRead).mockReset();
+    vi.mocked(markConversationRead).mockResolvedValue({
+      conversationId: "conv-a",
+      unreadCount: 0,
+    });
   });
 
   it("loads conversations into success state with mapped view models", async () => {
@@ -113,7 +123,7 @@ describe("useMessageCenterPage", () => {
     expect(page.unreadCount.value).toBeNull();
   });
 
-  it("auto-selects the first conversation only when autoSelectFirst is enabled", async () => {
+  it("does not select any conversation until one is explicitly chosen", async () => {
     vi.mocked(listConversations).mockResolvedValue(
       conversationPage([
         conversationSummary("conv-a"),
@@ -121,14 +131,15 @@ describe("useMessageCenterPage", () => {
       ]),
     );
 
-    const withoutAuto = useMessageCenterPage();
+    const page = useMessageCenterPage();
     await flushPromises();
-    expect(withoutAuto.activeConversationId.value).toBeNull();
+    // 列表入口默认不选中任何会话，避免打开即消费第一条未读；选中由用户点击驱动。
+    expect(page.activeConversationId.value).toBeNull();
+    expect(page.activeConversation.value).toBeNull();
 
-    const withAuto = useMessageCenterPage({ autoSelectFirst: true });
-    await flushPromises();
-    expect(withAuto.activeConversationId.value).toBe("conv-a");
-    expect(withAuto.activeConversation.value?.id).toBe("conv-a");
+    page.selectConversation("conv-b");
+    expect(page.activeConversationId.value).toBe("conv-b");
+    expect(page.activeConversation.value?.id).toBe("conv-b");
   });
 
   it("appends the next page and stops when the cursor is exhausted", async () => {
