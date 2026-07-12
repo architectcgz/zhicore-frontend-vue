@@ -1,0 +1,76 @@
+@media (max-width: 980px) {
+  .messages-route__layout--list,
+  .messages-route__layout--detail {
+    grid-template-columns: 5rem minmax(15rem, 22rem) minmax(0, 1fr);
+  }
+
+  .messages-route__history {
+    padding: var(--space-5);
+  }
+}
+
+@media (max-width: 640px) {
+  .messages-route {
+    min-height: calc(100vh - 61px);
+  }
+
+  .messages-route__layout--list,
+  .messages-route__layout--detail {
+    min-height: calc(100vh - 77px);
+    grid-template-columns: 1fr;
+    border-inline: 0;
+  }
+
+  .messages-route__utility-nav,
+  .messages-route__contacts--desktop,
+  .messages-route__chat--desktop {
+    display: none;
+  }
+
+  .messages-route__chat--mobile-detail {
+    display: grid;
+  }
+
+  .messages-route__detail-back {
+    display: inline-flex;
+  }
+
+  .messages-route__contacts {
+    border-right: 0;
+  }
+
+  .messages-route__contacts-header,
+  .messages-route__chat-header {
+    padding: var(--space-4);
+  }
+
+  .messages-route__filters {
+    overflow-x: auto;
+  }
+
+  .messages-route__history {
+    padding: var(--space-4);
+  }
+
+  .messages-route__message-body {
+    max-width: min(35rem, 78vw);
+  }
+
+  .messages-route__composer {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .messages-route__composer-button {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-route__utility-item,
+  .messages-route__icon-button,
+  .messages-route__composer-button,
+  .messages-route__send-button,
+  .messages-route__conversation {
+    transition: none;
+  }
+}

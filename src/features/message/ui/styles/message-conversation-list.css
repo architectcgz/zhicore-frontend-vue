@@ -1,0 +1,186 @@
+.messages-route__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-5) var(--space-4);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--messages-line);
+  border-radius: var(--radius-md);
+  background: var(--messages-control);
+}
+
+.messages-route__search:focus-within {
+  border-color: var(--messages-line-strong);
+  box-shadow: 0 0 0 3px var(--messages-focus-ring);
+}
+
+.messages-route__search svg {
+  width: var(--space-5);
+  height: var(--space-5);
+  color: var(--messages-muted);
+}
+
+.messages-route__search input {
+  min-width: 0;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--messages-text-strong);
+}
+
+.messages-route__search input::placeholder,
+.messages-route__input-shell input::placeholder {
+  color: var(--messages-muted);
+}
+
+.messages-route__filters {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.messages-route__filter {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--messages-muted);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.messages-route__filter:hover,
+.messages-route__filter:focus-visible {
+  background: var(--messages-control);
+  color: var(--messages-text-strong);
+}
+
+.messages-route__filter--active {
+  border-color: var(--messages-line-strong);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--messages-text-strong);
+}
+
+.messages-route__filter span,
+.messages-route__conversation-badge {
+  display: inline-flex;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #001814;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.messages-route__contact-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.messages-route__conversation {
+  display: grid;
+  min-height: 4.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid transparent;
+  border-bottom-color: var(--messages-line);
+  border-radius: 0;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.messages-route__conversation:hover,
+.messages-route__conversation:focus-visible {
+  background: color-mix(in srgb, var(--messages-control) 72%, transparent);
+}
+
+.messages-route__conversation--active {
+  border-color: transparent;
+  border-bottom-color: var(--messages-line);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.messages-route__avatar,
+.messages-route__message-avatar {
+  position: relative;
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-primary) 28%, #1e2a31);
+  color: var(--messages-text-strong);
+  font-size: 0.875rem;
+  font-weight: 900;
+  place-items: center;
+}
+
+.messages-route__avatar--header {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.messages-route__online {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid var(--messages-panel);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.messages-route__conversation-main {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.messages-route__conversation-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.messages-route__conversation-top strong {
+  overflow: hidden;
+  color: var(--messages-text-strong);
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messages-route__conversation-top span,
+.messages-route__preview,
+.messages-route__chat-header p,
+.messages-route__message-meta {
+  color: var(--messages-muted);
+}
+
+.messages-route__preview {
+  overflow: hidden;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

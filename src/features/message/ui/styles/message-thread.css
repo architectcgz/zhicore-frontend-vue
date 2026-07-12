@@ -1,0 +1,331 @@
+.messages-route__chat {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.messages-route__chat-person,
+.messages-route__chat-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.messages-route__chat-header p {
+  margin: var(--space-1) 0 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.messages-route__detail-back {
+  display: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--messages-line);
+  border-radius: var(--radius-md);
+  background: var(--messages-control);
+  color: var(--messages-text-strong);
+  text-decoration: none;
+}
+
+.messages-route__history {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--space-5);
+  overflow-y: auto;
+  padding: var(--space-6) var(--space-8);
+}
+
+.messages-route__date-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  color: var(--messages-muted);
+  font-size: 0.8125rem;
+}
+
+.messages-route__date-divider::before,
+.messages-route__date-divider::after {
+  content: "";
+  width: min(18rem, 36%);
+  height: 1px;
+  background: var(--messages-line);
+}
+
+.messages-route__message {
+  display: grid;
+  max-width: 100%;
+  align-self: flex-start;
+  grid-template-columns: auto minmax(0, max-content);
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.messages-route__message--mine {
+  align-self: flex-end;
+  grid-template-columns: minmax(0, max-content);
+  justify-content: end;
+}
+
+.messages-route__message-body {
+  max-width: min(38rem, 72vw);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--messages-line) 56%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--messages-panel-strong) 78%, transparent);
+}
+
+.messages-route__message--mine .messages-route__message-body {
+  border-color: var(--messages-line-strong);
+  background: color-mix(in srgb, var(--color-primary) 26%, #0a3a3c);
+}
+
+.messages-route__message-body p {
+  margin: 0;
+  color: var(--messages-text-strong);
+  line-height: 1.6;
+}
+
+.messages-route__message-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+
+.messages-route__delivery-status {
+  display: inline-flex;
+  align-items: center;
+  color: var(--messages-muted);
+}
+
+.messages-route__delivery-status--read {
+  color: var(--color-primary);
+}
+
+.messages-route__delivery-status svg {
+  width: var(--space-4);
+  height: var(--space-4);
+  stroke-width: 2.4;
+}
+
+.messages-route__composer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--messages-line);
+  background: color-mix(in srgb, var(--messages-panel) 82%, transparent);
+}
+
+.messages-route__input-shell {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 3rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--messages-line);
+  border-radius: var(--radius-md);
+  background: var(--messages-control);
+}
+
+.messages-route__input-shell:focus-within {
+  border-color: var(--messages-line-strong);
+  box-shadow: 0 0 0 3px var(--messages-focus-ring);
+}
+
+.messages-route__input-shell input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--messages-text-strong);
+}
+
+.messages-route__emoji-button {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--messages-muted);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.messages-route__emoji-button:hover,
+.messages-route__emoji-button:focus-visible {
+  background: var(--messages-control-hover);
+  color: var(--color-primary);
+}
+
+.messages-route__emoji-button svg {
+  width: var(--space-5);
+  height: var(--space-5);
+}
+
+.messages-route__emoji-menu {
+  position: absolute;
+  right: var(--space-2);
+  bottom: calc(100% + var(--space-2));
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(4, 2rem);
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--messages-line);
+  border-radius: var(--radius-md);
+  background: var(--messages-bg);
+  box-shadow: 0 var(--space-2) var(--space-5) rgba(0, 0, 0, 0.32);
+}
+
+.messages-route__emoji-menu button {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.messages-route__emoji-menu button:hover,
+.messages-route__emoji-menu button:focus-visible {
+  background: var(--messages-control-hover);
+}
+
+.messages-route__send-button {
+  border-color: transparent;
+  background: var(--color-primary);
+  color: #001814;
+}
+
+.messages-route__send-button:hover,
+.messages-route__send-button:focus-visible {
+  background: var(--color-primary-soft);
+}
+
+.messages-route__eyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.messages-route__empty {
+  display: grid;
+  width: min(100%, 48rem);
+  margin: var(--space-10) auto 0;
+  gap: var(--space-3);
+  padding: var(--space-10);
+  border-block: 1px solid var(--messages-line);
+  background: color-mix(in srgb, var(--messages-panel) 72%, transparent);
+  place-items: center;
+  text-align: center;
+}
+
+.messages-route__empty p:last-of-type {
+  max-width: 35rem;
+  margin: 0;
+  color: var(--messages-muted);
+}
+
+.messages-route__empty-link {
+  color: var(--messages-text-strong);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.messages-route__empty-link:hover,
+.messages-route__empty-link:focus-visible,
+.messages-route__detail-back:hover,
+.messages-route__detail-back:focus-visible {
+  color: var(--color-primary);
+}
+
+/* 右侧会话区未选中时的空状态：填满 chat 列，居中提示引导用户从左侧选择会话。 */
+.messages-route__no-selection {
+  display: grid;
+  place-items: center;
+  padding: var(--space-10);
+  text-align: center;
+}
+
+.messages-route__no-selection-inner {
+  display: grid;
+  max-width: 26rem;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+.messages-route__no-selection-icon {
+  display: inline-flex;
+  width: 4.5rem;
+  height: 4.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+
+.messages-route__no-selection-icon svg {
+  width: var(--space-6);
+  height: var(--space-6);
+}
+
+.messages-route__no-selection h2 {
+  margin: 0;
+  color: var(--messages-text-strong);
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.messages-route__no-selection p {
+  margin: 0;
+  color: var(--messages-muted);
+  line-height: 1.6;
+}
+
+.messages-route__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+.messages-route__utility-item:focus-visible,
+.messages-route__filter:focus-visible,
+.messages-route__conversation:focus-visible,
+.messages-route__detail-back:focus-visible {
+  outline: 2px solid var(--messages-focus-ring);
+  outline-offset: 2px;
+}
