@@ -643,16 +643,6 @@ function commentActionLabel(post: DiscoveryPost): string {
   transform: translateY(-1px);
 }
 
-.explore-post:first-of-type {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 55%,
-    var(--color-border)
-  );
-  box-shadow: 0 0 0 1px
-    color-mix(in srgb, var(--color-primary) 18%, transparent);
-}
-
 .explore-post__content {
   display: grid;
   gap: var(--space-2);
