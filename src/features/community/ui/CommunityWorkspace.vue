@@ -386,16 +386,6 @@ function getTopicIcon(slug: string): Component {
 
 <style scoped>
 .community-route {
-  --community-shell: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 48%,
-    transparent
-  );
-  --community-shell-strong: color-mix(
-    in srgb,
-    var(--color-bg-elevated-2) 44%,
-    transparent
-  );
   --community-line: color-mix(
     in srgb,
     var(--color-border-strong) 82%,
@@ -407,9 +397,9 @@ function getTopicIcon(slug: string): Component {
     transparent
   );
 
-  max-width: 95rem;
+  width: min(100%, 90rem);
   margin: 0 auto;
-  padding: var(--space-5) var(--space-6) var(--space-6);
+  padding: var(--space-8) var(--space-10) var(--space-12);
   color: var(--color-text);
   letter-spacing: 0;
 }
@@ -420,24 +410,9 @@ function getTopicIcon(slug: string): Component {
       17rem,
       21rem
     );
-  gap: var(--space-4);
+  gap: 0;
   align-items: start;
   min-width: 0;
-}
-
-.community-route__sidebar,
-.community-route__main,
-.community-route__extra-section {
-  border: 1px solid var(--community-line);
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--color-bg-elevated) 66%, transparent),
-      color-mix(in srgb, var(--color-bg) 72%, transparent)
-    ),
-    var(--community-shell);
-  box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(1.5rem);
 }
 
 .community-route__sidebar,
@@ -449,23 +424,22 @@ function getTopicIcon(slug: string): Component {
 .community-route__sidebar {
   display: flex;
   flex-direction: column;
-  min-height: min(48rem, calc(100vh - var(--space-12) * 2));
-  padding: var(--space-6);
-  border-radius: var(--radius-lg);
+  padding: 0 var(--space-6) 0 0;
+  border-right: 1px solid var(--community-line);
 }
 
 .community-route__sidebar-title {
   margin: 0;
-  font-size: var(--font-size-18, 1.125rem);
-  font-weight: var(--font-weight-h3);
+  font-size: var(--font-size-ui-section-title);
+  font-weight: var(--font-weight-ui-strong);
   color: var(--color-text-strong);
 }
 
 .community-route__topic-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
+  gap: var(--space-1);
+  margin-top: var(--space-4);
 }
 
 .community-route__topic-btn,
@@ -475,17 +449,16 @@ function getTopicIcon(slug: string): Component {
   gap: var(--space-3);
   width: 100%;
   min-height: 2.75rem;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid transparent;
-  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-soft);
   cursor: pointer;
   text-align: left;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .community-route__topic-icon,
@@ -514,12 +487,7 @@ function getTopicIcon(slug: string): Component {
 }
 
 .community-route__topic-btn--active {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 40%,
-    var(--color-border)
-  );
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 11%, transparent);
   color: var(--color-primary);
 }
 
@@ -535,17 +503,15 @@ function getTopicIcon(slug: string): Component {
 }
 
 .community-route__browse-btn {
-  margin-top: auto;
-  justify-content: center;
-  border-color: var(--community-muted-line);
-  background: var(--community-shell-strong);
+  margin-top: var(--space-6);
+  border: 1px solid var(--community-muted-line);
+  justify-content: flex-start;
   color: var(--color-text);
 }
 
 .community-route__main {
   min-width: 0;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
+  padding: 0 var(--space-6);
 }
 
 .community-route__main-header,
@@ -553,7 +519,7 @@ function getTopicIcon(slug: string): Component {
 .community-route__data-note,
 .community-route__feed,
 .community-route__state {
-  margin-inline: var(--space-3);
+  margin-inline: 0;
 }
 
 .community-route__main-header {
@@ -561,22 +527,22 @@ function getTopicIcon(slug: string): Component {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-5);
-  margin-top: var(--space-6);
+  margin-top: 0;
 }
 
 .community-route__main-header-info h1 {
   margin: 0 0 var(--space-2);
-  font-size: var(--font-size-32, 2rem);
-  font-weight: var(--font-weight-h1);
-  line-height: var(--line-height-label);
+  font-size: var(--font-size-ui-page-title);
+  font-weight: var(--font-weight-ui-title);
+  line-height: var(--line-height-ui-title);
   color: var(--color-text-strong);
 }
 
 .community-route__main-header-info p {
   margin: 0;
   color: var(--color-text-soft);
-  font-size: var(--font-size-15, 0.9375rem);
-  line-height: 1.5;
+  font-size: var(--font-size-ui-body);
+  line-height: var(--line-height-ui-body);
 }
 
 .community-route__main-header-actions {
@@ -589,13 +555,16 @@ function getTopicIcon(slug: string): Component {
   min-height: 2.25rem;
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-strong);
   font-weight: var(--font-weight-h3);
   font-size: var(--font-size-14, 0.875rem);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .community-route__btn:hover:not(:disabled) {
@@ -624,11 +593,13 @@ function getTopicIcon(slug: string): Component {
   width: 2.25rem;
   height: 2.25rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-soft);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .community-route__btn-icon:hover:not(:disabled) {
@@ -637,34 +608,30 @@ function getTopicIcon(slug: string): Component {
 }
 
 .community-route__tabs {
-  width: fit-content;
+  width: 100%;
   display: flex;
-  gap: 0;
+  gap: var(--space-6);
   margin-top: var(--space-6);
-  padding: var(--space-1);
-  border: 1px solid var(--community-muted-line);
-  border-radius: var(--radius-pill);
-  background: var(--community-shell-strong);
+  padding: 0;
+  border-bottom: 1px solid var(--community-muted-line);
 }
 
 .community-route__tab {
-  min-width: 5.5rem;
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--radius-pill);
+  min-width: 0;
+  padding: 0 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--color-text-soft);
-  font-size: var(--font-size-14, 0.875rem);
-  font-weight: var(--font-weight-h3);
+  font-size: var(--font-size-ui-body);
+  font-weight: var(--font-weight-ui-control);
   cursor: default;
   text-align: center;
 }
 
 .community-route__tab--active {
-  background: color-mix(in srgb, var(--color-text-strong) 88%, transparent);
-  color: var(--color-bg);
-  box-shadow: 0 0 0 1px
-    color-mix(in srgb, var(--color-text-strong) 30%, transparent);
+  border-bottom-color: var(--color-primary);
+  color: var(--color-text-strong);
 }
 
 .community-route__data-note {
@@ -683,31 +650,26 @@ function getTopicIcon(slug: string): Component {
 .community-route__feed {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  margin-bottom: var(--space-3);
+  gap: 0;
+  margin-top: var(--space-3);
+  margin-bottom: 0;
 }
 
 .community-route__post-card {
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
-  padding: var(--space-4);
-  background: color-mix(in srgb, var(--color-bg-reading) 62%, transparent);
-  border: 1px solid var(--community-muted-line);
-  border-radius: var(--radius-lg);
+  margin-inline: calc(var(--space-3) * -1);
+  padding: var(--space-5) var(--space-3);
+  border-bottom: 1px solid var(--community-muted-line);
+  background: transparent;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .community-route__post-card:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 30%,
-    var(--color-border-strong)
-  );
-  background: color-mix(in srgb, var(--color-bg-reading) 82%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 45%, transparent);
 }
 
 .community-route__post-body {
@@ -725,8 +687,8 @@ function getTopicIcon(slug: string): Component {
 
 .community-route__post-author {
   color: var(--color-text-strong);
-  font-size: var(--font-size-13, 0.8125rem);
-  font-weight: var(--font-weight-h3);
+  font-size: var(--font-size-ui-meta);
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .community-route__post-avatar {
@@ -739,14 +701,14 @@ function getTopicIcon(slug: string): Component {
 .community-route__post-time {
   flex: 0 0 auto;
   color: var(--color-text-soft);
-  font-size: var(--font-size-12, 0.75rem);
+  font-size: var(--font-size-ui-caption);
 }
 
 .community-route__post-content h3 {
   margin: 0 0 var(--space-1);
-  font-size: var(--font-size-18, 1.125rem);
-  font-weight: var(--font-weight-h1);
-  line-height: 1.32;
+  font-size: var(--font-size-ui-row-title);
+  font-weight: var(--font-weight-ui-strong);
+  line-height: var(--line-height-ui-row-title);
 }
 
 .community-route__post-content h3 a {
@@ -761,8 +723,8 @@ function getTopicIcon(slug: string): Component {
 .community-route__post-content p {
   margin: 0;
   color: var(--color-text-soft);
-  font-size: var(--font-size-13, 0.8125rem);
-  line-height: 1.45;
+  font-size: var(--font-size-ui-meta);
+  line-height: var(--line-height-ui-meta);
 }
 
 .community-route__post-footer {
@@ -833,18 +795,20 @@ function getTopicIcon(slug: string): Component {
 .community-route__extra {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--community-line);
 }
 
 .community-route__extra-section {
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
+  padding: 0 0 var(--space-6);
+  border-bottom: 1px solid var(--community-line);
 }
 
 .community-route__extra-section h3 {
   margin: 0;
-  font-size: var(--font-size-18, 1.125rem);
-  font-weight: var(--font-weight-h3);
+  font-size: var(--font-size-ui-section-title);
+  font-weight: var(--font-weight-ui-strong);
   color: var(--color-text-strong);
 }
 
@@ -984,7 +948,7 @@ function getTopicIcon(slug: string): Component {
   color: var(--color-text-soft);
   text-align: center;
   border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
 }
 
 .community-route__state--error {
@@ -1012,11 +976,15 @@ function getTopicIcon(slug: string): Component {
   .community-route__extra {
     display: none;
   }
+
+  .community-route__main {
+    padding-right: 0;
+  }
 }
 
 @media (max-width: 820px) {
   .community-route {
-    padding: var(--space-4);
+    padding: var(--space-6) var(--space-4) var(--space-10);
   }
 
   .community-route__layout {
@@ -1026,6 +994,27 @@ function getTopicIcon(slug: string): Component {
   .community-route__sidebar {
     position: static;
     min-height: auto;
+    padding: 0 0 var(--space-5);
+    border-right: 0;
+    border-bottom: 1px solid var(--community-line);
+  }
+
+  .community-route__topic-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .community-route__topic-btn,
+  .community-route__browse-btn {
+    width: auto;
+  }
+
+  .community-route__browse-btn {
+    margin-top: var(--space-3);
+  }
+
+  .community-route__main {
+    padding: var(--space-6) 0 0;
   }
 
   .community-route__main-header {
@@ -1035,34 +1024,26 @@ function getTopicIcon(slug: string): Component {
   .community-route__tabs {
     width: auto;
   }
-
-  .community-route__tab {
-    min-width: 0;
-    flex: 1;
-  }
 }
 
 @media (max-width: 560px) {
   .community-route {
-    padding: var(--space-3);
+    padding: var(--space-5) var(--space-3) var(--space-8);
   }
 
-  .community-route__sidebar,
-  .community-route__extra-section {
-    padding: var(--space-4);
+  .community-route__topic-list {
+    gap: var(--space-2);
   }
 
-  .community-route__main-header,
-  .community-route__tabs,
-  .community-route__data-note,
-  .community-route__feed,
-  .community-route__state {
-    margin-inline: var(--space-2);
+  .community-route__topic-btn,
+  .community-route__browse-btn {
+    min-height: 2.5rem;
   }
 
   .community-route__post-card {
     gap: var(--space-3);
-    padding: var(--space-3);
+    margin-inline: calc(var(--space-2) * -1);
+    padding: var(--space-4) var(--space-2);
   }
 
   .community-route__post-avatar {
@@ -1077,6 +1058,30 @@ function getTopicIcon(slug: string): Component {
 
   .community-route__post-stats {
     margin-left: 0;
+  }
+
+  .community-route__btn,
+  .community-route__btn-icon {
+    min-height: 2.75rem;
+  }
+
+  .community-route__btn-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community-route__topic-btn,
+  .community-route__browse-btn,
+  .community-route__btn,
+  .community-route__btn-icon,
+  .community-route__post-card,
+  .community-route__post-content h3 a,
+  .community-route__post-stat-btn,
+  .community-route__trending-item,
+  .community-route__reply-title {
+    transition: none;
   }
 }
 </style>
